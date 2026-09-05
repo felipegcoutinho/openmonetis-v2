@@ -520,7 +520,7 @@ function TransactionRow({
         </span>
         <MoneyValue
           amount={visibleAmount}
-          className={`font-normal ${amountClassName}`}
+          className={`font-medium ${amountClassName}`}
           showPositiveSign={transaction.type === "income" || isIncomingTransfer}
         />
       </TableCell>
