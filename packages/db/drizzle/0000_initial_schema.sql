@@ -23,6 +23,7 @@ CREATE TYPE "public"."transaction_origin" AS ENUM('regular', 'invoicePayment', '
 CREATE TYPE "public"."transaction_type" AS ENUM('income', 'expense', 'transfer');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
+	"issuer" text NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -834,7 +835,7 @@ ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_user_id_user_id_
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_default_account_id_financial_accounts_id_fk" FOREIGN KEY ("default_account_id") REFERENCES "public"."financial_accounts"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_default_card_id_cards_id_fk" FOREIGN KEY ("default_card_id") REFERENCES "public"."cards"("id") ON DELETE set null ON UPDATE cascade;--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "account_provider_account_unique" ON "account" USING btree ("provider_id","account_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "account_issuer_account_unique" ON "account" USING btree ("issuer","account_id");--> statement-breakpoint
 CREATE INDEX "attachments_user_id_idx" ON "attachments" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "budgets_user_id_period_idx" ON "budgets" USING btree ("user_id","period");--> statement-breakpoint
 CREATE INDEX "budgets_category_id_idx" ON "budgets" USING btree ("category_id");--> statement-breakpoint
