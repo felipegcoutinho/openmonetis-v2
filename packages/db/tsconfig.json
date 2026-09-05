@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "drizzle.config.ts"],
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true
+  }
+}

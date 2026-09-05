@@ -1,0 +1,23 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+
+# local maintainer playbooks
+/commit.md
+
+# turbo
+.turbo
+
+# typescript
+*.tsbuildinfo

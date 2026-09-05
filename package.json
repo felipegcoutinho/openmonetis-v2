@@ -1,0 +1,47 @@
+{
+  "name": "openmonetis",
+  "version": "0.1.0",
+  "description": "API-first self-hosted personal finance manager",
+  "type": "module",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/felipegcoutinho/openmonetis-v2#readme",
+  "bugs": {
+    "url": "https://github.com/felipegcoutinho/openmonetis-v2/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felipegcoutinho/openmonetis-v2.git"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "check": "pnpm lint && pnpm typecheck",
+    "db:generate": "pnpm --filter @openmonetis/db db:generate",
+    "db:migrate": "pnpm --filter @openmonetis/db db:migrate",
+    "db:seed": "pnpm --filter @openmonetis/api db:seed",
+    "db:studio": "pnpm --filter @openmonetis/db db:studio",
+    "dev": "pnpm --parallel --filter @openmonetis/api --filter @openmonetis/web dev",
+    "docker:build": "pnpm run \"/^docker:build:(api|migrator|web)$/\"",
+    "docker:build:api": "docker build --target api --tag openmonetis-local/openmonetis-api:local .",
+    "docker:build:migrator": "docker build --target migrator --tag openmonetis-local/openmonetis-migrator:local .",
+    "docker:build:web": "docker build --target web --tag openmonetis-local/openmonetis-web:local .",
+    "docker:config": "docker compose config",
+    "docker:db": "docker compose up -d db",
+    "docker:down": "docker compose down",
+    "docker:pull": "docker compose pull",
+    "docker:up": "docker compose up -d --pull always",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "release:check": "node scripts/validate-release.mjs",
+    "test": "tsx --test apps/api/src/auth.validation.test.ts apps/api/src/middlewares/password-change.test.ts apps/api/src/middlewares/security.test.ts apps/api/src/routes/companion.contract.test.ts apps/api/src/services/accounts.service.test.ts apps/api/src/services/dashboard.service.test.ts apps/api/src/services/device-tokens.service.test.ts apps/api/src/services/external-expenses.service.test.ts apps/api/src/services/inbox-rules.domain.test.ts apps/api/src/services/inbox-rules.service.test.ts apps/api/src/services/inbox.service.test.ts apps/api/src/services/installments.service.test.ts apps/api/src/services/invoices.service.test.ts apps/api/src/services/people.service.test.ts apps/api/src/services/person-settlements.service.test.ts apps/api/src/services/recurring-expenses.service.test.ts apps/api/src/services/preferences.service.test.ts apps/api/src/services/settings.service.test.ts apps/api/src/services/transactions.service.test.ts apps/web/src/features/device-tokens/device-tokens.presentation.test.ts apps/web/src/features/inbox/inbox.presentation.test.ts apps/web/src/features/transactions/components/transaction-form.validation.test.ts apps/web/src/features/transactions/transactions.presentation.test.ts apps/web/src/lib/api-proxy.test.ts apps/web/src/lib/security.test.ts",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "tsx": "^4.23.13"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

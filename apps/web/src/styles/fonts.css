@@ -1,0 +1,29 @@
+@font-face {
+  font-family: "Aeonik Fono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/aeonik-fono-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Aeonik Fono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/aeonik-fono-medium.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Aeonik Fono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/aeonik-fono-bold.otf") format("opentype");
+}
+
+:root {
+  --font-app-sans: "Aeonik Fono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-app-mono: var(--font-app-sans);
+  --font-app-heading: var(--font-app-sans);
+}

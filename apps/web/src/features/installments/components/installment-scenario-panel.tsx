@@ -1,0 +1,75 @@
+import type { InstallmentQuoteOutput } from "@openmonetis/validators/installments";
+import { Calculator, CheckCheck, RotateCcw } from "lucide-react";
+import { MoneyValue } from "@/components/money-value";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type InstallmentScenarioPanelProps = {
+  allPendingSelected: boolean;
+  hasPendingInstallments: boolean;
+  isQuoting: boolean;
+  onClear: () => void;
+  onSelectAll: () => void;
+  quote: InstallmentQuoteOutput | null;
+  selectedCount: number;
+};
+
+export function InstallmentScenarioPanel({
+  allPendingSelected,
+  hasPendingInstallments,
+  isQuoting,
+  onClear,
+  onSelectAll,
+  quote,
+  selectedCount,
+}: InstallmentScenarioPanelProps) {
+  return (
+    <Card className="border-brand-strong/15 bg-brand/5 shadow-none">
+      <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-brand-strong shadow-xs">
+            <Calculator aria-hidden="true" className="size-5" />
+          </span>
+          <div>
+            <p className="font-medium">Simulação de quitação</p>
+            {selectedCount === 0 ? (
+              <p className="mt-1 text-muted-foreground text-sm">
+                Selecione parcelas pendentes para saber quanto precisaria pagar. Nada será alterado.
+              </p>
+            ) : (
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                {isQuoting || !quote ? (
+                  <Skeleton className="h-7 w-32" />
+                ) : (
+                  <MoneyValue amount={quote.totalAmount} className="text-2xl font-semibold" />
+                )}
+                <span className="text-muted-foreground text-sm">
+                  {selectedCount}{" "}
+                  {selectedCount === 1 ? "parcela selecionada" : "parcelas selecionadas"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          {selectedCount > 0 ? (
+            <Button onClick={onClear} type="button" variant="ghost">
+              <RotateCcw aria-hidden="true" />
+              Limpar
+            </Button>
+          ) : null}
+          <Button
+            disabled={!hasPendingInstallments}
+            onClick={allPendingSelected ? onClear : onSelectAll}
+            type="button"
+            variant="outline"
+          >
+            <CheckCheck aria-hidden="true" />
+            {allPendingSelected ? "Desmarcar todas" : "Selecionar pendentes"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

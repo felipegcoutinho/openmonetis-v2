@@ -1,0 +1,40 @@
+{
+  "name": "@openmonetis/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./accounts": "./src/accounts.ts",
+    "./cards": "./src/cards.ts",
+    "./categories": "./src/categories.ts",
+    "./category-trends": "./src/category-trends.ts",
+    "./dashboard": "./src/dashboard.ts",
+    "./installments": "./src/installments.ts",
+    "./invoices": "./src/invoices.ts",
+    "./people": "./src/people.ts",
+    "./person-connections": "./src/person-connections.ts",
+    "./preferences": "./src/preferences.ts",
+    "./transactions": "./src/transactions.ts",
+    "./attachments": "./src/attachments.ts",
+    "./bills": "./src/bills.ts",
+    "./budgets": "./src/budgets.ts",
+    "./notes": "./src/notes.ts",
+    "./person-settlements": "./src/person-settlements.ts",
+    "./notifications": "./src/notifications.ts",
+    "./recurring-expenses": "./src/recurring-expenses.ts",
+    "./releases": "./src/releases.ts",
+    "./establishments": "./src/establishments.ts",
+    "./settings": "./src/settings.ts",
+    "./external-expenses": "./src/external-expenses.ts",
+    "./inbox": "./src/inbox.ts",
+    "./inbox-rules": "./src/inbox-rules.ts",
+    "./device-tokens": "./src/device-tokens.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^6"
+  }
+}
