@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
-const confettiColors = ["#fa8a2e", "#fda164", "#ffd4a8", "#c96524", "#8f4218"];
+const confettiColors = ["#fc941d", "#fda164", "#ffd4a8", "#c96524", "#8f4218"];
 
 export function PaymentSuccess({
   celebrate,

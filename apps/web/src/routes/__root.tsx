@@ -44,7 +44,7 @@ export const Route = createRootRoute({
       },
       {
         name: "theme-color",
-        content: "#fa8a2e",
+        content: "#fc941d",
       },
       {
         name: "apple-mobile-web-app-title",
@@ -55,6 +55,11 @@ export const Route = createRootRoute({
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "icon",
+        href: "/favicon.svg",
+        type: "image/svg+xml",
       },
       {
         rel: "icon",

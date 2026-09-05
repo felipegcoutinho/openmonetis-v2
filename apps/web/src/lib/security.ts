@@ -1,8 +1,13 @@
 const STATIC_PATH_PREFIXES = ["/assets/", "/flags/", "/images/", "/logos/"];
 const STATIC_PATHS = new Set([
   "/apple-touch-icon.png",
+  "/favicon.svg",
   "/favicon.ico",
   "/favicon-32x32.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-192.png",
+  "/icon-maskable-512.png",
   "/manifest.json",
   "/robots.txt",
 ]);

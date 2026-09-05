@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/images/openmonetis-mark.png" width="112" alt="Símbolo do OpenMonetis" />
+  <img src="apps/web/public/images/openmonetis-mark.svg" width="112" alt="Símbolo do OpenMonetis" />
 </p>
 
 <h1 align="center">OpenMonetis</h1>

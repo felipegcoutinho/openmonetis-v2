@@ -26,7 +26,7 @@ export function OpenMonetisLogo({
         )}
         height={36}
         layout="fixed"
-        src="/images/openmonetis-mark.png"
+        src="/images/openmonetis-mark.svg"
         width={35}
       />
       <Image
@@ -37,7 +37,7 @@ export function OpenMonetisLogo({
         )}
         height={21}
         layout="fixed"
-        src="/images/openmonetis-wordmark.png"
+        src="/images/openmonetis-wordmark.svg"
         width={134}
       />
     </span>

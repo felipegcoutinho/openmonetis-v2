@@ -37,6 +37,7 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
   repositories com persistência PostgreSQL via Drizzle.
 - Cliente web construído com TanStack Start, Router, Query e Form, com interface responsiva e
   acessível em PT-BR.
+- Identidade visual em SVG, com favicons e ícones PWA dedicados para exibição comum e maskable.
 - Imagens Docker separadas para web, API e migrator, worker de recorrências compartilhadas, scripts
   de instalação para Unix e Windows e documentação de implantação em produção.
 - Changelog integrado à aplicação, aviso de versão e consulta de atualizações com fallback local.

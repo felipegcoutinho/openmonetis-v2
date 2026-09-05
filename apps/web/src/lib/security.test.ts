@@ -57,3 +57,24 @@ test("versioned static assets remain cacheable", () => {
 
   assert.equal(headers["Cache-Control"], undefined);
 });
+
+test("brand and installable app assets remain cacheable", () => {
+  for (const pathname of [
+    "/favicon.svg",
+    "/favicon.ico",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-192.png",
+    "/icon-maskable-512.png",
+    "/apple-touch-icon.png",
+    "/manifest.json",
+  ]) {
+    const headers = createWebSecurityHeaders({
+      nonce: "test-nonce",
+      pathname,
+      production: true,
+    });
+
+    assert.equal(headers["Cache-Control"], undefined, pathname);
+  }
+});
