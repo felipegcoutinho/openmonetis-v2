@@ -91,7 +91,6 @@ Copy-Item (Join-Path $installDirectory ".env.example") $environmentFile
 
 $databasePassword = New-RandomSecret
 Set-EnvironmentValue $environmentFile "POSTGRES_PASSWORD" $databasePassword
-Set-EnvironmentValue $environmentFile "DATABASE_URL" "postgres://postgres:$databasePassword@localhost:7000/openmonetis"
 Set-EnvironmentValue $environmentFile "BETTER_AUTH_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "DEVICE_TOKEN_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "PERSON_CONNECTION_SECRET" (New-RandomSecret)

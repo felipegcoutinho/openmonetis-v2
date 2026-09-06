@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+import { resolveDatabaseUrl } from "./src/database-url";
 
 config({ path: new URL("../../.env", import.meta.url).pathname });
 
@@ -8,6 +9,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:7000/openmonetis",
+    url: resolveDatabaseUrl(),
   },
 });

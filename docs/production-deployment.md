@@ -19,6 +19,9 @@ As imagens de release são publicadas no GitHub Container Registry pelo workflow
 
 ## Variáveis obrigatórias
 
+Consulte o [manual de variáveis de ambiente](environment-variables.md) para conhecer todas as
+opções disponíveis.
+
 Use a origem HTTPS final, sem path:
 
 ```dotenv
@@ -28,10 +31,18 @@ WEB_URL=https://financas.exemplo.com
 CORS_ORIGIN=https://financas.exemplo.com
 ```
 
-Gere segredos independentes. Não reutilize o mesmo valor entre variáveis:
+Gere segredos independentes. Não reutilize o mesmo valor entre variáveis. Para os três segredos da
+aplicação, use:
 
 ```bash
 openssl rand -base64 48
+```
+
+Como a senha do PostgreSQL compõe uma URL interna, use um valor hexadecimal para evitar caracteres
+reservados:
+
+```bash
+openssl rand -hex 32
 ```
 
 Configure ao menos:
@@ -43,7 +54,7 @@ PERSON_CONNECTION_SECRET=<segredo-exclusivo>
 POSTGRES_PASSWORD=<senha-forte>
 ```
 
-Se usar um PostgreSQL externo, defina `DOCKER_DATABASE_URL`. Para anexos, configure juntos
+Se usar um PostgreSQL externo, defina `EXTERNAL_DATABASE_URL`. Para anexos, configure juntos
 `S3_BUCKET`, `S3_ACCESS_KEY_ID` e `S3_SECRET_ACCESS_KEY`; `S3_ENDPOINT` é necessário somente para
 serviços compatíveis que não usam o endpoint padrão da AWS.
 

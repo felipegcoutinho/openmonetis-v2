@@ -57,7 +57,6 @@ set_environment_value() {
 
 database_password="$(random_secret)"
 set_environment_value "POSTGRES_PASSWORD" "${database_password}"
-set_environment_value "DATABASE_URL" "postgres://postgres:${database_password}@localhost:7000/openmonetis"
 set_environment_value "BETTER_AUTH_SECRET" "$(random_secret)"
 set_environment_value "DEVICE_TOKEN_SECRET" "$(random_secret)"
 set_environment_value "PERSON_CONNECTION_SECRET" "$(random_secret)"

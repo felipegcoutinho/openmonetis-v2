@@ -1,20 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool, type PoolClient } from "pg";
+import { resolveDatabaseUrl } from "./database-url";
 import * as schema from "./schema";
-
-const LOCAL_DATABASE_URL = "postgres://postgres:postgres@localhost:7000/openmonetis";
-
-function getDatabaseUrl() {
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("DATABASE_URL is required in production");
-  }
-
-  return LOCAL_DATABASE_URL;
-}
 
 function positiveIntegerFromEnv(name: string, fallback: number) {
   const rawValue = process.env[name];
@@ -28,7 +15,7 @@ function positiveIntegerFromEnv(name: string, fallback: number) {
 }
 
 export const pool = new Pool({
-  connectionString: getDatabaseUrl(),
+  connectionString: resolveDatabaseUrl(),
   application_name: "openmonetis-api",
   max: positiveIntegerFromEnv("DB_POOL_MAX", 10),
   connectionTimeoutMillis: positiveIntegerFromEnv("DB_CONNECTION_TIMEOUT_MS", 5_000),
