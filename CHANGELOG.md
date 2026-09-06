@@ -7,6 +7,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-06
+
+Simplifica a configuração do banco de dados para desenvolvimento e Docker Compose, com uma única
+fonte de credenciais e documentação direta para cada variável de ambiente.
+
+### Adicionado
+
+- Manual das variáveis de ambiente para desenvolvimento local e implantação com Docker Compose.
+
+### Alterado
+
+- O Docker Compose usa diretamente as imagens oficiais do OpenMonetis e compartilha as mesmas
+  credenciais PostgreSQL entre processos locais e containers, com uma única URL opcional para banco
+  externo.
+
+### Corrigido
+
+- O worker de recorrências não herda mais o healthcheck HTTP exclusivo do servidor da API.
+
 ## [0.1.0] - 2026-09-05
 
 Primeira versão pública do OpenMonetis V2: um gerenciador de finanças pessoais self-hosted,
@@ -58,4 +77,6 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/felipegcoutinho/openmonetis-v2/releases/tag/v0.1.0

@@ -16,7 +16,7 @@ do PostgreSQL com `openssl rand -hex 32` e os demais segredos com `openssl rand 
 | Variável | Descrição |
 | --- | --- |
 | `OPENMONETIS_PROJECT_NAME` | Nome do projeto Compose e prefixo dos recursos criados. |
-| `OPENMONETIS_VERSION` | Tag das imagens oficiais. Use `latest` ou uma versão publicada, como `0.1.0`. |
+| `OPENMONETIS_VERSION` | Tag das imagens oficiais. Use `latest` ou uma versão publicada, como `0.2.0`. |
 | `APP_PORT` | Porta do host que publica o cliente web. Ao alterá-la, ajuste também as URLs públicas. |
 
 ## PostgreSQL
@@ -33,8 +33,8 @@ Sem `EXTERNAL_DATABASE_URL`, a conexão é montada automaticamente com as variá
 locais usam `localhost:DB_HOST_PORT`; containers recebem `db:5432`. Assim, usuário, senha e nome do
 banco são declarados uma única vez.
 
-Instalações anteriores de homologação podem remover as antigas entradas `DATABASE_URL` e
-`DOCKER_DATABASE_URL` do `.env`; elas não são mais necessárias.
+As antigas entradas `DATABASE_URL` e `DOCKER_DATABASE_URL` podem ser removidas do `.env`; elas não
+são mais necessárias.
 
 ## URLs da aplicação
 
