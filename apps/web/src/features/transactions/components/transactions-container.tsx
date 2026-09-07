@@ -153,8 +153,16 @@ export function TransactionsContainer({
       onRecurringStatus={async (id, status) => {
         try {
           await recurringStatus.mutateAsync({ id, status });
-        } catch {
+          toast.success(
+            status === "active"
+              ? "Recorrência retomada"
+              : status === "paused"
+                ? "Recorrência pausada"
+                : "Recorrência encerrada",
+          );
+        } catch (error) {
           toast.error("Não foi possível atualizar a recorrência");
+          throw error;
         }
       }}
       onPeriodChange={(nextPeriod) => {

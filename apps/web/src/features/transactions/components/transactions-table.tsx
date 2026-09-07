@@ -90,6 +90,7 @@ import {
   transactionConditionLabels,
 } from "../transactions.presentation";
 import { InstallmentActionDialog } from "./installment-action-dialog";
+import { RecurringStatusDialog } from "./recurring-status-dialog";
 
 type TransactionsTableProps = {
   adminPersonId: string | null;
@@ -109,7 +110,10 @@ type TransactionsTableProps = {
     purchaseDate: string,
     isSettled: boolean,
   ) => void;
-  onRecurringStatus: (id: string, status: "active" | "paused" | "cancelled") => void;
+  onRecurringStatus: (
+    id: string,
+    status: "active" | "paused" | "cancelled",
+  ) => Promise<void> | void;
   currentPage: number;
   pageCount: number;
   pageSize: number;
@@ -289,7 +293,10 @@ type TransactionRowProps = {
   onAnticipate: (transaction: TransactionOutput) => void;
   onUndoAnticipation: (transaction: TransactionOutput) => void;
   onRefund: (transaction: TransactionOutput) => void;
-  onRecurringStatus: (id: string, status: "active" | "paused" | "cancelled") => void;
+  onRecurringStatus: (
+    id: string,
+    status: "active" | "paused" | "cancelled",
+  ) => Promise<void> | void;
   onSettle: (ids: string[], isSettled: boolean) => void;
   onSettleRecurringOccurrence: (
     recurringRuleId: string,
@@ -318,6 +325,7 @@ function TransactionRow({
 }: TransactionRowProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [installmentDeleteOpen, setInstallmentDeleteOpen] = useState(false);
+  const [recurringAction, setRecurringAction] = useState<"pause" | "cancel" | null>(null);
   const visibleAmount = transaction.allocation?.amount ?? transaction.amount;
   const isIncomingTransfer = transaction.type === "transfer" && visibleAmount > 0;
   const amountClassName =
@@ -667,19 +675,13 @@ function TransactionRow({
               ) : null}
               {transaction.recurringRuleId ? (
                 <>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      onRecurringStatus(transaction.recurringRuleId as string, "paused")
-                    }
-                  >
+                  <DropdownMenuItem onClick={() => setRecurringAction("pause")}>
                     <Pause />
                     Pausar recorrência
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() =>
-                      onRecurringStatus(transaction.recurringRuleId as string, "cancelled")
-                    }
+                    onClick={() => setRecurringAction("cancel")}
                     variant="destructive"
                   >
                     <Trash2 />
@@ -752,6 +754,19 @@ function TransactionRow({
             open={installmentDeleteOpen}
             pending={pending}
             transaction={transaction}
+          />
+          <RecurringStatusDialog
+            action={recurringAction}
+            name={transaction.name}
+            onConfirm={(action) =>
+              onRecurringStatus(
+                transaction.recurringRuleId as string,
+                action === "pause" ? "paused" : "cancelled",
+              )
+            }
+            onOpenChange={(open) => {
+              if (!open) setRecurringAction(null);
+            }}
           />
         </div>
       </TableCell>
