@@ -88,12 +88,16 @@ abrir o URI em outro aplicativo.
 | `originalTitle` | não | 500 caracteres |
 | `originalText` | sim | 2.000 caracteres |
 | `notificationTimestamp` | sim | ISO 8601 com offset |
+| `timestampFormatVersion` | não | `2` para timestamps que representam um instante UTC real |
 | `parsedName` | não | 160 caracteres |
 | `parsedAmount` | não | maior que zero e no máximo `999999999.99` |
 | `clientId` | não | 255 caracteres |
 
-O timestamp pode ter no máximo 365 dias no passado e dez minutos no futuro. O corpo HTTP pode ter no
-máximo 16 KiB.
+O timestamp pode ter no máximo 365 dias no passado e dez minutos no futuro. O Companion até a versão
+`1.5.2` enviava o relógio local de Brasília com o sufixo `Z`; quando `timestampFormatVersion` está
+ausente, a API mantém essa interpretação legada. Clientes corrigidos enviam
+`timestampFormatVersion: 2`, e o timestamp passa a ser interpretado como o instante ISO 8601 informado.
+O corpo HTTP pode ter no máximo 16 KiB.
 
 Uma ingestão aceita retorna HTTP `201`, inclusive em repetição idempotente:
 

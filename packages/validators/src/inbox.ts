@@ -25,6 +25,7 @@ export const CompanionInboxItemInputSchema = z
     originalTitle: optionalTrimmedString(inboxOriginalTitleMaximumLength),
     originalText: z.string().trim().min(1).max(inboxOriginalTextMaximumLength),
     notificationTimestamp: z.iso.datetime({ offset: true }),
+    timestampFormatVersion: z.literal(2).optional(),
     parsedName: optionalTrimmedString(inboxParsedNameMaximumLength),
     parsedAmount: z.number().positive().max(999_999_999.99).nullish(),
     clientId: optionalTrimmedString(inboxClientIdMaximumLength),

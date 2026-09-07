@@ -290,7 +290,7 @@ function buildDraft(
   context: InboxIngestionContext,
   now: Date,
 ): InboxItemDraft {
-  const notificationTimestamp = new Date(input.notificationTimestamp);
+  const notificationTimestamp = parseCompanionNotificationTimestamp(input);
   if (!isInboxNotificationTimestampAllowed(notificationTimestamp, now)) {
     throw badRequest(
       "Notification timestamp is outside the accepted range",
@@ -324,6 +324,16 @@ function buildDraft(
     clientId: input.clientId ?? `legacy_${payloadFingerprint}`,
     payloadFingerprint,
   };
+}
+
+function parseCompanionNotificationTimestamp(input: CompanionInboxItemInput) {
+  if (input.timestampFormatVersion === 2) {
+    return new Date(input.notificationTimestamp);
+  }
+
+  // Companion <= 1.5.2 formatted the device's local wall clock and appended a literal `Z`,
+  // incorrectly labelling Brazil time as UTC. Preserve compatibility until legacy clients retire.
+  return new Date(input.notificationTimestamp.replace(/Z$/i, "-03:00"));
 }
 
 async function findItem(id: string, userId: string, repository: InboxRepository) {

@@ -64,11 +64,37 @@ function input(clientId = "notification-1") {
     originalTitle: "Compra aprovada",
     originalText: "Compra de R$ 10,00",
     notificationTimestamp: now.toISOString(),
+    timestampFormatVersion: 2 as const,
     parsedName: "Compra",
     parsedAmount: 10,
     clientId,
   };
 }
+
+test("legacy Companion timestamps are interpreted as Brazil wall-clock time", async () => {
+  let receivedTimestamp: Date | null = null;
+  const service = createInboxService(
+    createRepository({
+      insertOrFind: async (draft) => {
+        receivedTimestamp = draft.notificationTimestamp;
+        return {
+          record: createRecord({ ...draft }),
+          duplicate: false,
+        };
+      },
+    }),
+    { now: () => now },
+  );
+
+  const legacyInput = input();
+  const { timestampFormatVersion: _version, ...withoutVersion } = legacyInput;
+  await service.ingest(
+    { ...withoutVersion, notificationTimestamp: "2026-08-10T09:00:00.000Z" },
+    { userId, deviceTokenId },
+  );
+
+  assert.equal((receivedTimestamp as Date | null)?.toISOString(), now.toISOString());
+});
 
 test("inbox ingestion derives a stable fingerprint and accepts idempotent duplicates", async () => {
   let firstFingerprint = "";
