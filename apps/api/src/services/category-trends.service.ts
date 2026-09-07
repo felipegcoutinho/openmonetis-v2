@@ -17,11 +17,13 @@ export type CategoryTrendsRepository = {
     startPeriod: string,
     endPeriod: string,
     categoryIds: readonly string[],
+    personScope?: string,
   ): Promise<CategoryTrendActualEntry[]>;
   listRecurringRulesForUser(
     userId: string,
     periodEnd: Date,
     categoryIds: readonly string[],
+    personScope?: string,
   ): Promise<CategoryTrendRecurringRule[]>;
 };
 
@@ -37,8 +39,14 @@ export function createCategoryTrendsService(repository: CategoryTrendsRepository
           lookbackPeriod,
           query.endPeriod,
           query.categoryIds,
+          query.personScope ?? "admin",
         ),
-        repository.listRecurringRulesForUser(userId, periodEnd, query.categoryIds),
+        repository.listRecurringRulesForUser(
+          userId,
+          periodEnd,
+          query.categoryIds,
+          query.personScope ?? "admin",
+        ),
       ]);
 
       return calculateCategoryTrends({

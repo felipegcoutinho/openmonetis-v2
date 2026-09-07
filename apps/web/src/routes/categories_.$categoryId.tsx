@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CategoryTransactionsPage } from "@/features/categories/components/category-transactions-page";
+import { z } from "zod";
 import {
-  type TransactionsSearch,
-  validateTransactionsSearch,
-} from "@/features/transactions/transactions.presentation";
+  CategoryTransactionsPage,
+  type CategoryTransactionsSearch,
+} from "@/features/categories/components/category-transactions-page";
+import { validateTransactionsSearch } from "@/features/transactions/transactions.presentation";
 
 export const Route = createFileRoute("/categories_/$categoryId")({
   component: CategoryTransactionsRoute,
@@ -29,8 +30,11 @@ function CategoryTransactionsRoute() {
   );
 }
 
-function validateCategoryTransactionsSearch(search: Record<string, unknown>): TransactionsSearch {
+function validateCategoryTransactionsSearch(
+  search: Record<string, unknown>,
+): CategoryTransactionsSearch {
   const { categories, type, ...categorySearch } = validateTransactionsSearch(search);
 
-  return categorySearch;
+  const scope = z.union([z.literal("all"), z.uuid()]).safeParse(search.personScope);
+  return { ...categorySearch, personScope: scope.success ? scope.data : undefined };
 }

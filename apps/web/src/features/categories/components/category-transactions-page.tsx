@@ -1,13 +1,22 @@
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChartNoAxesCombined, Tags } from "lucide-react";
+import { CalendarDays, ChartNoAxesCombined, Tags, Users } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTrendPercentage } from "@/features/category-trends/category-trends.presentation";
 import { categoryTrendsQueryOptions } from "@/features/category-trends/category-trends.queries";
+import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import {
   formatPeriod,
@@ -18,10 +27,14 @@ import { categoryTypeLabels } from "../categories.presentation";
 import { categoryQueryOptions } from "../categories.queries";
 import { CategoryIcon } from "../category-icons";
 
+export type CategoryTransactionsSearch = TransactionsSearch & {
+  personScope?: string;
+};
+
 type CategoryTransactionsPageProps = {
   categoryId: string;
-  search: TransactionsSearch;
-  onSearchChange: (search: Partial<TransactionsSearch>) => void;
+  search: CategoryTransactionsSearch;
+  onSearchChange: (search: Partial<CategoryTransactionsSearch>) => void;
 };
 
 export function CategoryTransactionsPage({
@@ -43,6 +56,13 @@ export function CategoryTransactionsPage({
             scope={getCategoryTransactionsScope(
               categoryQuery.data,
               search.period ?? getCurrentPeriod(),
+              search.personScope ?? "admin",
+              (personScope) =>
+                onSearchChange({
+                  personScope: personScope === "admin" ? undefined : personScope,
+                  people: undefined,
+                  page: undefined,
+                }),
             )}
             search={search}
           />
@@ -52,11 +72,17 @@ export function CategoryTransactionsPage({
   );
 }
 
-function getCategoryTransactionsScope(category: CategoryOutput, period: string) {
+function getCategoryTransactionsScope(
+  category: CategoryOutput,
+  period: string,
+  personScope: string,
+  onPersonScopeChange: (value: string) => void,
+) {
   const periodLabel = formatPeriod(period);
 
   return {
-    adminPersonOnly: true,
+    adminPersonOnly: personScope === "admin",
+    personIds: personScope === "all" ? [] : personScope === "admin" ? undefined : [personScope],
     categoryIds: [category.id],
     createDefaults: { categoryId: category.id },
     createTypes: [category.type],
@@ -73,6 +99,8 @@ function getCategoryTransactionsScope(category: CategoryOutput, period: string) 
           category={category}
           period={period}
           periodLabel={periodLabel}
+          personScope={personScope}
+          onPersonScopeChange={onPersonScopeChange}
         />
       ),
     },
@@ -85,19 +113,52 @@ function CategoryTransactionsSummary({
   category,
   period,
   periodLabel,
+  personScope,
+  onPersonScopeChange,
 }: {
   category: CategoryOutput;
   period: string;
   periodLabel: string;
+  personScope: string;
+  onPersonScopeChange: (value: string) => void;
 }) {
+  const peopleQuery = useQuery(peopleQueryOptions());
+  const people = peopleQuery.data ?? [];
+  const options = [
+    { value: "admin", label: "Você", person: people.find((person) => person.role === "admin") },
+    ...people
+      .filter((person) => person.role !== "admin")
+      .map((person) => ({
+        value: person.id,
+        label: person.name,
+        person,
+      })),
+    { value: "all", label: "Todas as pessoas", person: undefined },
+  ];
+  const selected = options.find((option) => option.value === personScope);
+  const renderOption = (option: (typeof options)[number]) => (
+    <span className="flex min-w-0 items-center gap-2">
+      {option.value === "all" ? (
+        <Users aria-hidden="true" className="size-5 shrink-0" />
+      ) : (
+        <Avatar size="sm" showBorder={false}>
+          <AvatarImage src={option.person?.avatarUrl ?? undefined} alt="" />
+          <AvatarFallback>{(option.person?.name ?? option.label).slice(0, 1)}</AvatarFallback>
+        </Avatar>
+      )}
+      <span className="truncate">{option.label}</span>
+    </span>
+  );
   const isIncome = category.type === "income";
-  const trendsQuery = useQuery(
-    categoryTrendsQueryOptions({
+  const trendsQuery = useQuery({
+    ...categoryTrendsQueryOptions({
       categoryIds: [category.id],
       endPeriod: period,
       startPeriod: period,
+      personScope,
     }),
-  );
+    placeholderData: undefined,
+  });
   const categoryTrend = trendsQuery.data?.categories.find(
     (item) => item.categoryId === category.id,
   );
@@ -106,6 +167,26 @@ function CategoryTransactionsSummary({
 
   return (
     <FinancialSummaryHeader
+      actions={
+        <Select
+          value={personScope}
+          onValueChange={(value) => {
+            if (value && options.some((option) => option.value === value))
+              onPersonScopeChange(value);
+          }}
+        >
+          <SelectTrigger aria-label="Considerar lançamentos de" className="w-full sm:w-48">
+            <SelectValue>{selected ? renderOption(selected) : "Pessoa indisponível"}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {renderOption(option)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      }
       eyebrow={`Histórico de ${periodLabel}`}
       identity={
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
@@ -143,7 +224,7 @@ function CategoryTransactionsSummary({
           <MoneyValue amount={categoryAmount} />
         )
       }
-      subtitle={`Categoria de ${categoryTypeLabels[category.type].toLocaleLowerCase("pt-BR")}`}
+      subtitle={`Categoria de ${categoryTypeLabels[category.type].toLocaleLowerCase("pt-BR")} · ${selected?.label ?? "Pessoa indisponível"}`}
       title={category.name}
       variant="soft"
     />

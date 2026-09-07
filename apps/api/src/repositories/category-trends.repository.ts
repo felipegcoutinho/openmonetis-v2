@@ -34,7 +34,13 @@ export const categoryTrendsRepository = {
     return rows;
   },
 
-  async listActualEntriesForUser(userId, startPeriod, endPeriod, categoryIds) {
+  async listActualEntriesForUser(
+    userId,
+    startPeriod,
+    endPeriod,
+    categoryIds,
+    personScope = "admin",
+  ) {
     const rows = await db
       .select({
         categoryId: categories.id,
@@ -73,10 +79,19 @@ export const categoryTrendsRepository = {
           ne(categories.name, invoicePaymentCategoryName),
           gte(transactions.period, startPeriod),
           lte(transactions.period, endPeriod),
-          or(
-            and(isNull(transactionSplits.id), eq(transactionPeople.role, "admin")),
-            eq(splitPeople.role, "admin"),
-          ),
+          personScope === "all"
+            ? undefined
+            : or(
+                and(
+                  isNull(transactionSplits.id),
+                  personScope === "admin"
+                    ? eq(transactionPeople.role, "admin")
+                    : eq(transactionPeople.id, personScope),
+                ),
+                personScope === "admin"
+                  ? eq(splitPeople.role, "admin")
+                  : eq(splitPeople.id, personScope),
+              ),
           categoryIds.length ? inArray(categories.id, [...categoryIds]) : undefined,
         ),
       )
@@ -84,7 +99,7 @@ export const categoryTrendsRepository = {
     return rows;
   },
 
-  async listRecurringRulesForUser(userId, periodEnd, categoryIds) {
+  async listRecurringRulesForUser(userId, periodEnd, categoryIds, personScope = "admin") {
     const rows = await db
       .select({
         categoryId: categories.id,
@@ -141,10 +156,19 @@ export const categoryTrendsRepository = {
           ne(recurringTransactionRules.type, "transfer"),
           ne(categories.name, invoicePaymentCategoryName),
           lte(recurringTransactionRules.startDate, periodEnd),
-          or(
-            and(isNull(recurringTransactionSplits.id), eq(recurringPeople.role, "admin")),
-            eq(recurringSplitPeople.role, "admin"),
-          ),
+          personScope === "all"
+            ? undefined
+            : or(
+                and(
+                  isNull(recurringTransactionSplits.id),
+                  personScope === "admin"
+                    ? eq(recurringPeople.role, "admin")
+                    : eq(recurringPeople.id, personScope),
+                ),
+                personScope === "admin"
+                  ? eq(recurringSplitPeople.role, "admin")
+                  : eq(recurringSplitPeople.id, personScope),
+              ),
           categoryIds.length ? inArray(categories.id, [...categoryIds]) : undefined,
         ),
       )
