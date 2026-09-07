@@ -35,7 +35,7 @@ import { recurringExpensesQueryOptions } from "../recurring-expenses.queries";
 import { RecurringExpenseActionDialog } from "./recurring-expense-action-dialog";
 import { RecurringExpenseEditDialog } from "./recurring-expense-edit-dialog";
 
-const maximumVisibleExpenses = 4;
+const maximumVisibleExpenses = 5;
 
 export function RecurringExpensesWidget({ period }: { period: string }) {
   const query = useQuery(recurringExpensesQueryOptions(period));

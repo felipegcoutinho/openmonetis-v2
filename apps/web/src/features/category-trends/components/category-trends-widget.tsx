@@ -21,7 +21,7 @@ import {
 } from "../category-trends.presentation";
 import { categoryTrendsQueryOptions } from "../category-trends.queries";
 
-const maximumVisibleTrends = 4;
+const maximumVisibleTrends = 5;
 
 type TrendItem = ReturnType<typeof getCategoryTrendWidgetItems>[number];
 

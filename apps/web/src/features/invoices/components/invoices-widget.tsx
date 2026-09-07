@@ -20,7 +20,7 @@ import { invoiceDueLabel, invoicePaidLabel } from "../invoices.presentation";
 import { invoicesQueryOptions } from "../invoices.queries";
 import { InvoicePaymentDialog } from "./invoice-payment-dialog";
 
-const maximumVisibleInvoices = 4;
+const maximumVisibleInvoices = 5;
 
 export function InvoicesWidget({ period }: { period: string }) {
   const query = useQuery(invoicesQueryOptions(period));

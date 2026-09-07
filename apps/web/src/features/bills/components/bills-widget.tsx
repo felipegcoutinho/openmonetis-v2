@@ -18,7 +18,7 @@ import { billDueLabel } from "../bills.presentation";
 import { billsQueryOptions } from "../bills.queries";
 import { BillPaymentDialog } from "./bill-payment-dialog";
 
-const maximumVisibleBills = 4;
+const maximumVisibleBills = 5;
 
 export function BillsWidget({ period }: { period: string }) {
   const query = useQuery(billsQueryOptions(period));

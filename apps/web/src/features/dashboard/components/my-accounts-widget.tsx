@@ -19,7 +19,7 @@ import { DashboardWidgetEmptyState } from "./dashboard-widget-empty-state";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
 import { DashboardWidgetRow } from "./dashboard-widget-row";
 
-const maximumVisibleAccounts = 5;
+const maximumVisibleAccounts = 4;
 
 export function MyAccountsWidget({ period }: { period: string }) {
   const accountsQuery = useQuery(dashboardAccountsQueryOptions(period));
