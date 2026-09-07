@@ -600,6 +600,10 @@ function InboxItemCard({
   sourceMatch: InboxSourceMatch | null;
 }) {
   const amount = formatInboxAmount(item.parsedAmount);
+  const suggestionQuery = useQuery({
+    ...inboxRuleSuggestionQueryOptions(item.id),
+    enabled: item.status === "pending",
+  });
   return (
     <Card className="py-0">
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start">
@@ -619,6 +623,19 @@ function InboxItemCard({
             ) : (
               <Badge variant="secondary">{item.sourceAppName ?? "App financeiro"}</Badge>
             )}
+            {item.status === "pending"
+              ? suggestionQuery.data?.appliedRules.map((rule) => (
+                  <Badge
+                    className="max-w-full gap-1"
+                    key={rule.id}
+                    title={`Regra aplicada: ${rule.name}`}
+                    variant="outline"
+                  >
+                    <Workflow aria-hidden="true" className="size-3 shrink-0" />
+                    <span className="truncate">Regra · {rule.name}</span>
+                  </Badge>
+                ))
+              : null}
           </div>
           <p className="mt-2 line-clamp-2 wrap-break-word text-muted-foreground text-sm leading-relaxed">
             {item.originalText}
