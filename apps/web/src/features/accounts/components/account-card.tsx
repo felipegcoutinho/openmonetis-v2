@@ -82,8 +82,9 @@ export function AccountCard({
                   </Tooltip>
                 ) : null}
               </div>
-              <p className="mt-0.5 text-muted-foreground text-xs">
+              <p className="mt-0.5 truncate text-muted-foreground text-xs">
                 {accountTypeLabels[account.type]}
+                {account.excludeFromBalance ? " · Fora do saldo" : null}
               </p>
             </div>
           </div>
@@ -100,16 +101,11 @@ export function AccountCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3">
+      <CardContent>
         <div>
           <p className="text-muted-foreground text-xs">Saldo</p>
           <MoneyValue amount={account.summary.balance} className="mt-1 font-medium text-2xl" />
         </div>
-        {account.excludeFromBalance ? (
-          <span className="w-fit rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs">
-            Fora do saldo consolidado
-          </span>
-        ) : null}
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">

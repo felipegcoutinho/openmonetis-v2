@@ -39,7 +39,7 @@ export function CategoryIconPicker({
         onClick={() => setOpen(true)}
         type="button"
       >
-        <span className="grid size-8 place-items-center rounded-full border bg-muted/30 text-brand-strong">
+        <span className="grid size-8 place-items-center rounded-full bg-muted/30 text-brand-strong">
           <CategoryIcon name={value} />
         </span>
         <span className="grid">
