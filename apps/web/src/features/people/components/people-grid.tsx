@@ -8,9 +8,14 @@ type PeopleGridProps = {
 };
 
 export function PeopleGrid({ people, onEdit, onRemove }: PeopleGridProps) {
+  const orderedPeople = [...people].sort((left, right) => {
+    if (left.role === right.role) return 0;
+    return left.role === "admin" ? -1 : 1;
+  });
+
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {people.map((person) => (
+      {orderedPeople.map((person) => (
         <PersonCard
           key={person.id}
           onEdit={onEdit}

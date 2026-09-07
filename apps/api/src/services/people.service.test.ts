@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
+import {
+  calculatePersonFinancialSummary,
+  defaultAdminPersonAvatarUrl,
+} from "@openmonetis/domain/people";
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import type { PeopleRepository, PersonRecord } from "./people.service";
 import { createPeopleService } from "./people.service";
@@ -132,4 +135,18 @@ test("financial summary uses the person's allocation instead of the full transac
 
   assert.equal(summary.totalExpenses, 40);
   assert.equal(summary.paymentMethods.find((item) => item.paymentMethod === "boleto")?.amount, 40);
+});
+
+test("financial summary includes every payment method even when it has no expenses", () => {
+  const summary = calculatePersonFinancialSummary(
+    [{ amount: -75, paymentMethod: "boleto", period: "2026-08", type: "expense" }],
+    ["2026-08"],
+    "2026-08",
+  );
+
+  assert.deepEqual(
+    summary.paymentMethods.map((item) => item.paymentMethod),
+    ["credit_card", "debit_card", "pix", "cash", "boleto", "benefits", "bank_transfer"],
+  );
+  assert.equal(summary.paymentMethods.find((item) => item.paymentMethod === "pix")?.amount, 0);
 });

@@ -94,8 +94,7 @@ export type PersonFinancialEntry = {
   type: "income" | "expense" | "transfer";
 };
 
-const externalPersonPaymentMethods = ["credit_card", "boleto"] as const;
-const adminPersonPaymentMethods = [
+const personPaymentMethods = [
   "credit_card",
   "debit_card",
   "pix",
@@ -109,13 +108,10 @@ export function calculatePersonFinancialSummary(
   entries: PersonFinancialEntry[],
   periods: string[],
   selectedPeriod: string,
-  role: "admin" | "external",
 ) {
   const expensesByPeriod = new Map(periods.map((period) => [period, 0]));
-  const paymentMethods: readonly PersonFinancialEntry["paymentMethod"][] =
-    role === "admin" ? adminPersonPaymentMethods : externalPersonPaymentMethods;
   const paymentMethodTotals = new Map<PersonFinancialEntry["paymentMethod"], number>(
-    paymentMethods.map((method) => [method, 0]),
+    personPaymentMethods.map((method) => [method, 0]),
   );
   for (const entry of entries) {
     if (entry.type !== "expense" || !expensesByPeriod.has(entry.period)) continue;
@@ -145,7 +141,7 @@ export function calculatePersonFinancialSummary(
           highestHistoryCents > 0 ? Math.round((expensesCents / highestHistoryCents) * 100) : 0,
       };
     }),
-    paymentMethods: paymentMethods.map((paymentMethod) => {
+    paymentMethods: personPaymentMethods.map((paymentMethod) => {
       const amountCents = paymentMethodTotals.get(paymentMethod) as number;
       return {
         paymentMethod,

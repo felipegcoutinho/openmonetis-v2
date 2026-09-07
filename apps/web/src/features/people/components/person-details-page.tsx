@@ -129,12 +129,7 @@ function getPersonTransactionsScope(
         { label: "Pessoas", href: "/people" },
         { label: person.name },
       ],
-      summary: (
-        <div className="grid gap-4">
-          <PersonSummary onEdit={onEdit} periodLabel={periodLabel} person={person} />
-          <PersonConnectionPanel person={person} />
-        </div>
-      ),
+      summary: <PersonSummary onEdit={onEdit} periodLabel={periodLabel} person={person} />,
     },
     periodNavigationPlacement: "afterPageHeader" as const,
     hiddenFilters: ["person"] as const,
@@ -160,6 +155,7 @@ function getPersonTransactionsScope(
     contentOverride:
       selectedView === "panel" ? (
         <div className="grid gap-4">
+          <PersonConnectionPanel person={person} />
           {financialSummary}
           <PersonSettlementsCard period={period} person={person} />
         </div>

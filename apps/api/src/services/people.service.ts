@@ -125,7 +125,7 @@ export function createPeopleService(
         )
       ).flat();
 
-      return calculatePersonFinancialSummary(entries, periods, period, person.role);
+      return calculatePersonFinancialSummary(entries, periods, period);
     },
     async replace(id: string, userId: string, input: ReplacePersonInput) {
       const currentPerson = await repository.findByIdForUser(id, userId);
