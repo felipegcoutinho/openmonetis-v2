@@ -7,6 +7,33 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-07
+
+Amplia a análise por pessoa e torna ações recorrentes e informações contextuais mais claras em
+toda a interface financeira.
+
+### Adicionado
+
+- Itens pendentes da caixa de entrada exibem as regras aplicadas ao lado da identificação da conta ou cartão.
+- Seletor “Você / Todas as pessoas” no histórico da categoria, com resumo e lançamentos
+  sincronizados pela URL e visão pessoal mantida como padrão nos widgets.
+- Filtro individual por pessoa com avatar no header da categoria, incluindo a opção “Você”.
+
+### Alterado
+
+- A tela de pessoas prioriza a pessoa administradora, mantém a conexão dentro da aba Painel e
+  exibe todos os totais mensais por forma de pagamento com espaçamento revisado.
+- Logos de estabelecimentos agora podem ser alterados também em widgets, relatórios e diálogos.
+
+### Corrigido
+
+- A central de atenção exibe os logos dos estabelecimentos em boletos e dos cartões em faturas.
+- Pagar uma fatura não registra mais repasses automáticos de outras pessoas; os acertos são
+  registrados manualmente, de forma independente do pagamento da fatura.
+- Ações para pausar ou encerrar recorrências na tabela de lançamentos agora exigem confirmação.
+- Contas fora do saldo consolidado usam uma indicação discreta que não altera a altura dos cards.
+- O seletor de ícones de categoria não exibe mais uma borda extra ao redor do ícone atual.
+
 ## [0.2.0] - 2026-09-06
 
 Simplifica a configuração do banco de dados para desenvolvimento e Docker Compose, com uma única
@@ -77,6 +104,7 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/felipegcoutinho/openmonetis-v2/releases/tag/v0.1.0
