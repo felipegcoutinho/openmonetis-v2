@@ -113,7 +113,7 @@ export function BillsWidget({ period }: { period: string }) {
 function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void }) {
   return (
     <DashboardWidgetRow>
-      <EstablishmentLogo className="size-9" editable={false} name={bill.name} size={36} />
+      <EstablishmentLogo className="size-9" name={bill.name} size={36} />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate font-medium text-sm">{bill.name}</span>

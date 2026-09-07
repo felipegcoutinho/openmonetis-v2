@@ -98,7 +98,7 @@ export function BillPaymentDialog({
           <>
             <DialogHeader>
               <div className="flex items-center gap-3">
-                {bill ? <EstablishmentLogo editable={false} name={bill.name} size={40} /> : null}
+                {bill ? <EstablishmentLogo name={bill.name} size={40} /> : null}
                 <div className="min-w-0">
                   <DialogTitle>Registrar pagamento</DialogTitle>
                   <DialogDescription className="mt-0.5 truncate">

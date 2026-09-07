@@ -226,7 +226,7 @@ function RecurringExpenseReportRow({
 
   return (
     <li className="flex flex-wrap items-center gap-3 py-4 sm:flex-nowrap">
-      <EstablishmentLogo editable={false} name={item.name} size={40} />
+      <EstablishmentLogo name={item.name} size={40} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-semibold">{item.name}</p>

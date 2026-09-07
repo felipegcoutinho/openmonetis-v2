@@ -178,7 +178,7 @@ function TransactionRows({ items }: { items: TransactionOutput[] }) {
     <ol className="divide-y">
       {items.map((transaction) => (
         <DashboardWidgetRow key={transaction.id}>
-          <EstablishmentLogo editable={false} name={transaction.name} size={36} />
+          <EstablishmentLogo name={transaction.name} size={36} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-sm">{transaction.name}</p>
             <p className="truncate text-muted-foreground text-xs">

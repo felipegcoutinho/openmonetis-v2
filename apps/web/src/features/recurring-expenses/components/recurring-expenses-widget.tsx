@@ -157,7 +157,7 @@ function RecurringExpenseList({
           className={cn(item.status === "paused" && "-mx-2 rounded-md bg-muted/40 px-2")}
           key={`${item.id}:${item.purchaseDate}`}
         >
-          <EstablishmentLogo className="size-9" editable={false} name={item.name} size={36} />
+          <EstablishmentLogo className="size-9" name={item.name} size={36} />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
               <span

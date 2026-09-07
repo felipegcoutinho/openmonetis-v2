@@ -7,7 +7,6 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Archive,
   ArchiveRestore,
-  Barcode,
   Bell,
   Check,
   CreditCard,
@@ -20,6 +19,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { MoneyValue } from "@/components/money-value";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +33,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { cn } from "@/lib/utils";
 import {
   type UpdateNotificationVariables,
@@ -404,6 +405,27 @@ function NotificationRow({
 }
 
 function NotificationIcon({ notification }: { notification: NotificationOutput }) {
+  if (notification.kind === "bill") {
+    return (
+      <EstablishmentLogo className="size-9" editable={false} name={notification.name} size={36} />
+    );
+  }
+
+  if (notification.kind === "invoice") {
+    return (
+      <Avatar className="size-9" showBorder={false}>
+        <AvatarImage
+          alt={`Logo do cartão ${notification.cardName}`}
+          className="object-contain"
+          src={notification.cardLogo ?? undefined}
+        />
+        <AvatarFallback>
+          <CreditCard aria-hidden="true" className="size-4" />
+        </AvatarFallback>
+      </Avatar>
+    );
+  }
+
   const className = cn(
     "grid size-9 shrink-0 place-items-center rounded-full",
     notification.severity === "critical" && "bg-destructive/10 text-destructive",
@@ -413,10 +435,6 @@ function NotificationIcon({ notification }: { notification: NotificationOutput }
 
   return (
     <span className={className}>
-      {notification.kind === "bill" ? <Barcode aria-hidden="true" className="size-4" /> : null}
-      {notification.kind === "invoice" ? (
-        <CreditCard aria-hidden="true" className="size-4" />
-      ) : null}
       {notification.kind === "budget" ? <Gauge aria-hidden="true" className="size-4" /> : null}
       {notification.kind === "inbox" ? <InboxIcon aria-hidden="true" className="size-4" /> : null}
       {notification.kind === "externalExpenses" ? (
