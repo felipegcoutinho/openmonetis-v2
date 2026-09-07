@@ -7,7 +7,6 @@ import {
   invoicePayments,
   invoices,
   people,
-  personSettlements,
   recurringTransactionRules,
   recurringTransactionSplits,
   transactionSplits,
@@ -348,36 +347,14 @@ export const invoicesRepository = {
         })
         .returning({ id: invoicePayments.id });
       const payment = paymentRecord as { id: string };
-      const allocationRecords = await tx
-        .insert(invoicePaymentAllocations)
-        .values(
-          data.allocations.map((item) => ({
-            userId: data.userId,
-            paymentId: payment.id,
-            personId: item.personId,
-            amount: item.amount.toFixed(2),
-          })),
-        )
-        .returning({
-          id: invoicePaymentAllocations.id,
-          personId: invoicePaymentAllocations.personId,
-          amount: invoicePaymentAllocations.amount,
-        });
-      const externalAllocations = allocationRecords.filter(
-        (allocation) => allocation.personId !== data.adminPersonId,
+      await tx.insert(invoicePaymentAllocations).values(
+        data.allocations.map((item) => ({
+          userId: data.userId,
+          paymentId: payment.id,
+          personId: item.personId,
+          amount: item.amount.toFixed(2),
+        })),
       );
-      if (externalAllocations.length) {
-        await tx.insert(personSettlements).values(
-          externalAllocations.map((allocation) => ({
-            userId: data.userId,
-            personId: allocation.personId,
-            invoicePaymentAllocationId: allocation.id,
-            amount: allocation.amount,
-            receivedAt: new Date(`${data.paidAt}T00:00:00.000Z`),
-            note: `Pagamento registrado pela fatura ${data.cardName}.`,
-          })),
-        );
-      }
       const [previousAccount] =
         data.remainingAmount === 0 && data.accountId === null
           ? await tx
