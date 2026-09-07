@@ -321,87 +321,62 @@ export const accountsRepository = {
   },
 
   async listSettledAccountPostingsThroughPeriod(userId, period, accountId) {
-    const [adminPostings, billPostings] = await Promise.all([
-      db
-        .select({
-          accountId: transactions.accountId,
-          period: transactions.period,
-          paymentMethod: transactions.paymentMethod,
-          boletoPaymentDate: transactions.boletoPaymentDate,
-          amount:
-            sql<string>`sum(case when ${transactionSplits.id} is not null then ${transactionSplits.amount} else ${transactions.amount} end)`.as(
-              "amount",
-            ),
-          includeInSummary: sql<boolean>`true`.as("include_in_summary"),
-        })
-        .from(transactions)
-        .innerJoin(
-          transactionPeople,
-          and(
-            eq(transactions.personId, transactionPeople.id),
-            eq(transactionPeople.userId, userId),
+    const postings = await db
+      .select({
+        accountId: transactions.accountId,
+        period: transactions.period,
+        paymentMethod: transactions.paymentMethod,
+        boletoPaymentDate: transactions.boletoPaymentDate,
+        amount:
+          sql<string>`sum(case when ${transactionSplits.id} is not null then ${transactionSplits.amount} else ${transactions.amount} end)`.as(
+            "amount",
           ),
-        )
-        .leftJoin(
-          transactionSplits,
-          and(
-            eq(transactionSplits.transactionId, transactions.id),
-            eq(transactionSplits.userId, userId),
-          ),
-        )
-        .leftJoin(
-          splitPeople,
-          and(eq(transactionSplits.personId, splitPeople.id), eq(splitPeople.userId, userId)),
-        )
-        .where(
-          and(
-            eq(transactions.userId, userId),
-            eq(transactions.isSettled, true),
-            ne(transactions.origin, "personSettlement"),
-            or(isNull(transactions.paymentMethod), ne(transactions.paymentMethod, "boleto")),
-            lte(transactions.period, period),
-            or(
-              and(isNull(transactionSplits.id), eq(transactionPeople.role, "admin")),
-              eq(splitPeople.role, "admin"),
-            ),
-            ...(accountId ? [eq(transactions.accountId, accountId)] : []),
-          ),
-        )
-        .groupBy(
-          transactions.accountId,
-          transactions.period,
-          transactions.origin,
-          transactions.paymentMethod,
-          transactions.boletoPaymentDate,
+        includeInSummary: sql<boolean>`true`.as("include_in_summary"),
+      })
+      .from(transactions)
+      .innerJoin(
+        transactionPeople,
+        and(eq(transactions.personId, transactionPeople.id), eq(transactionPeople.userId, userId)),
+      )
+      .leftJoin(
+        transactionSplits,
+        and(
+          eq(transactionSplits.transactionId, transactions.id),
+          eq(transactionSplits.userId, userId),
         ),
-      db
-        .select({
-          accountId: transactions.accountId,
-          period: transactions.period,
-          paymentMethod: transactions.paymentMethod,
-          boletoPaymentDate: transactions.boletoPaymentDate,
-          amount: sql<string>`sum(${transactions.amount})`.as("amount"),
-          includeInSummary: sql<boolean>`true`.as("include_in_summary"),
-        })
-        .from(transactions)
-        .where(
-          and(
-            eq(transactions.userId, userId),
-            eq(transactions.isSettled, true),
-            eq(transactions.type, "expense"),
-            eq(transactions.paymentMethod, "boleto"),
-            ...(accountId ? [eq(transactions.accountId, accountId)] : []),
+      )
+      .leftJoin(
+        splitPeople,
+        and(eq(transactionSplits.personId, splitPeople.id), eq(splitPeople.userId, userId)),
+      )
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.isSettled, true),
+          ne(transactions.origin, "personSettlement"),
+          or(
+            and(
+              or(isNull(transactions.paymentMethod), ne(transactions.paymentMethod, "boleto")),
+              lte(transactions.period, period),
+            ),
+            and(eq(transactions.paymentMethod, "boleto"), eq(transactions.type, "expense")),
           ),
-        )
-        .groupBy(
-          transactions.accountId,
-          transactions.period,
-          transactions.paymentMethod,
-          transactions.boletoPaymentDate,
+          or(
+            and(isNull(transactionSplits.id), eq(transactionPeople.role, "admin")),
+            eq(splitPeople.role, "admin"),
+          ),
+          ...(accountId ? [eq(transactions.accountId, accountId)] : []),
         ),
-    ]);
+      )
+      .groupBy(
+        transactions.accountId,
+        transactions.period,
+        transactions.origin,
+        transactions.paymentMethod,
+        transactions.boletoPaymentDate,
+      );
 
-    return [...adminPostings, ...billPostings].map((posting) => ({
+    return postings.map((posting) => ({
       ...posting,
       boletoPaymentDate: posting.boletoPaymentDate?.toISOString().slice(0, 10) ?? null,
     }));
@@ -467,7 +442,10 @@ export const accountsRepository = {
           accountId: recurringTransactionRules.accountId,
           sourceAccountId: recurringTransactionRules.sourceAccountId,
           destinationAccountId: recurringTransactionRules.destinationAccountId,
-          amount: recurringTransactionRules.amount,
+          amount:
+            sql<string>`case when ${recurringTransactionSplits.id} is not null then ${recurringTransactionSplits.amount} else ${recurringTransactionRules.amount} end`.as(
+              "amount",
+            ),
           type: recurringTransactionRules.type,
           paymentMethod: recurringTransactionRules.paymentMethod,
           startDate: recurringTransactionRules.startDate,
@@ -477,6 +455,27 @@ export const accountsRepository = {
           isSettled: recurringTransactionRules.isSettled,
         })
         .from(recurringTransactionRules)
+        .innerJoin(
+          recurringPeople,
+          and(
+            eq(recurringTransactionRules.personId, recurringPeople.id),
+            eq(recurringPeople.userId, userId),
+          ),
+        )
+        .leftJoin(
+          recurringTransactionSplits,
+          and(
+            eq(recurringTransactionSplits.recurringRuleId, recurringTransactionRules.id),
+            eq(recurringTransactionSplits.userId, userId),
+          ),
+        )
+        .leftJoin(
+          recurringSplitPeople,
+          and(
+            eq(recurringTransactionSplits.personId, recurringSplitPeople.id),
+            eq(recurringSplitPeople.userId, userId),
+          ),
+        )
         // A boleto occurrence can affect the account before its scheduled month when paid early.
         .where(
           and(
@@ -484,6 +483,10 @@ export const accountsRepository = {
             eq(recurringTransactionRules.status, "active"),
             eq(recurringTransactionRules.type, "expense"),
             eq(recurringTransactionRules.paymentMethod, "boleto"),
+            or(
+              and(isNull(recurringTransactionSplits.id), eq(recurringPeople.role, "admin")),
+              eq(recurringSplitPeople.role, "admin"),
+            ),
           ),
         ),
     ]);

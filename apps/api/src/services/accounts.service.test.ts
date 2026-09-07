@@ -73,6 +73,31 @@ test("paid boleto affects the account in the payment month, not the due month", 
   });
 });
 
+test("paid split boleto uses only the admin allocation returned by the repository", async () => {
+  const service = createAccountsService(
+    createRepository({
+      listSettledAccountPostingsThroughPeriod: async () => [
+        {
+          accountId,
+          period: "2026-09",
+          paymentMethod: "boleto",
+          boletoPaymentDate: "2026-09-07",
+          amount: "-400.00",
+        },
+      ],
+    }),
+  );
+
+  const result = await service.list(userId, "2026-09");
+
+  assert.deepEqual(result[0]?.summary, {
+    period: "2026-09",
+    income: 0,
+    expenses: 400,
+    balance: -400,
+  });
+});
+
 test("early recurring boleto payment is posted before its occurrence due month", async () => {
   const recurringRuleId = "30000000-0000-4000-8000-000000000003";
   const service = createAccountsService(

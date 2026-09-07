@@ -267,6 +267,33 @@ test("forecast uses only the admin allocation from a split expense", async () =>
   assert.equal(october.projected.current, 750);
 });
 
+test("paying a split boleto preserves the admin-scoped forecast", async () => {
+  const pendingBoleto = {
+    ...boletoRecord(false),
+    adminAmount: "-400.00",
+    amount: "-1000.00",
+  };
+  const paidBoleto = {
+    ...pendingBoleto,
+    boletoPaymentDate: "2026-09-07",
+    isSettled: true,
+  };
+  const pendingService = createDashboardService(scenarioRepository(pendingBoleto), {
+    list: async (_userId, period) => [accountBalance(period, 1_000)],
+  });
+  const paidService = createDashboardService(scenarioRepository(paidBoleto), {
+    list: async (_userId, period) => [accountBalance(period, 600)],
+  });
+
+  const [pending, paid] = await Promise.all([
+    pendingService.getMetrics("2026-09", userId),
+    paidService.getMetrics("2026-09", userId),
+  ]);
+
+  assert.equal(pending.projected.current, 600);
+  assert.equal(paid.projected.current, 600);
+});
+
 test("forecast subtracts a partial payment of the admin invoice allocation", async () => {
   const invoiceExpense = {
     ...boletoRecord(false),
