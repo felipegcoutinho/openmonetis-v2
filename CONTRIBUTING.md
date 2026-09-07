@@ -34,6 +34,8 @@ pnpm dev
 - Repositories filtram toda operação por `userId`.
 - Código, banco e contratos usam inglês; a interface usa PT-BR.
 - Mudanças de schema sempre incluem migration revisada.
+- Migrations publicadas são imutáveis: preserve arquivos, hashes e timestamps existentes e adicione
+  uma nova migration incremental para cada alteração.
 - Novas features mantêm o mesmo nome e seguem o shape padronizado nas camadas aplicáveis, sem criar
   arquivos vazios apenas para completar a estrutura.
 

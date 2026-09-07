@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Corrigido
+
+- O migrator preserva a baseline publicada e atualiza bancos legados sem tentar recriar tipos e
+  tabelas existentes.
+
 ## [0.3.0] - 2026-09-07
 
 Amplia a análise por pessoa e torna ações recorrentes e informações contextuais mais claras em
