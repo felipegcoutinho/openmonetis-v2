@@ -7,6 +7,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-07
+
+Corrige a contabilização de boletos divididos e mantém compatibilidade temporal com versões antigas
+do Companion, além de equilibrar a densidade dos widgets financeiros.
+
+### Alterado
+
+- Os widgets de boletos, tendências, faturas e recorrências exibem até cinco itens, enquanto o de
+  contas exibe até quatro cards.
+
+### Corrigido
+
+- Boletos pagos, inclusive recorrentes e divididos, mantêm saldos e previsões limitados à
+  participação da pessoa administradora.
+- Notificações do Companion até a versão `1.5.2` preservam a interpretação do horário local de
+  Brasília, enquanto clientes corrigidos podem declarar timestamps UTC com o formato versão 2.
+
 ## [0.3.1] - 2026-09-07
 
 Restaura a compatibilidade do migrator com bancos existentes sem alterar o fluxo de instalações
@@ -114,7 +131,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.1.0...v0.2.0
