@@ -2,6 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import { CompanionDeviceAuthenticationErrorSchema } from "@openmonetis/validators/device-tokens";
 import {
+  ClearInboxItemsOutputSchema,
+  ClearInboxItemsQuerySchema,
   CompanionInboxAcceptedOutputSchema,
   CompanionInboxBatchInputSchema,
   CompanionInboxBatchOutputSchema,
@@ -216,6 +218,32 @@ export function createInboxRoute(service: InboxService) {
             context.get("userId"),
           ),
         ),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "delete",
+      path: "/",
+      tags: ["Inbox"],
+      request: { query: ClearInboxItemsQuerySchema },
+      responses: {
+        200: {
+          description: "Delete all processed or discarded inbox items",
+          content: {
+            "application/json": {
+              schema: z.object({ data: ClearInboxItemsOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.clear(context.req.valid("query").status, context.get("userId"))),
         200,
       ),
   );

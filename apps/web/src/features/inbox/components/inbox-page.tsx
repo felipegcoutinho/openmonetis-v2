@@ -1,4 +1,4 @@
-import type { InboxItemStatus } from "@openmonetis/domain/inbox";
+import type { InboxClearableStatus, InboxItemStatus } from "@openmonetis/domain/inbox";
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type { CardOutput } from "@openmonetis/validators/cards";
 import type { InboxItemSummaryOutput, InboxPageOutput } from "@openmonetis/validators/inbox";
@@ -65,6 +65,7 @@ import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
 import type { TransactionCreateDefaults } from "@/features/transactions/components/transaction-form.validation";
 import {
+  useClearInboxItemsMutation,
   useConfirmInboxItemMutation,
   useDeleteInboxItemMutation,
   useDiscardInboxItemMutation,
@@ -114,6 +115,7 @@ export function InboxPage({
   const restoreMutation = useRestoreInboxItemMutation();
   const confirmMutation = useConfirmInboxItemMutation();
   const deleteMutation = useDeleteInboxItemMutation();
+  const clearMutation = useClearInboxItemsMutation();
   const [detailsItemId, setDetailsItemId] = useState<string | null>(null);
   const [processItem, setProcessItem] = useState<InboxItemSummaryOutput | null>(null);
   const [processSuggestion, setProcessSuggestion] = useState<InboxRuleSuggestionOutput | null>(
@@ -122,6 +124,7 @@ export function InboxPage({
   const [resolvingItemId, setResolvingItemId] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [deleteItem, setDeleteItem] = useState<InboxItemSummaryOutput | null>(null);
+  const [clearStatus, setClearStatus] = useState<InboxClearableStatus | null>(null);
   const dataSourcesReady =
     accountsQuery.data && cardsQuery.data && categoriesQuery.data && peopleQuery.data;
 
@@ -150,6 +153,21 @@ export function InboxPage({
       setDeleteItem(null);
     } catch {
       toast.error("Não foi possível excluir o item.");
+    }
+  }
+
+  async function clearAll() {
+    if (!clearStatus) return;
+
+    try {
+      const result = await clearMutation.mutateAsync(clearStatus);
+      toast.success(
+        `${result.deletedCount} ${result.deletedCount === 1 ? "captura excluída" : "capturas excluídas"}`,
+      );
+      setClearStatus(null);
+      onSearchChange({ page: undefined, app: undefined, date: undefined });
+    } catch {
+      toast.error("Não foi possível limpar o histórico.");
     }
   }
 
@@ -223,16 +241,29 @@ export function InboxPage({
           </div>
 
           {query.data ? (
-            <InboxFilters
-              accounts={accountsQuery.data ?? []}
-              cards={cardsQuery.data ?? []}
-              notificationDate={notificationDate}
-              notificationDates={query.data.notificationDates}
-              onDateChange={(date) => onSearchChange({ date, page: undefined })}
-              onSourceChange={(app) => onSearchChange({ app, date: undefined, page: undefined })}
-              sourceAppName={sourceAppName}
-              sourceApps={query.data.sourceApps}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <InboxFilters
+                accounts={accountsQuery.data ?? []}
+                cards={cardsQuery.data ?? []}
+                notificationDate={notificationDate}
+                notificationDates={query.data.notificationDates}
+                onDateChange={(date) => onSearchChange({ date, page: undefined })}
+                onSourceChange={(app) => onSearchChange({ app, date: undefined, page: undefined })}
+                sourceAppName={sourceAppName}
+                sourceApps={query.data.sourceApps}
+              />
+              {status !== "pending" ? (
+                <Button
+                  disabled={query.data.counts[status] === 0}
+                  onClick={() => setClearStatus(status)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <Trash2 aria-hidden="true" /> Limpar tudo
+                </Button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </Tabs>
@@ -386,6 +417,36 @@ export function InboxPage({
               variant="destructive"
             >
               Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open && !clearMutation.isPending) setClearStatus(null);
+        }}
+        open={Boolean(clearStatus)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Excluir {clearStatus ? (query.data?.counts[clearStatus] ?? 0) : 0}{" "}
+              {clearStatus === "processed" ? "processadas" : "descartadas"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Todas as capturas desta aba serão excluídas, inclusive as que não aparecem nos filtros
+              atuais. Lançamentos já confirmados serão mantidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={clearMutation.isPending}
+              onClick={() => void clearAll()}
+              variant="destructive"
+            >
+              {clearMutation.isPending ? "Excluindo..." : "Excluir tudo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

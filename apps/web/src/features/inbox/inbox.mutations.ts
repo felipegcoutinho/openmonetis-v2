@@ -2,10 +2,16 @@ import type { TransactionInput } from "@openmonetis/validators/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationKeys } from "@/features/notifications/notifications.queries";
 import { refreshFinancialQueries } from "@/lib/financial-query-invalidation";
-import { confirmInboxItem, deleteInboxItem, discardInboxItem, restoreInboxItem } from "./inbox.api";
+import {
+  clearInboxItems,
+  confirmInboxItem,
+  deleteInboxItem,
+  discardInboxItem,
+  restoreInboxItem,
+} from "./inbox.api";
 import { inboxKeys } from "./inbox.queries";
 
-function useInboxMutation<T>(mutationFn: (input: T) => Promise<unknown>) {
+function useInboxMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
@@ -36,4 +42,8 @@ export function useConfirmInboxItemMutation() {
 
 export function useDeleteInboxItemMutation() {
   return useInboxMutation(deleteInboxItem);
+}
+
+export function useClearInboxItemsMutation() {
+  return useInboxMutation(clearInboxItems);
 }

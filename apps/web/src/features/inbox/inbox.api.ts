@@ -1,4 +1,6 @@
+import type { InboxClearableStatus } from "@openmonetis/domain/inbox";
 import type {
+  ClearInboxItemsOutput,
   InboxItemOutput,
   InboxItemSummaryOutput,
   InboxPageOutput,
@@ -53,4 +55,8 @@ export function confirmInboxItem(id: string, data: TransactionInput) {
 
 export function deleteInboxItem(id: string) {
   return request<{ id: string }>(`/inbox/${id}`, { method: "DELETE" });
+}
+
+export function clearInboxItems(status: InboxClearableStatus) {
+  return request<ClearInboxItemsOutput>(`/inbox?status=${status}`, { method: "DELETE" });
 }

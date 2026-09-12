@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import {
   inboxBatchMaximumSize,
+  inboxClearableStatuses,
   inboxClientIdMaximumLength,
   inboxItemStatuses,
   inboxOriginalTextMaximumLength,
@@ -87,6 +88,17 @@ export const InboxItemParamsSchema = z
   .object({ id: z.uuid().openapi({ param: { name: "id", in: "path" } }) })
   .openapi("InboxItemParams");
 
+export const ClearInboxItemsQuerySchema = z
+  .object({ status: z.enum(inboxClearableStatuses) })
+  .openapi("ClearInboxItemsQuery");
+
+export const ClearInboxItemsOutputSchema = z
+  .object({
+    status: z.enum(inboxClearableStatuses),
+    deletedCount: z.number().int().nonnegative(),
+  })
+  .openapi("ClearInboxItemsOutput");
+
 export const ProcessInboxItemInputSchema = z
   .object({ transactionId: z.uuid() })
   .strict()
@@ -171,10 +183,9 @@ export const InboxSnapshotOutputSchema = z
   .openapi("InboxSnapshot");
 
 export type CompanionInboxItemInput = z.infer<typeof CompanionInboxItemInputSchema>;
-export type CompanionInboxBatchInput = z.infer<typeof CompanionInboxBatchInputSchema>;
+export type ClearInboxItemsOutput = z.infer<typeof ClearInboxItemsOutputSchema>;
 export type ListInboxItemsQuery = z.infer<typeof ListInboxItemsQuerySchema>;
 export type InboxItemOutput = z.infer<typeof InboxItemOutputSchema>;
 export type InboxItemSummaryOutput = z.infer<typeof InboxItemSummaryOutputSchema>;
 export type InboxPageOutput = z.infer<typeof InboxPageOutputSchema>;
 export type InboxSnapshotOutput = z.infer<typeof InboxSnapshotOutputSchema>;
-export type ProcessInboxItemInput = z.infer<typeof ProcessInboxItemInputSchema>;

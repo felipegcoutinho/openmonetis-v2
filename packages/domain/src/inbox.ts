@@ -1,6 +1,8 @@
 export const inboxItemStatuses = ["pending", "processed", "discarded"] as const;
+export const inboxClearableStatuses = ["processed", "discarded"] as const;
 
 export type InboxItemStatus = (typeof inboxItemStatuses)[number];
+export type InboxClearableStatus = (typeof inboxClearableStatuses)[number];
 
 export const inboxSourceAppMaximumLength = 255;
 export const inboxSourceAppNameMaximumLength = 255;

@@ -184,4 +184,12 @@ export const inboxRepository: InboxRepository = {
       .returning({ id: inboxItems.id });
     return Boolean(deleted);
   },
+
+  async deleteByStatusForUser(status, userId) {
+    const deleted = await db
+      .delete(inboxItems)
+      .where(and(eq(inboxItems.userId, userId), eq(inboxItems.status, status)))
+      .returning({ id: inboxItems.id });
+    return deleted.length;
+  },
 };

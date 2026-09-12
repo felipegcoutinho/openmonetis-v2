@@ -53,6 +53,7 @@ function createRepository(overrides: Partial<InboxRepository> = {}): InboxReposi
     transactionExistsForUser: async () => false,
     transitionForUser: async () => null,
     deleteForUser: async () => false,
+    deleteByStatusForUser: async () => 0,
     ...overrides,
   };
 }
@@ -216,4 +217,25 @@ test("confirmation delegates transaction creation with the inbox identity and ti
   assert.equal(receivedInboxItemId, inboxId);
   assert.equal(receivedUserId, userId);
   assert.equal(receivedConfirmedAt, now);
+});
+
+test("clearing inbox history deletes only the requested owned status", async () => {
+  let receivedStatus = "";
+  let receivedUserId = "";
+  const service = createInboxService(
+    createRepository({
+      deleteByStatusForUser: async (status, ownerId) => {
+        receivedStatus = status;
+        receivedUserId = ownerId;
+        return 7;
+      },
+    }),
+  );
+
+  assert.deepEqual(await service.clear("processed", userId), {
+    status: "processed",
+    deletedCount: 7,
+  });
+  assert.equal(receivedStatus, "processed");
+  assert.equal(receivedUserId, userId);
 });

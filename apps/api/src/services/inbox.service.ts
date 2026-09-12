@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   assertInboxItemTransition,
+  type InboxClearableStatus,
   type InboxItemStatus,
   InboxTransitionError,
   isInboxNotificationTimestampAllowed,
@@ -80,6 +81,7 @@ export type InboxRepository = {
     changedAt: Date;
   }): Promise<InboxItemRecord | null>;
   deleteForUser(id: string, userId: string): Promise<boolean>;
+  deleteByStatusForUser(status: InboxClearableStatus, userId: string): Promise<number>;
 };
 
 type InboxIngestionContext = {
@@ -249,6 +251,11 @@ export function createInboxService(
       const deleted = await repository.deleteForUser(id, userId);
       if (!deleted) throw notFound("Inbox item not found", "inbox_item_not_found");
       return { id };
+    },
+
+    async clear(status: InboxClearableStatus, userId: string) {
+      const deletedCount = await repository.deleteByStatusForUser(status, userId);
+      return { status, deletedCount };
     },
   };
 
