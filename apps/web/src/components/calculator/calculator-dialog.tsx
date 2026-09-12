@@ -70,6 +70,8 @@ export function CalculatorDialogButton({
           aria-label="Abrir calculadora"
           render={
             <Button
+              aria-expanded={open}
+              aria-haspopup="dialog"
               className={cn("text-muted-foreground", className)}
               disabled={disabled}
               onClick={() => setOpen(true)}

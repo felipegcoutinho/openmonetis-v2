@@ -195,6 +195,46 @@
   letter-spacing: normal;
 }
 
+.primary-action {
+  border-color: color-mix(in srgb, var(--primary) 78%, var(--primary-foreground));
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--primary) 82%, white),
+    var(--primary)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 48%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, white 16%, transparent),
+    0 2px 3px color-mix(in srgb, var(--foreground) 22%, transparent);
+}
+
+.primary-action:hover {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--primary) 88%, white),
+    color-mix(in srgb, var(--primary) 92%, var(--foreground))
+  );
+}
+
+.primary-action:active:not(:disabled) {
+  box-shadow:
+    inset 0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
+.primary-action[data-popup-open] {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--primary) 86%, white),
+    color-mix(in srgb, var(--primary) 94%, var(--foreground))
+  );
+  box-shadow:
+    inset 0 1px 2px color-mix(in srgb, var(--foreground) 14%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
 [data-slot="card"] {
   border-width: 1px;
   border-radius: var(--radius-cards);
