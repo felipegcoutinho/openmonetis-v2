@@ -16,10 +16,12 @@ export function createContentSecurityPolicy(
   nonce: string,
   production: boolean,
   storageEndpoint?: string,
+  storageBucket?: string,
+  storageRegion?: string,
 ) {
   const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
   const connectSources = ["'self'"];
-  const storageOrigin = getStorageOrigin(storageEndpoint);
+  const storageOrigin = getStorageOrigin(storageEndpoint, storageBucket, storageRegion);
 
   if (storageOrigin) connectSources.push(storageOrigin);
 
@@ -33,13 +35,13 @@ export function createContentSecurityPolicy(
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "frame-src 'none'",
+    storageOrigin ? `frame-src ${storageOrigin}` : "frame-src 'none'",
     "form-action 'self'",
     `script-src ${scriptSources.join(" ")}`,
     "script-src-attr 'none'",
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     `connect-src ${connectSources.join(" ")}`,
     "manifest-src 'self'",
     "media-src 'self'",
@@ -56,12 +58,16 @@ export function createWebSecurityHeaders(options: {
   pathname: string;
   production: boolean;
   storageEndpoint?: string;
+  storageBucket?: string;
+  storageRegion?: string;
 }) {
   const headers: Record<string, string> = {
     "Content-Security-Policy": createContentSecurityPolicy(
       options.nonce,
       options.production,
       options.storageEndpoint,
+      options.storageBucket,
+      options.storageRegion,
     ),
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -81,8 +87,12 @@ export function createWebSecurityHeaders(options: {
   return headers;
 }
 
-function getStorageOrigin(endpoint: string | undefined) {
-  if (!endpoint) return null;
+function getStorageOrigin(
+  endpoint: string | undefined,
+  bucket: string | undefined,
+  region: string | undefined,
+) {
+  if (!endpoint) return getAwsStorageOrigin(bucket, region);
 
   try {
     const url = new URL(endpoint);
@@ -90,6 +100,17 @@ function getStorageOrigin(endpoint: string | undefined) {
   } catch {
     return null;
   }
+}
+
+function getAwsStorageOrigin(bucket: string | undefined, region: string | undefined) {
+  const normalizedBucket = bucket?.trim();
+  const normalizedRegion = region?.trim() || "us-east-1";
+  if (!normalizedBucket || !/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(normalizedBucket)) {
+    return null;
+  }
+  if (!/^[a-z0-9-]+$/.test(normalizedRegion)) return null;
+
+  return `https://${normalizedBucket}.s3.${normalizedRegion}.amazonaws.com`;
 }
 
 function isStaticPath(pathname: string) {

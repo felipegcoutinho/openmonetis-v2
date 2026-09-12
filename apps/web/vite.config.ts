@@ -42,8 +42,10 @@ function ignoreExpectedClientDisconnects(): Plugin {
 
 const config = defineConfig(({ mode }) => {
   const localEnvironment = loadEnv(mode, envDir, "");
-  if (!process.env.S3_ENDPOINT && localEnvironment.S3_ENDPOINT) {
-    process.env.S3_ENDPOINT = localEnvironment.S3_ENDPOINT;
+  for (const name of ["S3_BUCKET", "S3_ENDPOINT", "S3_REGION"] as const) {
+    if (!process.env[name] && localEnvironment[name]) {
+      process.env[name] = localEnvironment[name];
+    }
   }
 
   return {

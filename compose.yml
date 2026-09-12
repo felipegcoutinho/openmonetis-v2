@@ -79,7 +79,9 @@ services:
     init: true
     environment:
       API_INTERNAL_URL: http://api:7001
+      S3_BUCKET: ${S3_BUCKET}
       S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION}
     ports:
       - "${APP_PORT}:7002"
     depends_on:

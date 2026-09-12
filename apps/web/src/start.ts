@@ -9,7 +9,9 @@ const webSecurityMiddleware = createMiddleware().server(async ({ next, request }
     nonce,
     pathname,
     production: process.env.NODE_ENV === "production",
+    storageBucket: process.env.S3_BUCKET,
     storageEndpoint: process.env.S3_ENDPOINT,
+    storageRegion: process.env.S3_REGION,
   });
   const result = await next({ context: { nonce } });
   const headers = new Headers(result.response.headers);

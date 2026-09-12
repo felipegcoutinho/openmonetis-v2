@@ -7,6 +7,8 @@ test("production CSP authorizes only nonce-bearing application scripts", () => {
 
   assert.match(policy, /script-src 'self' 'nonce-test-nonce' 'strict-dynamic'/);
   assert.match(policy, /script-src-attr 'none'/);
+  assert.match(policy, /style-src 'self' 'unsafe-inline' https:\/\/fonts\.googleapis\.com/);
+  assert.match(policy, /font-src 'self' data: https:\/\/fonts\.gstatic\.com/);
   assert.match(policy, /frame-ancestors 'none'/);
   assert.match(policy, /upgrade-insecure-requests/);
   assert.doesNotMatch(policy, /'unsafe-eval'/);
@@ -20,8 +22,24 @@ test("CSP allows only the configured attachment storage origin", () => {
   );
 
   assert.match(policy, /connect-src 'self' https:\/\/project\.storage\.example\.com/);
+  assert.match(policy, /frame-src https:\/\/project\.storage\.example\.com/);
   assert.doesNotMatch(policy, /storage\/v1\/s3/);
   assert.doesNotMatch(policy, /ignored/);
+});
+
+test("CSP allows the exact AWS S3 bucket origin for embedded attachments", () => {
+  const policy = createContentSecurityPolicy(
+    "test-nonce",
+    true,
+    undefined,
+    "openmonetis-attachments",
+    "sa-east-1",
+  );
+
+  assert.match(
+    policy,
+    /frame-src https:\/\/openmonetis-attachments\.s3\.sa-east-1\.amazonaws\.com/,
+  );
 });
 
 test("CSP ignores an invalid attachment storage endpoint", () => {
@@ -32,6 +50,7 @@ test("CSP ignores an invalid attachment storage endpoint", () => {
   );
 
   assert.match(policy, /connect-src 'self';/);
+  assert.match(policy, /frame-src 'none'/);
   assert.doesNotMatch(policy, /javascript:/);
 });
 
