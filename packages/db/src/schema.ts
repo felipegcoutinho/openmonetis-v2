@@ -52,7 +52,7 @@ export const invoicePaymentStatus = pgEnum("invoice_payment_status", ["pending",
 export const inboxItemStatus = pgEnum("inbox_item_status", ["pending", "processed", "discarded"]);
 export const inboxRuleMatchMode = pgEnum("inbox_rule_match_mode", ["all", "any"]);
 
-export const noteKind = pgEnum("note_kind", ["text", "checklist"]);
+export const noteKind = pgEnum("note_kind", ["text", "checklist", "task"]);
 
 export const paymentMethod = pgEnum("payment_method", [
   "credit_card",
@@ -1721,6 +1721,8 @@ export const notes = pgTable(
     title: varchar("title", { length: 120 }).notNull(),
     kind: noteKind("kind").notNull(),
     content: text("content"),
+    dueDate: date("due_date", { mode: "date" }),
+    isCompleted: boolean("is_completed").notNull().default(false),
     isArchived: boolean("is_archived").notNull().default(false),
     version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -1736,11 +1738,18 @@ export const notes = pgTable(
       table.updatedAt.desc(),
       table.id.desc(),
     ),
+    index("notes_user_id_task_due_date_idx").on(
+      table.userId,
+      table.kind,
+      table.isArchived,
+      table.isCompleted,
+      table.dueDate,
+    ),
     uniqueIndex("notes_id_user_id_unique").on(table.id, table.userId),
     check("notes_title_not_blank_check", sql`btrim(${table.title}) <> ''`),
     check(
       "notes_content_matches_kind_check",
-      sql`(${table.kind} = 'text' AND ${table.content} IS NOT NULL AND btrim(${table.content}) <> '') OR (${table.kind} = 'checklist' AND ${table.content} IS NULL)`,
+      sql`(${table.kind} = 'text' AND ${table.content} IS NOT NULL AND btrim(${table.content}) <> '' AND ${table.dueDate} IS NULL AND ${table.isCompleted} = false) OR (${table.kind} = 'checklist' AND ${table.content} IS NULL AND ${table.dueDate} IS NULL AND ${table.isCompleted} = false) OR (${table.kind} = 'task' AND (${table.content} IS NULL OR btrim(${table.content}) <> '') AND ${table.dueDate} IS NOT NULL)`,
     ),
     check("notes_version_positive_check", sql`${table.version} > 0`),
   ],
@@ -2119,19 +2128,8 @@ export const noteItemsRelations = relations(noteItems, ({ one }) => ({
   }),
 }));
 
-export type Account = typeof financialAccounts.$inferSelect;
-export type Attachment = typeof attachments.$inferSelect;
-export type Budget = typeof budgets.$inferSelect;
 export type Card = typeof cards.$inferSelect;
-export type Category = typeof categories.$inferSelect;
-export type Invoice = typeof invoices.$inferSelect;
-export type Person = typeof people.$inferSelect;
-export type PersonConnection = typeof personConnections.$inferSelect;
-export type PersonConnectionInvitation = typeof personConnectionInvitations.$inferSelect;
 export type RecurringTransactionRule = typeof recurringTransactionRules.$inferSelect;
 export type NewRecurringTransactionRule = typeof recurringTransactionRules.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
-export type ExternalExpense = typeof externalExpenses.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
-export type User = typeof user.$inferSelect;
-export type EstablishmentLogo = typeof establishmentLogos.$inferSelect;

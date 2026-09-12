@@ -15,6 +15,20 @@
       "when": 1788795847484,
       "tag": "0001_align_legacy_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789057457453,
+      "tag": "0002_fluffy_lockheed",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789212423636,
+      "tag": "0003_invoice_adjustment_categories",
+      "breakpoints": true
     }
   ]
 }
