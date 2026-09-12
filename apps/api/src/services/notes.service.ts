@@ -5,6 +5,7 @@ import {
   type NoteKind,
   NoteRuleError,
   replaceNoteAggregateDraft,
+  sortNoteItemsByCompletion,
 } from "@openmonetis/domain/notes";
 import type {
   ArchiveNoteInput,
@@ -13,6 +14,7 @@ import type {
   NoteOutput,
   ReplaceNoteInput,
   SetNoteItemCompletionInput,
+  SetTaskCompletionInput,
 } from "@openmonetis/validators/notes";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
@@ -22,6 +24,8 @@ export type NoteRecord = {
   title: string;
   kind: NoteKind;
   content: string | null;
+  dueDate: Date | null;
+  isCompleted: boolean;
   isArchived: boolean;
   version: number;
   createdAt: Date;
@@ -94,6 +98,13 @@ export type NotesRepository = {
     expectedVersion: number,
     isCompleted: boolean,
   ): Promise<NoteItemMutationResult>;
+  setTaskCompletionForUser(
+    id: string,
+    userId: string,
+    expectedVersion: number,
+    isCompleted: boolean,
+  ): Promise<NoteStateMutationResult>;
+  listPendingTasksDueBy(userId: string, dueBy: string): Promise<NoteRecord[]>;
   deleteForUser(id: string, userId: string, expectedVersion: number): Promise<DeleteNoteResult>;
 };
 
@@ -128,22 +139,33 @@ export function createNotesService(repository: NotesRepository) {
 
       let draft: NoteAggregateDraft;
       try {
-        draft =
-          input.kind === "text"
-            ? replaceNoteAggregateDraft({
-                userId,
-                currentKind: current.note.kind,
-                kind: input.kind,
-                title: input.title,
-                content: input.content,
-              })
-            : replaceNoteAggregateDraft({
-                userId,
-                currentKind: current.note.kind,
-                kind: input.kind,
-                title: input.title,
-                items: input.items,
-              });
+        if (input.kind === "text") {
+          draft = replaceNoteAggregateDraft({
+            userId,
+            currentKind: current.note.kind,
+            kind: input.kind,
+            title: input.title,
+            content: input.content,
+          });
+        } else if (input.kind === "checklist") {
+          draft = replaceNoteAggregateDraft({
+            userId,
+            currentKind: current.note.kind,
+            kind: input.kind,
+            title: input.title,
+            items: input.items,
+          });
+        } else {
+          draft = replaceNoteAggregateDraft({
+            userId,
+            currentKind: current.note.kind,
+            kind: input.kind,
+            title: input.title,
+            content: input.content,
+            dueDate: input.dueDate,
+            isCompleted: input.isCompleted,
+          });
+        }
       } catch (error) {
         throw translateRuleError(error);
       }
@@ -199,6 +221,34 @@ export function createNotesService(repository: NotesRepository) {
       throw noteNotFound();
     },
 
+    async setTaskCompletion(id: string, input: SetTaskCompletionInput, userId: string) {
+      const current = await findNote(id, userId, repository);
+      assertEditable(current);
+      if (current.note.kind !== "task") {
+        throw badRequest("Only task notes can be completed", "note_kind_mismatch");
+      }
+      if (current.note.isCompleted === input.isCompleted) return toNoteOutput(current);
+
+      const result = await repository.setTaskCompletionForUser(
+        id,
+        userId,
+        current.note.version,
+        input.isCompleted,
+      );
+      if (result.status === "updated") return toNoteOutput(result.aggregate);
+      if (result.status === "version_conflict") throw noteVersionConflict();
+      throw noteNotFound();
+    },
+
+    async listTaskReminders(userId: string, dueBy: string) {
+      return (await repository.listPendingTasksDueBy(userId, dueBy)).map((note) => ({
+        id: note.id,
+        title: note.title,
+        dueDate: (note.dueDate as Date).toISOString().slice(0, 10),
+        updatedAt: note.updatedAt.toISOString(),
+      }));
+    },
+
     async remove(id: string, expectedVersion: number, userId: string) {
       const result = await repository.deleteForUser(id, userId, expectedVersion);
       if (result.status === "deleted") return { id: result.id };
@@ -240,16 +290,14 @@ function noteVersionConflict() {
 }
 
 function toNoteOutput(aggregate: NoteAggregateRecord): NoteOutput {
-  const items = [...aggregate.items]
-    .sort((left, right) => left.position - right.position)
-    .map((item) => ({
-      id: item.id,
-      text: item.text,
-      isCompleted: item.isCompleted,
-      position: item.position,
-      createdAt: item.createdAt.toISOString(),
-      updatedAt: item.updatedAt.toISOString(),
-    }));
+  const items = sortNoteItemsByCompletion(aggregate.items).map((item) => ({
+    id: item.id,
+    text: item.text,
+    isCompleted: item.isCompleted,
+    position: item.position,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+  }));
   const progress = calculateChecklistProgress(items);
 
   return {
@@ -257,6 +305,8 @@ function toNoteOutput(aggregate: NoteAggregateRecord): NoteOutput {
     title: aggregate.note.title,
     kind: aggregate.note.kind,
     content: aggregate.note.content,
+    dueDate: aggregate.note.dueDate?.toISOString().slice(0, 10) ?? null,
+    isCompleted: aggregate.note.isCompleted,
     isArchived: aggregate.note.isArchived,
     items,
     ...progress,

@@ -28,6 +28,7 @@ import {
   useDeleteNoteMutation,
   useReplaceNoteMutation,
   useSetNoteItemCompletionMutation,
+  useSetTaskCompletionMutation,
 } from "../notes.mutations";
 import { noteQueryOptions, notesInfiniteQueryOptions } from "../notes.queries";
 import { NoteCard } from "./note-card";
@@ -49,6 +50,7 @@ export function NotesPage() {
   const replaceMutation = useReplaceNoteMutation();
   const archiveMutation = useArchiveNoteMutation();
   const completionMutation = useSetNoteItemCompletionMutation();
+  const taskCompletionMutation = useSetTaskCompletionMutation();
   const deleteMutation = useDeleteNoteMutation();
   const query = useInfiniteQuery(
     notesInfiniteQueryOptions({
@@ -126,6 +128,14 @@ export function NotesPage() {
       });
     } catch {
       toast.error("Não foi possível atualizar o item.");
+    }
+  }
+
+  async function setTaskCompletion(note: NoteOutput, isCompleted: boolean) {
+    try {
+      await taskCompletionMutation.mutateAsync({ id: note.id, isCompleted });
+    } catch {
+      toast.error("Não foi possível atualizar a tarefa.");
     }
   }
 
@@ -264,11 +274,16 @@ export function NotesPage() {
                         onSetItemCompletion={(item, itemId, isCompleted) =>
                           void setItemCompletion(item, itemId, isCompleted)
                         }
+                        onSetTaskCompletion={(item, isCompleted) =>
+                          void setTaskCompletion(item, isCompleted)
+                        }
                         pendingAction={
                           (archiveMutation.isPending &&
                             archiveMutation.variables?.id === note.id) ||
                           (completionMutation.isPending &&
-                            completionMutation.variables?.noteId === note.id)
+                            completionMutation.variables?.noteId === note.id) ||
+                          (taskCompletionMutation.isPending &&
+                            taskCompletionMutation.variables?.id === note.id)
                         }
                         pendingItemId={
                           completionMutation.variables?.noteId === note.id
@@ -326,8 +341,14 @@ export function NotesPage() {
           onSetItemCompletion={(note, itemId, isCompleted) =>
             void setItemCompletion(note, itemId, isCompleted)
           }
+          onSetTaskCompletion={(note, isCompleted) => void setTaskCompletion(note, isCompleted)}
           open={Boolean(viewingNote)}
-          pendingItemId={pendingItemId}
+          pendingItemId={
+            taskCompletionMutation.isPending &&
+            taskCompletionMutation.variables?.id === viewingNoteId
+              ? (viewingNoteId ?? undefined)
+              : pendingItemId
+          }
         />
         <AlertDialog
           onOpenChange={(open) => {

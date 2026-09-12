@@ -9,6 +9,7 @@ import {
   ArchiveRestore,
   Bell,
   Check,
+  ClipboardCheck,
   CreditCard,
   Gauge,
   HandCoins,
@@ -439,6 +440,9 @@ function NotificationIcon({ notification }: { notification: NotificationOutput }
       {notification.kind === "inbox" ? <InboxIcon aria-hidden="true" className="size-4" /> : null}
       {notification.kind === "externalExpenses" ? (
         <HandCoins aria-hidden="true" className="size-4" />
+      ) : null}
+      {notification.kind === "task" ? (
+        <ClipboardCheck aria-hidden="true" className="size-4" />
       ) : null}
     </span>
   );

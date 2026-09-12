@@ -291,6 +291,7 @@ test("pending external expenses create one aggregated import notification", () =
         latestUpdatedAt: "2026-08-20T12:00:00.000Z",
         latestPeriod: "2026-09",
       },
+      tasks: [],
     },
   });
 

@@ -1,4 +1,4 @@
-export const noteKinds = ["text", "checklist"] as const;
+export const noteKinds = ["text", "checklist", "task"] as const;
 
 export type NoteKind = (typeof noteKinds)[number];
 
@@ -21,6 +21,8 @@ export type NoteAggregateDraft = {
     title: string;
     kind: NoteKind;
     content: string | null;
+    dueDate: string | null;
+    isCompleted: boolean;
   };
   items: NoteItemDraft[];
 };
@@ -28,6 +30,7 @@ export type NoteAggregateDraft = {
 export type NoteRuleCode =
   | "invalid_note_title"
   | "invalid_note_content"
+  | "invalid_note_due_date"
   | "invalid_note_items"
   | "note_kind_mismatch";
 
@@ -51,10 +54,17 @@ type ChecklistNoteInput = {
   items: Array<{ id?: string; text: string; isCompleted?: boolean }>;
 };
 
+type TaskNoteInput = {
+  kind: "task";
+  content?: string | null;
+  dueDate: string;
+  isCompleted?: boolean;
+};
+
 export type CreateNoteAggregateInput = {
   userId: string;
   title: string;
-} & (TextNoteInput | ChecklistNoteInput);
+} & (TextNoteInput | ChecklistNoteInput | TaskNoteInput);
 
 export type ReplaceNoteAggregateInput = CreateNoteAggregateInput & {
   currentKind: NoteKind;
@@ -81,6 +91,15 @@ export function calculateChecklistProgress(items: Array<{ isCompleted: boolean }
   return { totalItemCount, completedItemCount, completionPercentage };
 }
 
+export function sortNoteItemsByCompletion<T extends { isCompleted: boolean; position: number }>(
+  items: readonly T[],
+) {
+  return [...items].sort(
+    (left, right) =>
+      Number(left.isCompleted) - Number(right.isCompleted) || left.position - right.position,
+  );
+}
+
 function buildNoteAggregateDraft(
   input: CreateNoteAggregateInput,
   allowExistingItemIds: boolean,
@@ -99,7 +118,36 @@ function buildNoteAggregateDraft(
     }
 
     return {
-      note: { userId: input.userId, title, kind: input.kind, content },
+      note: {
+        userId: input.userId,
+        title,
+        kind: input.kind,
+        content,
+        dueDate: null,
+        isCompleted: false,
+      },
+      items: [],
+    };
+  }
+
+  if (input.kind === "task") {
+    const content = input.content?.trim() || null;
+    if (content && content.length > noteContentMaximumLength) {
+      throw new NoteRuleError("invalid_note_content", "Task notes require valid content");
+    }
+    if (!isValidCalendarDate(input.dueDate)) {
+      throw new NoteRuleError("invalid_note_due_date", "Task notes require a valid due date");
+    }
+
+    return {
+      note: {
+        userId: input.userId,
+        title,
+        kind: input.kind,
+        content,
+        dueDate: input.dueDate,
+        isCompleted: input.isCompleted ?? false,
+      },
       items: [],
     };
   }
@@ -133,11 +181,25 @@ function buildNoteAggregateDraft(
   });
 
   return {
-    note: { userId: input.userId, title, kind: input.kind, content: null },
+    note: {
+      userId: input.userId,
+      title,
+      kind: input.kind,
+      content: null,
+      dueDate: null,
+      isCompleted: false,
+    },
     items,
   };
 }
 
 function normalizeSingleLine(value: string) {
   return value.trim().replace(/\s+/g, " ");
+}
+
+function isValidCalendarDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }

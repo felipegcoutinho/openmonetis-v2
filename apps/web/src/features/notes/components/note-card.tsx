@@ -1,12 +1,24 @@
 import type { NoteOutput } from "@openmonetis/validators/notes";
-import { Archive, CheckSquare2, Eye, FileText, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import {
+  Archive,
+  CalendarCheck2,
+  CalendarDays,
+  CheckSquare2,
+  Eye,
+  FileText,
+  Pencil,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
   formatNoteUpdatedAt,
+  formatTaskDueDate,
   getChecklistProgressLabel,
+  noteCompletionCheckboxClassName,
   noteKindLabels,
 } from "../notes.presentation";
 
@@ -17,6 +29,7 @@ type NoteCardProps = {
   onOpen: (note: NoteOutput) => void;
   onRemove: (note: NoteOutput) => void;
   onSetItemCompletion: (note: NoteOutput, itemId: string, isCompleted: boolean) => void;
+  onSetTaskCompletion: (note: NoteOutput, isCompleted: boolean) => void;
   pendingAction?: boolean;
   pendingItemId?: string;
 };
@@ -28,10 +41,12 @@ export function NoteCard({
   onOpen,
   onRemove,
   onSetItemCompletion,
+  onSetTaskCompletion,
   pendingAction = false,
   pendingItemId,
 }: NoteCardProps) {
   const isChecklist = note.kind === "checklist";
+  const isTask = note.kind === "task";
   const visibleItems = note.items.slice(0, 5);
   const hiddenItemCount = note.items.length - visibleItems.length;
 
@@ -43,6 +58,8 @@ export function NoteCard({
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
               {isChecklist ? (
                 <CheckSquare2 aria-hidden="true" className="size-5" />
+              ) : isTask ? (
+                <CalendarCheck2 aria-hidden="true" className="size-5" />
               ) : (
                 <FileText aria-hidden="true" className="size-5" />
               )}
@@ -101,6 +118,7 @@ export function NoteCard({
                   <Checkbox
                     aria-label={`Marcar ${item.text} como ${item.isCompleted ? "pendente" : "concluído"}`}
                     checked={item.isCompleted}
+                    className={noteCompletionCheckboxClassName}
                     disabled={note.isArchived || Boolean(pendingItemId)}
                     id={`note-card-item-${item.id}`}
                     onCheckedChange={(checked) =>
@@ -131,6 +149,47 @@ export function NoteCard({
               ) : null}
             </div>
           </>
+        ) : isTask ? (
+          <div className="grid gap-4">
+            <label
+              className="flex cursor-pointer items-start gap-3 rounded-lg border p-3"
+              htmlFor={`note-task-${note.id}`}
+            >
+              <Checkbox
+                aria-label={`Marcar tarefa ${note.title} como ${note.isCompleted ? "pendente" : "concluída"}`}
+                checked={note.isCompleted}
+                className={noteCompletionCheckboxClassName}
+                disabled={note.isArchived || pendingAction}
+                id={`note-task-${note.id}`}
+                onCheckedChange={(checked) => onSetTaskCompletion(note, checked === true)}
+              />
+              <span className="grid min-w-0 gap-1">
+                <span
+                  className={cn(
+                    "font-medium text-sm",
+                    note.isCompleted && "text-muted-foreground line-through",
+                  )}
+                >
+                  {note.isCompleted ? "Concluída" : "Pendente"}
+                </span>
+                {note.dueDate ? (
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground text-xs">
+                    <CalendarDays aria-hidden="true" className="size-3.5" />
+                    {formatTaskDueDate(note.dueDate)}
+                  </span>
+                ) : null}
+              </span>
+            </label>
+            {note.content ? (
+              <button
+                className="line-clamp-4 whitespace-pre-wrap text-left text-muted-foreground text-sm leading-relaxed wrap-break-word focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50"
+                onClick={() => onOpen(note)}
+                type="button"
+              >
+                {note.content}
+              </button>
+            ) : null}
+          </div>
         ) : (
           <button
             aria-label={`Abrir anotação ${note.title}`}

@@ -60,6 +60,14 @@ export function getNotificationCopy(notification: NotificationOutput) {
     };
   }
 
+  if (notification.kind === "task") {
+    return {
+      title: notification.title,
+      context: notification.status === "overdue" ? "Tarefa atrasada" : "Tarefa a vencer",
+      detail: dueDateLabel(notification.dueDate),
+    };
+  }
+
   return {
     title: "Caixa de entrada",
     context: "Capturas para revisar",
@@ -102,6 +110,9 @@ export function getNotificationTarget(notification: NotificationOutput) {
       to: "/people/admin",
       search: { period: notification.period, view: "external" },
     };
+  }
+  if (notification.kind === "task") {
+    return { to: "/notes", search: {} };
   }
   return { to: "/inbox", search: { status: "pending" } };
 }

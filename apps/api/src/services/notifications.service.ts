@@ -1,5 +1,6 @@
 import {
   buildNotifications,
+  getNotificationDueThroughDate,
   type NotificationState,
   notificationLookaheadMonths,
   notificationLookbackMonths,
@@ -40,6 +41,12 @@ type NotificationSources = {
   externalExpenses: {
     summary(userId: string): Promise<ExternalExpenseSummaryOutput>;
   };
+  notes: {
+    listTaskReminders(
+      userId: string,
+      dueBy: string,
+    ): Promise<Array<{ id: string; title: string; dueDate: string; updatedAt: string }>>;
+  };
 };
 
 type NotificationPreferencesReader = {
@@ -67,20 +74,24 @@ export function createNotificationsService(
       { length: notificationLookbackMonths + notificationLookaheadMonths + 1 },
       (_item, index) => addMonthsToPeriod(period, index - notificationLookbackMonths),
     );
+    const userPreferences = await preferences.get(userId);
     const [
-      userPreferences,
       billSnapshots,
       invoiceSnapshots,
       budgetSnapshot,
       inboxSnapshot,
       externalExpenseSummary,
+      tasks,
     ] = await Promise.all([
-      preferences.get(userId),
       Promise.all(sourcePeriods.map((sourcePeriod) => sources.bills.get(sourcePeriod, userId))),
       Promise.all(sourcePeriods.map((sourcePeriod) => sources.invoices.get(sourcePeriod, userId))),
       sources.budgets.list(userId, { period }),
       sources.inbox.snapshot(userId, 1),
       sources.externalExpenses.summary(userId),
+      sources.notes.listTaskReminders(
+        userId,
+        getNotificationDueThroughDate(businessDate, userPreferences.notificationDueSoonDays),
+      ),
     ]);
     const notificationSources = {
       bills: billSnapshots.flatMap((snapshot) => snapshot.items),
@@ -91,6 +102,7 @@ export function createNotificationsService(
         latestItemAt: inboxSnapshot.recentItems[0]?.notificationTimestamp ?? null,
       },
       externalExpenses: externalExpenseSummary,
+      tasks,
     };
     const unresolvedItems = buildNotifications({
       today: businessDate,

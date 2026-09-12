@@ -6,6 +6,7 @@ import type {
   NotesPageOutput,
   ReplaceNoteInput,
   SetNoteItemCompletionInput,
+  SetTaskCompletionInput,
 } from "@openmonetis/validators/notes";
 import { ApiClientError, requestApi } from "@/lib/api-client";
 
@@ -62,6 +63,13 @@ export function setNoteItemCompletion(
   input: SetNoteItemCompletionInput,
 ) {
   return request<NoteOutput>(`/notes/${noteId}/items/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function setTaskCompletion(id: string, input: SetTaskCompletionInput) {
+  return request<NoteOutput>(`/notes/${id}/completion`, {
     method: "PATCH",
     body: JSON.stringify(input),
   });

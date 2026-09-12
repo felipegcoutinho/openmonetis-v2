@@ -43,13 +43,16 @@ export function NoteDialog({ note, onOpenChange, onSubmit, open, pending }: Note
   return (
     <>
       <Dialog onOpenChange={requestOpenChange} open={open}>
-        <DialogContent className="sm:max-w-xl" showCloseButton={!pending}>
-          <DialogHeader>
+        <DialogContent
+          className="flex flex-col overflow-hidden sm:max-w-xl"
+          showCloseButton={!pending}
+        >
+          <DialogHeader className="shrink-0">
             <DialogTitle>{note ? "Editar anotação" : "Nova anotação"}</DialogTitle>
             <DialogDescription>
               {note
                 ? "Atualize o conteúdo e os itens já registrados."
-                : "Crie uma nota de texto ou uma lista para acompanhar."}
+                : "Crie uma nota, uma lista ou uma tarefa com data para acompanhar."}
             </DialogDescription>
           </DialogHeader>
           <NoteForm

@@ -9,6 +9,7 @@ import {
   exists,
   ilike,
   inArray,
+  lte,
   notInArray,
   or,
   sql,
@@ -24,7 +25,13 @@ import type {
 export const notesRepository = {
   async insertAggregate(draft) {
     return db.transaction(async (transaction) => {
-      const [note] = await transaction.insert(notes).values(draft.note).returning();
+      const [note] = await transaction
+        .insert(notes)
+        .values({
+          ...draft.note,
+          dueDate: draft.note.dueDate ? new Date(`${draft.note.dueDate}T00:00:00.000Z`) : null,
+        })
+        .returning();
       const items = draft.items.length
         ? await transaction
             .insert(noteItems)
@@ -126,6 +133,8 @@ export const notesRepository = {
         .set({
           title: draft.note.title,
           content: draft.note.content,
+          dueDate: draft.note.dueDate ? new Date(`${draft.note.dueDate}T00:00:00.000Z`) : null,
+          isCompleted: draft.note.isCompleted,
           version: sql`${notes.version} + 1`,
           updatedAt: now,
         })
@@ -276,6 +285,54 @@ export const notesRepository = {
         aggregate: aggregate(updatedNote, items),
       };
     });
+  },
+
+  async setTaskCompletionForUser(id, userId, expectedVersion, isCompleted) {
+    return db.transaction(async (transaction) => {
+      const [updated] = await transaction
+        .update(notes)
+        .set({
+          isCompleted,
+          version: sql`${notes.version} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(notes.id, id),
+            eq(notes.userId, userId),
+            eq(notes.kind, "task"),
+            eq(notes.isArchived, false),
+            eq(notes.version, expectedVersion),
+          ),
+        )
+        .returning();
+      if (!updated) {
+        const [current] = await transaction
+          .select({ id: notes.id })
+          .from(notes)
+          .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+          .limit(1);
+        return { status: current ? ("version_conflict" as const) : ("not_found" as const) };
+      }
+
+      return { status: "updated" as const, aggregate: aggregate(updated, []) };
+    });
+  },
+
+  listPendingTasksDueBy(userId, dueBy) {
+    return db
+      .select()
+      .from(notes)
+      .where(
+        and(
+          eq(notes.userId, userId),
+          eq(notes.kind, "task"),
+          eq(notes.isArchived, false),
+          eq(notes.isCompleted, false),
+          lte(notes.dueDate, new Date(`${dueBy}T00:00:00.000Z`)),
+        ),
+      )
+      .orderBy(asc(notes.dueDate), asc(notes.id));
   },
 
   async deleteForUser(id, userId, expectedVersion) {

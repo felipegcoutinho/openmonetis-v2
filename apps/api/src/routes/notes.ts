@@ -11,6 +11,7 @@ import {
   NotesPageOutputSchema,
   ReplaceNoteInputSchema,
   SetNoteItemCompletionInputSchema,
+  SetTaskCompletionInputSchema,
 } from "@openmonetis/validators/notes";
 import type { NotesService } from "../services/notes.service";
 import type { ApiVariables } from "../types/context";
@@ -61,6 +62,35 @@ export function createNotesRoute(service: NotesService) {
     }),
     async (context) =>
       context.json(ok(await service.list(context.get("userId"), context.req.valid("query"))), 200),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "patch",
+      path: "/{id}/completion",
+      tags: ["Notes"],
+      request: {
+        params: NoteParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: SetTaskCompletionInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Updated task completion",
+          content: { "application/json": { schema: NoteResponseSchema } },
+        },
+        ...errorResponses,
+      },
+    }),
+    async (context) => {
+      const { id } = context.req.valid("param");
+      return context.json(
+        ok(await service.setTaskCompletion(id, context.req.valid("json"), context.get("userId"))),
+        200,
+      );
+    },
   );
 
   route.openapi(

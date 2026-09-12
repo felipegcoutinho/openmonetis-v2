@@ -5,12 +5,14 @@ import type {
   ReplaceNoteInput,
 } from "@openmonetis/validators/notes";
 import { type InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { notificationKeys } from "@/features/notifications/notifications.queries";
 import {
   archiveNote,
   createNote,
   deleteNote,
   replaceNote,
   setNoteItemCompletion,
+  setTaskCompletion,
 } from "./notes.api";
 import { noteKeys } from "./notes.queries";
 
@@ -86,6 +88,33 @@ export function useSetNoteItemCompletionMutation() {
   });
 }
 
+export function useSetTaskCompletionMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isCompleted }: { id: string; isCompleted: boolean }) =>
+      setTaskCompletion(id, { isCompleted }),
+    onSuccess: (note) => {
+      client.setQueryData(noteKeys.detail(note.id), note);
+      client.setQueryData<NotesPageOutput>(noteKeys.dashboard(), (current) =>
+        current
+          ? { ...current, items: current.items.map((item) => (item.id === note.id ? note : item)) }
+          : current,
+      );
+      client.setQueriesData<NotesInfiniteData>({ queryKey: noteKeys.lists() }, (current) =>
+        current
+          ? mapCachedNotes(current, (candidate) => (candidate.id === note.id ? note : candidate))
+          : current,
+      );
+    },
+    onSettled: (_note, _error, variables) => {
+      void client.invalidateQueries({ queryKey: noteKeys.lists() });
+      void client.invalidateQueries({ queryKey: noteKeys.dashboard() });
+      void client.invalidateQueries({ queryKey: noteKeys.detail(variables.id) });
+      void client.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+}
+
 export function useDeleteNoteMutation() {
   const client = useQueryClient();
   return useMutation({
@@ -115,5 +144,6 @@ function invalidateNoteCollections(client: ReturnType<typeof useQueryClient>) {
   return Promise.all([
     client.invalidateQueries({ queryKey: noteKeys.lists() }),
     client.invalidateQueries({ queryKey: noteKeys.dashboard() }),
+    client.invalidateQueries({ queryKey: notificationKeys.all }),
   ]);
 }

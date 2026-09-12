@@ -65,6 +65,14 @@ export const ExternalExpensesNotificationOutputSchema = NotificationStateOutputS
   action: z.literal("import"),
 });
 
+export const TaskNotificationOutputSchema = NotificationStateOutputSchema.extend({
+  kind: z.literal("task"),
+  noteId: z.uuid(),
+  title: z.string(),
+  dueDate: z.iso.date(),
+  status: z.enum(["overdue", "dueSoon"]),
+});
+
 export const NotificationOutputSchema = z
   .discriminatedUnion("kind", [
     BillNotificationOutputSchema,
@@ -72,6 +80,7 @@ export const NotificationOutputSchema = z
     BudgetNotificationOutputSchema,
     InboxNotificationOutputSchema,
     ExternalExpensesNotificationOutputSchema,
+    TaskNotificationOutputSchema,
   ])
   .openapi("Notification");
 

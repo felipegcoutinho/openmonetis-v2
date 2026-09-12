@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  CalendarCheck2,
   CheckSquare2,
   Eye,
   FileText,
@@ -24,8 +25,9 @@ import {
   useCreateNoteMutation,
   useReplaceNoteMutation,
   useSetNoteItemCompletionMutation,
+  useSetTaskCompletionMutation,
 } from "../notes.mutations";
-import { getChecklistProgressLabel } from "../notes.presentation";
+import { formatTaskDueDate, getChecklistProgressLabel } from "../notes.presentation";
 import { notesDashboardQueryOptions } from "../notes.queries";
 import { NoteDetailsDialog } from "./note-details-dialog";
 import { NoteDialog } from "./note-dialog";
@@ -40,6 +42,7 @@ export function NotesWidget() {
   const createMutation = useCreateNoteMutation();
   const replaceMutation = useReplaceNoteMutation();
   const completionMutation = useSetNoteItemCompletionMutation();
+  const taskCompletionMutation = useSetTaskCompletionMutation();
   const notes = query.data?.items ?? [];
   const viewingNote = notes.find((note) => note.id === viewingNoteId) ?? null;
   const pendingItemId = completionMutation.isPending
@@ -81,6 +84,14 @@ export function NotesWidget() {
       await completionMutation.mutateAsync({ noteId: note.id, itemId, isCompleted });
     } catch {
       toast.error("Não foi possível atualizar o item.");
+    }
+  }
+
+  async function setTaskCompletion(note: NoteOutput, isCompleted: boolean) {
+    try {
+      await taskCompletionMutation.mutateAsync({ id: note.id, isCompleted });
+    } catch {
+      toast.error("Não foi possível atualizar a tarefa.");
     }
   }
 
@@ -153,8 +164,11 @@ export function NotesWidget() {
           if (!open) setViewingNoteId(null);
         }}
         onSetItemCompletion={setItemCompletion}
+        onSetTaskCompletion={setTaskCompletion}
         open={Boolean(viewingNoteId)}
-        pendingItemId={pendingItemId}
+        pendingItemId={
+          taskCompletionMutation.isPending ? (viewingNoteId ?? undefined) : pendingItemId
+        }
       />
     </>
   );
@@ -173,6 +187,7 @@ function NotesWidgetList({
     <ul className="divide-y">
       {notes.map((note) => {
         const checklist = note.kind === "checklist";
+        const task = note.kind === "task";
 
         return (
           <DashboardWidgetRow
@@ -183,6 +198,8 @@ function NotesWidgetList({
             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
               {checklist ? (
                 <CheckSquare2 aria-hidden="true" className="size-4" />
+              ) : task ? (
+                <CalendarCheck2 aria-hidden="true" className="size-4" />
               ) : (
                 <FileText aria-hidden="true" className="size-4" />
               )}
@@ -207,6 +224,14 @@ function NotesWidgetList({
                     value={note.completionPercentage}
                   />
                 </div>
+              ) : task ? (
+                <p className="truncate text-muted-foreground text-xs">
+                  {note.isCompleted
+                    ? "Concluída"
+                    : note.dueDate
+                      ? `Para ${formatTaskDueDate(note.dueDate)}`
+                      : "Pendente"}
+                </p>
               ) : (
                 <p className="truncate text-muted-foreground text-xs">{note.content}</p>
               )}

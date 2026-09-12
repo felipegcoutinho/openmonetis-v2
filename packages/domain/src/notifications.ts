@@ -72,12 +72,21 @@ export type ExternalExpensesNotification = NotificationBase & {
   action: "import";
 };
 
+export type TaskNotification = NotificationBase & {
+  kind: "task";
+  noteId: string;
+  title: string;
+  dueDate: string;
+  status: "overdue" | "dueSoon";
+};
+
 export type Notification =
   | BillNotification
   | InvoiceNotification
   | BudgetNotification
   | InboxNotification
-  | ExternalExpensesNotification;
+  | ExternalExpensesNotification
+  | TaskNotification;
 
 export type NotificationSources = {
   bills: Array<{
@@ -119,7 +128,19 @@ export type NotificationSources = {
     latestUpdatedAt: string | null;
     latestPeriod: string | null;
   };
+  tasks: Array<{
+    id: string;
+    title: string;
+    dueDate: string;
+    updatedAt: string;
+  }>;
 };
+
+export function getNotificationDueThroughDate(today: string, dueSoonDays: number) {
+  const date = new Date(`${today}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + dueSoonDays);
+  return date.toISOString().slice(0, 10);
+}
 
 export function buildNotifications(input: {
   today: string;
@@ -255,6 +276,28 @@ export function buildNotifications(input: {
     );
   }
 
+  for (const task of uniqueBy(input.sources.tasks, (item) => item.id)) {
+    const status = dueStatus(task.dueDate, input.today, input.dueSoonDays);
+    if (!status) continue;
+
+    notifications.push(
+      withState(
+        {
+          kind: "task" as const,
+          noteId: task.id,
+          title: task.title,
+          dueDate: task.dueDate,
+          status,
+          severity: status === "overdue" ? "critical" : "warning",
+          canArchive: true,
+          notificationKey: `task:${task.id}`,
+          fingerprint: [status, task.dueDate, task.updatedAt].join(":"),
+        },
+        statesByKey,
+      ),
+    );
+  }
+
   return notifications.sort(compareNotifications);
 }
 
@@ -325,7 +368,13 @@ function compareNotifications(left: Notification, right: Notification) {
 }
 
 function notificationDate(notification: Notification) {
-  if (notification.kind === "bill" || notification.kind === "invoice") return notification.dueDate;
+  if (
+    notification.kind === "bill" ||
+    notification.kind === "invoice" ||
+    notification.kind === "task"
+  ) {
+    return notification.dueDate;
+  }
   if (notification.kind === "budget") return `${notification.period}-01`;
   if (notification.kind === "inbox") return notification.latestItemAt;
   return notification.latestUpdatedAt;

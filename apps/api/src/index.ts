@@ -137,7 +137,8 @@ const installmentsRoute = createInstallmentsRoute(
 );
 const invoicesService = createInvoicesService(invoicesRepository);
 const invoicesRoute = createInvoicesRoute(invoicesService);
-const notesRoute = createNotesRoute(createNotesService(notesRepository));
+const notesService = createNotesService(notesRepository);
+const notesRoute = createNotesRoute(notesService);
 const attachmentsService = createAttachmentsService(attachmentsRepository, attachmentStorage);
 const attachmentsRoute = createAttachmentsRoute(attachmentsService);
 const transactionsService = createTransactionsService(
@@ -221,6 +222,7 @@ const notificationsRoute = createNotificationsRoute(
       inbox: inboxService,
       invoices: invoicesService,
       externalExpenses: externalExpensesService,
+      notes: notesService,
     },
     preferencesService,
   ),

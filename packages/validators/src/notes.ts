@@ -18,6 +18,8 @@ export {
 const NoteTitleSchema = z.string().trim().min(1).max(noteTitleMaximumLength);
 const NoteContentSchema = z.string().trim().min(1).max(noteContentMaximumLength);
 const NoteItemTextSchema = z.string().trim().min(1).max(noteItemTextMaximumLength);
+const NoteDueDateSchema = z.iso.date();
+const OptionalNoteContentSchema = z.string().trim().max(noteContentMaximumLength).nullable();
 
 const CreateChecklistItemInputSchema = z.object({ text: NoteItemTextSchema }).strict();
 const ReplaceChecklistItemInputSchema = z
@@ -44,6 +46,15 @@ const CreateChecklistNoteInputSchema = z
   })
   .strict();
 
+const CreateTaskNoteInputSchema = z
+  .object({
+    title: NoteTitleSchema,
+    kind: z.literal("task"),
+    content: OptionalNoteContentSchema.optional(),
+    dueDate: NoteDueDateSchema,
+  })
+  .strict();
+
 const ReplaceTextNoteInputSchema = z
   .object({
     expectedVersion: z.number().int().positive(),
@@ -62,15 +73,34 @@ const ReplaceChecklistNoteInputSchema = z
   })
   .strict();
 
+const ReplaceTaskNoteInputSchema = z
+  .object({
+    expectedVersion: z.number().int().positive(),
+    title: NoteTitleSchema,
+    kind: z.literal("task"),
+    content: OptionalNoteContentSchema,
+    dueDate: NoteDueDateSchema,
+    isCompleted: z.boolean(),
+  })
+  .strict();
+
 export const CreateNoteInputSchema = z
-  .discriminatedUnion("kind", [CreateTextNoteInputSchema, CreateChecklistNoteInputSchema])
+  .discriminatedUnion("kind", [
+    CreateTextNoteInputSchema,
+    CreateChecklistNoteInputSchema,
+    CreateTaskNoteInputSchema,
+  ])
   .openapi("CreateNoteInput");
 
 export const ReplaceNoteInputSchema = z
-  .discriminatedUnion("kind", [ReplaceTextNoteInputSchema, ReplaceChecklistNoteInputSchema])
+  .discriminatedUnion("kind", [
+    ReplaceTextNoteInputSchema,
+    ReplaceChecklistNoteInputSchema,
+    ReplaceTaskNoteInputSchema,
+  ])
   .refine(
     (input) =>
-      input.kind === "text" ||
+      input.kind !== "checklist" ||
       new Set(input.items.flatMap((item) => (item.id ? [item.id] : []))).size ===
         input.items.filter((item) => item.id).length,
     "Checklist item IDs must be unique",
@@ -86,6 +116,11 @@ export const SetNoteItemCompletionInputSchema = z
   .object({ isCompleted: z.boolean() })
   .strict()
   .openapi("SetNoteItemCompletionInput");
+
+export const SetTaskCompletionInputSchema = z
+  .object({ isCompleted: z.boolean() })
+  .strict()
+  .openapi("SetTaskCompletionInput");
 
 export const ListNotesQuerySchema = z
   .object({
@@ -129,6 +164,8 @@ export const NoteOutputSchema = z
     title: z.string(),
     kind: z.enum(noteKinds),
     content: z.string().nullable(),
+    dueDate: z.iso.date().nullable(),
+    isCompleted: z.boolean(),
     isArchived: z.boolean(),
     items: z.array(NoteItemOutputSchema),
     totalItemCount: z.number().int().nonnegative(),
@@ -152,7 +189,7 @@ export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 export type ReplaceNoteInput = z.infer<typeof ReplaceNoteInputSchema>;
 export type ArchiveNoteInput = z.infer<typeof ArchiveNoteInputSchema>;
 export type SetNoteItemCompletionInput = z.infer<typeof SetNoteItemCompletionInputSchema>;
+export type SetTaskCompletionInput = z.infer<typeof SetTaskCompletionInputSchema>;
 export type ListNotesQuery = z.infer<typeof ListNotesQuerySchema>;
-export type DeleteNoteQuery = z.infer<typeof DeleteNoteQuerySchema>;
 export type NoteOutput = z.infer<typeof NoteOutputSchema>;
 export type NotesPageOutput = z.infer<typeof NotesPageOutputSchema>;
