@@ -7,6 +7,45 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-12
+
+Adiciona tarefas com vencimento e alertas, amplia as ações da caixa de entrada e corrige os ajustes
+de fatura e saldo, com melhorias de apresentação e consulta das informações financeiras.
+
+### Alterado
+
+- Botões de ação primária mantêm a cor da marca com gradiente, brilho e relevo sutis.
+- O seletor de tipo de anotação apresenta opções mais legíveis, responsivas e acessíveis por
+  teclado.
+- Itens de listas e tarefas concluídos usam a cor semântica de sucesso no checkbox.
+
+### Adicionado
+
+- A configuração de tipografia web permite alternar entre fontes locais e Google Fonts.
+- A caixa de entrada permite excluir, mediante confirmação, todo o histórico das abas processada e
+  descartada sem remover os lançamentos confirmados.
+- Faturas discriminam os valores por pessoa em um hover card, e o relatório de parcelamentos
+  sinaliza anotações ao lado do nome do lançamento.
+- Anotações agora aceitam tarefas com data, conclusão e alerta de vencimento na Central de atenção.
+
+### Corrigido
+
+- O atalho da calculadora permanece centralizado nos campos monetários durante o clique.
+- O changelog exibe integralmente itens que ocupam mais de uma linha no arquivo de origem.
+- Formulários longos de anotações mantêm o cabeçalho e as ações fixos enquanto o conteúdo rola.
+- PDFs anexados podem ser visualizados dentro do modal sem ampliar a política de frames para origens
+  não configuradas.
+- Reduções de fatura deixam de ser contabilizadas como receitas e passam a reduzir despesas de
+  forma consistente no dashboard, categorias, tendências, pessoas e acertos; itens longos de
+  listas quebram linha durante a edição e a visualização de anotações.
+- Ajustes de fatura usam uma categoria de despesa própria e pertencem integralmente a uma pessoa.
+  Faturas com pagamentos precisam ser reabertas antes de ajustar ou remover o ajuste; a reabertura
+  desfaz todos os pagamentos e devolve cada movimentação à conta de origem.
+- Ajustes de saldo consideram somente os lançamentos existentes até a data escolhida, não aceitam
+  datas futuras e alteram o saldo sem inflar as métricas de entradas e saídas do extrato.
+- Itens concluídos de listas de anotações aparecem depois dos itens pendentes.
+- Reduções de despesas não tornam negativo o total de gastos sem orçamento.
+
 ## [0.3.2] - 2026-09-07
 
 Corrige a contabilização de boletos divididos e mantém compatibilidade temporal com versões antigas
@@ -131,7 +170,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.2.0...v0.3.0
