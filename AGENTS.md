@@ -197,6 +197,20 @@ escopo.
   imagens ou GitHub Release.
 - Nunca mover, apagar ou recriar automaticamente uma tag publicada para contornar uma falha.
 
-## 16. Princípio Final
+## 16. Playbooks locais do mantenedor
+
+- A mensagem exata e autônoma **"Execute o deploy"** ativa a skill privada
+  `$openmonetis-deploy`, que deve reler e executar integralmente `deploy.md` da raiz do projeto.
+- A mensagem exata e autônoma **"Execute o cleanup"** ativa a skill privada
+  `$openmonetis-cleanup` em modo de diagnóstico, sem alterar ou excluir arquivos.
+- A mensagem exata e autônoma **"Execute o cleanup apply"** ativa `$openmonetis-cleanup` em modo de
+  aplicação conservadora. Esse gatilho não autoriza commit, push, tag, release ou deploy.
+- Menções explicativas, condicionais ou entre aspas não acionam nenhum desses fluxos.
+- Se a skill ou seu playbook estiver ausente, vazio ou ilegível, interromper e informar o usuário;
+  nunca reconstruir suas instruções por suposição.
+- `deploy.md`, `cleanup.md` e as duas skills são privados do mantenedor, ignorados pelo Git e não
+  fazem parte da documentação pública do OpenMonetis.
+
+## 17. Princípio Final
 
 Backend é o núcleo, frontend é interface. Domain é a camada mais estável — tudo gira em torno dela, nunca o contrário.

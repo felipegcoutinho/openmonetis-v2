@@ -157,6 +157,5 @@ export const CardOutputSchema = z
 export type CreateCardInput = z.infer<typeof CreateCardInputSchema>;
 export type ReplaceCardInput = z.infer<typeof ReplaceCardInputSchema>;
 export type UpdateCardInput = z.infer<typeof UpdateCardInputSchema>;
-export type CardInvoiceSummary = z.infer<typeof CardInvoiceSummarySchema>;
 export type CardInvoicePeriodOutput = z.infer<typeof CardInvoicePeriodOutputSchema>;
 export type CardOutput = z.infer<typeof CardOutputSchema>;

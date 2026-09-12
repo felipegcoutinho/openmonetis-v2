@@ -103,7 +103,6 @@ export const RecurringExpenseActionOutputSchema = z
   .object({ success: z.literal(true) })
   .openapi("RecurringExpenseAction");
 
-export type ListRecurringExpensesQuery = z.infer<typeof ListRecurringExpensesQuerySchema>;
 export type UpdateRecurringExpenseInput = z.infer<typeof UpdateRecurringExpenseInputSchema>;
 export type RecurringExpenseOutput = z.infer<typeof RecurringExpenseOutputSchema>;
 export type RecurringExpensesOutput = z.infer<typeof RecurringExpensesOutputSchema>;
