@@ -7,6 +7,7 @@ import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cardInvoiceStatusLabels } from "@/features/cards/cards.presentation";
 import { DashboardItemLinkArrow } from "@/features/dashboard/components/dashboard-item-link-arrow";
@@ -113,8 +114,6 @@ export function InvoicesWidget({ period }: { period: string }) {
 }
 
 function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () => void }) {
-  const people = invoice.people;
-  const showPeople = people.length > 1;
   const isPaid = invoice.status === "paid";
   return (
     <DashboardWidgetRow>
@@ -141,46 +140,7 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
       </Link>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            to="/cards/$cardId"
-            params={{ cardId: invoice.cardId }}
-            search={{ period: invoice.period }}
-            className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <span className="truncate">{invoice.cardName}</span>
-            <DashboardItemLinkArrow />
-          </Link>
-          {showPeople ? (
-            <div
-              aria-label={`Pessoas: ${people.map((person) => person.personName).join(", ")}`}
-              className="flex shrink-0 -space-x-1"
-              role="img"
-            >
-              {people.slice(0, 3).map((person) => (
-                <Avatar
-                  className="data-[size=sm]:size-5.5"
-                  key={person.personId}
-                  showBorder={false}
-                  size="sm"
-                  title={person.personName}
-                >
-                  <AvatarImage src={person.personAvatarUrl ?? undefined} alt="" />
-                  <AvatarFallback>
-                    {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-              {people.length > 3 ? (
-                <span
-                  aria-hidden="true"
-                  className="grid size-5.5 place-items-center rounded-full bg-muted font-medium text-[9px] text-muted-foreground"
-                  title={`Mais ${people.length - 3} pessoas`}
-                >
-                  +{people.length - 3}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
+          <InvoiceCardName invoice={invoice} />
         </div>
         {invoice.remainingAmount === 0 && invoice.latestPayment ? (
           <p className="flex items-center gap-1 text-success text-xs">
@@ -220,5 +180,74 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
         )}
       </div>
     </DashboardWidgetRow>
+  );
+}
+
+function InvoiceCardName({ invoice }: { invoice: DashboardInvoice }) {
+  const linkClassName =
+    "group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
+  if (invoice.people.length === 0) {
+    return (
+      <Link
+        className={linkClassName}
+        params={{ cardId: invoice.cardId }}
+        search={{ period: invoice.period }}
+        to="/cards/$cardId"
+      >
+        <span className="truncate">{invoice.cardName}</span>
+        <DashboardItemLinkArrow />
+      </Link>
+    );
+  }
+
+  return (
+    <HoverCard>
+      <HoverCardTrigger
+        render={
+          <Link
+            className={linkClassName}
+            params={{ cardId: invoice.cardId }}
+            search={{ period: invoice.period }}
+            to="/cards/$cardId"
+          />
+        }
+      >
+        <span className="truncate">{invoice.cardName}</span>
+        <DashboardItemLinkArrow />
+      </HoverCardTrigger>
+      <HoverCardContent align="start" className="w-72">
+        <p className="font-medium">Valores por pessoa</p>
+        <div className="mt-3 grid gap-3">
+          {invoice.people.map((person) => (
+            <div
+              className="flex gap-3 border-b pb-3 last:border-b-0 last:pb-0"
+              key={person.personId}
+            >
+              <Avatar className="overflow-hidden" showBorder={false}>
+                <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
+                <AvatarFallback>
+                  {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 flex-1 gap-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate font-medium text-sm">{person.personName}</span>
+                  <MoneyValue amount={person.amount} className="shrink-0 font-medium text-sm" />
+                </div>
+                <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+                  <span>Pago</span>
+                  <MoneyValue amount={person.paidAmount} />
+                </div>
+                <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+                  <span>Em aberto</span>
+                  <MoneyValue amount={person.remainingAmount} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }

@@ -12,6 +12,7 @@ export type InstallmentReportRow = {
   id: string;
   seriesId: string;
   name: string;
+  note: string | null;
   amount: string | number;
   purchaseDate: string;
   period: string;
@@ -87,6 +88,7 @@ export type InstallmentDetailCalculation = {
 export type InstallmentGroupCalculation = {
   seriesId: string;
   name: string;
+  note: string | null;
   paymentMethod: PaymentMethod;
   originalAmount: number;
   totalInstallments: number;
@@ -444,6 +446,7 @@ function calculateGroup(
   return {
     seriesId: representative.seriesId,
     name: representative.name,
+    note: representative.note,
     paymentMethod: representative.paymentMethod,
     originalAmount: centsToMoney(moneyToCents(representative.originalAmount)),
     totalInstallments,

@@ -1,6 +1,13 @@
 import type { InstallmentGroupOutput } from "@openmonetis/validators/installments";
 import { Image } from "@unpic/react";
-import { AlertTriangle, CalendarClock, ChevronRight, CircleCheckBig, Landmark } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarClock,
+  ChevronRight,
+  CircleCheckBig,
+  Info,
+  Landmark,
+} from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { cn } from "@/lib/utils";
 import {
@@ -61,7 +69,27 @@ export function InstallmentGroupCard({
             <EstablishmentLogo name={group.name} size={40} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="truncate">{group.name}</CardTitle>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <CardTitle className="truncate">{group.name}</CardTitle>
+                  {group.note ? (
+                    <Tooltip>
+                      <TooltipTrigger
+                        aria-label={`Anotação de ${group.name}`}
+                        render={
+                          <button
+                            className="shrink-0 text-muted-foreground hover:text-foreground"
+                            type="button"
+                          />
+                        }
+                      >
+                        <Info aria-hidden="true" className="size-3.5" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs whitespace-pre-wrap wrap-break-word">
+                        {group.note}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
+                </div>
                 <Badge variant={statusVariant}>{installmentSeriesStatusLabels[group.status]}</Badge>
               </div>
               <p className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">

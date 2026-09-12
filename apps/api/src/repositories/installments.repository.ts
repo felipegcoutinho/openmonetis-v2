@@ -28,6 +28,7 @@ export const installmentsRepository = {
         id: transactions.id,
         seriesId: installmentSeries.id,
         name: transactions.name,
+        note: transactions.note,
         amount: transactions.amount,
         adminAmount: sql<string | null>`case
           when exists (
@@ -164,6 +165,7 @@ export const installmentsRepository = {
           id: row.id,
           seriesId: row.seriesId,
           name: row.name,
+          note: row.note,
           amount: adminScope ? (row.adminAmount as string) : row.amount,
           purchaseDate: toDateString(row.purchaseDate),
           period: row.period,

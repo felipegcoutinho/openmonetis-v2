@@ -53,6 +53,7 @@ export const InstallmentGroupOutputSchema = z
   .object({
     seriesId: z.uuid(),
     name: z.string(),
+    note: z.string().nullable(),
     paymentMethod: z.enum(paymentMethods),
     originalAmount: moneySchema,
     totalInstallments: z.number().int().positive(),

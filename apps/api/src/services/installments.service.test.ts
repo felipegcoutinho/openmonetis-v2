@@ -12,6 +12,7 @@ function installment(currentInstallment: number, period: string): InstallmentRep
     id: `30000000-0000-4000-8000-00000000000${currentInstallment}`,
     seriesId,
     name: "Compra dividida",
+    note: "Garantia estendida incluída.",
     amount: "-50.00",
     purchaseDate: "2026-08-24",
     period,
@@ -71,6 +72,7 @@ test("installment report uses only the admin person's allocation", async () => {
   assert.equal(report.groups[0]?.originalAmount, 150);
   assert.equal(report.groups[0]?.trackedAmount, 150);
   assert.equal(report.groups[0]?.pendingAmount, 150);
+  assert.equal(report.groups[0]?.note, "Garantia estendida incluída.");
   assert.deepEqual(
     report.groups[0]?.installments.map((item) => item.amount),
     [50, 50, 50],
