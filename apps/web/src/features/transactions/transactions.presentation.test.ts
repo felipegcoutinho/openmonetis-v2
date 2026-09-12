@@ -2,9 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   formatInstallmentOption,
+  formatPaymentMethod,
+  formatPaymentMethodTable,
   getTransactionDateLabel,
   groupTransactionRows,
 } from "./transactions.presentation";
+
+test("balance adjustments identify their internal balance correction", () => {
+  assert.equal(formatPaymentMethod(null, "accountBalanceAdjustment"), "Ajuste de saldo");
+  assert.equal(formatPaymentMethodTable(null, "accountBalanceAdjustment"), "Ajuste de saldo");
+  assert.equal(formatPaymentMethod(null), "Não se aplica");
+});
 
 test("installment labels do not hide cent redistribution", () => {
   assert.equal(formatInstallmentOption(3, 2), "2x de R$\u00a01,50");

@@ -121,7 +121,7 @@ export function TransactionDetailsSheet({
                 <DetailRow label="Condição" value={transactionConditionLabels[detail.condition]} />
                 <DetailRow
                   label="Forma de pagamento"
-                  value={formatPaymentMethod(detail.paymentMethod)}
+                  value={formatPaymentMethod(detail.paymentMethod, detail.origin)}
                 />
                 <DetailRow label="Origem" value={transactionOriginLabels[detail.origin]} />
               </DetailsSection>

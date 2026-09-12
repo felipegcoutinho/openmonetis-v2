@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
+  AccountBalanceAdjustmentOutputSchema,
   AccountOutputSchema,
   AccountParamsSchema,
   AccountPeriodQuerySchema,
@@ -15,6 +16,10 @@ import type { ApiVariables } from "../types/context";
 import { ErrorResponseSchema as ErrorSchema, validationHook } from "../utils/openapi";
 
 const AccountResponseSchema = z.object({ data: AccountOutputSchema, error: z.null() });
+const AccountBalanceAdjustmentResponseSchema = z.object({
+  data: AccountBalanceAdjustmentOutputSchema,
+  error: z.null(),
+});
 const AccountsResponseSchema = z.object({ data: z.array(AccountOutputSchema), error: z.null() });
 const DeletedAccountResponseSchema = z.object({
   data: z.object({ id: z.uuid() }),
@@ -207,7 +212,7 @@ export function createAccountsRoute(service: AccountsService) {
       responses: {
         200: {
           description: "Adjusted account balance",
-          content: { "application/json": { schema: AccountResponseSchema } },
+          content: { "application/json": { schema: AccountBalanceAdjustmentResponseSchema } },
         },
         400: {
           description: "Invalid request",

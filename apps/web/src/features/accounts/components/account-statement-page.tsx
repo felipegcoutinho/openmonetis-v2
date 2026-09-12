@@ -46,8 +46,12 @@ export function AccountStatementPage({
   const [addYieldOpen, setAddYieldOpen] = useState(false);
 
   async function adjustBalance(input: AdjustAccountBalanceInput) {
-    await adjustBalanceMutation.mutateAsync({ id: accountId, input });
+    const result = await adjustBalanceMutation.mutateAsync({ id: accountId, input });
     setAdjustBalanceOpen(false);
+    if (!result.adjustmentCreated) {
+      toast.info("O saldo já estava com esse valor");
+      return;
+    }
     toast.success("Saldo ajustado", { description: "O lançamento de ajuste foi registrado." });
   }
 
@@ -126,6 +130,7 @@ function getAccountStatementScope(
           account={account}
           onAddYield={onAddYield}
           onAdjustBalance={onAdjustBalance}
+          period={period}
           periodLabel={periodLabel}
         />
       ),
@@ -140,11 +145,13 @@ function AccountStatementSummary({
   account,
   onAddYield,
   onAdjustBalance,
+  period,
   periodLabel,
 }: {
   account: AccountOutput;
   onAddYield: () => void;
   onAdjustBalance: () => void;
+  period: string;
   periodLabel: string;
 }) {
   return (
@@ -157,10 +164,12 @@ function AccountStatementSummary({
               <TrendingUp aria-hidden="true" className="size-4" />
               Adicionar rendimento
             </FinancialSummaryAction>
-            <FinancialSummaryAction onClick={onAdjustBalance} type="button">
-              <Scale aria-hidden="true" className="size-4" />
-              Ajustar saldo
-            </FinancialSummaryAction>
+            {period <= getCurrentPeriod() ? (
+              <FinancialSummaryAction onClick={onAdjustBalance} type="button">
+                <Scale aria-hidden="true" className="size-4" />
+                Ajustar saldo
+              </FinancialSummaryAction>
+            ) : null}
           </>
         ) : undefined
       }

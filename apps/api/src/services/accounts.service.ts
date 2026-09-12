@@ -17,7 +17,7 @@ import {
   type RecurrenceFrequency,
   type TransactionType,
 } from "@openmonetis/domain/transactions";
-import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
+import { getCurrentDateInBrazil, getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type {
   AccountOutput,
   AddAccountYieldInput,
@@ -55,6 +55,7 @@ type AccountUpdateRecord = Partial<Omit<AccountCreateRecord, "userId"> & { isArc
 export type AccountBalancePostingRecord = {
   accountId: string | null;
   period: string;
+  postingDate?: string;
   amount: string;
   includeInSummary?: boolean;
   paymentMethod?: PaymentMethod | null;
@@ -152,8 +153,16 @@ function toAccountOutput(account: AccountRecord, summary: AccountPeriodSummary):
   };
 }
 
-export function createAccountsService(repository: AccountsRepository) {
-  async function summarizeAccounts(accounts: AccountRecord[], userId: string, period: string) {
+export function createAccountsService(
+  repository: AccountsRepository,
+  today: () => string = getCurrentDateInBrazil,
+) {
+  async function summarizeAccounts(
+    accounts: AccountRecord[],
+    userId: string,
+    period: string,
+    throughDate?: string,
+  ) {
     const accountId = accounts.length === 1 ? accounts[0]?.id : undefined;
     const [persistedPostings, recurringRules] = await Promise.all([
       repository.listSettledAccountPostingsThroughPeriod(userId, period, accountId),
@@ -176,7 +185,9 @@ export function createAccountsService(repository: AccountsRepository) {
         }))
         .filter((posting) => posting.period <= period),
       ...expandSettledRecurringPostings(recurringRules, occurrenceStates, period),
-    ];
+    ].filter(
+      (posting) => !throughDate || (posting.postingDate ?? `${posting.period}-31`) <= throughDate,
+    );
     const postingsByAccount = new Map<string, AccountBalancePostingRecord[]>();
 
     for (const posting of postings) {
@@ -201,8 +212,13 @@ export function createAccountsService(repository: AccountsRepository) {
     );
   }
 
-  async function summarizeAccount(account: AccountRecord, userId: string, period: string) {
-    const [output] = await summarizeAccounts([account], userId, period);
+  async function summarizeAccount(
+    account: AccountRecord,
+    userId: string,
+    period: string,
+    throughDate?: string,
+  ) {
+    const [output] = await summarizeAccounts([account], userId, period, throughDate);
     return output as AccountOutput;
   }
 
@@ -316,8 +332,15 @@ export function createAccountsService(repository: AccountsRepository) {
         throw notFound("Account not found", "account_not_found");
       }
 
+      if (input.date > today()) {
+        throw badRequest(
+          "Balance adjustment date cannot be in the future",
+          "balance_adjustment_date_future",
+        );
+      }
+
       const period = input.date.slice(0, 7);
-      const current = await summarizeAccount(account, userId, period);
+      const current = await summarizeAccount(account, userId, period, input.date);
       const adjustment = createAccountBalanceAdjustmentDraft(
         current.summary.balance,
         input.balance,
@@ -334,7 +357,10 @@ export function createAccountsService(repository: AccountsRepository) {
         });
       }
 
-      return summarizeAccount(account, userId, period);
+      return {
+        account: await summarizeAccount(account, userId, period, input.date),
+        adjustmentCreated: adjustment !== null,
+      };
     },
 
     async addYield(id: string, userId: string, input: AddAccountYieldInput) {
@@ -467,6 +493,7 @@ function expandSettledRecurringPostings(
             }).map((posting) => ({
               accountId: posting.accountId,
               period,
+              postingDate: occurrence?.boletoPaymentDate ?? purchaseDate,
               amount: posting.amount.toFixed(2),
             })),
           );
@@ -474,6 +501,7 @@ function expandSettledRecurringPostings(
           postings.push({
             accountId: occurrence?.accountId ?? rule.accountId,
             period,
+            postingDate: occurrence?.boletoPaymentDate ?? purchaseDate,
             amount: rule.amount,
           });
         }

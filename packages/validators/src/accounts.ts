@@ -102,10 +102,17 @@ export const AccountOutputSchema = z
   })
   .openapi("AccountOutput");
 
+export const AccountBalanceAdjustmentOutputSchema = z
+  .object({
+    account: AccountOutputSchema,
+    adjustmentCreated: z.boolean(),
+  })
+  .openapi("AccountBalanceAdjustmentOutput");
+
 export type CreateAccountInput = z.infer<typeof CreateAccountInputSchema>;
 export type ReplaceAccountInput = z.infer<typeof ReplaceAccountInputSchema>;
 export type UpdateAccountInput = z.infer<typeof UpdateAccountInputSchema>;
 export type AdjustAccountBalanceInput = z.infer<typeof AdjustAccountBalanceInputSchema>;
 export type AddAccountYieldInput = z.infer<typeof AddAccountYieldInputSchema>;
-export type AccountPeriodSummary = z.infer<typeof AccountPeriodSummarySchema>;
 export type AccountOutput = z.infer<typeof AccountOutputSchema>;
+export type AccountBalanceAdjustmentOutput = z.infer<typeof AccountBalanceAdjustmentOutputSchema>;

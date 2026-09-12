@@ -159,14 +159,21 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   bank_transfer: "Transferência bancária",
 };
 
-export function formatPaymentMethod(paymentMethod: PaymentMethod | null) {
+export function formatPaymentMethod(
+  paymentMethod: PaymentMethod | null,
+  origin?: TransactionOrigin,
+) {
+  if (origin === "accountBalanceAdjustment") return "Ajuste de saldo";
   return paymentMethod === null ? "Não se aplica" : paymentMethodLabels[paymentMethod];
 }
 
-export function formatPaymentMethodTable(paymentMethod: PaymentMethod | null) {
+export function formatPaymentMethodTable(
+  paymentMethod: PaymentMethod | null,
+  origin?: TransactionOrigin,
+) {
   return paymentMethod === "bank_transfer"
     ? "Transf. bancária"
-    : formatPaymentMethod(paymentMethod);
+    : formatPaymentMethod(paymentMethod, origin);
 }
 
 export const recurrenceFrequencyLabels: Record<RecurrenceFrequency, string> = {

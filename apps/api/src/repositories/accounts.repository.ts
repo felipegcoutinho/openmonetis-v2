@@ -325,13 +325,16 @@ export const accountsRepository = {
       .select({
         accountId: transactions.accountId,
         period: transactions.period,
+        purchaseDate: transactions.purchaseDate,
         paymentMethod: transactions.paymentMethod,
         boletoPaymentDate: transactions.boletoPaymentDate,
         amount:
           sql<string>`sum(case when ${transactionSplits.id} is not null then ${transactionSplits.amount} else ${transactions.amount} end)`.as(
             "amount",
           ),
-        includeInSummary: sql<boolean>`true`.as("include_in_summary"),
+        includeInSummary: sql<boolean>`${transactions.origin} <> 'accountBalanceAdjustment'`.as(
+          "include_in_summary",
+        ),
       })
       .from(transactions)
       .innerJoin(
@@ -371,6 +374,7 @@ export const accountsRepository = {
       .groupBy(
         transactions.accountId,
         transactions.period,
+        transactions.purchaseDate,
         transactions.origin,
         transactions.paymentMethod,
         transactions.boletoPaymentDate,
@@ -378,6 +382,9 @@ export const accountsRepository = {
 
     return postings.map((posting) => ({
       ...posting,
+      postingDate:
+        posting.boletoPaymentDate?.toISOString().slice(0, 10) ??
+        posting.purchaseDate.toISOString().slice(0, 10),
       boletoPaymentDate: posting.boletoPaymentDate?.toISOString().slice(0, 10) ?? null,
     }));
   },

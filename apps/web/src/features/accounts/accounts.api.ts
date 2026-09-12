@@ -1,4 +1,5 @@
 import type {
+  AccountBalanceAdjustmentOutput,
   AccountOutput,
   AddAccountYieldInput,
   AdjustAccountBalanceInput,
@@ -53,7 +54,7 @@ export function deleteAccount(id: string) {
 }
 
 export function adjustAccountBalance(id: string, input: AdjustAccountBalanceInput) {
-  return request<AccountOutput>(`/accounts/${id}/balance-adjustments`, {
+  return request<AccountBalanceAdjustmentOutput>(`/accounts/${id}/balance-adjustments`, {
     method: "POST",
     body: JSON.stringify(input),
   });

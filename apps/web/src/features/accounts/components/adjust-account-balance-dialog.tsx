@@ -121,7 +121,7 @@ function AdjustAccountBalanceForm({
             <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
             <DatePicker
               id={`${id}-date`}
-              max={getPeriodEndDate(period)}
+              max={getMaximumAdjustmentDate(period)}
               min={`${period}-01`}
               value={field.state.value}
               onChange={field.handleChange}
@@ -154,7 +154,13 @@ function getAdjustmentDate(period: string) {
   const today = getCurrentDateInBrazil();
   if (today.startsWith(period)) return today;
 
-  return getPeriodEndDate(period);
+  return getMaximumAdjustmentDate(period);
+}
+
+function getMaximumAdjustmentDate(period: string) {
+  const today = getCurrentDateInBrazil();
+  const periodEnd = getPeriodEndDate(period);
+  return periodEnd < today ? periodEnd : today;
 }
 
 function getPeriodEndDate(period: string) {

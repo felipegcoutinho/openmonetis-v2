@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { ApiError } from "../utils/errors";
 import type { AccountsRepository } from "./accounts.service";
 import { createAccountsService } from "./accounts.service";
 
@@ -138,4 +139,72 @@ test("early recurring boleto payment is posted before its occurrence due month",
     expenses: 250,
     balance: -250,
   });
+});
+
+test("balance adjustment uses the balance at the selected date", async () => {
+  let insertedAmount = "";
+  const service = createAccountsService(
+    createRepository({
+      findByIdForUser: async () => account,
+      insertBalanceAdjustment: async (data) => {
+        insertedAmount = data.amount;
+      },
+      listSettledAccountPostingsThroughPeriod: async () => [
+        {
+          accountId,
+          period: "2026-09",
+          postingDate: "2026-09-05",
+          amount: "-100.00",
+        },
+        {
+          accountId,
+          period: "2026-09",
+          postingDate: "2026-09-20",
+          amount: "-200.00",
+        },
+      ],
+    }),
+    () => "2026-09-30",
+  );
+
+  await service.adjustBalance(accountId, userId, { balance: -50, date: "2026-09-10" });
+
+  assert.equal(insertedAmount, "50.00");
+});
+
+test("balance adjustments affect balance without becoming income or expenses", async () => {
+  const service = createAccountsService(
+    createRepository({
+      listSettledAccountPostingsThroughPeriod: async () => [
+        {
+          accountId,
+          period: "2026-09",
+          postingDate: "2026-09-10",
+          amount: "250.00",
+          includeInSummary: false,
+        },
+      ],
+    }),
+  );
+
+  const result = await service.list(userId, "2026-09");
+
+  assert.deepEqual(result[0]?.summary, {
+    period: "2026-09",
+    income: 0,
+    expenses: 0,
+    balance: 250,
+  });
+});
+
+test("balance adjustment rejects a future date", async () => {
+  const service = createAccountsService(
+    createRepository({ findByIdForUser: async () => account }),
+    () => "2026-09-10",
+  );
+
+  await assert.rejects(
+    service.adjustBalance(accountId, userId, { balance: 100, date: "2026-09-11" }),
+    (error: ApiError) => error.code === "balance_adjustment_date_future" && error.status === 400,
+  );
 });
