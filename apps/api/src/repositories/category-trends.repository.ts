@@ -45,6 +45,7 @@ export const categoryTrendsRepository = {
       .select({
         categoryId: categories.id,
         origin: transactions.origin,
+        transactionType: transactions.type,
         type: categories.type,
         period: transactions.period,
         amount:

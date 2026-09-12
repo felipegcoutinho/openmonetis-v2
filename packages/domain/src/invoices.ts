@@ -20,7 +20,7 @@ export type InvoicePersonBalance = {
 
 export type InvoiceAdjustmentDraft = {
   amount: string;
-  type: "income" | "expense";
+  type: "expense";
 };
 
 export function calculateInvoicePersonBalances(
@@ -96,50 +96,8 @@ export function createInvoiceAdjustmentDraft(
 
   return {
     amount: fromCents(-adjustmentCents).toFixed(2),
-    type: adjustmentCents > 0 ? "expense" : "income",
+    type: "expense",
   };
-}
-
-export function allocateInvoiceReduction(
-  reductionAmount: number,
-  people: Array<{ personId: string; amount: number }>,
-): InvoicePersonPayment[] {
-  const reductionCents = toCents(reductionAmount);
-  const totalCents = people.reduce((sum, person) => sum + toCents(person.amount), 0);
-  if (reductionCents <= 0 || reductionCents > totalCents) {
-    throw new RangeError("invalid_invoice_reduction");
-  }
-
-  const allocations = people.map((person, index) => {
-    const weightCents = toCents(person.amount);
-    const weightedReduction = BigInt(reductionCents) * BigInt(weightCents);
-    return {
-      index,
-      personId: person.personId,
-      amountCents: Number(weightedReduction / BigInt(totalCents)),
-      remainder: weightedReduction % BigInt(totalCents),
-    };
-  });
-  let unallocatedCents =
-    reductionCents - allocations.reduce((sum, allocation) => sum + allocation.amountCents, 0);
-  for (const allocation of [...allocations].sort((left, right) =>
-    left.remainder === right.remainder
-      ? left.index - right.index
-      : left.remainder > right.remainder
-        ? -1
-        : 1,
-  )) {
-    if (unallocatedCents === 0) break;
-    allocation.amountCents += 1;
-    unallocatedCents -= 1;
-  }
-
-  return allocations
-    .map((allocation) => ({
-      personId: allocation.personId,
-      amount: fromCents(allocation.amountCents),
-    }))
-    .filter((allocation) => allocation.amount > 0);
 }
 
 function toCents(value: number) {

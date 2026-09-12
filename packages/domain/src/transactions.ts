@@ -72,6 +72,28 @@ export function canDeleteTransactionOrigin(origin: TransactionOrigin) {
   return origin === "regular" || origin === "refund" || origin === "accountBalanceAdjustment";
 }
 
+export function isExpenseReduction(input: {
+  amount: number | string;
+  origin: TransactionOrigin;
+  type: TransactionType;
+}) {
+  return (
+    (input.origin === "refund" && input.type === "income") ||
+    (input.origin === "invoiceAdjustment" && Number(input.amount) > 0)
+  );
+}
+
+export function calculateExpenseImpact(input: {
+  amount: number | string;
+  origin: TransactionOrigin;
+  type: TransactionType;
+}) {
+  const amount = Math.abs(Number(input.amount));
+  if (!Number.isFinite(amount)) return 0;
+  if (isExpenseReduction(input)) return -amount;
+  return input.type === "expense" ? amount : 0;
+}
+
 export type ImportedTransaction = {
   externalId: string | null;
   purchaseDate: string;

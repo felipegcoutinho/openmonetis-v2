@@ -139,7 +139,15 @@ test("financial summary uses the person's allocation instead of the full transac
 
 test("financial summary includes every payment method even when it has no expenses", () => {
   const summary = calculatePersonFinancialSummary(
-    [{ amount: -75, paymentMethod: "boleto", period: "2026-08", type: "expense" }],
+    [
+      {
+        amount: -75,
+        origin: "regular",
+        paymentMethod: "boleto",
+        period: "2026-08",
+        type: "expense",
+      },
+    ],
     ["2026-08"],
     "2026-08",
   );
@@ -149,4 +157,30 @@ test("financial summary includes every payment method even when it has no expens
     ["credit_card", "debit_card", "pix", "cash", "boleto", "benefits", "bank_transfer"],
   );
   assert.equal(summary.paymentMethods.find((item) => item.paymentMethod === "pix")?.amount, 0);
+});
+
+test("invoice reduction lowers the selected person's expenses", () => {
+  const summary = calculatePersonFinancialSummary(
+    [
+      {
+        amount: -100,
+        origin: "regular",
+        paymentMethod: "credit_card",
+        period: "2026-08",
+        type: "expense",
+      },
+      {
+        amount: 25,
+        origin: "invoiceAdjustment",
+        paymentMethod: "credit_card",
+        period: "2026-08",
+        type: "expense",
+      },
+    ],
+    ["2026-08"],
+    "2026-08",
+  );
+
+  assert.equal(summary.totalExpenses, 75);
+  assert.equal(summary.paymentMethods[0]?.amount, 75);
 });

@@ -5,10 +5,13 @@ import {
   CreateInvoicePaymentInputSchema,
   DashboardInvoicesOutputSchema,
   InvoiceAdjustmentOutputSchema,
+  InvoiceAdjustmentParamsSchema,
   InvoiceParamsSchema,
   InvoicePaymentOutputSchema,
   InvoicePaymentParamsSchema,
   ListInvoicesQuerySchema,
+  RemoveInvoiceAdjustmentOutputSchema,
+  ReopenInvoiceOutputSchema,
   UndoInvoicePaymentOutputSchema,
   UpdateInvoiceDatesInputSchema,
 } from "@openmonetis/validators/invoices";
@@ -59,6 +62,65 @@ export function createInvoicesRoute(service: InvoicesService) {
   route.openapi(
     createRoute({
       method: "post",
+      path: "/{cardId}/{period}/reopen",
+      tags: ["Invoices"],
+      request: { params: InvoiceParamsSchema },
+      responses: {
+        200: {
+          description: "Invoice reopened and all payments reversed",
+          content: {
+            "application/json": {
+              schema: z.object({ data: ReopenInvoiceOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        404: {
+          description: "Card not found",
+          content: { "application/json": { schema: errorSchema } },
+        },
+      },
+    }),
+    async (c) => {
+      const { cardId, period } = c.req.valid("param");
+      return c.json(ok(await service.reopen(cardId, period, c.get("userId"))), 200);
+    },
+  );
+  route.openapi(
+    createRoute({
+      method: "delete",
+      path: "/{cardId}/{period}/adjustments/{adjustmentId}",
+      tags: ["Invoices"],
+      request: { params: InvoiceAdjustmentParamsSchema },
+      responses: {
+        200: {
+          description: "Invoice adjustment removed",
+          content: {
+            "application/json": {
+              schema: z.object({ data: RemoveInvoiceAdjustmentOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        404: {
+          description: "Invoice adjustment not found",
+          content: { "application/json": { schema: errorSchema } },
+        },
+        409: {
+          description: "Invoice must be reopened before removing an adjustment",
+          content: { "application/json": { schema: errorSchema } },
+        },
+      },
+    }),
+    async (c) => {
+      const { cardId, period, adjustmentId } = c.req.valid("param");
+      return c.json(
+        ok(await service.removeAdjustment(cardId, period, adjustmentId, c.get("userId"))),
+        200,
+      );
+    },
+  );
+  route.openapi(
+    createRoute({
+      method: "post",
       path: "/{cardId}/{period}/adjustments",
       tags: ["Invoices"],
       request: {
@@ -83,6 +145,10 @@ export function createInvoicesRoute(service: InvoicesService) {
         },
         404: {
           description: "Invoice adjustment dependency not found",
+          content: { "application/json": { schema: errorSchema } },
+        },
+        409: {
+          description: "Invoice must be reopened before adjustment",
           content: { "application/json": { schema: errorSchema } },
         },
       },

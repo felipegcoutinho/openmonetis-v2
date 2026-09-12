@@ -54,7 +54,7 @@ export function ExpenseDistributionList({ items }: { items: ExpenseDistributionL
               aria-label={`${item.label}: ${formatExpenseDistributionPercentage(item.percentage)}% das despesas`}
               indicatorClassName="bg-brand/70"
               trackClassName="h-1"
-              value={item.percentage}
+              value={Math.max(0, Math.min(100, item.percentage))}
             />
           </div>
         </DashboardWidgetRow>

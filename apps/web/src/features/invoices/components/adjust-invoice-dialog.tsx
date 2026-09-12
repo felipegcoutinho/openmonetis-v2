@@ -1,8 +1,10 @@
 import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
 import type { AdjustInvoiceInput } from "@openmonetis/validators/invoices";
 import { AdjustInvoiceInputSchema } from "@openmonetis/validators/invoices";
+import type { PersonOutput } from "@openmonetis/validators/people";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -15,6 +17,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatCurrency, parseCurrencyInput } from "@/features/accounts/accounts.presentation";
 import { InvoicesApiError } from "../invoices.api";
 
@@ -24,6 +33,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: AdjustInvoiceInput) => Promise<void>;
+  people: PersonOutput[];
   period: string;
 };
 
@@ -33,6 +43,7 @@ export function AdjustInvoiceDialog({
   open,
   onOpenChange,
   onSubmit,
+  people,
   period,
 }: Props) {
   return (
@@ -41,7 +52,7 @@ export function AdjustInvoiceDialog({
         <DialogHeader>
           <DialogTitle>Ajustar fatura</DialogTitle>
           <DialogDescription>
-            Informe o total correto. A diferença será lançada como receita ou despesa.
+            Informe o total correto. A diferença aumentará ou reduzirá as despesas da fatura.
           </DialogDescription>
         </DialogHeader>
         <AdjustInvoiceForm
@@ -50,6 +61,7 @@ export function AdjustInvoiceDialog({
           currentAmount={currentAmount}
           onCancel={() => onOpenChange(false)}
           onSubmit={onSubmit}
+          people={people}
           period={period}
         />
       </DialogContent>
@@ -62,6 +74,7 @@ function AdjustInvoiceForm({
   currentAmount,
   onCancel,
   onSubmit,
+  people,
   period,
 }: Omit<Props, "open" | "onOpenChange"> & { onCancel: () => void }) {
   const id = useId();
@@ -70,12 +83,14 @@ function AdjustInvoiceForm({
     defaultValues: {
       amount: formatCurrency(currentAmount),
       date: getEntryDate(period),
+      personId: people.find((person) => person.role === "admin")?.id ?? people[0]?.id ?? "",
     },
     onSubmit: async ({ value }) => {
       setError(null);
       const result = AdjustInvoiceInputSchema.safeParse({
         amount: parseCurrencyInput(value.amount),
         date: value.date,
+        personId: value.personId,
       });
       if (!result.success) {
         setError("Informe um valor válido.");
@@ -88,7 +103,13 @@ function AdjustInvoiceForm({
           submissionError instanceof InvoicesApiError &&
             submissionError.code === "invoice_adjustment_below_paid_amount"
             ? "O novo valor não pode ser menor que o total já pago."
-            : "Não foi possível ajustar a fatura.",
+            : submissionError instanceof InvoicesApiError &&
+                submissionError.code === "invoice_requires_reopen"
+              ? "Reabra a fatura antes de fazer o ajuste."
+              : submissionError instanceof InvoicesApiError &&
+                  submissionError.code === "invoice_adjustment_exceeds_person_amount"
+                ? "A redução é maior que o valor atribuído a essa pessoa."
+                : "Não foi possível ajustar a fatura.",
         );
       }
     },
@@ -121,13 +142,40 @@ function AdjustInvoiceForm({
           </div>
         )}
       </form.Field>
+      <form.Field name="personId">
+        {(field) => {
+          const selectedPerson = people.find((person) => person.id === field.state.value);
+          return (
+            <div className="grid gap-1.5">
+              <Label htmlFor={`${id}-person`}>Pessoa responsável</Label>
+              <Select
+                onValueChange={(value) => value && field.handleChange(value)}
+                value={field.state.value}
+              >
+                <SelectTrigger className="w-full" id={`${id}-person`}>
+                  <SelectValue placeholder="Selecione uma pessoa">
+                    <PersonOption person={selectedPerson} />
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {people.map((person) => (
+                    <SelectItem key={person.id} value={person.id}>
+                      <PersonOption person={person} />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        }}
+      </form.Field>
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
             <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
             <DatePicker
               id={`${id}-date`}
-              max={getPeriodEndDate(period)}
+              max={getMaximumEntryDate(period)}
               min={`${period}-01`}
               onChange={field.handleChange}
               value={field.state.value}
@@ -156,9 +204,29 @@ function AdjustInvoiceForm({
   );
 }
 
+function PersonOption({ person }: { person?: PersonOutput }) {
+  if (!person) return <span>Selecione uma pessoa</span>;
+
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <Avatar showBorder={false} size="sm">
+        <AvatarImage alt="" src={person.avatarUrl ?? person.providerAvatarUrl ?? undefined} />
+        <AvatarFallback>{person.name.slice(0, 1).toLocaleUpperCase("pt-BR")}</AvatarFallback>
+      </Avatar>
+      <span className="truncate">{person.name}</span>
+    </span>
+  );
+}
+
 function getEntryDate(period: string) {
   const today = getCurrentDateInBrazil();
-  return today.startsWith(period) ? today : getPeriodEndDate(period);
+  return today.startsWith(period) ? today : getMaximumEntryDate(period);
+}
+
+function getMaximumEntryDate(period: string) {
+  const today = getCurrentDateInBrazil();
+  const periodEnd = getPeriodEndDate(period);
+  return periodEnd < today ? periodEnd : today;
 }
 
 function getPeriodEndDate(period: string) {

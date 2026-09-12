@@ -211,6 +211,7 @@ async function listAllPersonTransactions(
         : [
             {
               amount: item.allocation?.amount ?? item.amount,
+              origin: item.origin,
               paymentMethod: item.paymentMethod,
               period: item.period,
               type: item.type,

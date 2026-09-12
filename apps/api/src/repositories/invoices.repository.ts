@@ -13,9 +13,8 @@ import {
   transactions,
 } from "@openmonetis/db";
 import {
+  invoiceAdjustmentCategoryName,
   invoicePaymentCategoryName,
-  otherExpenseCategoryName,
-  otherIncomeCategoryName,
 } from "@openmonetis/domain/categories";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -446,9 +445,9 @@ export const invoicesRepository = {
       return { id: payment.id, amount: payment.amount };
     });
   },
-  async findAdjustmentContext(userId, cardId, type) {
-    const categoryName = type === "income" ? otherIncomeCategoryName : otherExpenseCategoryName;
-    const [cardRows, adminRows, categoryRows] = await Promise.all([
+  async findAdjustmentContext(userId, cardId, personId) {
+    const categoryName = invoiceAdjustmentCategoryName;
+    const [cardRows, personRows, categoryRows] = await Promise.all([
       db
         .select({ id: cards.id, name: cards.name })
         .from(cards)
@@ -457,7 +456,7 @@ export const invoicesRepository = {
       db
         .select({ id: people.id })
         .from(people)
-        .where(and(eq(people.userId, userId), eq(people.role, "admin")))
+        .where(and(eq(people.userId, userId), eq(people.id, personId), eq(people.status, "active")))
         .limit(1),
       db
         .select({ id: categories.id })
@@ -466,22 +465,35 @@ export const invoicesRepository = {
           and(
             eq(categories.userId, userId),
             eq(categories.name, categoryName),
-            eq(categories.type, type),
+            eq(categories.type, "expense"),
+            eq(categories.isSystem, true),
           ),
         )
         .limit(1),
     ]);
     return {
       card: cardRows[0] ?? null,
-      adminPersonId: adminRows[0]?.id ?? null,
+      personId: personRows[0]?.id ?? null,
       categoryId: categoryRows[0]?.id ?? null,
     };
   },
   async insertAdjustment(data) {
-    await db.transaction(async (tx) => {
+    return db.transaction(async (tx) => {
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtextextended(${`${data.userId}:${data.cardId}:${data.period}`}, 0))`,
       );
+      const [payment] = await tx
+        .select({ id: invoicePayments.id })
+        .from(invoicePayments)
+        .where(
+          and(
+            eq(invoicePayments.userId, data.userId),
+            eq(invoicePayments.cardId, data.cardId),
+            eq(invoicePayments.period, data.period),
+          ),
+        )
+        .limit(1);
+      if (payment) return null;
       const [adjustmentRecord] = await tx
         .insert(transactions)
         .values({
@@ -503,16 +515,111 @@ export const invoicesRepository = {
         })
         .returning({ id: transactions.id });
       const adjustment = adjustmentRecord as { id: string };
-      if (data.allocations.length > 1) {
-        await tx.insert(transactionSplits).values(
-          data.allocations.map((allocation) => ({
-            userId: data.userId,
-            transactionId: adjustment.id,
-            personId: allocation.personId,
-            amount: allocation.amount.toFixed(2),
-          })),
+      return adjustment;
+    });
+  },
+  async reopenInvoice(userId, cardId, period) {
+    return db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`${userId}:${cardId}:${period}`}, 0))`,
+      );
+      const [ownedCard] = await tx
+        .select({ id: cards.id })
+        .from(cards)
+        .where(and(eq(cards.userId, userId), eq(cards.id, cardId)))
+        .limit(1);
+      if (!ownedCard) return null;
+
+      const payments = await tx
+        .select({
+          id: invoicePayments.id,
+          amount: invoicePayments.amount,
+          transactionId: invoicePayments.transactionId,
+        })
+        .from(invoicePayments)
+        .where(
+          and(
+            eq(invoicePayments.userId, userId),
+            eq(invoicePayments.cardId, cardId),
+            eq(invoicePayments.period, period),
+          ),
         );
+
+      if (payments.length) {
+        await tx.delete(invoicePayments).where(
+          and(
+            eq(invoicePayments.userId, userId),
+            inArray(
+              invoicePayments.id,
+              payments.map((payment) => payment.id),
+            ),
+          ),
+        );
+        const transactionIds = payments.flatMap((payment) =>
+          payment.transactionId ? [payment.transactionId] : [],
+        );
+        if (transactionIds.length) {
+          await tx
+            .delete(transactions)
+            .where(and(eq(transactions.userId, userId), inArray(transactions.id, transactionIds)));
+        }
       }
+
+      await tx
+        .update(invoices)
+        .set({
+          paymentStatus: "pending",
+          paidAt: null,
+          paymentAccountId: null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(invoices.userId, userId),
+            eq(invoices.cardId, cardId),
+            eq(invoices.period, period),
+          ),
+        );
+
+      return {
+        reversedPaymentCount: payments.length,
+        reversedAmount:
+          payments.reduce((total, payment) => total + Math.round(Number(payment.amount) * 100), 0) /
+          100,
+      };
+    });
+  },
+  async deleteAdjustment(userId, cardId, period, adjustmentId) {
+    return db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${`${userId}:${cardId}:${period}`}, 0))`,
+      );
+      const [payment] = await tx
+        .select({ id: invoicePayments.id })
+        .from(invoicePayments)
+        .where(
+          and(
+            eq(invoicePayments.userId, userId),
+            eq(invoicePayments.cardId, cardId),
+            eq(invoicePayments.period, period),
+          ),
+        )
+        .limit(1);
+      if (payment) return "has_payments" as const;
+
+      const [deleted] = await tx
+        .delete(transactions)
+        .where(
+          and(
+            eq(transactions.id, adjustmentId),
+            eq(transactions.userId, userId),
+            eq(transactions.cardId, cardId),
+            eq(transactions.period, period),
+            eq(transactions.origin, "invoiceAdjustment"),
+          ),
+        )
+        .returning({ id: transactions.id });
+      return deleted ? ("deleted" as const) : ("not_found" as const);
     });
   },
   async upsertDates(data) {

@@ -2,11 +2,13 @@ import type { CardClosingRule } from "./cards";
 import { invoicePaymentCategoryName } from "./categories";
 import {
   addMonthsToPeriod,
+  calculateExpenseImpact,
   deriveTransactionPeriod,
   listRecurrenceDatesInPeriod,
   type PaymentMethod,
   type RecurrenceFrequency,
   type TransactionOrigin,
+  type TransactionType,
 } from "./transactions";
 
 export const categoryTrendChangeKinds = ["increase", "decrease", "stable", "started"] as const;
@@ -24,6 +26,7 @@ export type CategoryTrendCategory = {
 export type CategoryTrendActualEntry = {
   categoryId: string;
   origin?: TransactionOrigin;
+  transactionType: TransactionType;
   type: CategoryTrendType;
   period: string;
   amount: string | number;
@@ -128,12 +131,22 @@ export function calculateCategoryTrends(input: {
     }
     const category = categoryById.get(entry.categoryId);
     if (!category || category.type !== entry.type) continue;
+    const amount =
+      category.type === "expense"
+        ? calculateExpenseImpact({
+            amount: entry.amount,
+            origin: entry.origin ?? "regular",
+            type: entry.transactionType,
+          })
+        : Math.abs(Number(entry.amount));
+    if (amount === 0) continue;
     addCategoryAmount(
       amountsByCategory,
       entry.categoryId,
       entry.period,
       "actualCents",
-      entry.amount,
+      amount,
+      true,
     );
   }
 
@@ -182,7 +195,7 @@ export function calculateCategoryTrends(input: {
     )
     .filter(
       (category) =>
-        category.totalAmount > 0 || category.values.some((value) => value.previousAmount > 0),
+        category.totalAmount !== 0 || category.values.some((value) => value.previousAmount !== 0),
     )
     .sort(compareCategoryOutputs);
   const periodAmounts = new Map(periods.map((period) => [period, emptyPeriodAmounts()] as const));
@@ -190,10 +203,10 @@ export function calculateCategoryTrends(input: {
   for (const category of categoryOutputs) {
     for (const value of category.values) {
       const amounts = periodAmounts.get(value.period) as PeriodAmounts;
-      amounts.actualCents += toCents(value.actualAmount);
-      amounts.recurringCents += toCents(value.recurringAmount);
-      if (category.type === "income") amounts.incomeCents += toCents(value.totalAmount);
-      else amounts.expenseCents += toCents(value.totalAmount);
+      amounts.actualCents += toSignedCents(value.actualAmount);
+      amounts.recurringCents += toSignedCents(value.recurringAmount);
+      if (category.type === "income") amounts.incomeCents += toSignedCents(value.totalAmount);
+      else amounts.expenseCents += toSignedCents(value.totalAmount);
     }
   }
 
@@ -202,7 +215,7 @@ export function calculateCategoryTrends(input: {
     return {
       period,
       incomeAmount: fromCents(amounts.incomeCents),
-      expenseAmount: fromCents(amounts.expenseCents),
+      expenseAmount: fromCents(Math.max(0, amounts.expenseCents)),
       netAmount: fromCents(amounts.incomeCents - amounts.expenseCents),
       actualAmount: fromCents(amounts.actualCents),
       recurringAmount: fromCents(amounts.recurringCents),
@@ -249,7 +262,7 @@ function buildCategoryOutput(
     totalAmount: fromCents(totalCategoryCents),
     averageAmount: fromCents(
       Math.round(
-        totalCategoryCents / Math.max(values.filter((value) => value.totalAmount > 0).length, 1),
+        totalCategoryCents / Math.max(values.filter((value) => value.totalAmount !== 0).length, 1),
       ),
     ),
     values,
@@ -293,7 +306,7 @@ function calculateChange(
   currentCents: number,
   previousCents: number,
 ): { kind: CategoryTrendChangeKind; percentage: number | null } {
-  if (previousCents === 0 && currentCents > 0) return { kind: "started", percentage: null };
+  if (previousCents === 0 && currentCents !== 0) return { kind: "started", percentage: null };
   if (currentCents === previousCents) return { kind: "stable", percentage: 0 };
 
   const percentage = roundPercentage(((currentCents - previousCents) / previousCents) * 100);
@@ -306,10 +319,11 @@ function addCategoryAmount(
   period: string,
   field: keyof CategoryPeriodAmounts,
   amount: string | number,
+  signed = false,
 ) {
   const amountsByPeriod = amountsByCategory.get(categoryId) ?? new Map();
   const amounts = amountsByPeriod.get(period) ?? emptyCategoryPeriodAmounts();
-  amounts[field] += toCents(amount);
+  amounts[field] += signed ? toSignedCents(amount) : toCents(amount);
   amountsByPeriod.set(period, amounts);
   amountsByCategory.set(categoryId, amountsByPeriod);
 }
@@ -378,6 +392,11 @@ function emptyPeriodAmounts(): PeriodAmounts {
 
 function toCents(amount: string | number) {
   const numericAmount = Math.abs(Number(amount));
+  return Number.isFinite(numericAmount) ? Math.round(numericAmount * 100) : 0;
+}
+
+function toSignedCents(amount: string | number) {
+  const numericAmount = Number(amount);
   return Number.isFinite(numericAmount) ? Math.round(numericAmount * 100) : 0;
 }
 

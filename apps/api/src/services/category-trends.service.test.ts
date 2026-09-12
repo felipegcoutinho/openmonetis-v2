@@ -46,3 +46,56 @@ test("category scope rejects unexpected values", () => {
     false,
   );
 });
+
+test("invoice reductions lower expense trends without becoming income", async () => {
+  const purchaseCategoryId = "10000000-0000-4000-8000-000000000001";
+  const adjustmentCategoryId = "20000000-0000-4000-8000-000000000002";
+  const service = createCategoryTrendsService({
+    async listCategoriesForUser() {
+      return [
+        { categoryId: purchaseCategoryId, name: "Compras", icon: null, type: "expense" },
+        {
+          categoryId: adjustmentCategoryId,
+          name: "Ajustes de fatura",
+          icon: null,
+          type: "expense",
+        },
+      ];
+    },
+    async listActualEntriesForUser() {
+      return [
+        {
+          categoryId: purchaseCategoryId,
+          origin: "regular" as const,
+          transactionType: "expense" as const,
+          type: "expense" as const,
+          period: "2026-09",
+          amount: "-100.00",
+        },
+        {
+          categoryId: adjustmentCategoryId,
+          origin: "invoiceAdjustment" as const,
+          transactionType: "expense" as const,
+          type: "expense" as const,
+          period: "2026-09",
+          amount: "20.00",
+        },
+      ];
+    },
+    async listRecurringRulesForUser() {
+      return [];
+    },
+  });
+
+  const report = await service.list(
+    "owner",
+    ListCategoryTrendsQuerySchema.parse({ startPeriod: "2026-09", endPeriod: "2026-09" }),
+  );
+
+  assert.equal(report.summary.incomeAmount, 0);
+  assert.equal(report.summary.expenseAmount, 80);
+  assert.equal(
+    report.categories.find((category) => category.categoryId === adjustmentCategoryId)?.totalAmount,
+    -20,
+  );
+});

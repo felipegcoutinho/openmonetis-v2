@@ -37,8 +37,13 @@ export const AdjustInvoiceInputSchema = z
   .object({
     amount: z.number().nonnegative().multipleOf(0.01).max(9999999999.99),
     date: z.iso.date(),
+    personId: z.uuid(),
   })
   .openapi("AdjustInvoiceInput");
+
+export const InvoiceAdjustmentParamsSchema = InvoiceParamsSchema.extend({
+  adjustmentId: z.uuid().openapi({ param: { name: "adjustmentId", in: "path" } }),
+});
 
 export const InvoicePersonBalanceSchema = z.object({
   personId: z.uuid(),
@@ -96,10 +101,18 @@ export const UndoInvoicePaymentOutputSchema = z.object({
   amount: z.number().positive(),
 });
 export const InvoiceAdjustmentOutputSchema = z.object({
+  id: z.uuid().nullable(),
   previousAmount: z.number().nonnegative(),
   currentAmount: z.number().nonnegative(),
   adjustmentAmount: z.number().nonnegative(),
-  type: z.enum(["income", "expense"]).nullable(),
+  type: z.literal("expense").nullable(),
+});
+export const ReopenInvoiceOutputSchema = z.object({
+  reversedPaymentCount: z.number().int().nonnegative(),
+  reversedAmount: z.number().nonnegative(),
+});
+export const RemoveInvoiceAdjustmentOutputSchema = z.object({
+  id: z.uuid(),
 });
 
 export type CreateInvoicePaymentInput = z.infer<typeof CreateInvoicePaymentInputSchema>;
@@ -110,3 +123,5 @@ export type DashboardInvoicesOutput = z.infer<typeof DashboardInvoicesOutputSche
 export type InvoicePaymentOutput = z.infer<typeof InvoicePaymentOutputSchema>;
 export type UndoInvoicePaymentOutput = z.infer<typeof UndoInvoicePaymentOutputSchema>;
 export type InvoiceAdjustmentOutput = z.infer<typeof InvoiceAdjustmentOutputSchema>;
+export type ReopenInvoiceOutput = z.infer<typeof ReopenInvoiceOutputSchema>;
+export type RemoveInvoiceAdjustmentOutput = z.infer<typeof RemoveInvoiceAdjustmentOutputSchema>;

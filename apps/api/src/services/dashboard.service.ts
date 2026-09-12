@@ -426,7 +426,7 @@ function buildPrimaryPersonMetricEntries(
   return transactions.map((transaction) => {
     const adminAmount = Number(transaction.adminAmount ?? 0);
     const amount =
-      transaction.type === "transfer"
+      transaction.type === "transfer" || transaction.origin === "invoiceAdjustment"
         ? Math.sign(Number(transaction.amount)) * Math.abs(adminAmount)
         : normalizeTransactionAmount(transaction.type, adminAmount);
     const forecastPeriod = deriveTransactionForecastPeriod({

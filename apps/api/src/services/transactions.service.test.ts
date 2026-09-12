@@ -277,3 +277,34 @@ test("installment series reallocates divided shares proportionally for each targ
     ],
   );
 });
+
+test("invoice adjustments can only be removed through the invoice workflow", async () => {
+  const dependencies = new Proxy(
+    {
+      findTransactionByIdForUser: async () =>
+        transactionFixture({
+          origin: "invoiceAdjustment",
+          paymentMethod: "credit_card",
+          cardId: "70000000-0000-4000-8000-000000000007",
+        }),
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+
+  await assert.rejects(
+    service.deleteTransaction(transactionId, userId),
+    (error: { code?: string }) => error.code === "GENERATED_TRANSACTION_IMMUTABLE",
+  );
+});

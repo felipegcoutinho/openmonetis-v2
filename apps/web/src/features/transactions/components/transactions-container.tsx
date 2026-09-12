@@ -1,10 +1,15 @@
-import type { TransactionActionScope } from "@openmonetis/validators/transactions";
+import type {
+  TransactionActionScope,
+  TransactionOutput,
+} from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { accountsQueryOptions } from "../../accounts/accounts.queries";
 import { cardsQueryOptions } from "../../cards/cards.queries";
 import { categoriesQueryOptions } from "../../categories/categories.queries";
+import { InvoicesApiError } from "../../invoices/invoices.api";
+import { useDeleteInvoiceAdjustmentMutation } from "../../invoices/invoices.mutations";
 import { peopleQueryOptions } from "../../people/people.queries";
 import { userPreferencesQueryOptions } from "../../preferences/preferences.queries";
 import {
@@ -93,15 +98,34 @@ export function TransactionsContainer({
     enabled: !scope?.contentOverride,
   });
   const deleteTransaction = useDeleteTransactionMutation();
+  const deleteInvoiceAdjustment = useDeleteInvoiceAdjustmentMutation();
   const settleTransactions = useSettleTransactionsMutation();
   const settleRecurringOccurrence = useSettleRecurringOccurrenceMutation();
   const recurringStatus = useRecurringRuleStatusMutation();
 
-  async function handleDeleteTransaction(id: string, scope: TransactionActionScope = "single") {
+  async function handleDeleteTransaction(
+    transaction: TransactionOutput,
+    scope: TransactionActionScope = "single",
+  ) {
     try {
-      await deleteTransaction.mutateAsync({ id, scope });
+      if (transaction.origin === "invoiceAdjustment" && transaction.cardId) {
+        await deleteInvoiceAdjustment.mutateAsync({
+          cardId: transaction.cardId,
+          period: transaction.period,
+          adjustmentId: transaction.recordId as string,
+        });
+        toast.success("Ajuste de fatura removido");
+        return;
+      }
+      await deleteTransaction.mutateAsync({ id: transaction.recordId as string, scope });
       toast.success("Lançamento removido");
-    } catch {
+    } catch (error) {
+      if (error instanceof InvoicesApiError && error.code === "invoice_requires_reopen") {
+        toast.error("Reabra a fatura antes de remover o ajuste", {
+          description: "A reabertura desfaz os pagamentos para que a fatura possa ser alterada.",
+        });
+        return;
+      }
       toast.error("Não foi possível remover o lançamento", {
         description: "O lançamento permanece salvo. Tente novamente em instantes.",
       });
@@ -175,7 +199,11 @@ export function TransactionsContainer({
       }}
       onSearchChange={onSearchChange}
       pendingTransactionId={
-        deleteTransaction.isPending ? (deleteTransaction.variables?.id ?? null) : null
+        deleteTransaction.isPending
+          ? (deleteTransaction.variables?.id ?? null)
+          : deleteInvoiceAdjustment.isPending
+            ? (deleteInvoiceAdjustment.variables?.adjustmentId ?? null)
+            : null
       }
       pendingSettlementKey={
         settleTransactions.isPending

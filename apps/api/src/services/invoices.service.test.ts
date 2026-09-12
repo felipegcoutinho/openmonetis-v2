@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {
+  createDefaultCategoryDrafts,
+  invoiceAdjustmentCategoryName,
+} from "@openmonetis/domain/categories";
 import type { ApiError } from "../utils/errors";
 import { createInvoicesService, type InvoicesRepository } from "./invoices.service";
 
@@ -12,7 +16,21 @@ const paymentId = "60000000-0000-4000-8000-000000000006";
 
 type PaymentDraft = Parameters<InvoicesRepository["insertPayment"]>[0];
 
-function createRepository(onInsert: (data: PaymentDraft) => void): InvoicesRepository {
+test("default categories use one expense category for every invoice adjustment", () => {
+  const categories = createDefaultCategoryDrafts(userId).filter(
+    (category) => category.name === invoiceAdjustmentCategoryName,
+  );
+
+  assert.deepEqual(
+    categories.map((category) => ({ type: category.type, isSystem: category.isSystem })),
+    [{ type: "expense", isSystem: true }],
+  );
+});
+
+function createRepository(
+  onInsert: (data: PaymentDraft) => void,
+  overrides: Partial<InvoicesRepository> = {},
+): InvoicesRepository {
   return new Proxy(
     {
       listCards: async () => [
@@ -71,6 +89,7 @@ function createRepository(onInsert: (data: PaymentDraft) => void): InvoicesRepos
         onInsert(data);
         return { id: paymentId };
       },
+      ...overrides,
       ...({} as Pick<InvoicesRepository, never>),
     },
     {
@@ -165,4 +184,93 @@ test("primary person's payment requires a financial account", async () => {
     ),
     (error: ApiError) => error.code === "invoice_payment_account_required" && error.status === 400,
   );
+});
+
+test("invoice reduction is an expense adjustment assigned entirely to the selected person", async () => {
+  let inserted: Parameters<InvoicesRepository["insertAdjustment"]>[0] | undefined;
+  const adjustmentId = "80000000-0000-4000-8000-000000000008";
+  const categoryId = "70000000-0000-4000-8000-000000000007";
+  const service = createInvoicesService(
+    createRepository(() => undefined, {
+      findAdjustmentContext: async (_userId, _cardId, personId) => ({
+        card: { id: cardId, name: "Nubank" },
+        personId,
+        categoryId,
+      }),
+      insertAdjustment: async (data) => {
+        inserted = data;
+        return { id: adjustmentId };
+      },
+    }),
+    () => "2026-09-04",
+  );
+
+  const result = await service.adjust(
+    cardId,
+    "2026-09",
+    { amount: 10989.99, date: "2026-09-04", personId: externalPersonId },
+    userId,
+  );
+
+  assert.equal(inserted?.personId, externalPersonId);
+  assert.equal(inserted?.categoryId, categoryId);
+  assert.equal(inserted?.amount, "10.00");
+  assert.equal(inserted?.type, "expense");
+  assert.equal(result.id, adjustmentId);
+});
+
+test("paid invoice must be reopened before it can be adjusted", async () => {
+  const service = createInvoicesService(
+    createRepository(() => undefined, {
+      listPayments: async () => [{ id: paymentId, cardId, amount: "100.00", paidAt: "2026-09-03" }],
+    }),
+    () => "2026-09-04",
+  );
+
+  await assert.rejects(
+    service.adjust(
+      cardId,
+      "2026-09",
+      { amount: 11009.99, date: "2026-09-04", personId: externalPersonId },
+      userId,
+    ),
+    (error: ApiError) => error.code === "invoice_requires_reopen" && error.status === 409,
+  );
+});
+
+test("invoice reduction cannot exceed the selected person's amount", async () => {
+  const service = createInvoicesService(
+    createRepository(() => undefined, {
+      findAdjustmentContext: async () => ({
+        card: { id: cardId, name: "Nubank" },
+        personId: adminPersonId,
+        categoryId: "70000000-0000-4000-8000-000000000007",
+      }),
+    }),
+    () => "2026-09-04",
+  );
+
+  await assert.rejects(
+    service.adjust(
+      cardId,
+      "2026-09",
+      { amount: 8999.99, date: "2026-09-04", personId: adminPersonId },
+      userId,
+    ),
+    (error: ApiError) =>
+      error.code === "invoice_adjustment_exceeds_person_amount" && error.status === 400,
+  );
+});
+
+test("reopening an invoice delegates reversal of every payment", async () => {
+  const service = createInvoicesService(
+    createRepository(() => undefined, {
+      reopenInvoice: async () => ({ reversedPaymentCount: 2, reversedAmount: 750 }),
+    }),
+  );
+
+  assert.deepEqual(await service.reopen(cardId, "2026-09", userId), {
+    reversedPaymentCount: 2,
+    reversedAmount: 750,
+  });
 });

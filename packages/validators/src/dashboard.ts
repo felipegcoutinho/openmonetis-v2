@@ -82,9 +82,9 @@ export const DashboardPaymentStatusOutputSchema = z
 const expenseDistributionItemSchema = <T extends readonly [string, ...string[]]>(values: T) =>
   z.object({
     key: z.enum(values),
-    amount: z.number().finite().nonnegative(),
+    amount: z.number().finite(),
     count: z.number().int().nonnegative(),
-    percentage: z.number().finite().min(0).max(100),
+    percentage: z.number().finite(),
   });
 
 export const DashboardExpenseDistributionOutputSchema = z
@@ -101,10 +101,10 @@ const dashboardCategoryBreakdownItemSchema = z.object({
   categoryId: z.uuid(),
   categoryName: z.string(),
   categoryIcon: z.string().nullable(),
-  amount: z.number().finite().nonnegative(),
-  previousAmount: z.number().finite().nonnegative(),
+  amount: z.number().finite(),
+  previousAmount: z.number().finite(),
   count: z.number().int().nonnegative(),
-  percentage: z.number().finite().min(0).max(100),
+  percentage: z.number().finite(),
 });
 
 export const DashboardCategoryBreakdownOutputSchema = z
@@ -174,7 +174,6 @@ export const DashboardSnapshotOutputSchema = z
   })
   .openapi("DashboardSnapshot");
 
-export type DashboardQuery = z.infer<typeof DashboardQuerySchema>;
 export type DashboardWidgetPreferencesInput = z.infer<typeof DashboardWidgetPreferencesInputSchema>;
 export type DashboardWidgetPreferencesOutput = z.infer<
   typeof DashboardWidgetPreferencesOutputSchema

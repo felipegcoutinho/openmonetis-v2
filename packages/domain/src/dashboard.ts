@@ -1,8 +1,10 @@
-import type {
-  PaymentMethod,
-  TransactionCondition,
-  TransactionOrigin,
-  TransactionType,
+import {
+  calculateExpenseImpact,
+  isExpenseReduction,
+  type PaymentMethod,
+  type TransactionCondition,
+  type TransactionOrigin,
+  type TransactionType,
 } from "./transactions";
 
 export const dashboardWidgetIds = [
@@ -296,7 +298,7 @@ function contributesToProjected(entry: DashboardMetricEntry) {
 function calculatePeriod(entries: DashboardMetricEntry[], period: string) {
   let incomeCents = 0;
   let grossExpenseCents = 0;
-  let refundCents = 0;
+  let expenseReductionCents = 0;
   let transferAdjustmentCents = 0;
 
   for (const entry of entries) {
@@ -318,12 +320,10 @@ function calculatePeriod(entries: DashboardMetricEntry[], period: string) {
       continue;
     }
 
-    if (entry.origin === "refund") {
-      refundCents += Math.abs(amountCents);
-      continue;
-    }
+    if (entry.origin === "accountBalanceAdjustment") continue;
 
-    if (entry.origin === "accountBalanceAdjustment") {
+    if (isExpenseReduction(entry)) {
+      expenseReductionCents += Math.abs(amountCents);
       continue;
     }
 
@@ -331,8 +331,9 @@ function calculatePeriod(entries: DashboardMetricEntry[], period: string) {
     if (entry.type === "expense") grossExpenseCents += Math.abs(amountCents);
   }
 
-  const expenseCents = Math.max(0, grossExpenseCents - refundCents);
-  const balanceCents = incomeCents - grossExpenseCents + refundCents + transferAdjustmentCents;
+  const expenseCents = Math.max(0, grossExpenseCents - expenseReductionCents);
+  const balanceCents =
+    incomeCents - grossExpenseCents + expenseReductionCents + transferAdjustmentCents;
 
   return {
     balanceCents,
@@ -368,8 +369,8 @@ function hasPeriodData(
 
     if (entry.origin === "accountBalanceAdjustment") return false;
     if (metric === "balance") return true;
-    if (metric === "expenses") return entry.type === "expense" || entry.origin === "refund";
-    return entry.type === "income" && entry.origin !== "refund";
+    if (metric === "expenses") return entry.type === "expense" || isExpenseReduction(entry);
+    return entry.type === "income" && !isExpenseReduction(entry);
   });
 }
 
@@ -476,7 +477,7 @@ export function calculateDashboardPaymentStatus(
     const status = entry.isSettled ? "confirmed" : "pending";
     const amountCents = Math.abs(toCents(entry.adminAmount));
 
-    if (entry.origin === "refund") {
+    if (isExpenseReduction({ ...entry, amount: entry.adminAmount })) {
       cents.expenses[status] -= amountCents;
       continue;
     }
@@ -509,11 +510,14 @@ export function calculateDashboardExpenseDistribution(
     (entry) =>
       entry.period === period &&
       entry.personRole === "admin" &&
-      entry.type === "expense" &&
       entry.origin !== "invoicePayment" &&
-      entry.origin !== "accountBalanceAdjustment",
+      entry.origin !== "accountBalanceAdjustment" &&
+      calculateExpenseImpact(entry) !== 0,
   );
-  const totalCents = included.reduce((total, entry) => total + Math.abs(toCents(entry.amount)), 0);
+  const totalCents = Math.max(
+    0,
+    included.reduce((total, entry) => total + toCents(calculateExpenseImpact(entry)), 0),
+  );
 
   return {
     totalAmount: totalCents / 100,
@@ -568,8 +572,8 @@ export function calculateDashboardPeopleExpenses(
       continue;
     }
 
-    const isRefund = entry.origin === "refund";
-    if (!isRefund && entry.type !== "expense") continue;
+    const isReduction = isExpenseReduction(entry);
+    if (!isReduction && entry.type !== "expense") continue;
 
     const person = people.get(entry.personId) ?? {
       amountCents: 0,
@@ -580,7 +584,7 @@ export function calculateDashboardPeopleExpenses(
       personStatus: entry.personStatus,
       previousAmountCents: 0,
     };
-    const amountCents = Math.abs(toCents(entry.amount)) * (isRefund ? -1 : 1);
+    const amountCents = Math.abs(toCents(entry.amount)) * (isReduction ? -1 : 1);
 
     if (entry.period === period) {
       person.amountCents += amountCents;
@@ -639,13 +643,19 @@ function groupCategoryBreakdown(
       entry.type === "transfer" ||
       entry.origin === "invoicePayment" ||
       entry.origin === "accountBalanceAdjustment" ||
-      entry.origin === "refund" ||
       (entry.period !== period && entry.period !== previousPeriod)
     ) {
       continue;
     }
 
-    if (entry.type !== type) continue;
+    const expenseImpact = calculateExpenseImpact(entry);
+    if (
+      type === "expense"
+        ? expenseImpact === 0
+        : entry.type !== "income" || isExpenseReduction(entry)
+    ) {
+      continue;
+    }
 
     const group = groups.get(entry.categoryId) ?? {
       amountCents: 0,
@@ -654,7 +664,8 @@ function groupCategoryBreakdown(
       count: 0,
       previousAmountCents: 0,
     };
-    const amountCents = Math.abs(toCents(entry.amount));
+    const amountCents =
+      type === "expense" ? toCents(expenseImpact) : Math.abs(toCents(entry.amount));
 
     if (entry.period === period) {
       group.amountCents += amountCents;
@@ -665,27 +676,24 @@ function groupCategoryBreakdown(
     groups.set(entry.categoryId, group);
   }
 
-  const totalCents = [...groups.values()].reduce(
-    (total, group) => total + Math.max(0, group.amountCents),
-    0,
-  );
+  const totalCents = [...groups.values()].reduce((total, group) => total + group.amountCents, 0);
   const items = [...groups]
-    .filter(([, group]) => group.amountCents > 0)
+    .filter(([, group]) => group.amountCents !== 0)
     .map(([categoryId, group]) => ({
       categoryId,
       categoryName: group.categoryName,
       categoryIcon: group.categoryIcon,
       amount: group.amountCents / 100,
-      previousAmount: Math.max(0, group.previousAmountCents) / 100,
+      previousAmount: group.previousAmountCents / 100,
       count: group.count,
-      percentage: Math.round((group.amountCents / totalCents) * 1_000) / 10,
+      percentage: totalCents > 0 ? Math.round((group.amountCents / totalCents) * 1_000) / 10 : 0,
     }))
     .sort(
       (left, right) =>
         right.amount - left.amount || left.categoryName.localeCompare(right.categoryName),
     );
 
-  return { items, total: totalCents / 100 };
+  return { items, total: Math.max(0, totalCents) / 100 };
 }
 
 function groupExpenseDistribution<
@@ -701,12 +709,13 @@ function groupExpenseDistribution<
   for (const entry of entries) {
     const key = entry[field] as Key;
     const group = groups.get(key) ?? { amountCents: 0, count: 0 };
-    group.amountCents += Math.abs(toCents(entry.amount));
+    group.amountCents += toCents(calculateExpenseImpact(entry));
     group.count += 1;
     groups.set(key, group);
   }
 
   return [...groups]
+    .filter(([, group]) => group.amountCents !== 0)
     .map(([key, group]) => ({
       key,
       amount: group.amountCents / 100,

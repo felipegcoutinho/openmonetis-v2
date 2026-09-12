@@ -6,7 +6,6 @@ import {
   resolveCardClosingRule,
 } from "@openmonetis/domain/cards";
 import {
-  allocateInvoiceReduction,
   calculateInvoicePersonBalances,
   createInvoiceAdjustmentDraft,
   validateInvoicePaymentAllocations,
@@ -130,10 +129,10 @@ export type InvoicesRepository = {
   findAdjustmentContext(
     userId: string,
     cardId: string,
-    type: "income" | "expense",
+    personId: string,
   ): Promise<{
     card: { id: string; name: string } | null;
-    adminPersonId: string | null;
+    personId: string | null;
     categoryId: string | null;
   }>;
   insertAdjustment(data: {
@@ -147,8 +146,18 @@ export type InvoicesRepository = {
     amount: string;
     type: "income" | "expense";
     note: string;
-    allocations: { personId: string; amount: number }[];
-  }): Promise<void>;
+  }): Promise<{ id: string } | null>;
+  reopenInvoice(
+    userId: string,
+    cardId: string,
+    period: string,
+  ): Promise<{ reversedPaymentCount: number; reversedAmount: number } | null>;
+  deleteAdjustment(
+    userId: string,
+    cardId: string,
+    period: string,
+    adjustmentId: string,
+  ): Promise<"deleted" | "has_payments" | "not_found">;
 };
 
 export function createInvoicesService(
@@ -334,6 +343,12 @@ export function createInvoicesService(
       return { id: payment.id, amount: Number(payment.amount) };
     },
     async adjust(cardId: string, period: string, input: AdjustInvoiceInput, userId: string) {
+      if (input.date > today()) {
+        throw badRequest(
+          "Adjustment date cannot be in the future",
+          "invoice_adjustment_date_future",
+        );
+      }
       if (!input.date.startsWith(`${period}-`)) {
         throw badRequest(
           "Adjustment date must belong to the invoice period",
@@ -345,6 +360,12 @@ export function createInvoicesService(
       if (!ownedCard) throw notFound("Card not found", "card_not_found");
 
       const invoice = snapshot.items.find((item) => item.cardId === cardId);
+      if ((invoice?.paymentCount ?? 0) > 0) {
+        throw conflict(
+          "Invoice payments must be reopened before adjusting the invoice",
+          "invoice_requires_reopen",
+        );
+      }
       const previousAmount = money(invoice?.amount ?? 0);
       const currentAmount = money(input.amount);
       if (currentAmount < (invoice?.paidAmount ?? 0)) {
@@ -355,46 +376,69 @@ export function createInvoicesService(
       }
       const adjustment = createInvoiceAdjustmentDraft(previousAmount, currentAmount);
       if (!adjustment) {
-        return { previousAmount, currentAmount, adjustmentAmount: 0, type: null };
+        return { id: null, previousAmount, currentAmount, adjustmentAmount: 0, type: null };
       }
 
-      const context = await repository.findAdjustmentContext(userId, cardId, adjustment.type);
+      const context = await repository.findAdjustmentContext(userId, cardId, input.personId);
       if (!context.card) throw notFound("Card not found", "card_not_found");
-      if (!context.adminPersonId) throw notFound("Person not found", "person_not_found");
+      if (!context.personId) throw notFound("Person not found", "person_not_found");
       if (!context.categoryId) {
         throw notFound("Adjustment category not found", "invoice_adjustment_category_not_found");
       }
+      const adjustmentAmount = Number(adjustment.amount);
+      const selectedPersonAmount =
+        invoice?.people.find((person) => person.personId === context.personId)?.amount ?? 0;
+      if (adjustmentAmount > 0 && money(selectedPersonAmount) < money(adjustmentAmount)) {
+        throw badRequest(
+          "Invoice reduction exceeds the selected person's amount",
+          "invoice_adjustment_exceeds_person_amount",
+        );
+      }
 
-      const allocations =
-        adjustment.type === "income"
-          ? allocateInvoiceReduction(
-              Number(adjustment.amount),
-              (invoice as NonNullable<typeof invoice>).people.map((person) => ({
-                personId: person.personId,
-                amount: person.remainingAmount,
-              })),
-            )
-          : [];
-      await repository.insertAdjustment({
+      const inserted = await repository.insertAdjustment({
         userId,
         cardId,
         cardName: context.card.name,
-        personId: allocations[0]?.personId ?? context.adminPersonId,
+        personId: context.personId,
         categoryId: context.categoryId,
         period,
         date: input.date,
         amount: adjustment.amount,
         type: adjustment.type,
         note: createInvoiceAdjustmentNote(previousAmount, currentAmount),
-        allocations,
       });
+      if (!inserted) {
+        throw conflict(
+          "Invoice payments must be reopened before adjusting the invoice",
+          "invoice_requires_reopen",
+        );
+      }
 
       return {
+        id: inserted.id,
         previousAmount,
         currentAmount,
-        adjustmentAmount: Math.abs(Number(adjustment.amount)),
+        adjustmentAmount: Math.abs(adjustmentAmount),
         type: adjustment.type,
       };
+    },
+    async reopen(cardId: string, period: string, userId: string) {
+      const result = await repository.reopenInvoice(userId, cardId, period);
+      if (!result) throw notFound("Card not found", "card_not_found");
+      return result;
+    },
+    async removeAdjustment(cardId: string, period: string, adjustmentId: string, userId: string) {
+      const result = await repository.deleteAdjustment(userId, cardId, period, adjustmentId);
+      if (result === "has_payments") {
+        throw conflict(
+          "Invoice payments must be reopened before removing an adjustment",
+          "invoice_requires_reopen",
+        );
+      }
+      if (result === "not_found") {
+        throw notFound("Invoice adjustment not found", "invoice_adjustment_not_found");
+      }
+      return { id: adjustmentId };
     },
     async updateDates(
       cardId: string,

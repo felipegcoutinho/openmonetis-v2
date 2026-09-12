@@ -9,6 +9,7 @@ import {
   transactionSplits,
   transactions,
 } from "@openmonetis/db";
+import { isExpenseReduction } from "@openmonetis/domain/transactions";
 import { and, asc, desc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import type { PersonSettlementsRepository } from "../services/person-settlements.service";
 
@@ -91,6 +92,7 @@ export const personSettlementsRepository: PersonSettlementsRepository = {
     const rows = await db
       .select({
         kind: transactions.origin,
+        type: transactions.type,
         amount: transactions.amount,
         splitAmount: transactionSplits.amount,
       })
@@ -110,13 +112,16 @@ export const personSettlementsRepository: PersonSettlementsRepository = {
           or(
             and(eq(transactions.origin, "regular"), eq(transactions.type, "expense")),
             eq(transactions.origin, "refund"),
+            eq(transactions.origin, "invoiceAdjustment"),
           ),
           or(eq(transactions.personId, personId), eq(transactionSplits.personId, personId)),
         ),
       );
 
     return rows.map((row) => ({
-      kind: row.kind === "refund" ? ("refund" as const) : ("expense" as const),
+      kind: isExpenseReduction({ origin: row.kind, type: row.type, amount: row.amount })
+        ? ("refund" as const)
+        : ("expense" as const),
       amount: row.splitAmount ?? row.amount,
     }));
   },

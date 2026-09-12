@@ -1,5 +1,6 @@
 import type { CardOutput } from "@openmonetis/validators/cards";
 import type { AdjustInvoiceInput, DashboardInvoice } from "@openmonetis/validators/invoices";
+import type { PersonOutput } from "@openmonetis/validators/people";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
@@ -42,10 +43,12 @@ import { AdjustInvoiceDialog } from "@/features/invoices/components/adjust-invoi
 import { InvoiceDatesDialog } from "@/features/invoices/components/invoice-dates-dialog";
 import {
   useAdjustInvoiceMutation,
+  useReopenInvoiceMutation,
   useUndoInvoicePaymentMutation,
 } from "@/features/invoices/invoices.mutations";
 import { formatInvoicePaymentOption } from "@/features/invoices/invoices.presentation";
 import { invoicesQueryOptions } from "@/features/invoices/invoices.queries";
+import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import {
   formatPeriod,
@@ -65,7 +68,9 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
   const selectedPeriod = search.period ?? getCurrentPeriod();
   const cardQuery = useQuery(cardQueryOptions(cardId, selectedPeriod));
   const invoicesQuery = useQuery(invoicesQueryOptions(selectedPeriod));
+  const peopleQuery = useQuery(peopleQueryOptions());
   const invoice = invoicesQuery.data?.items.find((item) => item.cardId === cardId);
+  const activePeople = peopleQuery.data?.filter((person) => person.status === "active") ?? [];
 
   return (
     <ProtectedRoute>
@@ -76,7 +81,7 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
         {cardQuery.data ? (
           <TransactionsContainer
             onSearchChange={onSearchChange}
-            scope={getCardInvoiceScope(cardQuery.data, selectedPeriod, invoice)}
+            scope={getCardInvoiceScope(cardQuery.data, selectedPeriod, activePeople, invoice)}
             search={search}
           />
         ) : null}
@@ -85,7 +90,12 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
   );
 }
 
-function getCardInvoiceScope(card: CardOutput, period: string, invoice?: DashboardInvoice) {
+function getCardInvoiceScope(
+  card: CardOutput,
+  period: string,
+  people: PersonOutput[],
+  invoice?: DashboardInvoice,
+) {
   const periodLabel = formatPeriod(period);
 
   return {
@@ -109,6 +119,7 @@ function getCardInvoiceScope(card: CardOutput, period: string, invoice?: Dashboa
         <CardInvoiceSummary
           card={card}
           invoice={invoice}
+          people={people}
           period={period}
           periodLabel={periodLabel}
         />
@@ -122,17 +133,20 @@ function getCardInvoiceScope(card: CardOutput, period: string, invoice?: Dashboa
 function CardInvoiceSummary({
   card,
   invoice,
+  people,
   period,
   periodLabel,
 }: {
   card: CardOutput;
   invoice?: DashboardInvoice;
+  people: PersonOutput[];
   period: string;
   periodLabel: string;
 }) {
   const brandAsset = getCardBrandAsset(card.brand);
   const undoMutation = useUndoInvoicePaymentMutation();
   const adjustMutation = useAdjustInvoiceMutation();
+  const reopenMutation = useReopenInvoiceMutation();
   const payments = invoice?.payments ?? [];
   const invoicePeriod = invoice?.period ?? "";
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
@@ -142,8 +156,12 @@ function CardInvoiceSummary({
     payments.find((payment) => payment.id === selectedPaymentId) ?? payments[0];
 
   async function adjustInvoice(input: AdjustInvoiceInput) {
-    await adjustMutation.mutateAsync({ cardId: card.id, period, input });
+    const adjustment = await adjustMutation.mutateAsync({ cardId: card.id, period, input });
     setAdjustOpen(false);
+    if (adjustment.id === null) {
+      toast.info("A fatura já estava com esse valor");
+      return;
+    }
     toast.success("Fatura ajustada", {
       description: "A diferença foi registrada nos lançamentos da fatura.",
     });
@@ -155,8 +173,19 @@ function CardInvoiceSummary({
         accentImage={card.logo}
         actions={
           <>
-            {card.status === "active" ? (
-              <FinancialSummaryAction onClick={() => setAdjustOpen(true)}>
+            {card.status === "active" && period <= getCurrentPeriod() ? (
+              <FinancialSummaryAction
+                disabled={people.length === 0}
+                onClick={() => {
+                  if (payments.length > 0) {
+                    toast.error("Reabra a fatura antes de ajustá-la", {
+                      description: "A reabertura desfaz todos os pagamentos desta fatura.",
+                    });
+                    return;
+                  }
+                  setAdjustOpen(true);
+                }}
+              >
                 <Scale aria-hidden="true" className="size-4" />
                 Ajustar fatura
               </FinancialSummaryAction>
@@ -165,6 +194,45 @@ function CardInvoiceSummary({
               <CalendarClock aria-hidden="true" className="size-4" />
               Ajustar datas
             </FinancialSummaryAction>
+            {selectedPayment ? (
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <FinancialSummaryAction disabled={reopenMutation.isPending} type="button" />
+                  }
+                >
+                  <RotateCcw aria-hidden="true" className="size-4" />
+                  Reabrir fatura
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reabrir esta fatura?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Todos os {payments.length} pagamento{payments.length === 1 ? "" : "s"} serão
+                      desfeitos, e cada movimentação de conta vinculada será estornada. Depois
+                      disso, você poderá ajustar e pagar a fatura novamente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        try {
+                          await reopenMutation.mutateAsync({ cardId: card.id, period });
+                          toast.success("Fatura reaberta", {
+                            description: "Todos os pagamentos foram desfeitos.",
+                          });
+                        } catch {
+                          toast.error("Não foi possível reabrir a fatura");
+                        }
+                      }}
+                    >
+                      Reabrir fatura
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : null}
             {selectedPayment ? (
               <AlertDialog>
                 <AlertDialogTrigger
@@ -288,6 +356,7 @@ function CardInvoiceSummary({
           onOpenChange={setAdjustOpen}
           onSubmit={adjustInvoice}
           open={adjustOpen}
+          people={people}
           period={period}
         />
       ) : null}

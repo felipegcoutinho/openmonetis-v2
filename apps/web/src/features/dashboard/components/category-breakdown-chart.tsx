@@ -104,22 +104,27 @@ export function CategoryBreakdownChart({
 }
 
 function createChartData(items: CategoryBreakdownItem[]): ChartEntry[] {
-  const visibleItems = items.slice(0, maximumChartCategories);
+  const positiveItems = items.filter((item) => item.amount > 0);
+  const positiveTotal = positiveItems.reduce((total, item) => total + item.amount, 0);
+  const visibleItems = positiveItems.slice(0, maximumChartCategories);
   const entries = visibleItems.map((item, index) => ({
     category: item.categoryId,
     fill: chartColors[index % chartColors.length],
     name: item.categoryName,
-    percentage: item.percentage,
+    percentage: positiveTotal > 0 ? (item.amount / positiveTotal) * 100 : 0,
     value: item.amount,
   }));
-  const remainingItems = items.slice(maximumChartCategories);
+  const remainingItems = positiveItems.slice(maximumChartCategories);
 
   if (remainingItems.length > 0) {
     entries.push({
       category: "others",
       fill: chartColors[maximumChartCategories % chartColors.length],
       name: "Outros",
-      percentage: remainingItems.reduce((total, item) => total + item.percentage, 0),
+      percentage:
+        positiveTotal > 0
+          ? (remainingItems.reduce((total, item) => total + item.amount, 0) / positiveTotal) * 100
+          : 0,
       value: remainingItems.reduce((total, item) => total + item.amount, 0),
     });
   }

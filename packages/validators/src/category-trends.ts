@@ -75,7 +75,7 @@ export const CategoryTrendPeriodOutputSchema = z
     incomeAmount: z.number().nonnegative(),
     expenseAmount: z.number().nonnegative(),
     netAmount: z.number(),
-    actualAmount: z.number().nonnegative(),
+    actualAmount: z.number(),
     recurringAmount: z.number().nonnegative(),
   })
   .openapi("CategoryTrendPeriod");
@@ -83,10 +83,10 @@ export const CategoryTrendPeriodOutputSchema = z
 export const CategoryTrendValueOutputSchema = z
   .object({
     period: periodSchema,
-    actualAmount: z.number().nonnegative(),
+    actualAmount: z.number(),
     recurringAmount: z.number().nonnegative(),
-    totalAmount: z.number().nonnegative(),
-    previousAmount: z.number().nonnegative(),
+    totalAmount: z.number(),
+    previousAmount: z.number(),
     changeAmount: z.number(),
     changePercentage: z.number().nullable(),
     changeKind: z.enum(categoryTrendChangeKinds),
@@ -103,8 +103,8 @@ export const CategoryTrendAvailableCategoryOutputSchema = z
   .openapi("CategoryTrendAvailableCategory");
 
 export const CategoryTrendCategoryOutputSchema = CategoryTrendAvailableCategoryOutputSchema.extend({
-  totalAmount: z.number().nonnegative(),
-  averageAmount: z.number().nonnegative(),
+  totalAmount: z.number(),
+  averageAmount: z.number(),
   values: z.array(CategoryTrendValueOutputSchema),
 }).openapi("CategoryTrendCategory");
 
@@ -115,9 +115,9 @@ export const CategoryTrendsSummaryOutputSchema = z
     incomeAmount: z.number().nonnegative(),
     expenseAmount: z.number().nonnegative(),
     netAmount: z.number(),
-    actualAmount: z.number().nonnegative(),
+    actualAmount: z.number(),
     recurringAmount: z.number().nonnegative(),
-    totalAmount: z.number().nonnegative(),
+    totalAmount: z.number(),
     averageMonthlyIncomeAmount: z.number().nonnegative(),
     averageMonthlyExpenseAmount: z.number().nonnegative(),
     averageMonthlyNetAmount: z.number(),

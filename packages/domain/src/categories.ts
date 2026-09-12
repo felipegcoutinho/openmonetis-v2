@@ -3,6 +3,7 @@ export type CategoryType = (typeof categoryTypes)[number];
 export const internalTransferCategoryName = "Transferência interna";
 export const invoicePaymentCategoryName = "Pagamentos";
 export const balanceAdjustmentCategoryName = "Ajuste de saldo";
+export const invoiceAdjustmentCategoryName = "Ajustes de fatura";
 export const yieldCategoryName = "Rendimentos";
 export const personSettlementCategoryName = "Repasses";
 export const otherExpenseCategoryName = "Outras despesas";
@@ -65,6 +66,12 @@ const defaultCategoryDefinitions: Array<{
   { name: "Viagem", type: "expense", icon: "plane" },
   { name: "Presentes", type: "expense", icon: "gift" },
   { name: invoicePaymentCategoryName, type: "expense", icon: "receipt", isSystem: true },
+  {
+    name: invoiceAdjustmentCategoryName,
+    type: "expense",
+    icon: "receipt-text",
+    isSystem: true,
+  },
   { name: otherExpenseCategoryName, type: "expense", icon: "more-horizontal" },
   { name: "Salário", type: "income", icon: "wallet" },
   { name: "Freelance", type: "income", icon: "briefcase" },

@@ -100,7 +100,10 @@ type TransactionsScreenProps = {
   periodNavigationPlacement?: "afterPageHeader" | "afterSummary";
   search: TransactionsSearch;
   onSearchChange: (search: Partial<TransactionsSearch>) => void;
-  onDeleteTransaction: (id: string, scope?: TransactionActionScope) => Promise<void> | void;
+  onDeleteTransaction: (
+    transaction: TransactionOutput,
+    scope?: TransactionActionScope,
+  ) => Promise<void> | void;
   onSettleTransactions: (ids: string[], isSettled: boolean) => Promise<void> | void;
   onSettleRecurringOccurrence: (
     recurringRuleId: string,

@@ -1,3 +1,10 @@
+import {
+  calculateExpenseImpact,
+  type PaymentMethod,
+  type TransactionOrigin,
+  type TransactionType,
+} from "./transactions";
+
 export type AuthenticatedUser = {
   id: string;
   name: string;
@@ -82,16 +89,10 @@ export function createExternalPersonDraft(
 
 export type PersonFinancialEntry = {
   amount: number;
-  paymentMethod:
-    | "credit_card"
-    | "debit_card"
-    | "pix"
-    | "cash"
-    | "boleto"
-    | "benefits"
-    | "bank_transfer";
+  origin: TransactionOrigin;
+  paymentMethod: PaymentMethod;
   period: string;
-  type: "income" | "expense" | "transfer";
+  type: TransactionType;
 };
 
 const personPaymentMethods = [
@@ -114,8 +115,8 @@ export function calculatePersonFinancialSummary(
     personPaymentMethods.map((method) => [method, 0]),
   );
   for (const entry of entries) {
-    if (entry.type !== "expense" || !expensesByPeriod.has(entry.period)) continue;
-    const amount = Math.abs(Math.round(entry.amount * 100));
+    const amount = Math.round(calculateExpenseImpact(entry) * 100);
+    if (amount === 0 || !expensesByPeriod.has(entry.period)) continue;
     expensesByPeriod.set(entry.period, (expensesByPeriod.get(entry.period) as number) + amount);
 
     if (entry.period === selectedPeriod && paymentMethodTotals.has(entry.paymentMethod)) {
@@ -126,14 +127,14 @@ export function calculatePersonFinancialSummary(
     }
   }
 
-  const totalExpensesCents = expensesByPeriod.get(selectedPeriod) ?? 0;
+  const totalExpensesCents = Math.max(0, expensesByPeriod.get(selectedPeriod) ?? 0);
   const highestHistoryCents = Math.max(0, ...expensesByPeriod.values());
 
   return {
     period: selectedPeriod,
     totalExpenses: totalExpensesCents / 100,
     history: periods.map((period) => {
-      const expensesCents = expensesByPeriod.get(period) as number;
+      const expensesCents = Math.max(0, expensesByPeriod.get(period) as number);
       return {
         period,
         expenses: expensesCents / 100,
@@ -142,7 +143,7 @@ export function calculatePersonFinancialSummary(
       };
     }),
     paymentMethods: personPaymentMethods.map((paymentMethod) => {
-      const amountCents = paymentMethodTotals.get(paymentMethod) as number;
+      const amountCents = Math.max(0, paymentMethodTotals.get(paymentMethod) as number);
       return {
         paymentMethod,
         amount: amountCents / 100,

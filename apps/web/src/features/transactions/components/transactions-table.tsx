@@ -40,6 +40,7 @@ import {
   QrCode,
   RefreshCw,
   RotateCcw,
+  Scale,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
@@ -99,7 +100,7 @@ type TransactionsTableProps = {
   pendingSettlementKey: string | null;
   onEdit: (transaction: TransactionOutput) => void;
   onView: (transaction: TransactionOutput) => void;
-  onDelete: (id: string, scope?: TransactionActionScope) => void;
+  onDelete: (transaction: TransactionOutput, scope?: TransactionActionScope) => void;
   onCopy: (transaction: TransactionOutput) => void;
   onAnticipate: (transaction: TransactionOutput) => void;
   onUndoAnticipation: (transaction: TransactionOutput) => void;
@@ -288,7 +289,7 @@ type TransactionRowProps = {
   settlementPending: boolean;
   onEdit: (transaction: TransactionOutput) => void;
   onView: (transaction: TransactionOutput) => void;
-  onDelete: (id: string, scope?: TransactionActionScope) => void;
+  onDelete: (transaction: TransactionOutput, scope?: TransactionActionScope) => void;
   onCopy: (transaction: TransactionOutput) => void;
   onAnticipate: (transaction: TransactionOutput) => void;
   onUndoAnticipation: (transaction: TransactionOutput) => void;
@@ -335,23 +336,26 @@ function TransactionRow({
         ? "text-info"
         : "text-foreground";
   const PaymentIcon =
-    transaction.paymentMethod === null
-      ? Minus
-      : transaction.paymentMethod === "credit_card" || transaction.paymentMethod === "debit_card"
-        ? CreditCard
-        : transaction.paymentMethod === "boleto"
-          ? Barcode
-          : transaction.paymentMethod === "pix"
-            ? QrCode
-            : transaction.paymentMethod === "cash"
-              ? Banknote
-              : Landmark;
+    transaction.origin === "accountBalanceAdjustment"
+      ? Scale
+      : transaction.paymentMethod === null
+        ? Minus
+        : transaction.paymentMethod === "credit_card" || transaction.paymentMethod === "debit_card"
+          ? CreditCard
+          : transaction.paymentMethod === "boleto"
+            ? Barcode
+            : transaction.paymentMethod === "pix"
+              ? QrCode
+              : transaction.paymentMethod === "cash"
+                ? Banknote
+                : Landmark;
   const isInvoicePayment = transaction.categoryName === invoicePaymentCategoryName;
   const categoryLabel =
     transaction.categoryName === internalTransferCategoryName
       ? "Transf. interna"
       : transaction.categoryName;
   const isInvoiceAdjustment = transaction.origin === "invoiceAdjustment";
+  const isInvoiceReduction = isInvoiceAdjustment && visibleAmount > 0;
   const isBalanceAdjustment =
     transaction.categoryName === balanceAdjustmentCategoryName ||
     transaction.paymentMethod === null;
@@ -379,7 +383,7 @@ function TransactionRow({
     transaction.installmentCount !== null &&
     transaction.installmentCount > 1 &&
     transaction.currentInstallment === transaction.installmentCount;
-  const canDelete = canDeleteTransactionOrigin(transaction.origin);
+  const canDelete = isInvoiceAdjustment || canDeleteTransactionOrigin(transaction.origin);
   const isPaymentControlledByInvoice =
     transaction.paymentMethod === "credit_card" || transaction.isSettled === null;
   const shouldShowPersonContext =
@@ -519,17 +523,21 @@ function TransactionRow({
         <span className="sr-only">
           {isRefund
             ? "Reembolso"
-            : transaction.type === "income"
-              ? "Receita"
-              : transaction.type === "expense"
-                ? "Despesa"
-                : "Transferência"}
+            : isInvoiceReduction
+              ? "Redução de despesa"
+              : transaction.type === "income"
+                ? "Receita"
+                : transaction.type === "expense"
+                  ? "Despesa"
+                  : "Transferência"}
           :
         </span>
         <MoneyValue
           amount={visibleAmount}
           className={`font-medium ${amountClassName}`}
-          showPositiveSign={transaction.type === "income" || isIncomingTransfer}
+          showPositiveSign={
+            transaction.type === "income" || isIncomingTransfer || isInvoiceReduction
+          }
         />
       </TableCell>
       <TableCell className="whitespace-nowrap">
@@ -547,7 +555,7 @@ function TransactionRow({
       <TableCell className="whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           <PaymentIcon aria-hidden="true" className="size-4" />
-          {formatPaymentMethodTable(transaction.paymentMethod)}
+          {formatPaymentMethodTable(transaction.paymentMethod, transaction.origin)}
         </span>
       </TableCell>
       <TableCell>
@@ -705,9 +713,11 @@ function TransactionRow({
                     <Trash2 />
                     {isRefund
                       ? "Remover reembolso"
-                      : isBalanceAdjustment
-                        ? "Remover ajuste"
-                        : "Remover lançamento"}
+                      : isInvoiceAdjustment
+                        ? "Remover ajuste de fatura"
+                        : isBalanceAdjustment
+                          ? "Remover ajuste"
+                          : "Remover lançamento"}
                   </DropdownMenuItem>
                 </>
               ) : null}
@@ -719,26 +729,32 @@ function TransactionRow({
                 <AlertDialogTitle>
                   {isRefund
                     ? "Remover reembolso?"
-                    : isBalanceAdjustment
-                      ? "Remover ajuste de saldo?"
-                      : "Remover lançamento?"}
+                    : isInvoiceAdjustment
+                      ? "Remover ajuste de fatura?"
+                      : isBalanceAdjustment
+                        ? "Remover ajuste de saldo?"
+                        : "Remover lançamento?"}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                   {isRefund
                     ? `O reembolso de “${transaction.name.replace(/^Reembolso · /, "")}” será desfeito.`
-                    : isBalanceAdjustment
-                      ? "O lançamento de ajuste será removido e o saldo da conta será recalculado."
-                      : `O lançamento “${transaction.name}” será removido desta base.`}
+                    : isInvoiceAdjustment
+                      ? "O ajuste será removido e o valor da fatura será recalculado. Se houver pagamentos, reabra a fatura primeiro."
+                      : isBalanceAdjustment
+                        ? "O lançamento de ajuste será removido e o saldo da conta será recalculado."
+                        : `O lançamento “${transaction.name}” será removido desta base.`}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction
                   disabled={pending}
-                  onClick={() => onDelete(transaction.recordId ?? "", "single")}
+                  onClick={() => onDelete(transaction, "single")}
                   variant="destructive"
                 >
-                  {isBalanceAdjustment ? "Remover ajuste" : "Remover lançamento"}
+                  {isBalanceAdjustment || isInvoiceAdjustment
+                    ? "Remover ajuste"
+                    : "Remover lançamento"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -747,7 +763,7 @@ function TransactionRow({
             action="delete"
             key={`delete-${transaction.id}`}
             onConfirm={async (scope) => {
-              await onDelete(transaction.recordId ?? "", scope);
+              await onDelete(transaction, scope);
               setInstallmentDeleteOpen(false);
             }}
             onOpenChange={setInstallmentDeleteOpen}

@@ -185,7 +185,7 @@ function CategoryBreakdownList({
               aria-label={`${item.categoryName}: ${formatPercentage(item.percentage)}% das ${itemLabel}`}
               indicatorClassName={indicatorClassName}
               trackClassName="h-1"
-              value={item.percentage}
+              value={Math.max(0, Math.min(100, item.percentage))}
             />
           </div>
         </DashboardWidgetRow>

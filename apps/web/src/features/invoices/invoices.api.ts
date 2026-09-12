@@ -4,6 +4,8 @@ import type {
   DashboardInvoicesOutput,
   InvoiceAdjustmentOutput,
   InvoicePaymentOutput,
+  RemoveInvoiceAdjustmentOutput,
+  ReopenInvoiceOutput,
   UndoInvoicePaymentOutput,
   UpdateInvoiceDatesInput,
 } from "@openmonetis/validators/invoices";
@@ -47,4 +49,17 @@ export function adjustInvoice(cardId: string, period: string, input: AdjustInvoi
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export function reopenInvoice(cardId: string, period: string) {
+  return request<ReopenInvoiceOutput>(`/invoices/${cardId}/${period}/reopen`, {
+    method: "POST",
+  });
+}
+
+export function deleteInvoiceAdjustment(cardId: string, period: string, adjustmentId: string) {
+  return request<RemoveInvoiceAdjustmentOutput>(
+    `/invoices/${cardId}/${period}/adjustments/${adjustmentId}`,
+    { method: "DELETE" },
+  );
 }

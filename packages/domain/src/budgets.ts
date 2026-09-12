@@ -1,6 +1,7 @@
 import type { CardClosingRule } from "./cards";
 import {
   addMonthsToPeriod,
+  calculateExpenseImpact,
   deriveTransactionPeriod,
   listRecurrenceDatesInPeriod,
   type PaymentMethod,
@@ -121,15 +122,16 @@ export function calculateBudgetSpending(
   let uncategorizedProjectedAmount = 0;
 
   for (const entry of entries) {
+    const expenseImpact = calculateExpenseImpact(entry);
     if (
-      entry.type !== "expense" ||
       entry.origin === "invoicePayment" ||
-      entry.origin === "accountBalanceAdjustment"
+      entry.origin === "accountBalanceAdjustment" ||
+      expenseImpact === 0
     ) {
       continue;
     }
-    if (entry.categoryId) addAmount(actualByCategory, entry.categoryId, entry.amount);
-    else uncategorizedActualAmount += normalizedAmount(entry.amount);
+    if (entry.categoryId) addSignedAmount(actualByCategory, entry.categoryId, expenseImpact);
+    else uncategorizedActualAmount += expenseImpact;
   }
 
   for (const rule of recurringRules) {
@@ -218,7 +220,7 @@ export function calculateBudgetOverview(
     committedAmount: roundMoney(committedAmount),
     availableAmount: roundMoney(availableAmount),
     exceededAmount: roundMoney(exceededAmount),
-    unbudgetedCommittedAmount,
+    unbudgetedCommittedAmount: Math.max(0, unbudgetedCommittedAmount),
     warningCount,
   };
 }
@@ -237,6 +239,10 @@ function resolveBudgetStatus(limit: number, spent: number, usagePercentage: numb
 function addAmount(totals: Map<string, number>, categoryId: string, amount: string | number) {
   const numericAmount = normalizedAmount(amount);
   totals.set(categoryId, (totals.get(categoryId) ?? 0) + numericAmount);
+}
+
+function addSignedAmount(totals: Map<string, number>, categoryId: string, amount: number) {
+  totals.set(categoryId, (totals.get(categoryId) ?? 0) + amount);
 }
 
 function normalizedAmount(amount: string | number) {

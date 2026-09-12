@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { calculateBudgetOverview, calculateBudgetSpending } from "@openmonetis/domain/budgets";
 import {
   createDefaultDashboardWidgetPreferences,
   normalizeDashboardWidgetPreferences,
@@ -327,6 +328,76 @@ test("forecast subtracts a partial payment of the admin invoice allocation", asy
     },
     { balance: -1000, expenses: 1000, projected: 0 },
   );
+});
+
+test("invoice reductions preserve the nonnegative unbudgeted spending contract", () => {
+  const spending = calculateBudgetSpending(
+    [{ categoryId: null, origin: "invoiceAdjustment", type: "expense", amount: "20.00" }],
+    [],
+    "2026-09",
+  );
+
+  assert.equal(spending.uncategorizedActualAmount, -20);
+  assert.equal(calculateBudgetOverview([], spending).unbudgetedCommittedAmount, 0);
+});
+
+test("invoice reductions decrease expenses instead of contributing to income", async () => {
+  const purchase = {
+    ...boletoRecord(false),
+    id: "b0000000-0000-4000-8000-00000000000b",
+    adminAmount: "-100.00",
+    amount: "-100.00",
+    cardId,
+    paymentMethod: "credit_card" as const,
+    period: "2026-09",
+    purchaseDate: "2026-09-02",
+  };
+  const reduction = {
+    ...purchase,
+    id: "c0000000-0000-4000-8000-00000000000c",
+    adminAmount: "20.00",
+    amount: "20.00",
+    categoryName: "Outras receitas",
+    origin: "invoiceAdjustment" as const,
+    type: "expense" as const,
+  };
+  const increase = {
+    ...purchase,
+    id: "d0000000-0000-4000-8000-00000000000d",
+    adminAmount: "-10.00",
+    amount: "-10.00",
+    categoryName: "Outras despesas",
+    origin: "invoiceAdjustment" as const,
+  };
+  const service = createDashboardService(scenarioRepository(purchase, reduction, increase), {
+    list: async () => [],
+  });
+
+  const snapshot = await service.getSnapshot("2026-09", userId);
+
+  assert.deepEqual(
+    {
+      balance: snapshot.metrics.balance.current,
+      expenses: snapshot.metrics.expenses.current,
+      income: snapshot.metrics.income.current,
+      projected: snapshot.metrics.projected.current,
+    },
+    { balance: -90, expenses: 90, income: 0, projected: -90 },
+  );
+  assert.deepEqual(snapshot.paymentStatus.expenses, {
+    confirmed: 0,
+    pending: 90,
+    total: 90,
+  });
+  assert.deepEqual(snapshot.paymentStatus.income, {
+    confirmed: 0,
+    pending: 0,
+    total: 0,
+  });
+  assert.equal(snapshot.peopleExpenses.totalAmount, 90);
+  assert.equal(snapshot.categoryBreakdown.incomeTotal, 0);
+  assert.equal(snapshot.categoryBreakdown.expensesTotal, 90);
+  assert.equal(snapshot.expenseDistribution.totalAmount, 90);
 });
 
 test("dashboard upgrades only the old default order without hiding widgets", () => {
