@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
   CalendarDays,
+  Circle,
   CircleCheck,
   Clock3,
   CreditCard,
@@ -349,9 +350,17 @@ export function TransactionDetailsSheet({
 function TransactionSummary({ transaction }: { transaction: TransactionOutput }) {
   const status =
     transaction.isSettled === null
-      ? { label: "Conciliado na fatura", className: "bg-secondary text-secondary-foreground" }
+      ? { label: "Pagamento pela fatura", className: "bg-secondary text-secondary-foreground" }
       : transaction.isSettled
-        ? { label: "Pago", className: "bg-success/10 text-success" }
+        ? {
+            label:
+              transaction.type === "income"
+                ? "Recebido"
+                : transaction.type === "transfer"
+                  ? "Realizada"
+                  : "Pago",
+            className: "bg-success/10 text-success",
+          }
         : { label: "Em aberto", className: "bg-warning/10 text-foreground" };
   const amountClassName =
     transaction.type === "income"
@@ -364,7 +373,7 @@ function TransactionSummary({ transaction }: { transaction: TransactionOutput })
     <section className="rounded-xl border bg-muted/30 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">Valor do lançamento</p>
+          <p className="text-muted-foreground text-xs">Total do lançamento</p>
           <MoneyValue
             amount={transaction.amount}
             className={cn("mt-1 text-2xl font-semibold", amountClassName)}
@@ -372,7 +381,13 @@ function TransactionSummary({ transaction }: { transaction: TransactionOutput })
           />
         </div>
         <Badge className={status.className} variant="secondary">
-          <CircleCheck aria-hidden="true" />
+          {transaction.isSettled === null ? (
+            <CreditCard aria-hidden="true" />
+          ) : transaction.isSettled ? (
+            <CircleCheck aria-hidden="true" />
+          ) : (
+            <Circle aria-hidden="true" />
+          )}
           {status.label}
         </Badge>
       </div>

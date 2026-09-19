@@ -115,6 +115,9 @@ function CalculatorDialogContent({
         </DialogTitle>
       </DialogHeader>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+        <p className="mb-2 text-muted-foreground text-xs">
+          Esc limpa a conta. Use o botão de fechar para sair.
+        </p>
         <Calculator initialValue={initialValue} onSelectValue={onSelectValue} />
       </div>
     </DialogContent>

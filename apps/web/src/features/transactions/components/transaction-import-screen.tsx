@@ -194,13 +194,7 @@ export function TransactionImportScreen({
       const result = await onPreview(file);
       const defaultPersonId =
         people.find((person) => person.role === "admin")?.id ?? people[0]?.id ?? "";
-      const destination = result.isCreditCard
-        ? cards[0]
-          ? `card:${cards[0].id}`
-          : ""
-        : accounts[0]
-          ? `account:${accounts[0].id}`
-          : "";
+      const destination = "";
       form.reset({
         destination,
         paymentMethod: result.isCreditCard ? "credit_card" : "pix",
@@ -387,7 +381,9 @@ export function TransactionImportScreen({
                   <Badge variant="outline">{duplicateCount} já importados</Badge>
                 ) : null}
                 {incompleteRows.length ? (
-                  <Badge variant="destructive">{incompleteRows.length} pendentes</Badge>
+                  <Badge variant="destructive">
+                    {incompleteRows.length} sem categoria ou pessoa
+                  </Badge>
                 ) : null}
               </div>
             </CardContent>
@@ -418,7 +414,7 @@ export function TransactionImportScreen({
                     <section className="grid gap-3" aria-labelledby="destination-settings-title">
                       <div>
                         <h3 className="font-medium text-sm" id="destination-settings-title">
-                          Destino e pagamento
+                          Escolha onde registrar os lançamentos
                         </h3>
                         <p className="text-muted-foreground text-xs">
                           Estes dados serão usados em todos os lançamentos importados.
@@ -726,12 +722,20 @@ export function TransactionImportScreen({
               <RotateCcw />
               Escolher outro arquivo
             </Button>
-            <Button
-              disabled={isImporting || !selectedRows.length || incompleteRows.length > 0}
-              type="submit"
-            >
-              {isImporting ? "Importando..." : `Importar ${selectedRows.length} lançamentos`}
-            </Button>
+            <form.Subscribe selector={(state) => state.values.destination}>
+              {(destination) => (
+                <Button
+                  disabled={
+                    isImporting || !selectedRows.length || incompleteRows.length > 0 || !destination
+                  }
+                  type="submit"
+                >
+                  {isImporting
+                    ? "Importando..."
+                    : `Importar ${selectedRows.length} lançamentos para ${[...accounts, ...cards].find((entity) => destination.endsWith(`:${entity.id}`))?.name ?? "o destino escolhido"}`}
+                </Button>
+              )}
+            </form.Subscribe>
           </div>
         </form>
       )}

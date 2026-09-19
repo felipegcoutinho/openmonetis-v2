@@ -1,6 +1,7 @@
 import {
   cards,
   db,
+  establishmentLogos,
   externalExpenses,
   financialAccounts,
   installmentSeries,
@@ -13,12 +14,15 @@ import {
   transactions,
   user,
 } from "@openmonetis/db";
+import { createEstablishmentNameKey } from "@openmonetis/domain/establishments";
 import {
   calculateExternalInstallmentAllocationTotal,
   calculateExternalInstallmentTotal,
   canUpdateExternalExpenseSnapshot,
   type ExternalExpenseSnapshot,
+  preserveExternalExpenseInstallmentBoundary,
 } from "@openmonetis/domain/external-expenses";
+import { getPeriodEndDate } from "@openmonetis/domain/transactions";
 import {
   and,
   asc,
@@ -82,6 +86,7 @@ const expenseColumns = {
   installmentCount: externalExpenses.installmentCount,
   currentInstallment: externalExpenses.currentInstallment,
   sourceLabel: externalExpenses.sourceLabel,
+  establishmentLogoDomain: externalExpenses.establishmentLogoDomain,
   sourceLogoUrl: sql<
     string | null
   >`coalesce(${sourceCards.logo}, ${sourceAccounts.logo}, ${sourceRecurringCards.logo}, ${sourceRecurringAccounts.logo})`.as(
@@ -192,6 +197,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
   async installmentAmountsForImport(input) {
     const [expense] = await db
       .select({
+        currentInstallment: externalExpenses.currentInstallment,
         ownerUserId: externalExpenses.ownerUserId,
         sourceSeriesId: externalExpenses.sourceSeriesId,
         sourcePersonId: externalExpenses.sourcePersonId,
@@ -207,7 +213,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         ),
       )
       .limit(1);
-    if (!expense?.sourceSeriesId) return null;
+    if (!expense?.sourceSeriesId || expense.currentInstallment === null) return null;
 
     const rows = await db
       .select({
@@ -229,6 +235,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         and(
           eq(transactions.userId, expense.ownerUserId),
           eq(transactions.seriesId, expense.sourceSeriesId),
+          gte(transactions.currentInstallment, expense.currentInstallment),
         ),
       )
       .orderBy(asc(transactions.currentInstallment));
@@ -289,8 +296,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
 
   async listRecurringSourcesForPeriod(period, ownerUserId) {
     const periodStart = new Date(`${period}-01T00:00:00.000Z`);
-    const [year, month] = period.split("-").map(Number);
-    const periodEnd = new Date(Date.UTC(year, month, 0));
+    const periodEnd = getPeriodEndDate(period);
     const recurringAccounts = alias(financialAccounts, "recurring_external_accounts");
     const recurringCards = alias(cards, "recurring_external_cards");
     const rows = await db
@@ -362,6 +368,11 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
     const grouped = new Map<string, (typeof rows)[number][]>();
     for (const row of rows) grouped.set(row.id, [...(grouped.get(row.id) ?? []), row]);
 
+    const logoDomains = await findEstablishmentLogoDomains(
+      db,
+      rows.map((row) => ({ name: row.name, ownerUserId: row.ownerUserId })),
+    );
+
     return [...grouped.values()].map((group) => {
       const row = group[0] as (typeof rows)[number];
       return {
@@ -380,6 +391,8 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         ),
         seriesCreatedAt: row.seriesCreatedAt,
         name: row.name,
+        establishmentLogoDomain:
+          logoDomains.get(establishmentLogoKey(row.ownerUserId, row.name)) ?? null,
         dueDate: toDate(row.dueDate),
         paymentMethod: row.paymentMethod,
         sourceLabel: row.cardName ? `Fatura ${row.cardName}` : row.accountName,
@@ -480,6 +493,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
               sourceRecurringRuleId: draft.sourceRecurringRuleId,
               sourceOccurrenceDate: new Date(`${draft.sourceOccurrenceDate}T00:00:00.000Z`),
               sourcePersonId: draft.sourcePersonId,
+              establishmentLogoDomain: draft.establishmentLogoDomain,
               ...snapshotValues(draft.snapshot),
             })
             .onConflictDoNothing()
@@ -492,6 +506,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
           current.connectionId === draft.connectionId &&
           current.recipientUserId === draft.recipientUserId &&
           current.sourceRecurringRuleId === draft.sourceRecurringRuleId &&
+          current.establishmentLogoDomain === draft.establishmentLogoDomain &&
           snapshotsEqual(snapshotFromRow(current), draft.snapshot);
         if (unchanged) continue;
         await transaction
@@ -500,6 +515,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
             connectionId: draft.connectionId,
             recipientUserId: draft.recipientUserId,
             sourceRecurringRuleId: draft.sourceRecurringRuleId,
+            establishmentLogoDomain: draft.establishmentLogoDomain,
             sourceVersion: current.sourceVersion + 1,
             ...snapshotValues(draft.snapshot),
             updatedAt: input.changedAt,
@@ -535,6 +551,10 @@ type EligibleSourceRow = {
   cardName: string | null;
   accountName: string | null;
   allocationKind: "direct" | "split";
+};
+
+type EligibleSource = ReturnType<typeof groupEligibleSources>[number] & {
+  establishmentLogoDomain: string | null;
 };
 
 export async function synchronizePendingExternalExpensesForTransactions(
@@ -655,10 +675,19 @@ export async function synchronizePendingExternalExpensesForTransactions(
       ),
     );
 
-  const eligible = groupEligibleSources([
+  const groupedEligible = groupEligibleSources([
     ...(directlyAssigned as EligibleSourceRow[]),
     ...(splitAssignments as EligibleSourceRow[]),
   ]);
+  const logoDomains = await findEstablishmentLogoDomains(
+    transaction,
+    groupedEligible.map((item) => ({ name: item.snapshot.name, ownerUserId })),
+  );
+  const eligible: EligibleSource[] = groupedEligible.map((item) => ({
+    ...item,
+    establishmentLogoDomain:
+      logoDomains.get(establishmentLogoKey(ownerUserId, item.snapshot.name)) ?? null,
+  }));
   const existing = await transaction
     .select()
     .from(externalExpenses)
@@ -694,6 +723,7 @@ export async function synchronizePendingExternalExpensesForTransactions(
         sourceTransactionId: item.sourceTransactionId,
         sourceSeriesId: item.sourceSeriesId,
         sourcePersonId: item.sourcePersonId,
+        establishmentLogoDomain: item.establishmentLogoDomain,
         ...snapshotValues(item.snapshot),
       });
       continue;
@@ -701,7 +731,13 @@ export async function synchronizePendingExternalExpensesForTransactions(
 
     if (!canUpdateExternalExpenseSnapshot(current.status)) continue;
     const currentSnapshot = snapshotFromRow(current);
-    if (snapshotsEqual(currentSnapshot, item.snapshot)) continue;
+    const nextSnapshot = preserveExternalExpenseInstallmentBoundary(currentSnapshot, item.snapshot);
+    if (
+      snapshotsEqual(currentSnapshot, nextSnapshot) &&
+      current.establishmentLogoDomain === item.establishmentLogoDomain
+    ) {
+      continue;
+    }
     await transaction
       .update(externalExpenses)
       .set({
@@ -710,8 +746,9 @@ export async function synchronizePendingExternalExpensesForTransactions(
         sourceKind: item.sourceSeriesId ? "installmentSeries" : "transaction",
         sourceTransactionId: item.sourceTransactionId,
         sourceSeriesId: item.sourceSeriesId,
+        establishmentLogoDomain: item.establishmentLogoDomain,
         sourceVersion: current.sourceVersion + 1,
-        ...snapshotValues(item.snapshot),
+        ...snapshotValues(nextSnapshot),
         updatedAt: changedAt,
       })
       .where(eq(externalExpenses.id, current.id));
@@ -822,6 +859,42 @@ function transactionLogicalSourceFilter(standaloneIds: string[], seriesIds: stri
   return filters.length === 2 ? or(filters[0], filters[1]) : filters[0];
 }
 
+async function findEstablishmentLogoDomains(
+  executor: Pick<DatabaseTransaction, "select">,
+  establishments: Array<{ ownerUserId: string; name: string }>,
+) {
+  const references = [
+    ...new Map(
+      establishments.map((item) => [establishmentLogoKey(item.ownerUserId, item.name), item]),
+    ).values(),
+  ];
+  if (!references.length) return new Map<string, string>();
+
+  const rows = await executor
+    .select({
+      ownerUserId: establishmentLogos.userId,
+      nameKey: establishmentLogos.nameKey,
+      domain: establishmentLogos.domain,
+    })
+    .from(establishmentLogos)
+    .where(
+      and(
+        inArray(establishmentLogos.userId, [
+          ...new Set(references.map((item) => item.ownerUserId)),
+        ]),
+        inArray(establishmentLogos.nameKey, [
+          ...new Set(references.map((item) => createEstablishmentNameKey(item.name))),
+        ]),
+      ),
+    );
+
+  return new Map(rows.map((row) => [`${row.ownerUserId}:${row.nameKey}`, row.domain] as const));
+}
+
+function establishmentLogoKey(ownerUserId: string, name: string) {
+  return `${ownerUserId}:${createEstablishmentNameKey(name)}`;
+}
+
 function groupEligibleSources(rows: EligibleSourceRow[]) {
   const groups = new Map<string, EligibleSourceRow[]>();
   for (const row of rows) {
@@ -838,7 +911,7 @@ function groupEligibleSources(rows: EligibleSourceRow[]) {
     const representative = ordered[0] as EligibleSourceRow;
     const isSeries = Boolean(representative.seriesId);
     const totalInstallments =
-      representative.totalInstallments ?? representative.installmentCount ?? group.length;
+      representative.totalInstallments ?? representative.installmentCount ?? ordered.length;
     const trackedFromInstallment =
       representative.trackedFromInstallment ?? representative.currentInstallment ?? 1;
     const sourceTotal = isSeries
@@ -847,14 +920,14 @@ function groupEligibleSources(rows: EligibleSourceRow[]) {
             originalTransactionAmount: representative.seriesOriginalAmount ?? 0,
             totalInstallments,
             trackedFromInstallment,
-            trackedTransactionAmounts: group.map((row) => row.transactionAmount),
-            trackedAllocationAmounts: group.map((row) => row.amount),
+            trackedTransactionAmounts: ordered.map((row) => row.transactionAmount),
+            trackedAllocationAmounts: ordered.map((row) => row.amount),
           })
         : calculateExternalInstallmentTotal({
             originalAmount: representative.seriesOriginalAmount ?? 0,
             totalInstallments,
             trackedFromInstallment,
-            trackedAmounts: group.map((row) => row.transactionAmount),
+            trackedAmounts: ordered.map((row) => row.transactionAmount),
           })
       : Math.abs(Number(representative.amount));
     const sourceLabel = representative.cardName

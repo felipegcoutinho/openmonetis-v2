@@ -4,7 +4,7 @@ import {
   type CategoryTrendRecurringRule,
   calculateCategoryTrends,
 } from "@openmonetis/domain/category-trends";
-import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
+import { addMonthsToPeriod, getPeriodEndDate } from "@openmonetis/domain/transactions";
 import type {
   CategoryTrendsOutput,
   ListCategoryTrendsQuery,
@@ -31,7 +31,7 @@ export function createCategoryTrendsService(repository: CategoryTrendsRepository
   return {
     async list(userId: string, query: ListCategoryTrendsQuery): Promise<CategoryTrendsOutput> {
       const lookbackPeriod = addMonthsToPeriod(query.startPeriod, -1);
-      const periodEnd = getPeriodEnd(query.endPeriod);
+      const periodEnd = getPeriodEndDate(query.endPeriod);
       const [categories, actualEntries, recurringRules] = await Promise.all([
         repository.listCategoriesForUser(userId),
         repository.listActualEntriesForUser(
@@ -59,11 +59,6 @@ export function createCategoryTrendsService(repository: CategoryTrendsRepository
       });
     },
   };
-}
-
-function getPeriodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 export type CategoryTrendsService = ReturnType<typeof createCategoryTrendsService>;

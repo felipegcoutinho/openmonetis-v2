@@ -26,10 +26,12 @@ import { CategoryIconPicker } from "./category-icon-picker";
 
 export function CategoryForm({
   category,
+  defaultType = "expense",
   onCancel,
   onSubmit,
 }: {
   category?: CategoryOutput | null;
+  defaultType?: CreateCategoryInput["type"];
   onCancel: () => void;
   onSubmit: (input: CreateCategoryInput | ReplaceCategoryInput) => Promise<void>;
 }) {
@@ -39,7 +41,7 @@ export function CategoryForm({
   const form = useForm({
     defaultValues: {
       name: category?.name ?? "",
-      type: category?.type ?? ("expense" as const),
+      type: category?.type ?? defaultType,
       icon: category?.icon ?? "tag",
     },
     onSubmitInvalid: showInvalidFormToast,
@@ -91,7 +93,7 @@ export function CategoryForm({
               value={field.state.value}
             />
             {field.state.meta.errors[0] ? (
-              <p className="sr-only" role="alert">
+              <p className="text-destructive text-xs" role="alert">
                 {field.state.meta.errors[0]}
               </p>
             ) : null}

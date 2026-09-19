@@ -55,7 +55,7 @@ export function InstallmentDetailsDialog({
 
         <div className="grid gap-3 rounded-lg bg-muted/40 p-4 sm:grid-cols-3">
           <Metric label="Compra original" value={group.originalAmount} />
-          <Metric label="Valor acompanhado" value={group.trackedAmount} />
+          <Metric label="Valor registrado" value={group.trackedAmount} />
           <Metric label="Saldo pendente" value={group.pendingAmount} />
         </div>
 
@@ -66,7 +66,7 @@ export function InstallmentDetailsDialog({
               {group.missingInstallmentCount}{" "}
               {group.missingInstallmentCount === 1
                 ? "parcela acompanhada não está"
-                : "parcelas acompanhadas não estão"}{" "}
+                : "parcelas registradas não estão"}{" "}
               no cronograma. Revise a série antes de confiar no saldo.
             </p>
           </div>

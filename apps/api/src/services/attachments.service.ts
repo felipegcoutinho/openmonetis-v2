@@ -16,7 +16,7 @@ import type {
 import { badRequest, notFound, serviceUnavailable } from "../utils/errors";
 import type { AttachmentStorage } from "../utils/storage";
 
-export type AttachmentRecord = {
+type AttachmentRecord = {
   id: string;
   userId: string;
   fileKey: string;
@@ -26,7 +26,7 @@ export type AttachmentRecord = {
   createdAt: Date;
 };
 
-export type AttachmentLinkRecord = AttachmentRecord & {
+type AttachmentLinkRecord = AttachmentRecord & {
   transactionId: string;
   transactionName: string;
   transactionAmount: string;

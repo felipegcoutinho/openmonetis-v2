@@ -13,6 +13,7 @@ import type { ClipboardEvent as ReactClipboardEvent } from "react";
 
 export type AttachmentsSearch = {
   period?: string;
+  q?: string;
   kind?: "image" | "pdf";
   personId?: string;
   page?: number;
@@ -23,12 +24,14 @@ export const maximumAttachmentSizeMb = maximumAttachmentSize / 1024 / 1024;
 
 export function validateAttachmentsSearch(search: Record<string, unknown>): AttachmentsSearch {
   const period = ListAttachmentsQuerySchema.shape.period.safeParse(search.period);
+  const q = ListAttachmentsQuerySchema.shape.q.safeParse(search.q);
   const kind = ListAttachmentsQuerySchema.shape.kind.safeParse(search.kind);
   const personId = ListAttachmentsQuerySchema.shape.personId.safeParse(search.personId);
   const page = ListAttachmentsQuerySchema.shape.page.safeParse(search.page);
 
   return {
     period: period.success ? period.data : undefined,
+    q: q.success ? q.data : undefined,
     kind: kind.success ? kind.data : undefined,
     personId: personId.success ? personId.data : undefined,
     page: page.success && page.data > 1 ? page.data : undefined,

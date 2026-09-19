@@ -12,7 +12,9 @@ import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ApiClientError } from "@/lib/api-client";
 import {
   useCreateCategoryMutation,
   useDeleteCategoryMutation,
@@ -27,6 +29,7 @@ export function CategoriesPage() {
   const create = useCreateCategoryMutation();
   const replace = useReplaceCategoryMutation();
   const remove = useDeleteCategoryMutation();
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CategoryOutput | null>(null);
   const categories = query.data ?? [];
@@ -44,8 +47,12 @@ export function CategoriesPage() {
     try {
       await remove.mutateAsync(category.id);
       toast.success("Categoria removida");
-    } catch {
-      toast.error("Não foi possível remover.");
+    } catch (error) {
+      toast.error(
+        error instanceof ApiClientError && error.code === "category_in_use"
+          ? "Categoria em uso. Altere os lançamentos e remova os orçamentos vinculados antes de excluir."
+          : "Não foi possível remover a categoria. Tente novamente.",
+      );
     }
   }
   return (
@@ -66,6 +73,12 @@ export function CategoriesPage() {
             icon={<Tags aria-hidden="true" className="size-5" />}
             title="Categorias"
           />
+          <Input
+            aria-label="Buscar categorias"
+            placeholder="Buscar categoria"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
           {query.isLoading ? (
             <p className="text-muted-foreground text-sm">Carregando categorias...</p>
           ) : null}
@@ -83,7 +96,13 @@ export function CategoriesPage() {
                 </TabsTrigger>
               </TabsList>
               {(["expense", "income"] as const).map((type) => {
-                const items = categories.filter((item) => item.type === type);
+                const items = categories.filter(
+                  (item) =>
+                    item.type === type &&
+                    item.name
+                      .toLocaleLowerCase("pt-BR")
+                      .includes(search.toLocaleLowerCase("pt-BR")),
+                );
                 return (
                   <TabsContent className="pt-5" key={type} value={type}>
                     <Card className="gap-0 p-4">
@@ -102,7 +121,7 @@ export function CategoriesPage() {
                       ) : (
                         <div className="grid min-h-52 place-items-center p-6 text-center">
                           <p className="text-muted-foreground text-sm">
-                            Nenhuma categoria cadastrada.
+                            Nenhuma categoria encontrada. Cadastre uma categoria ou revise a busca.
                           </p>
                         </div>
                       )}

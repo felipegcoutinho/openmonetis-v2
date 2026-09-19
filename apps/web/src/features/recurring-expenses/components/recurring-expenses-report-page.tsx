@@ -36,9 +36,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
+import { cardsQueryOptions } from "@/features/cards/cards.queries";
+import { categoriesQueryOptions } from "@/features/categories/categories.queries";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { formatDashboardPeriod } from "@/features/dashboard/dashboard.presentation";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
+import { peopleQueryOptions } from "@/features/people/people.queries";
+import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
 import { paymentMethodLabels } from "@/features/transactions/transactions.presentation";
 import {
   formatRecurringExpenseDate,
@@ -57,6 +62,11 @@ export function RecurringExpensesReportPage({
   onPeriodChange: (period: string) => void;
   period: string;
 }) {
+  const [creating, setCreating] = useState(false);
+  const accounts = useQuery(accountsQueryOptions());
+  const cards = useQuery(cardsQueryOptions());
+  const categories = useQuery(categoriesQueryOptions());
+  const people = useQuery(peopleQueryOptions());
   const reportQuery = useQuery(recurringExpensesReportQueryOptions(period));
   const [editing, setEditing] = useState<ReportItem | null>(null);
   const [action, setAction] = useState<"pause" | "resume" | "skip" | "stop" | null>(null);
@@ -74,12 +84,20 @@ export function RecurringExpensesReportPage({
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            actions={
+              <Button
+                onClick={() => setCreating(true)}
+                disabled={!accounts.data || !cards.data || !categories.data || !people.data}
+              >
+                Nova recorrência
+              </Button>
+            }
             breadcrumbs={[
               { label: "Visão geral", href: "/dashboard" },
               { label: "Relatórios" },
               { label: "Despesas recorrentes" },
             ]}
-            description="Acompanhe os compromissos recorrentes da pessoa administradora e gerencie cada regra com clareza."
+            description="Acompanhe seus compromissos recorrentes e gerencie as próximas ocorrências."
             icon={<Repeat2 aria-hidden="true" className="size-5" />}
             title="Despesas recorrentes"
           />
@@ -127,9 +145,9 @@ export function RecurringExpensesReportPage({
                     value: report.summary.pausedCount,
                   },
                 ]}
-                primaryLabel="Total previsto no mês"
+                primaryLabel="Sua parte prevista no mês"
                 primaryValue={<MoneyValue amount={report.summary.projectedTotal} />}
-                subtitle="Compromissos recorrentes da pessoa administradora"
+                subtitle="Valores correspondentes à sua parte nos compromissos"
                 title="Despesas recorrentes"
                 variant="soft"
               />
@@ -138,8 +156,7 @@ export function RecurringExpensesReportPage({
                 <CardHeader>
                   <CardTitle className="text-base">Projeção dos próximos meses</CardTitle>
                   <CardDescription>
-                    Valores previstos pela data da recorrência, sem materializar lançamentos
-                    futuros.
+                    Previsão baseada nas datas das recorrências ativas.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-3 sm:grid-cols-3">
@@ -179,7 +196,7 @@ export function RecurringExpensesReportPage({
                       <div>
                         <p className="font-medium">Nenhuma recorrência ativa neste período</p>
                         <p className="mt-1 text-muted-foreground text-sm">
-                          As despesas recorrentes da pessoa administradora aparecerão aqui.
+                          Cadastre uma despesa recorrente para acompanhar suas próximas ocorrências.
                         </p>
                       </div>
                     </div>
@@ -190,6 +207,20 @@ export function RecurringExpensesReportPage({
           ) : null}
         </section>
       </main>
+      <TransactionDialog
+        open={creating}
+        onOpenChange={setCreating}
+        accounts={accounts.data ?? []}
+        cards={cards.data ?? []}
+        categories={categories.data ?? []}
+        people={people.data ?? []}
+        transaction={null}
+        defaultPeriod={period}
+        createDefaults={{ condition: "recurring" }}
+        allowedConditions={["recurring"]}
+        createTitle="Nova recorrência"
+        createDescription="Informe o valor, a frequência e quando começa este compromisso."
+      />
       {editing ? (
         <RecurringExpenseEditDialog
           expense={editing}

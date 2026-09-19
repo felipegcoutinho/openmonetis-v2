@@ -50,7 +50,7 @@ export function PeriodPicker({
         </span>
         <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto bg-popover/85 p-0 backdrop-blur-md">
+      <PopoverContent align="start" className="w-auto bg-popover/80 p-0 backdrop-blur-sm">
         <MonthPicker
           key={value}
           onMonthSelect={(date) => {

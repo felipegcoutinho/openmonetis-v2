@@ -1,7 +1,7 @@
 import type { PersonOutput } from "@openmonetis/validators/people";
 import type { PersonSettlementOutput } from "@openmonetis/validators/person-settlements";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, Trash2 } from "lucide-react";
+import { HandCoins, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -74,7 +74,7 @@ export function PersonSettlementsCard({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ArrowDownToLine aria-hidden="true" className="size-4 text-muted-foreground" />
+            <HandCoins aria-hidden="true" className="size-4 text-muted-foreground" />
             Acertos
           </CardTitle>
           <CardDescription className="text-xs">

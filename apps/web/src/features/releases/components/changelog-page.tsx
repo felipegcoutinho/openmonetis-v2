@@ -23,11 +23,11 @@ export function ChangelogPage() {
         <Navbar />
         <section className="app-page project-container text-left">
           <PageHeader
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Changelog" }]}
+            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Novidades" }]}
             description="Acompanhe novidades, melhorias e correções disponíveis no OpenMonetis."
             eyebrow="Aplicativo"
             icon={<History aria-hidden="true" className="size-5" />}
-            title="Changelog"
+            title="Novidades"
           />
 
           {releasesQuery.isPending ? <ChangelogSkeleton /> : null}
@@ -68,7 +68,7 @@ export function ChangelogPage() {
                           rel="noreferrer"
                           target="_blank"
                         >
-                          Ver release
+                          Ver notas completas
                           <ExternalLink aria-hidden="true" className="size-4" />
                         </a>
                       </Button>
@@ -95,20 +95,27 @@ export function ChangelogPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="grid gap-5 border-border border-t pt-5">
-                          {release.sections.map((section) => (
-                            <section className="grid gap-2" key={section.type}>
-                              <h2 className="font-medium text-sm">
-                                {releaseSectionLabels[section.type]}
-                              </h2>
-                              <ul className="grid gap-2 pl-5 text-muted-foreground text-sm leading-relaxed">
-                                {section.items.map((item) => (
-                                  <li className="list-disc" key={item}>
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            </section>
-                          ))}
+                          <details>
+                            <summary className="cursor-pointer font-medium text-sm">
+                              Ver todas as mudanças desta versão
+                            </summary>
+                            <div className="mt-4 grid gap-5">
+                              {release.sections.map((section) => (
+                                <section className="grid gap-2" key={section.type}>
+                                  <h2 className="font-medium text-sm">
+                                    {releaseSectionLabels[section.type]}
+                                  </h2>
+                                  <ul className="grid gap-2 pl-5 text-muted-foreground text-sm leading-relaxed">
+                                    {section.items.map((item) => (
+                                      <li className="list-disc" key={item}>
+                                        {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </section>
+                              ))}
+                            </div>
+                          </details>
                         </div>
                       </CardContent>
                     </div>

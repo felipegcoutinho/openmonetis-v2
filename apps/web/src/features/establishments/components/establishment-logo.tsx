@@ -12,6 +12,7 @@ type EstablishmentLogoProps = {
   size?: number;
   className?: string;
   editable?: boolean;
+  fallbackLogoUrl?: string | null;
 };
 
 export function EstablishmentLogo({
@@ -19,10 +20,12 @@ export function EstablishmentLogo({
   size = 32,
   className,
   editable = true,
+  fallbackLogoUrl = null,
 }: EstablishmentLogoProps) {
   const { data } = useQuery(establishmentLogoQueryOptions(name));
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const logoUrl = data?.logoUrl && data.logoUrl !== failedUrl ? data.logoUrl : null;
+  const preferredLogoUrl = data?.logoUrl ?? fallbackLogoUrl;
+  const logoUrl = preferredLogoUrl && preferredLogoUrl !== failedUrl ? preferredLogoUrl : null;
   const avatar = logoUrl ? (
     <Image
       alt={`Logo de ${name}`}

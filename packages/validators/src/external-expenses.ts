@@ -62,6 +62,7 @@ export const ExternalExpenseOutputSchema = z
     status: z.enum(externalExpenseStatuses),
     sourceVersion: z.number().int().positive(),
     snapshot: ExternalExpenseSnapshotSchema,
+    establishmentLogoUrl: z.url().nullable(),
     sourceLogoUrl: z.string().max(255).nullable(),
     sourceCardBrand: z.enum(cardBrands).nullable(),
     importedAt: z.iso.datetime().nullable(),

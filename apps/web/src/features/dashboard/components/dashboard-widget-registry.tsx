@@ -1,6 +1,5 @@
 import type { DashboardWidgetId } from "@openmonetis/domain/dashboard";
 import {
-  BarChart3,
   BookOpenText,
   CalendarClock,
   ChartNoAxesCombined,
@@ -15,6 +14,7 @@ import {
   ReceiptText,
   RefreshCcw,
   Tags,
+  Target,
   Users,
   WalletCards,
   Waypoints,
@@ -56,7 +56,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "invoices",
-    title: "Faturas",
+    title: "Minhas faturas",
     description: "Resumo das faturas do período",
     icon: CreditCard,
     render: (period) => <InvoicesWidget period={period} />,
@@ -107,7 +107,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
     id: "category-trends",
     title: "Tendências de categorias",
     description: "Maiores variações contra o mês anterior",
-    icon: BarChart3,
+    icon: Target,
     render: (period) => <CategoryTrendsWidget period={period} />,
   },
   {

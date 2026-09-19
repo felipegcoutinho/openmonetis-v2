@@ -87,12 +87,12 @@ export function BillPaymentDialog({
         {paymentCompleted ? (
           <PaymentSuccess
             celebrate
-            description="O boleto foi quitado e o pagamento já foi registrado no histórico."
+            description="O pagamento foi registrado. O boleto aparece como pago no histórico."
             onClose={() => {
               setPaymentCompleted(false);
               onOpenChange(false);
             }}
-            title="Boleto pago!"
+            title="Pagamento registrado"
           />
         ) : (
           <>
@@ -100,9 +100,11 @@ export function BillPaymentDialog({
               <div className="flex items-center gap-3">
                 {bill ? <EstablishmentLogo name={bill.name} size={40} /> : null}
                 <div className="min-w-0">
-                  <DialogTitle>Registrar pagamento</DialogTitle>
-                  <DialogDescription className="mt-0.5 truncate">
-                    {bill ? bill.name : "Confirme os dados do boleto."}
+                  <DialogTitle>Registrar pagamento do boleto</DialogTitle>
+                  <DialogDescription className="mt-0.5">
+                    {bill
+                      ? `${bill.name}. Informe a conta e a data do pagamento já realizado.`
+                      : "Informe os dados do pagamento já realizado."}
                   </DialogDescription>
                 </div>
               </div>
@@ -156,8 +158,8 @@ export function BillPaymentDialog({
                       </SelectContent>
                     </Select>
                     {accounts.length === 0 ? (
-                      <p className="sr-only" role="alert">
-                        Cadastre uma conta antes de pagar.
+                      <p className="text-destructive text-xs" role="alert">
+                        Cadastre uma conta antes de registrar o pagamento.
                       </p>
                     ) : null}
                   </div>
@@ -174,9 +176,10 @@ export function BillPaymentDialog({
                       id={`${id}-paid-at`}
                       onChange={field.handleChange}
                       value={field.state.value}
+                      max={currentLocalDate()}
                     />
                     {field.state.value > currentLocalDate() ? (
-                      <p className="sr-only" role="alert">
+                      <p className="text-destructive text-xs" role="alert">
                         A data não pode estar no futuro.
                       </p>
                     ) : null}
@@ -205,7 +208,7 @@ export function BillPaymentDialog({
                       }
                       type="submit"
                     >
-                      {payment.isPending ? "Registrando…" : "Confirmar pagamento"}
+                      {payment.isPending ? "Registrando…" : "Registrar pagamento"}
                     </Button>
                   )}
                 </form.Subscribe>

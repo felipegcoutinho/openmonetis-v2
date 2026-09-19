@@ -14,7 +14,6 @@ import {
   Banknote,
   Barcode,
   CalendarClock,
-  Check,
   ChevronDown,
   Circle,
   CircleCheck,
@@ -23,9 +22,10 @@ import {
   Filter,
   Landmark,
   type LucideIcon,
+  Minus,
   Plus,
   QrCode,
-  RefreshCw,
+  Repeat2,
   Search,
   Ticket,
   X,
@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/select";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -69,6 +70,8 @@ import { InstallmentAnticipationUndoDialog } from "@/features/installments/compo
 import { cn } from "@/lib/utils";
 import {
   buildFilterSlugMap,
+  formatTransactionFilterAmount,
+  formatTransactionFilterDate,
   parseFilterSlugs,
   paymentMethodLabels,
   serializeFilterSlugs,
@@ -96,6 +99,8 @@ type TransactionsScreenProps = {
   pendingSettlementKey: string | null;
   pageCount: number;
   totalItems: number;
+  onRetry: () => void;
+  isUpdating?: boolean;
   onPeriodChange?: (period: string) => void;
   periodNavigationPlacement?: "afterPageHeader" | "afterSummary";
   search: TransactionsSearch;
@@ -104,11 +109,16 @@ type TransactionsScreenProps = {
     transaction: TransactionOutput,
     scope?: TransactionActionScope,
   ) => Promise<void> | void;
-  onSettleTransactions: (ids: string[], isSettled: boolean) => Promise<void> | void;
+  onSettleTransactions: (
+    ids: string[],
+    isSettled: boolean,
+    settledDate?: string,
+  ) => Promise<void> | void;
   onSettleRecurringOccurrence: (
     recurringRuleId: string,
     purchaseDate: string,
     isSettled: boolean,
+    settledDate?: string,
   ) => Promise<void> | void;
   onRecurringStatus: (
     id: string,
@@ -155,6 +165,8 @@ export function TransactionsScreen({
   pendingSettlementKey,
   pageCount,
   totalItems,
+  onRetry,
+  isUpdating,
   onPeriodChange,
   periodNavigationPlacement = "afterSummary",
   onDeleteTransaction,
@@ -224,14 +236,55 @@ export function TransactionsScreen({
     Boolean(urlSearch.hasAttachments),
     Boolean(urlSearch.isDivided),
   ].filter(Boolean).length;
-  const periodNavigation = (
-    <MonthNavigation
-      className="sticky top-20 z-20"
-      onPeriodChange={(nextPeriod) => {
-        onPeriodChange?.(nextPeriod);
-      }}
-      period={period}
-    />
+  const periodNavigation =
+    urlSearch.dateStart || urlSearch.dateEnd ? (
+      <div className="sticky top-20 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-3">
+        <p className="text-sm font-medium">
+          Intervalo:{" "}
+          {urlSearch.dateStart
+            ? formatTransactionFilterDate(urlSearch.dateStart)
+            : "desde o início"}{" "}
+          até {urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "a última data"}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
+          }
+        >
+          Voltar ao mês selecionado
+        </Button>
+      </div>
+    ) : (
+      <MonthNavigation
+        className="sticky top-20 z-20"
+        onPeriodChange={(nextPeriod) => {
+          onPeriodChange?.(nextPeriod);
+        }}
+        period={period}
+      />
+    );
+  const summarySection =
+    periodNavigationPlacement === "afterSummary" ? (
+      pageHeader.summary ? (
+        <div className="grid gap-3">
+          {pageHeader.summary}
+          {periodNavigation}
+        </div>
+      ) : (
+        periodNavigation
+      )
+    ) : (
+      pageHeader.summary
+    );
+  const contextNavigationSection = contentNavigation ? (
+    <div className="grid gap-3">
+      {summarySection}
+      {contentNavigation}
+    </div>
+  ) : (
+    summarySection
   );
 
   function setSearch(value: string) {
@@ -330,9 +383,7 @@ export function TransactionsScreen({
           title={pageHeader.title}
         />
         {periodNavigationPlacement === "afterPageHeader" ? periodNavigation : null}
-        {pageHeader.summary}
-        {periodNavigationPlacement === "afterSummary" ? periodNavigation : null}
-        {contentNavigation}
+        {contextNavigationSection}
         {contentOverride}
       </section>
     );
@@ -374,7 +425,9 @@ export function TransactionsScreen({
                   return (
                     <DropdownMenuItem key={type} onClick={() => openCreateDialog(type)}>
                       <Icon aria-hidden="true" />
-                      {createTransactionLabels[type]}
+                      {type === "income" && createDefaults?.paymentMethod === "credit_card"
+                        ? "Novo crédito na fatura"
+                        : createTransactionLabels[type]}
                     </DropdownMenuItem>
                   );
                 })}
@@ -390,11 +443,7 @@ export function TransactionsScreen({
 
       {periodNavigationPlacement === "afterPageHeader" ? periodNavigation : null}
 
-      {pageHeader.summary}
-
-      {periodNavigationPlacement === "afterSummary" ? periodNavigation : null}
-
-      {contentNavigation}
+      {contextNavigationSection}
 
       <div className="flex flex-wrap items-center gap-2">
         {showInlineCreateButtons || allowImport ? (
@@ -410,7 +459,9 @@ export function TransactionsScreen({
                       onClick={() => openCreateDialog(type)}
                     >
                       <Icon aria-hidden="true" />
-                      {createTransactionLabels[type]}
+                      {type === "income" && createDefaults?.paymentMethod === "credit_card"
+                        ? "Novo crédito na fatura"
+                        : createTransactionLabels[type]}
                     </Button>
                   );
                 })
@@ -427,7 +478,26 @@ export function TransactionsScreen({
         ) : null}
 
         <div className="contents">
-          <div className="order-3 relative w-full md:ml-auto md:w-64">
+          <div className="order-3 flex shrink-0 items-center gap-2 text-muted-foreground text-sm md:ml-auto">
+            Ordenar por
+            <Select
+              value={urlSearch.sort ?? "recent"}
+              onValueChange={(value) =>
+                onSearchChange({ sort: value as TransactionsSearch["sort"], page: undefined })
+              }
+            >
+              <SelectTrigger aria-label="Ordenar lançamentos" className="w-40">
+                <SelectValue>{transactionSortLabels[urlSearch.sort ?? "recent"]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Mais recentes</SelectItem>
+                <SelectItem value="oldest">Mais antigos</SelectItem>
+                <SelectItem value="dueDate">Vencimento</SelectItem>
+                <SelectItem value="amount">Maior valor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="order-4 relative w-full md:w-64">
             <Search
               aria-hidden="true"
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -436,7 +506,7 @@ export function TransactionsScreen({
               aria-label="Buscar lançamentos"
               className="pr-9 pl-9 placeholder:text-muted-foreground"
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar"
+              placeholder="Buscar descrição, pessoa ou categoria"
               value={search}
             />
             {search ? (
@@ -465,16 +535,17 @@ export function TransactionsScreen({
                   />
                 ) : null}
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md">
-                <SheetHeader>
+              <SheetContent className="w-full gap-0 sm:max-w-lg!">
+                <SheetHeader className="border-b">
                   <SheetTitle>Filtros</SheetTitle>
                   <SheetDescription>
-                    Refine os lançamentos. Um intervalo de datas substitui o mês selecionado.
+                    Os filtros são aplicados automaticamente. Um intervalo de datas substitui o mês
+                    selecionado.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-4">
-                  <div className="grid content-start gap-5">
-                    <div className="grid gap-5 sm:grid-cols-2">
+                <div className="flex-1 overflow-y-auto px-4 py-4">
+                  <div className="grid content-start gap-6">
+                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                       {!hiddenFilterSet.has("type") ? (
                         <FilterSelect
                           label="Tipo de lançamento"
@@ -500,10 +571,10 @@ export function TransactionsScreen({
                           {
                             value: "single",
                             label: transactionConditionLabels.single,
-                            icon: Check,
+                            icon: Minus,
                           },
                           { value: "installment", label: "Parcelada", icon: CalendarClock },
-                          { value: "recurring", label: "Recorrente", icon: RefreshCw },
+                          { value: "recurring", label: "Recorrente", icon: Repeat2 },
                         ]}
                         value={conditionFilter ?? "all"}
                       />
@@ -524,12 +595,13 @@ export function TransactionsScreen({
                       ) : null}
                       {!hiddenFilterSet.has("settlement") ? (
                         <FilterSelect
-                          label="Status de pagamento"
+                          label="Situação"
                           onChange={setSettlementFilter}
                           options={[
                             { value: "all", label: "Todos" },
-                            { value: "paid", label: "Pagos", icon: CircleCheck },
-                            { value: "unpaid", label: "Não pagos", icon: Circle },
+                            { value: "paid", label: "Pagos / recebidos", icon: CircleCheck },
+                            { value: "unpaid", label: "Em aberto", icon: Circle },
+                            { value: "invoice", label: "Pagamento pela fatura", icon: CreditCard },
                           ]}
                           value={settlementFilter ?? "all"}
                         />
@@ -705,7 +777,7 @@ export function TransactionsScreen({
                     </div>
                   </div>
                 </div>
-                <SheetFooter>
+                <SheetFooter className="border-t bg-popover/95">
                   <div className="flex items-center justify-between rounded-md border border-dashed px-3 py-2">
                     <span className="text-muted-foreground text-xs">
                       {activeFilterCount
@@ -721,6 +793,7 @@ export function TransactionsScreen({
                       Limpar
                     </Button>
                   </div>
+                  <SheetClose render={<Button />}>Ver resultados</SheetClose>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
@@ -751,7 +824,7 @@ export function TransactionsScreen({
           ) : null}
           {!hiddenFilterSet.has("settlement") && settlementFilter ? (
             <FilterChip
-              label={`Status: ${settlementFilter === "paid" ? "Pagos" : "Não pagos"}`}
+              label={`Status: ${settlementFilter === "invoice" ? "Pagamento pela fatura" : settlementFilter === "paid" ? "Pagos / recebidos" : "Em aberto"}`}
               onRemove={() => setSettlementFilter("all")}
             />
           ) : null}
@@ -809,7 +882,7 @@ export function TransactionsScreen({
             ))}
           {urlSearch.minAmount !== undefined || urlSearch.maxAmount !== undefined ? (
             <FilterChip
-              label={`Valor: ${urlSearch.minAmount ?? 0} até ${urlSearch.maxAmount ?? "∞"}`}
+              label={`Valor: ${formatTransactionFilterAmount(urlSearch.minAmount ?? 0)} até ${urlSearch.maxAmount !== undefined ? formatTransactionFilterAmount(urlSearch.maxAmount) : "sem limite"}`}
               onRemove={() =>
                 onSearchChange({ minAmount: undefined, maxAmount: undefined, page: undefined })
               }
@@ -817,7 +890,7 @@ export function TransactionsScreen({
           ) : null}
           {urlSearch.dateStart || urlSearch.dateEnd ? (
             <FilterChip
-              label={`Datas: ${urlSearch.dateStart ?? "início"} até ${urlSearch.dateEnd ?? "fim"}`}
+              label={`Datas: ${urlSearch.dateStart ? formatTransactionFilterDate(urlSearch.dateStart) : "início"} até ${urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "fim"}`}
               onRemove={() =>
                 onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
               }
@@ -841,15 +914,32 @@ export function TransactionsScreen({
         </fieldset>
       ) : null}
 
+      {isUpdating ? (
+        <span role="status" className="text-muted-foreground text-xs">
+          Atualizando resultados…
+        </span>
+      ) : null}
       {isLoading ? <TransactionsLoading /> : null}
 
       {hasLoadError ? (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-10 text-center">
           <p className="font-medium text-destructive">Não foi possível carregar os lançamentos.</p>
-          <p className="mt-1 text-muted-foreground text-sm">Tente novamente em instantes.</p>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Verifique sua conexão e tente novamente.
+          </p>
+          <Button variant="outline" className="mt-3" onClick={onRetry}>
+            Tentar novamente
+          </Button>
         </div>
       ) : null}
 
+      {!isLoading && !hasLoadError && !transactions.length && activeFilterCount ? (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={clearFilters}>
+            Limpar filtros
+          </Button>
+        </div>
+      ) : null}
       {!isLoading && !hasLoadError ? (
         <TransactionsTable
           adminPersonId={adminPersonId}
@@ -887,6 +977,16 @@ export function TransactionsScreen({
         cards={cards}
         categories={categories}
         createDefaults={createDefaults}
+        createTitle={
+          createType === "income" && createDefaults?.paymentMethod === "credit_card"
+            ? "Novo crédito na fatura"
+            : undefined
+        }
+        createDescription={
+          createType === "income" && createDefaults?.paymentMethod === "credit_card"
+            ? "Registre um crédito recebido no cartão. Para reembolsar uma despesa específica, use a ação de reembolso desse lançamento."
+            : undefined
+        }
         defaultType={createType}
         defaultPeriod={period}
         onOpenChange={(open) => {
@@ -957,15 +1057,17 @@ function FilterSelect({
   const selectedOption = options.find((option) => option.value === value);
 
   return (
-    <div className="grid gap-2">
+    <div className="grid min-w-0 gap-2">
       <span className="font-medium text-muted-foreground text-xs">{label}</span>
       <Select onValueChange={(next) => next && onChange(next)} value={value}>
-        <SelectTrigger className="w-full">
-          <SelectValue className={value === "all" ? "text-muted-foreground" : "text-foreground"}>
+        <SelectTrigger className="w-full min-w-0 overflow-hidden">
+          <SelectValue
+            className={cn("min-w-0", value === "all" ? "text-muted-foreground" : "text-foreground")}
+          >
             {selectedOption ? <FilterSelectOption option={selectedOption} /> : null}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start" alignItemWithTrigger={false} className="min-w-56">
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <FilterSelectOption option={option} />
@@ -1062,19 +1164,24 @@ function MultiFilterSelect({
   const groups = [...new Set(visibleOptions.map((option) => option.group ?? ""))];
 
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid min-w-0 gap-2", className)}>
       <span className="font-medium text-muted-foreground text-xs">{label}</span>
       <Popover>
         <PopoverTrigger
           render={
             <Button
-              className="w-full justify-between bg-transparent font-normal"
+              className="w-full min-w-0 justify-between overflow-hidden bg-transparent font-normal"
               type="button"
               variant="outline"
             />
           }
         >
-          <span className={selected.length ? "text-foreground" : "text-muted-foreground"}>
+          <span
+            className={cn(
+              "flex min-w-0 flex-1 items-center overflow-hidden text-left",
+              selected.length ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
             {selectedOptions.length === 1 ? (
               <FilterOptionContent option={selectedOptions[0]} />
             ) : selected.length ? (
@@ -1231,3 +1338,10 @@ const createTransactionLabels: Record<TransactionCreateType, string> = {
 };
 
 const defaultCreateTypes: readonly TransactionCreateType[] = ["income", "expense", "transfer"];
+
+const transactionSortLabels = {
+  recent: "Mais recentes",
+  oldest: "Mais antigos",
+  dueDate: "Vencimento",
+  amount: "Maior valor",
+} as const;

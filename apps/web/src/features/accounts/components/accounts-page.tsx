@@ -4,6 +4,7 @@ import type {
   ReplaceAccountInput,
 } from "@openmonetis/validators/accounts";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Landmark, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export function AccountsPage() {
   const replaceMutation = useReplaceAccountMutation();
   const archiveMutation = useArchiveAccountMutation();
   const deleteMutation = useDeleteAccountMutation();
+  const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<AccountOutput | null>(null);
 
@@ -49,7 +51,8 @@ export function AccountsPage() {
         input: input as ReplaceAccountInput,
       });
     } else {
-      await createMutation.mutateAsync(input as CreateAccountInput);
+      const created = await createMutation.mutateAsync(input as CreateAccountInput);
+      setCreatedAccountId(created.id);
     }
     closeDialog(false);
   }
@@ -103,6 +106,24 @@ export function AccountsPage() {
             title="Contas"
           />
 
+          {createdAccountId ? (
+            <Card className="gap-3 p-4">
+              <h2 className="font-semibold">Conta criada. Agora informe o saldo.</h2>
+              <p className="text-muted-foreground text-sm">
+                Abra o extrato e use “Ajustar saldo” para registrar quanto você já tem nesta conta.
+              </p>
+              <div className="flex gap-2">
+                <Button asChild>
+                  <Link to="/accounts/$accountId" params={{ accountId: createdAccountId }}>
+                    Informar saldo no extrato
+                  </Link>
+                </Button>
+                <Button variant="ghost" onClick={() => setCreatedAccountId(null)}>
+                  Fazer depois
+                </Button>
+              </div>
+            </Card>
+          ) : null}
           {accountsQuery.isLoading ? (
             <p className="text-muted-foreground text-sm">Carregando contas...</p>
           ) : null}

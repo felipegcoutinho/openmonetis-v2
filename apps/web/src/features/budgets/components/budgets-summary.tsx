@@ -1,5 +1,5 @@
 import type { BudgetOverviewOutput } from "@openmonetis/validators/budgets";
-import { CircleDollarSign, PiggyBank, ReceiptText, WalletCards } from "lucide-react";
+import { CircleDollarSign, ReceiptText, Target, WalletCards } from "lucide-react";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 
@@ -9,7 +9,7 @@ export function BudgetsSummary({ overview }: { overview: BudgetOverviewOutput })
       eyebrow="Planejamento mensal"
       identity={
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
-          <PiggyBank aria-hidden="true" className="size-6" />
+          <Target aria-hidden="true" className="size-6" />
         </span>
       }
       metrics={[
@@ -20,7 +20,7 @@ export function BudgetsSummary({ overview }: { overview: BudgetOverviewOutput })
           value: <MoneyValue amount={overview.committedAmount} />,
         },
         {
-          description: "Valor que ainda pode ser utilizado dentro dos limites deste mês.",
+          description: "Quanto resta nos limites planejados deste mês. Não é o saldo das contas.",
           icon: <CircleDollarSign aria-hidden="true" className="size-3.5" />,
           label: "Ainda disponível",
           value: <MoneyValue amount={overview.availableAmount} className="text-success" />,
@@ -28,7 +28,7 @@ export function BudgetsSummary({ overview }: { overview: BudgetOverviewOutput })
         {
           description: "Despesas previstas sem um limite de orçamento correspondente.",
           icon: <WalletCards aria-hidden="true" className="size-3.5" />,
-          label: "Sem orçamento",
+          label: "Gastos em categorias sem limite",
           value: (
             <MoneyValue
               amount={overview.unbudgetedCommittedAmount}

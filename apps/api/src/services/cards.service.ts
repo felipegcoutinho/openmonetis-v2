@@ -11,6 +11,7 @@ import {
 import {
   addMonthsToPeriod,
   deriveTransactionPeriod,
+  getPeriodEndDate,
   listRecurrenceDatesInPeriod,
   type PaymentMethod,
   type RecurrenceFrequency,
@@ -24,7 +25,7 @@ import type {
 } from "@openmonetis/validators/cards";
 import { conflict, notFound } from "../utils/errors";
 
-export type CardRecord = {
+type CardRecord = {
   id: string;
   userId: string;
   accountId: string;
@@ -51,13 +52,13 @@ type DeleteCardResult =
   | { status: "deleted"; id: string }
   | { status: "not_found" };
 
-export type CardMovementRecord = {
+type CardMovementRecord = {
   cardId: string | null;
   period: string;
   amount: string;
 };
 
-export type CardInvoiceStateRecord = {
+type CardInvoiceStateRecord = {
   cardId: string;
   period: string;
   paymentStatus: "pending" | "paid";
@@ -72,7 +73,7 @@ type CardInvoicePaymentRecord = {
   amount: string;
 };
 
-export type CardRecurringRuleRecord = {
+type CardRecurringRuleRecord = {
   id: string;
   cardId: string | null;
   amount: string;
@@ -143,7 +144,7 @@ export function createCardsService(
       repository.listMovementsByUser(userId, cardId),
       repository.listInvoiceStatesByUser(userId, cardId),
       repository.listInvoicePaymentsByUser(userId, cardId),
-      repository.listActiveRecurringRulesThroughPeriod(userId, getPeriodEnd(period), cardId),
+      repository.listActiveRecurringRulesThroughPeriod(userId, getPeriodEndDate(period), cardId),
     ]);
     const movements = [
       ...persistedMovements,
@@ -333,11 +334,6 @@ export type CardsService = ReturnType<typeof createCardsService>;
 
 function currentPeriod() {
   return getCurrentPeriodInBrazil();
-}
-
-function getPeriodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 function expandRecurringInvoiceMovements(

@@ -11,11 +11,12 @@ import {
   Check,
   ClipboardCheck,
   CreditCard,
-  Gauge,
   HandCoins,
   Inbox as InboxIcon,
   Mail,
+  MailOpen,
   RefreshCw,
+  Target,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -365,7 +366,11 @@ function NotificationRow({
                   />
                 }
               >
-                {notification.isRead ? <Mail aria-hidden="true" /> : <Check aria-hidden="true" />}
+                {notification.isRead ? (
+                  <Mail aria-hidden="true" />
+                ) : (
+                  <MailOpen aria-hidden="true" />
+                )}
               </TooltipTrigger>
               <TooltipContent>
                 {notification.isRead ? "Marcar como não lida" : "Marcar como lida"}
@@ -436,7 +441,7 @@ function NotificationIcon({ notification }: { notification: NotificationOutput }
 
   return (
     <span className={className}>
-      {notification.kind === "budget" ? <Gauge aria-hidden="true" className="size-4" /> : null}
+      {notification.kind === "budget" ? <Target aria-hidden="true" className="size-4" /> : null}
       {notification.kind === "inbox" ? <InboxIcon aria-hidden="true" className="size-4" /> : null}
       {notification.kind === "externalExpenses" ? (
         <HandCoins aria-hidden="true" className="size-4" />

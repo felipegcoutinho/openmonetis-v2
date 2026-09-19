@@ -48,7 +48,7 @@ export function PreferencesActions({
           ) : (
             <RotateCcw aria-hidden="true" />
           )}
-          Restaurar padrões
+          Carregar padrões
         </Button>
       </div>
       {hasChanges || isBusy ? (

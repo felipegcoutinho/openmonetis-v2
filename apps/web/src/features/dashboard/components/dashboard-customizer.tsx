@@ -4,7 +4,7 @@ import {
   type DashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Check, LoaderCircle, Paintbrush, RotateCcw } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, LoaderCircle, PanelsTopLeft, RotateCcw } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ export function DashboardCustomizer() {
           {preferencesQuery.isPending ? (
             <LoaderCircle aria-hidden="true" className="animate-spin" />
           ) : (
-            <Paintbrush aria-hidden="true" />
+            <PanelsTopLeft aria-hidden="true" />
           )}
         </TooltipTrigger>
         <TooltipContent>Personalizar dashboard</TooltipContent>

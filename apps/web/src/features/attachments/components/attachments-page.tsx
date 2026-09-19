@@ -3,7 +3,8 @@ import type {
   ListAttachmentsQuery,
 } from "@openmonetis/validators/attachments";
 import { useQuery } from "@tanstack/react-query";
-import { FileSearch, Loader2, Paperclip, RefreshCw, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { FileSearch, Loader2, Paperclip, RefreshCw, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -43,6 +44,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
   const period = search.period ?? getCurrentAttachmentPeriod();
   const queryInput = {
     period,
+    q: search.q,
     kind: search.kind,
     personId: search.personId,
     page: search.page ?? 1,
@@ -56,7 +58,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
   );
   const data = query.data;
   const previewIndex = data?.items.findIndex((attachment) => attachment.id === previewId) ?? -1;
-  const hasFilters = Boolean(search.kind || search.personId);
+  const hasFilters = Boolean(search.q || search.kind || search.personId);
 
   async function removeAttachment() {
     if (!removingAttachment) return;
@@ -86,7 +88,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
               { label: "Organização" },
               { label: "Anexos" },
             ]}
-            description="Encontre comprovantes e documentos vinculados aos seus lançamentos."
+            description="Encontre comprovantes e documentos dos lançamentos do mês selecionado."
             icon={<Paperclip aria-hidden="true" className="size-5" />}
             title="Anexos"
           />
@@ -102,7 +104,10 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
           {query.isError ? (
             <Card className="grid min-h-60 place-items-center border p-6 text-center">
               <div>
-                <FileSearch aria-hidden="true" className="mx-auto size-8 text-muted-foreground" />
+                <TriangleAlert
+                  aria-hidden="true"
+                  className="mx-auto size-8 text-muted-foreground"
+                />
                 <p className="mt-3 font-medium">Não foi possível carregar os anexos</p>
                 <p className="mt-1 text-muted-foreground text-sm">
                   Verifique sua conexão e tente novamente.
@@ -177,6 +182,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
                   hasFilters={hasFilters}
                   onClear={() =>
                     onSearchChange({
+                      q: undefined,
                       kind: undefined,
                       personId: undefined,
                       page: undefined,
@@ -289,6 +295,11 @@ function AttachmentsEmptyState({
             ? "Ajuste ou limpe os filtros para ver outros documentos."
             : "Adicione comprovantes aos lançamentos para encontrá-los organizados aqui."}
         </p>
+        {!hasFilters ? (
+          <Button asChild className="mt-4">
+            <Link to="/transactions">Abrir lançamentos</Link>
+          </Button>
+        ) : null}
         {hasFilters && (
           <Button className="mt-4" onClick={onClear} size="sm" type="button" variant="outline">
             Limpar filtros

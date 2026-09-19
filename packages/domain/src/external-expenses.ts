@@ -33,6 +33,29 @@ export type ExternalExpenseSnapshot = {
   sourceLabel: string | null;
 };
 
+export function preserveExternalExpenseInstallmentBoundary(
+  current: ExternalExpenseSnapshot,
+  next: ExternalExpenseSnapshot,
+): ExternalExpenseSnapshot {
+  if (
+    current.condition !== "installment" ||
+    next.condition !== "installment" ||
+    current.currentInstallment === null ||
+    next.currentInstallment === null ||
+    current.currentInstallment <= next.currentInstallment
+  ) {
+    return next;
+  }
+
+  return {
+    ...next,
+    purchaseDate: current.purchaseDate,
+    period: current.period,
+    dueDate: current.dueDate,
+    currentInstallment: current.currentInstallment,
+  };
+}
+
 export function selectNewExternalExpenseAssignmentKeys(
   before: ReadonlySet<string>,
   after: ReadonlySet<string>,

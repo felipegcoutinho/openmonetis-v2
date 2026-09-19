@@ -99,7 +99,7 @@ export function PersonForm({
                 placeholder="Ex.: Ana Silva"
                 value={field.state.value}
               />
-              <p aria-live="polite" className="sr-only" role="alert">
+              <p aria-live="polite" className="text-destructive text-xs" role="alert">
                 {field.state.meta.errors[0] ?? ""}
               </p>
             </div>

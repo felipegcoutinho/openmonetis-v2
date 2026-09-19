@@ -35,7 +35,7 @@ export type InboxRuleRecord = {
   updatedAt: Date;
 };
 
-export type InboxRuleWriteRecord = Omit<
+type InboxRuleWriteRecord = Omit<
   InboxRuleRecord,
   | "id"
   | "categoryName"

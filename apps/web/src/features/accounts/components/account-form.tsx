@@ -63,7 +63,7 @@ function FieldError({ errors }: { errors: unknown[] }) {
   if (!message) return null;
 
   return (
-    <p aria-live="polite" className="sr-only" role={message ? "alert" : undefined}>
+    <p aria-live="polite" className="text-destructive text-xs" role={message ? "alert" : undefined}>
       {message}
     </p>
   );
@@ -197,31 +197,33 @@ export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
           )}
         </form.Field>
 
-        <form.Field name="isArchived">
-          {(field) => (
-            <div className="grid gap-1.5 sm:col-span-2">
-              <Label htmlFor={fieldId(field.name)}>Status</Label>
-              <Select
-                onValueChange={(status) => field.handleChange(status === "inactive")}
-                value={field.state.value ? "inactive" : "active"}
-              >
-                <SelectTrigger className="w-full" id={fieldId(field.name)}>
-                  <SelectValue>
-                    <AccountStatusOption archived={field.state.value} />
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">
-                    <AccountStatusOption archived={false} />
-                  </SelectItem>
-                  <SelectItem value="inactive">
-                    <AccountStatusOption archived />
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </form.Field>
+        {isEditing ? (
+          <form.Field name="isArchived">
+            {(field) => (
+              <div className="grid gap-1.5 sm:col-span-2">
+                <Label htmlFor={fieldId(field.name)}>Status</Label>
+                <Select
+                  onValueChange={(status) => field.handleChange(status === "inactive")}
+                  value={field.state.value ? "inactive" : "active"}
+                >
+                  <SelectTrigger className="w-full" id={fieldId(field.name)}>
+                    <SelectValue>
+                      <AccountStatusOption archived={field.state.value} />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      <AccountStatusOption archived={false} />
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      <AccountStatusOption archived />
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </form.Field>
+        ) : null}
 
         <form.Field
           name="note"

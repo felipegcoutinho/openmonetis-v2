@@ -16,12 +16,14 @@ import {
   type DashboardTransactionOrigin,
   normalizeDashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
+import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
 import {
   addMonthsToPeriod,
   buildTransferPostings,
   deriveTransactionCompetencePeriod,
   deriveTransactionForecastPeriod,
   deriveTransactionPeriod,
+  getPeriodEndDate,
   getPeriodFromDate,
   listRecurrenceDatesInPeriod,
   normalizeTransactionAmount,
@@ -160,11 +162,6 @@ type DashboardRecurringPersonSplitRecord = DashboardPersonSplitRecord & {
 type DashboardAccountsReader = {
   list(userId: string, period: string): Promise<AccountOutput[]>;
 };
-
-function periodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
-}
 
 function expandRecurringRules(
   rules: DashboardRecurringRuleRecord[],
@@ -405,21 +402,6 @@ function expandRecurringExpenseDistributionEntries(
   });
 }
 
-function getRecurringDueDate(ruleDueDate: string | null, purchaseDate: string) {
-  if (!ruleDueDate) return null;
-  const purchase = new Date(`${purchaseDate}T00:00:00.000Z`);
-  const dueDay = new Date(`${ruleDueDate}T00:00:00.000Z`).getUTCDate();
-  const lastDay = new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-
-  return new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth(), Math.min(dueDay, lastDay)),
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
 function buildPrimaryPersonMetricEntries(
   transactions: DashboardTransactionRecord[],
 ): DashboardMetricEntry[] {
@@ -512,7 +494,7 @@ export function createDashboardService(
       let transactionSplitsPromise: Promise<DashboardTransactionPersonSplitRecord[]> | undefined;
       let recurringSplitsPromise: Promise<DashboardRecurringPersonSplitRecord[]> | undefined;
       const accountPromises = new Map<string, Promise<AccountOutput[]>>();
-      const end = periodEnd(period);
+      const end = getPeriodEndDate(period);
 
       const sharedRepository: DashboardRepository = {
         ...repository,
@@ -608,8 +590,8 @@ export function createDashboardService(
         previousAccounts,
       ] = await Promise.all([
         repository.listTransactionsThroughPeriod(userId, period),
-        repository.listRecurringRules(userId, periodEnd(period)),
-        repository.listRecurringOccurrenceStates(userId, periodEnd(period)),
+        repository.listRecurringRules(userId, getPeriodEndDate(period)),
+        repository.listRecurringOccurrenceStates(userId, getPeriodEndDate(period)),
         repository.listInvoiceStatuses(userId, period),
         repository.listAdminInvoicePaymentAllocations(userId, period),
         accountsReader.list(userId, period),
@@ -674,7 +656,7 @@ export function createDashboardService(
     },
 
     async getPaymentStatus(period: string, userId: string): Promise<DashboardPaymentStatusOutput> {
-      const end = periodEnd(period);
+      const end = getPeriodEndDate(period);
       const [transactions, recurringRules, occurrenceStates, invoiceStatuses] = await Promise.all([
         repository.listTransactionsThroughPeriod(userId, period, period),
         repository.listRecurringRules(userId, end),
@@ -706,7 +688,7 @@ export function createDashboardService(
     ): Promise<DashboardExpenseDistributionOutput> {
       const [transactions, recurringRules] = await Promise.all([
         repository.listTransactionsThroughPeriod(userId, period, period),
-        repository.listRecurringRules(userId, periodEnd(period)),
+        repository.listRecurringRules(userId, getPeriodEndDate(period)),
       ]);
       const entries: DashboardExpenseDistributionEntry[] = [
         ...transactions.flatMap((transaction) =>
@@ -741,7 +723,7 @@ export function createDashboardService(
       const previousPeriod = addMonthsToPeriod(period, -1);
       const [transactions, recurringRules] = await Promise.all([
         repository.listTransactionsThroughPeriod(userId, period, previousPeriod),
-        repository.listRecurringRules(userId, periodEnd(period)),
+        repository.listRecurringRules(userId, getPeriodEndDate(period)),
       ]);
       const recurringTransactions = expandRecurringRules(
         recurringRules,
@@ -790,7 +772,7 @@ export function createDashboardService(
       userId: string,
     ): Promise<DashboardPeopleExpensesOutput> {
       const previousPeriod = addMonthsToPeriod(period, -1);
-      const end = periodEnd(period);
+      const end = getPeriodEndDate(period);
       const [transactions, recurringRules, transactionSplits, recurringSplits] = await Promise.all([
         repository.listTransactionsThroughPeriod(userId, period, previousPeriod),
         repository.listRecurringRules(userId, end),

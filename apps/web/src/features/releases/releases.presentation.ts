@@ -3,11 +3,11 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const releaseSectionLabels: Record<ReleaseOutput["sections"][number]["type"], string> = {
-  added: "Adicionado",
-  changed: "Alterado",
+  added: "Novidades",
+  changed: "Melhorias",
   deprecated: "Descontinuado",
   removed: "Removido",
-  fixed: "Corrigido",
+  fixed: "Correções",
   security: "Segurança",
 };
 

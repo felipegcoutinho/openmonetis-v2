@@ -4,6 +4,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 import { OpenMonetisLogo } from "@/components/openmonetis-logo";
 
 export const Route = createFileRoute("/signup")({
+  head: () => ({ meta: [{ title: "Criar conta · OpenMonetis" }] }),
   component: SignupPage,
 });
 

@@ -1,10 +1,11 @@
 import type { PersonOutput, ReplacePersonInput } from "@openmonetis/validators/people";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
-import { CalendarDays, CircleHelp, Mail, MessageSquareText, Pencil, UserRound } from "lucide-react";
+import { CalendarDays, Mail, MessageSquareText, Pencil, UserRound } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { CurrentUserBadge } from "@/components/current-user-badge";
+import { EntityLoadError } from "@/components/entity-load-error";
 import { Navbar } from "@/components/navigation/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,8 +61,7 @@ export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDe
   const hasExternalExpenses = Boolean(
     personQuery.data?.role === "admin" && recipientConnections.length > 0,
   );
-  const selectedView =
-    search.view === "external" && !hasExternalExpenses ? "panel" : (search.view ?? "panel");
+  const selectedView = search.view ?? "panel";
 
   async function updatePerson(input: ReplacePersonInput) {
     if (!resolvedPersonId) return;
@@ -74,7 +74,15 @@ export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDe
       <main className="min-h-svh bg-background">
         <Navbar />
         {personQuery.isLoading ? <PersonDetailsLoading /> : null}
-        {personQuery.isError ? <PersonDetailsNotFound /> : null}
+        {personQuery.isError ? (
+          <EntityLoadError
+            error={personQuery.error}
+            entity="a pessoa"
+            onRetry={() => void personQuery.refetch()}
+          >
+            <PersonDetailsNotFound />
+          </EntityLoadError>
+        ) : null}
         {personQuery.data ? (
           <>
             <TransactionsContainer
@@ -131,7 +139,7 @@ function getPersonTransactionsScope(
       ],
       summary: <PersonSummary onEdit={onEdit} periodLabel={periodLabel} person={person} />,
     },
-    periodNavigationPlacement: "afterPageHeader" as const,
+    periodNavigationPlacement: "afterSummary" as const,
     hiddenFilters: ["person"] as const,
     contentNavigation: (
       <Tabs
@@ -146,8 +154,8 @@ function getPersonTransactionsScope(
         <TabsList variant="line">
           <TabsTrigger value="panel">Painel</TabsTrigger>
           <TabsTrigger value="transactions">Lançamentos</TabsTrigger>
-          {hasExternalExpenses ? (
-            <TabsTrigger value="external">Lançamentos externos</TabsTrigger>
+          {person.role === "admin" ? (
+            <TabsTrigger value="external">Despesas compartilhadas</TabsTrigger>
           ) : null}
         </TabsList>
       </Tabs>
@@ -155,14 +163,24 @@ function getPersonTransactionsScope(
     contentOverride:
       selectedView === "panel" ? (
         <div className="grid gap-4">
-          <PersonConnectionPanel person={person} />
           {financialSummary}
           <PersonSettlementsCard period={period} person={person} />
+          <PersonConnectionPanel person={person} />
         </div>
-      ) : selectedView === "external" && hasExternalExpenses ? (
+      ) : selectedView === "external" ? (
         <div className="grid gap-4">
           <PersonConnectionsManager />
-          <ExternalExpensesSection period={period} />
+          {hasExternalExpenses ? (
+            <ExternalExpensesSection period={period} />
+          ) : (
+            <Card className="gap-2 p-6">
+              <h2 className="font-semibold">Ainda não há uma conexão para receber despesas</h2>
+              <p className="text-muted-foreground text-sm">
+                Aceite uma conexão e conclua a confirmação para revisar despesas compartilhadas com
+                você.
+              </p>
+            </Card>
+          )}
         </div>
       ) : undefined,
   };
@@ -229,7 +247,7 @@ function PersonDetailsPopover({ person }: { person: PersonOutput }) {
   return (
     <Popover>
       <PopoverTrigger render={<Button size="sm" type="button" variant="ghost" />}>
-        <CircleHelp aria-hidden="true" />
+        <UserRound aria-hidden="true" />
         Detalhes
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">

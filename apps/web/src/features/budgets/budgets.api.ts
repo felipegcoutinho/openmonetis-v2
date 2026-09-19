@@ -6,11 +6,7 @@ import type {
   CreateBudgetInput,
   UpdateBudgetInput,
 } from "@openmonetis/validators/budgets";
-import { requestApi } from "@/lib/api-client";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  return requestApi<T>(path, init, { useResponseMessage: true });
-}
+import { requestApiWithResponseMessage as request } from "@/lib/api-client";
 
 export function getBudgets(period: string) {
   return request<BudgetOverviewOutput>(`/budgets?${new URLSearchParams({ period })}`);

@@ -13,6 +13,7 @@ import {
 import {
   addMonthsToPeriod,
   deriveTransactionPeriod,
+  getPeriodEndDate,
   listRecurrenceDatesInPeriod,
   type PaymentMethod,
   type RecurrenceFrequency,
@@ -39,7 +40,7 @@ type InvoiceCardRecord = {
   dueDay: number;
 };
 type InvoiceAccountRecord = { id: string; name: string; logo: string | null };
-export type InvoiceMovementRecord = {
+type InvoiceMovementRecord = {
   cardId: string | null;
   personId: string;
   personName: string;
@@ -60,7 +61,7 @@ type InvoiceDateRecord = {
   dueDate: string | null;
   datesCustomized: boolean;
 };
-export type InvoiceRecurringMovementRecord = InvoiceMovementRecord & {
+type InvoiceRecurringMovementRecord = InvoiceMovementRecord & {
   startDate: string;
   endDate?: string | null;
   frequency: RecurrenceFrequency;
@@ -170,7 +171,7 @@ export function createInvoicesService(
         repository.listCards(userId),
         repository.listAccounts(userId),
         repository.listMovements(userId, period),
-        repository.listRecurringMovements(userId, periodEnd(period)),
+        repository.listRecurringMovements(userId, getPeriodEndDate(period)),
         repository.listPaymentAllocations(userId, period),
         repository.listPayments(userId, period),
         repository.listDates(userId, period),
@@ -501,11 +502,6 @@ function formatCurrency(amount: number) {
 
 function createInvoiceAdjustmentNote(previousAmount: number, currentAmount: number) {
   return `Ajuste de fatura. Valor anterior: ${formatCurrency(previousAmount)}. Valor atual: ${formatCurrency(currentAmount)}.`;
-}
-
-function periodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 function expandRecurringMovements(

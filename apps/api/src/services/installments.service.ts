@@ -22,7 +22,7 @@ import type {
 } from "@openmonetis/validators/installments";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
-export type InstallmentQuoteRecord = {
+type InstallmentQuoteRecord = {
   id: string;
   userId: string;
   type: "income" | "expense" | "transfer";

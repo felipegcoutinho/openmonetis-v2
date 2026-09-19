@@ -47,6 +47,16 @@ export const AdjustAccountBalanceInputSchema = z
   })
   .openapi("AdjustAccountBalanceInput");
 
+export const AccountBalanceAdjustmentPreviewSchema = z
+  .object({
+    currentBalance: z.number().finite(),
+    desiredBalance: z.number().finite(),
+    adjustmentAmount: z.number().finite(),
+    date: z.iso.date(),
+  })
+  .openapi("AccountBalanceAdjustmentPreview");
+export type AccountBalanceAdjustmentPreview = z.infer<typeof AccountBalanceAdjustmentPreviewSchema>;
+
 export const AddAccountYieldInputSchema = z
   .discriminatedUnion("mode", [
     z.object({

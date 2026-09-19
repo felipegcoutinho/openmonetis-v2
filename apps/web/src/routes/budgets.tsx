@@ -3,6 +3,7 @@ import { getCurrentPeriod } from "@/components/month-navigation";
 import { BudgetsPage } from "@/features/budgets/components/budgets-page";
 
 export const Route = createFileRoute("/budgets")({
+  head: () => ({ meta: [{ title: "Orçamentos · OpenMonetis" }] }),
   component: BudgetsRoute,
   validateSearch: validateBudgetsSearch,
 });

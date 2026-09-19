@@ -120,7 +120,7 @@ export function InstallmentGroupCard({
               <MoneyValue amount={group.pendingAmount} className="mt-1 font-semibold text-lg" />
             </div>
             <div className="text-right">
-              <p className="text-muted-foreground text-xs">Valor acompanhado</p>
+              <p className="text-muted-foreground text-xs">Valor registrado</p>
               <MoneyValue amount={group.trackedAmount} className="mt-1 font-semibold text-lg" />
             </div>
           </div>
@@ -129,14 +129,14 @@ export function InstallmentGroupCard({
             <div className="flex items-center justify-between gap-3 text-xs">
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <CircleCheckBig aria-hidden="true" className="size-3.5 text-success" />
-                {group.paidInstallmentCount} de {group.trackedInstallmentCount} acompanhadas pagas
+                {group.paidInstallmentCount} de {group.trackedInstallmentCount} registradas pagas
               </span>
               <span className="font-mono tabular-nums">
                 {Math.round(group.progressPercentage)}%
               </span>
             </div>
             <Progress
-              aria-label="Progresso das parcelas acompanhadas"
+              aria-label="Progresso das parcelas registradas"
               indicatorClassName="bg-success"
               value={group.progressPercentage}
             />

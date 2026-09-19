@@ -4,6 +4,7 @@ import {
   cards,
   categories,
   db,
+  establishmentLogos,
   externalExpenses,
   financialAccounts,
   importCategoryMappings,
@@ -24,6 +25,7 @@ import {
   transactionSplits,
   transactions,
 } from "@openmonetis/db";
+import { createEstablishmentNameKey } from "@openmonetis/domain/establishments";
 import { selectNewExternalExpenseAssignmentKeys } from "@openmonetis/domain/external-expenses";
 import { assertTransferWithinAvailableBalance } from "@openmonetis/domain/transactions";
 import {
@@ -131,7 +133,11 @@ async function confirmTransactionSource(
 
   if (confirmation.source === "externalExpense") {
     const [expense] = await transaction
-      .select({ id: externalExpenses.id })
+      .select({
+        id: externalExpenses.id,
+        establishmentLogoDomain: externalExpenses.establishmentLogoDomain,
+        name: externalExpenses.name,
+      })
       .from(externalExpenses)
       .where(
         and(
@@ -163,6 +169,17 @@ async function confirmTransactionSource(
       )
       .returning({ id: externalExpenses.id });
     if (!accepted) throw transactionConfirmationConflict;
+    if (expense.establishmentLogoDomain) {
+      await transaction
+        .insert(establishmentLogos)
+        .values({
+          userId: confirmation.userId,
+          nameKey: createEstablishmentNameKey(expense.name),
+          domain: expense.establishmentLogoDomain,
+          updatedAt: confirmation.confirmedAt,
+        })
+        .onConflictDoNothing();
+    }
     return;
   }
 

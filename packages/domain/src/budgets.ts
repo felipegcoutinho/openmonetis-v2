@@ -1,4 +1,5 @@
 import type { CardClosingRule } from "./cards";
+import { getRecurringDueDate } from "./recurring-expenses";
 import {
   addMonthsToPeriod,
   calculateExpenseImpact,
@@ -260,22 +261,6 @@ function unbudgetedTotal(values: Map<string, number>, budgetedCategoryIds: Set<s
       budgetedCategoryIds.has(categoryId) ? total : total + Math.max(0, amount),
     0,
   );
-}
-
-function getRecurringDueDate(ruleDueDate: string | null, purchaseDate: string) {
-  if (!ruleDueDate) return null;
-
-  const purchase = new Date(`${purchaseDate}T00:00:00.000Z`);
-  const dueDay = new Date(`${ruleDueDate}T00:00:00.000Z`).getUTCDate();
-  const lastDay = new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-
-  return new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth(), Math.min(dueDay, lastDay)),
-  )
-    .toISOString()
-    .slice(0, 10);
 }
 
 function roundMoney(value: number) {

@@ -6,6 +6,7 @@ import {
 import { CategoryTrendsPage } from "@/features/category-trends/components/category-trends-page";
 
 export const Route = createFileRoute("/reports/category-trends")({
+  head: () => ({ meta: [{ title: "Evolução por categoria · OpenMonetis" }] }),
   component: CategoryTrendsRoute,
   validateSearch: validateCategoryTrendsSearch,
 });

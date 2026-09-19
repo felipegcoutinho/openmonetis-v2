@@ -8,7 +8,7 @@ import {
 type PersonPaymentMethod = PersonFinancialSummaryOutput["paymentMethods"][number]["paymentMethod"];
 
 export const personRoleLabels: Record<PersonOutput["role"], string> = {
-  admin: "Pessoa principal",
+  admin: "Você",
   external: "Pessoa",
 };
 

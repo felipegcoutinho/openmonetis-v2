@@ -13,6 +13,10 @@ import { DeviceTokenSettings } from "@/features/device-tokens/components/device-
 export function CompanionSettings() {
   return (
     <SettingsPanel>
+      <p className="rounded-lg border p-3 text-muted-foreground text-sm">
+        Primeiro configure o endereço HTTPS da API no Companion. Depois escaneie o QR Code, que
+        contém somente o token de acesso.
+      </p>
       <DeviceTokenSettings />
       <SettingsSection
         icon={Smartphone}
@@ -39,7 +43,7 @@ export function CompanionSettings() {
             [
               "4",
               "Confira o recebimento",
-              "Após uma notificação capturada pelo Companion, confira a caixa de pré-lançamentos. Você decide o que salvar.",
+              "Após uma notificação capturada pelo Companion, confira a Caixa de entrada. Você decide o que salvar.",
             ],
           ].map(([step, title, description]) => (
             <li className="flex gap-3" key={step}>
@@ -59,7 +63,7 @@ export function CompanionSettings() {
               to="/inbox"
               search={{ status: "pending", page: undefined, app: undefined, date: undefined }}
             >
-              Abrir pré-lançamentos
+              Abrir Caixa de entrada
             </Link>
           </Button>
           <Button asChild variant="ghost">

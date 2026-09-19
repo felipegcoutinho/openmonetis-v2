@@ -1,6 +1,7 @@
 import type { PaginatedAttachmentsOutput } from "@openmonetis/validators/attachments";
 import { FileImage, FileText, Paperclip, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ export function AttachmentLibraryFilters({
   search,
   onSearchChange,
 }: AttachmentLibraryFiltersProps) {
-  const hasFilters = Boolean(search.kind || search.personId);
+  const hasFilters = Boolean(search.q || search.kind || search.personId);
   const typeFilters = [
     { value: undefined, label: "Todos", count: counts.all, icon: Paperclip },
     { value: "image" as const, label: "Imagens", count: counts.images, icon: FileImage },
@@ -34,6 +35,15 @@ export function AttachmentLibraryFilters({
 
   return (
     <fieldset aria-label="Filtros de anexos" className="flex min-w-0 flex-wrap items-center gap-2">
+      <Input
+        className="w-full sm:w-64"
+        aria-label="Buscar anexos"
+        placeholder="Buscar arquivo ou lançamento"
+        value={search.q ?? ""}
+        onChange={(event) =>
+          onSearchChange({ q: event.target.value || undefined, page: undefined })
+        }
+      />
       <Select
         onValueChange={(value) =>
           onSearchChange({
@@ -89,6 +99,7 @@ export function AttachmentLibraryFilters({
           aria-label="Limpar filtros"
           onClick={() => {
             onSearchChange({
+              q: undefined,
               kind: undefined,
               personId: undefined,
               page: undefined,

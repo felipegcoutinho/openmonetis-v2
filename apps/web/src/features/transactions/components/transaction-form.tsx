@@ -25,23 +25,24 @@ import {
   CreditCard,
   Landmark,
   Loader2,
+  Plus,
   QrCode,
-  RefreshCw,
+  Repeat2,
   Save,
   Ticket,
 } from "lucide-react";
-import { type ReactNode, type Ref, useId, useImperativeHandle, useMemo, useState } from "react";
+import { type ReactNode, type Ref, useImperativeHandle, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -84,6 +85,10 @@ import {
   validateTransactionForm,
   validateTransactionName,
 } from "./transaction-form.validation";
+import {
+  TransactionRelatedRecordDialog,
+  type TransactionRelatedRecordKind,
+} from "./transaction-related-record-dialog";
 import { TransactionSplitDialog } from "./transaction-split-dialog";
 import { transactionTypeIconStyles, transactionTypeIcons } from "./transaction-type-badge";
 
@@ -117,6 +122,7 @@ export type TransactionFormHandle = {
 };
 
 const noneValue = "__none__";
+const createValue = "__create__";
 
 export function TransactionForm({
   accounts,
@@ -182,6 +188,10 @@ export function TransactionForm({
           ),
     [accounts, cards, createDefaults, defaultPeriod, defaultType, mode, people, transaction],
   );
+  const [relatedAccountField, setRelatedAccountField] = useState<
+    "accountId" | "sourceAccountId" | "destinationAccountId"
+  >("accountId");
+  const [relatedRecord, setRelatedRecord] = useState<TransactionRelatedRecordKind | null>(null);
   const form = useForm({
     defaultValues,
     onSubmitInvalid: showInvalidFormToast,
@@ -339,463 +349,87 @@ export function TransactionForm({
   }
 
   return (
-    <form
-      aria-busy={attachmentBusy || undefined}
-      className="flex min-h-0 flex-1 flex-col gap-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-    >
-      <form.Subscribe
-        selector={(state) => ({
-          canSubmit: state.canSubmit,
-          isDirty: state.isDirty,
-          isSubmitting: state.isSubmitting,
-          values: state.values,
-        })}
+    <>
+      <form
+        noValidate
+        aria-busy={attachmentBusy || undefined}
+        className="flex min-h-0 flex-1 flex-col gap-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
       >
-        {({ canSubmit, isDirty, isSubmitting, values }) => {
-          const isTransfer = values.type === "transfer";
-          const isSplitBetweenPeople = values.splitShares.length >= 2;
-          const isSeriesEdit =
-            mode === "edit" &&
-            Boolean(
-              transaction && (transaction.condition === "installment" || transaction.isRecurring),
+        <form.Subscribe
+          selector={(state) => ({
+            isDirty: state.isDirty,
+            isSubmitting: state.isSubmitting,
+            values: state.values,
+          })}
+        >
+          {({ isDirty, isSubmitting, values }) => {
+            const isTransfer = values.type === "transfer";
+            const isSplitBetweenPeople = values.splitShares.length >= 2;
+            const isSeriesEdit =
+              mode === "edit" &&
+              Boolean(
+                transaction && (transaction.condition === "installment" || transaction.isRecurring),
+              );
+            const isCreditCard = values.paymentMethod === "credit_card";
+            const isBoleto = values.paymentMethod === "boleto";
+            const showBoletoPaymentDate =
+              values.condition !== "recurring" && values.isSettled === "true";
+            const visibleCategories = categories.filter(
+              (category) =>
+                category.type === values.type && category.name !== invoicePaymentCategoryName,
             );
-          const isCreditCard = values.paymentMethod === "credit_card";
-          const isBoleto = values.paymentMethod === "boleto";
-          const showBoletoPaymentDate =
-            values.condition !== "recurring" && values.isSettled === "true";
-          const visibleCategories = categories.filter(
-            (category) =>
-              category.type === values.type && category.name !== invoicePaymentCategoryName,
-          );
-          const installmentAmount = Number(values.amount);
-          const installmentCount = Number(values.installmentCount);
-          const startInstallment = Number(values.startInstallment);
-          const showStartInstallment = values.condition === "installment" && mode !== "edit";
-          const formIsValid = validateTransactionForm({ value: values }) === undefined;
-          const getInstallmentLabel = (count: number) =>
-            formatInstallmentOption(installmentAmount, count);
+            const installmentAmount = Number(values.amount);
+            const installmentCount = Number(values.installmentCount);
+            const startInstallment = Number(values.startInstallment);
+            const showStartInstallment = values.condition === "installment" && mode !== "edit";
 
-          return (
-            <>
-              <div className="-ml-1 -mr-3 flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto pr-3 pl-1">
-                <section className="grid gap-4">
-                  <form.Field
-                    name="name"
-                    validators={{ onChange: ({ value }) => validateTransactionName(value) }}
-                  >
-                    {(field) => (
-                      <FieldShell
-                        error={getTransactionFormErrorMessage("name", field.state.meta.errors)}
-                        label="Descrição"
-                      >
-                        <EstablishmentInput
-                          disabled={isSubmitting}
-                          establishments={isTransfer ? [] : establishments}
-                          invalid={field.state.meta.errors.length > 0}
-                          loading={!isTransfer && establishmentsLoading}
-                          maxLength={160}
-                          onBlur={field.handleBlur}
-                          onChange={field.handleChange}
-                          placeholder={
-                            isTransfer ? "Ex.: Transferência para reserva" : "Ex.: Restaurante"
-                          }
-                          value={field.state.value}
-                        />
-                      </FieldShell>
-                    )}
-                  </form.Field>
+            const getInstallmentLabel = (count: number) =>
+              formatInstallmentOption(installmentAmount, count);
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <form.Field name="purchaseDate">
-                      {(field) => (
-                        <FieldShell
-                          error={getTransactionFormErrorMessage(
-                            "purchaseDate",
-                            field.state.meta.errors,
-                          )}
-                          label={getTransactionDateLabel(values.type, values.condition)}
-                        >
-                          <DatePicker
-                            aria-invalid={field.state.meta.errors.length > 0}
-                            disabled={isSubmitting}
-                            onChange={field.handleChange}
-                            value={field.state.value}
-                          />
-                        </FieldShell>
-                      )}
-                    </form.Field>
-
-                    <form.Field
-                      name="amount"
-                      validators={{ onChange: ({ value }) => validateTransactionAmount(value) }}
-                    >
-                      {(field) => (
-                        <FieldShell
-                          error={getTransactionFormErrorMessage("amount", field.state.meta.errors)}
-                          label="Valor"
-                        >
-                          <CurrencyInput
-                            aria-invalid={field.state.meta.errors.length > 0}
-                            disabled={isSubmitting}
-                            onBlur={field.handleBlur}
-                            onValueChange={field.handleChange}
-                            placeholder="R$ 0,00"
-                            required
-                            value={field.state.value}
-                          />
-                        </FieldShell>
-                      )}
-                    </form.Field>
-                  </div>
-
-                  {(showTypeSelector && !isSeriesEdit) || !isTransfer ? (
-                    <div
-                      className={cn(
-                        "grid gap-4",
-                        showTypeSelector && !isTransfer && !isSeriesEdit && "sm:grid-cols-2",
-                      )}
-                    >
-                      {showTypeSelector && !isSeriesEdit ? (
-                        <form.Field name="type">
-                          {(field) => (
-                            <FieldShell
-                              error={getTransactionFormErrorMessage(
-                                "type",
-                                field.state.meta.errors,
-                              )}
-                              label="Tipo de transação"
-                            >
-                              <Select
-                                disabled={isSubmitting || lockType}
-                                onValueChange={(value) =>
-                                  handleTypeChange(value as TransactionFormValues["type"])
-                                }
-                                value={field.state.value}
-                              >
-                                <SelectTrigger
-                                  className="w-full"
-                                  aria-invalid={field.state.meta.errors.length > 0}
-                                >
-                                  <SelectValue placeholder="Selecione">
-                                    <TransactionTypeOption type={field.state.value} />
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.keys(transactionTypeLabels).map((value) => (
-                                    <SelectItem key={value} value={value}>
-                                      <TransactionTypeOption
-                                        type={value as TransactionFormValues["type"]}
-                                      />
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FieldShell>
-                          )}
-                        </form.Field>
-                      ) : null}
-
-                      {!isTransfer ? (
-                        <form.Field name="categoryId">
-                          {(field) => (
-                            <FieldShell
-                              error={getTransactionFormErrorMessage(
-                                "categoryId",
-                                field.state.meta.errors,
-                              )}
-                              label="Categoria"
-                            >
-                              <Select
-                                disabled={isSubmitting}
-                                onValueChange={(value) =>
-                                  field.handleChange(
-                                    value === noneValue || value === null ? "" : value,
-                                  )
-                                }
-                                value={field.state.value || noneValue}
-                              >
-                                <SelectTrigger
-                                  className="w-full"
-                                  aria-invalid={field.state.meta.errors.length > 0}
-                                >
-                                  <SelectValue placeholder="Selecione">
-                                    <CategoryOption
-                                      category={visibleCategories.find(
-                                        (category) => category.id === field.state.value,
-                                      )}
-                                    />
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={noneValue}>Selecione</SelectItem>
-                                  {visibleCategories.map((category) => (
-                                    <SelectItem key={category.id} value={category.id}>
-                                      <CategoryOption category={category} />
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FieldShell>
-                          )}
-                        </form.Field>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </section>
-
-                {!isTransfer ? (
+            return (
+              <>
+                <div className="-ml-1 -mr-3 flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto pr-3 pl-1">
                   <section className="grid gap-4">
-                    {!isSplitBetweenPeople ? (
-                      <form.Field name="personId">
-                        {(field) => (
-                          <FieldShell
-                            error={getTransactionFormErrorMessage(
-                              "personId",
-                              field.state.meta.errors,
-                            )}
-                            label="Pessoa"
-                          >
-                            <Select
-                              disabled={isSubmitting || isTransfer}
-                              onValueChange={(value) =>
-                                handlePersonChange(
-                                  value === noneValue || value === null ? "" : value,
-                                )
-                              }
-                              value={field.state.value || noneValue}
-                            >
-                              <SelectTrigger
-                                className="w-full"
-                                aria-invalid={field.state.meta.errors.length > 0}
-                              >
-                                <SelectValue placeholder="Selecione">
-                                  <PersonOption
-                                    person={activePeople.find(
-                                      (person) => person.id === field.state.value,
-                                    )}
-                                  />
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value={noneValue}>Selecione</SelectItem>
-                                {activePeople.map((person) => (
-                                  <SelectItem key={person.id} value={person.id}>
-                                    <PersonOption person={person} />
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FieldShell>
-                        )}
-                      </form.Field>
-                    ) : null}
-                    {activePeople.length > 1 ? (
-                      <form.Field name="splitShares">
-                        {(field) => (
-                          <TransactionSplitDialog
-                            amount={values.amount}
+                    <form.Field
+                      name="name"
+                      validators={{ onChange: ({ value }) => validateTransactionName(value) }}
+                    >
+                      {(field) => (
+                        <FieldShell
+                          error={getTransactionFormErrorMessage("name", field.state.meta.errors)}
+                          label="Descrição"
+                        >
+                          <EstablishmentInput
                             disabled={isSubmitting}
+                            establishments={isTransfer ? [] : establishments}
+                            invalid={field.state.meta.errors.length > 0}
+                            loading={!isTransfer && establishmentsLoading}
+                            maxLength={160}
+                            onBlur={field.handleBlur}
                             onChange={field.handleChange}
-                            people={activePeople}
-                            primaryPersonId={values.personId}
+                            placeholder={
+                              isTransfer ? "Ex.: Transferência para reserva" : "Ex.: Restaurante"
+                            }
                             value={field.state.value}
                           />
-                        )}
-                      </form.Field>
-                    ) : null}
-                  </section>
-                ) : null}
-
-                <section className="grid gap-4">
-                  {!isTransfer ? (
-                    <div className={cn("grid gap-4", !isSeriesEdit && "sm:grid-cols-2")}>
-                      {!isSeriesEdit ? (
-                        <form.Field name="paymentMethod">
-                          {(field) => (
-                            <FieldShell
-                              error={getTransactionFormErrorMessage(
-                                "paymentMethod",
-                                field.state.meta.errors,
-                              )}
-                              label="Forma de pagamento"
-                            >
-                              <Select
-                                disabled={isSubmitting || isTransfer}
-                                onValueChange={(value) =>
-                                  handlePaymentMethodChange(
-                                    value as TransactionInput["paymentMethod"],
-                                  )
-                                }
-                                value={field.state.value}
-                              >
-                                <SelectTrigger
-                                  className="w-full"
-                                  aria-invalid={field.state.meta.errors.length > 0}
-                                >
-                                  <SelectValue placeholder="Selecione">
-                                    <PaymentMethodOption method={field.state.value} />
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.entries(paymentMethodLabels).map(([value]) => (
-                                    <SelectItem key={value} value={value}>
-                                      <PaymentMethodOption
-                                        method={value as TransactionInput["paymentMethod"]}
-                                      />
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FieldShell>
-                          )}
-                        </form.Field>
-                      ) : null}
-
-                      {isCreditCard ? (
-                        <form.Field name="cardId">
-                          {(field) => (
-                            <FieldShell
-                              error={getTransactionFormErrorMessage(
-                                "cardId",
-                                field.state.meta.errors,
-                              )}
-                              label="Cartão"
-                            >
-                              <div>
-                                <Select
-                                  disabled={isSubmitting}
-                                  onValueChange={(value) =>
-                                    handleCardChange(
-                                      value === noneValue || value === null ? "" : value,
-                                    )
-                                  }
-                                  value={field.state.value || noneValue}
-                                >
-                                  <SelectTrigger
-                                    className="w-full"
-                                    aria-invalid={field.state.meta.errors.length > 0}
-                                  >
-                                    <SelectValue placeholder="Selecione">
-                                      <EntityOption
-                                        entity={activeCards.find(
-                                          (card) => card.id === field.state.value,
-                                        )}
-                                      />
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={noneValue}>Selecione</SelectItem>
-                                    {activeCards.map((card) => (
-                                      <SelectItem key={card.id} value={card.id}>
-                                        <EntityOption entity={card} />
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                {field.state.value && values.condition !== "recurring" ? (
-                                  <InvoicePeriodPicker
-                                    cardId={values.cardId}
-                                    onChange={(value) => form.setFieldValue("invoicePeriod", value)}
-                                    purchaseDate={values.purchaseDate}
-                                    value={values.invoicePeriod}
-                                  />
-                                ) : null}
-                              </div>
-                            </FieldShell>
-                          )}
-                        </form.Field>
-                      ) : (
-                        <form.Field name="accountId">
-                          {(field) => (
-                            <FieldShell
-                              error={getTransactionFormErrorMessage(
-                                "accountId",
-                                field.state.meta.errors,
-                              )}
-                              label="Conta"
-                            >
-                              <AccountSelect
-                                accounts={activeAccounts}
-                                disabled={isSubmitting}
-                                error={field.state.meta.errors.length > 0}
-                                onChange={field.handleChange}
-                                value={field.state.value}
-                              />
-                            </FieldShell>
-                          )}
-                        </form.Field>
+                        </FieldShell>
                       )}
-                    </div>
-                  ) : (
-                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
-                      <form.Field name="sourceAccountId">
+                    </form.Field>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <form.Field name="purchaseDate">
                         {(field) => (
                           <FieldShell
                             error={getTransactionFormErrorMessage(
-                              "sourceAccountId",
+                              "purchaseDate",
                               field.state.meta.errors,
                             )}
-                            label="Conta de origem"
-                          >
-                            <AccountSelect
-                              accounts={activeAccounts.filter(
-                                (account) => account.id !== values.destinationAccountId,
-                              )}
-                              disabled={isSubmitting}
-                              error={field.state.meta.errors.length > 0}
-                              onChange={field.handleChange}
-                              value={field.state.value}
-                            />
-                          </FieldShell>
-                        )}
-                      </form.Field>
-
-                      <div
-                        aria-hidden="true"
-                        className="flex h-5 items-center justify-center text-muted-foreground sm:h-9"
-                      >
-                        <ArrowRight className="size-4 rotate-90 sm:rotate-0" />
-                      </div>
-
-                      <form.Field name="destinationAccountId">
-                        {(field) => (
-                          <FieldShell
-                            error={getTransactionFormErrorMessage(
-                              "destinationAccountId",
-                              field.state.meta.errors,
-                            )}
-                            label="Conta de destino"
-                          >
-                            <AccountSelect
-                              accounts={activeAccounts.filter(
-                                (account) => account.id !== values.sourceAccountId,
-                              )}
-                              disabled={isSubmitting}
-                              error={field.state.meta.errors.length > 0}
-                              onChange={field.handleChange}
-                              value={field.state.value}
-                            />
-                          </FieldShell>
-                        )}
-                      </form.Field>
-                    </div>
-                  )}
-
-                  {isBoleto ? (
-                    <div className={cn("grid gap-4", showBoletoPaymentDate && "sm:grid-cols-2")}>
-                      <form.Field name="dueDate">
-                        {(field) => (
-                          <FieldShell
-                            error={getTransactionFormErrorMessage(
-                              "dueDate",
-                              field.state.meta.errors,
-                            )}
-                            label="Vencimento do boleto"
+                            label={getTransactionDateLabel(values.type, values.condition)}
                           >
                             <DatePicker
                               aria-invalid={field.state.meta.errors.length > 0}
@@ -807,15 +441,422 @@ export function TransactionForm({
                         )}
                       </form.Field>
 
-                      {showBoletoPaymentDate ? (
-                        <form.Field name="boletoPaymentDate">
+                      <form.Field
+                        name="amount"
+                        validators={{ onChange: ({ value }) => validateTransactionAmount(value) }}
+                      >
+                        {(field) => (
+                          <FieldShell
+                            error={getTransactionFormErrorMessage(
+                              "amount",
+                              field.state.meta.errors,
+                            )}
+                            label={
+                              values.condition === "installment" ? "Valor total da compra" : "Valor"
+                            }
+                          >
+                            <CurrencyInput
+                              aria-invalid={field.state.meta.errors.length > 0}
+                              disabled={isSubmitting}
+                              onBlur={field.handleBlur}
+                              onValueChange={field.handleChange}
+                              placeholder="R$ 0,00"
+                              required
+                              value={field.state.value}
+                            />
+                          </FieldShell>
+                        )}
+                      </form.Field>
+                    </div>
+
+                    {(showTypeSelector && !isSeriesEdit) || !isTransfer ? (
+                      <div
+                        className={cn(
+                          "grid gap-4",
+                          showTypeSelector && !isTransfer && !isSeriesEdit && "sm:grid-cols-2",
+                        )}
+                      >
+                        {showTypeSelector && !isSeriesEdit ? (
+                          <form.Field name="type">
+                            {(field) => (
+                              <FieldShell
+                                error={getTransactionFormErrorMessage(
+                                  "type",
+                                  field.state.meta.errors,
+                                )}
+                                label="Tipo de transação"
+                              >
+                                <Select
+                                  disabled={isSubmitting || lockType}
+                                  onValueChange={(value) =>
+                                    handleTypeChange(value as TransactionFormValues["type"])
+                                  }
+                                  value={field.state.value}
+                                >
+                                  <SelectTrigger
+                                    className="w-full"
+                                    aria-invalid={field.state.meta.errors.length > 0}
+                                  >
+                                    <SelectValue placeholder="Selecione">
+                                      <TransactionTypeOption type={field.state.value} />
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.keys(transactionTypeLabels).map((value) => (
+                                      <SelectItem key={value} value={value}>
+                                        <TransactionTypeOption
+                                          type={value as TransactionFormValues["type"]}
+                                        />
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FieldShell>
+                            )}
+                          </form.Field>
+                        ) : null}
+
+                        {!isTransfer ? (
+                          <form.Field name="categoryId">
+                            {(field) => (
+                              <FieldShell
+                                error={getTransactionFormErrorMessage(
+                                  "categoryId",
+                                  field.state.meta.errors,
+                                )}
+                                label="Categoria"
+                              >
+                                <Select
+                                  disabled={isSubmitting}
+                                  onValueChange={(value) => {
+                                    if (value === createValue) {
+                                      setRelatedRecord("category");
+                                      return;
+                                    }
+                                    field.handleChange(
+                                      value === noneValue || value === null ? "" : value,
+                                    );
+                                  }}
+                                  value={field.state.value || noneValue}
+                                >
+                                  <SelectTrigger
+                                    className="w-full"
+                                    aria-invalid={field.state.meta.errors.length > 0}
+                                  >
+                                    <SelectValue placeholder="Selecione">
+                                      <CategoryOption
+                                        category={visibleCategories.find(
+                                          (category) => category.id === field.state.value,
+                                        )}
+                                      />
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value={noneValue}>Selecione</SelectItem>
+                                    {visibleCategories.map((category) => (
+                                      <SelectItem key={category.id} value={category.id}>
+                                        <CategoryOption category={category} />
+                                      </SelectItem>
+                                    ))}
+                                    <SelectSeparator />
+                                    <SelectItem value={createValue}>
+                                      <Plus aria-hidden="true" className="size-4" />
+                                      Criar categoria…
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FieldShell>
+                            )}
+                          </form.Field>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </section>
+
+                  {!isTransfer ? (
+                    <section className="grid gap-4">
+                      {!isSplitBetweenPeople ? (
+                        <form.Field name="personId">
                           {(field) => (
                             <FieldShell
                               error={getTransactionFormErrorMessage(
-                                "boletoPaymentDate",
+                                "personId",
                                 field.state.meta.errors,
                               )}
-                              label="Data do pagamento"
+                              label={
+                                values.type === "expense"
+                                  ? "De quem é esta despesa?"
+                                  : "Pessoa responsável"
+                              }
+                            >
+                              <Select
+                                disabled={isSubmitting || isTransfer}
+                                onValueChange={(value) => {
+                                  if (value === createValue) {
+                                    setRelatedRecord("person");
+                                    return;
+                                  }
+                                  handlePersonChange(
+                                    value === noneValue || value === null ? "" : value,
+                                  );
+                                }}
+                                value={field.state.value || noneValue}
+                              >
+                                <SelectTrigger
+                                  className="w-full"
+                                  aria-invalid={field.state.meta.errors.length > 0}
+                                >
+                                  <SelectValue placeholder="Selecione">
+                                    <PersonOption
+                                      person={activePeople.find(
+                                        (person) => person.id === field.state.value,
+                                      )}
+                                    />
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value={noneValue}>Selecione</SelectItem>
+                                  {activePeople.map((person) => (
+                                    <SelectItem key={person.id} value={person.id}>
+                                      <PersonOption person={person} />
+                                    </SelectItem>
+                                  ))}
+                                  <SelectSeparator />
+                                  <SelectItem value={createValue}>
+                                    <Plus aria-hidden="true" className="size-4" />
+                                    Criar pessoa…
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FieldShell>
+                          )}
+                        </form.Field>
+                      ) : null}
+                      {activePeople.length > 1 ? (
+                        <form.Field name="splitShares">
+                          {(field) => (
+                            <TransactionSplitDialog
+                              amount={values.amount}
+                              disabled={isSubmitting}
+                              onChange={field.handleChange}
+                              people={activePeople}
+                              primaryPersonId={values.personId}
+                              value={field.state.value}
+                            />
+                          )}
+                        </form.Field>
+                      ) : null}
+                    </section>
+                  ) : null}
+
+                  <section className="grid gap-4">
+                    {!isTransfer ? (
+                      <div className={cn("grid gap-4", !isSeriesEdit && "sm:grid-cols-2")}>
+                        {!isSeriesEdit ? (
+                          <form.Field name="paymentMethod">
+                            {(field) => (
+                              <FieldShell
+                                error={getTransactionFormErrorMessage(
+                                  "paymentMethod",
+                                  field.state.meta.errors,
+                                )}
+                                label="Forma de pagamento"
+                              >
+                                <Select
+                                  disabled={isSubmitting || isTransfer}
+                                  onValueChange={(value) =>
+                                    handlePaymentMethodChange(
+                                      value as TransactionInput["paymentMethod"],
+                                    )
+                                  }
+                                  value={field.state.value}
+                                >
+                                  <SelectTrigger
+                                    className="w-full"
+                                    aria-invalid={field.state.meta.errors.length > 0}
+                                  >
+                                    <SelectValue placeholder="Selecione">
+                                      <PaymentMethodOption method={field.state.value} />
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(paymentMethodLabels).map(([value]) => (
+                                      <SelectItem key={value} value={value}>
+                                        <PaymentMethodOption
+                                          method={value as TransactionInput["paymentMethod"]}
+                                        />
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FieldShell>
+                            )}
+                          </form.Field>
+                        ) : null}
+
+                        {isCreditCard ? (
+                          <form.Field name="cardId">
+                            {(field) => (
+                              <FieldShell
+                                error={getTransactionFormErrorMessage(
+                                  "cardId",
+                                  field.state.meta.errors,
+                                )}
+                                label="Cartão"
+                              >
+                                <div>
+                                  <Select
+                                    disabled={isSubmitting}
+                                    onValueChange={(value) => {
+                                      if (value === createValue) {
+                                        setRelatedRecord("card");
+                                        return;
+                                      }
+                                      handleCardChange(
+                                        value === noneValue || value === null ? "" : value,
+                                      );
+                                    }}
+                                    value={field.state.value || noneValue}
+                                  >
+                                    <SelectTrigger
+                                      className="w-full"
+                                      aria-invalid={field.state.meta.errors.length > 0}
+                                    >
+                                      <SelectValue placeholder="Selecione">
+                                        <EntityOption
+                                          entity={activeCards.find(
+                                            (card) => card.id === field.state.value,
+                                          )}
+                                        />
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={noneValue}>Selecione</SelectItem>
+                                      {activeCards.map((card) => (
+                                        <SelectItem key={card.id} value={card.id}>
+                                          <EntityOption entity={card} />
+                                        </SelectItem>
+                                      ))}
+                                      <SelectSeparator />
+                                      <SelectItem value={createValue}>
+                                        <Plus aria-hidden="true" className="size-4" />
+                                        Criar cartão…
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  {field.state.value && values.condition !== "recurring" ? (
+                                    <InvoicePeriodPicker
+                                      cardId={values.cardId}
+                                      onChange={(value) =>
+                                        form.setFieldValue("invoicePeriod", value)
+                                      }
+                                      purchaseDate={values.purchaseDate}
+                                      value={values.invoicePeriod}
+                                    />
+                                  ) : null}
+                                </div>
+                              </FieldShell>
+                            )}
+                          </form.Field>
+                        ) : (
+                          <form.Field name="accountId">
+                            {(field) => (
+                              <FieldShell
+                                error={getTransactionFormErrorMessage(
+                                  "accountId",
+                                  field.state.meta.errors,
+                                )}
+                                label="Conta"
+                              >
+                                <AccountSelect
+                                  onCreate={() => {
+                                    setRelatedAccountField("accountId");
+                                    setRelatedRecord("account");
+                                  }}
+                                  accounts={activeAccounts}
+                                  disabled={isSubmitting}
+                                  error={field.state.meta.errors.length > 0}
+                                  onChange={field.handleChange}
+                                  value={field.state.value}
+                                />
+                              </FieldShell>
+                            )}
+                          </form.Field>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
+                        <form.Field name="sourceAccountId">
+                          {(field) => (
+                            <FieldShell
+                              error={getTransactionFormErrorMessage(
+                                "sourceAccountId",
+                                field.state.meta.errors,
+                              )}
+                              label="Conta de origem"
+                            >
+                              <AccountSelect
+                                onCreate={() => {
+                                  setRelatedAccountField("sourceAccountId");
+                                  setRelatedRecord("account");
+                                }}
+                                accounts={activeAccounts.filter(
+                                  (account) => account.id !== values.destinationAccountId,
+                                )}
+                                disabled={isSubmitting}
+                                error={field.state.meta.errors.length > 0}
+                                onChange={field.handleChange}
+                                value={field.state.value}
+                              />
+                            </FieldShell>
+                          )}
+                        </form.Field>
+
+                        <div
+                          aria-hidden="true"
+                          className="flex h-5 items-center justify-center text-muted-foreground sm:h-9"
+                        >
+                          <ArrowRight className="size-4 rotate-90 sm:rotate-0" />
+                        </div>
+
+                        <form.Field name="destinationAccountId">
+                          {(field) => (
+                            <FieldShell
+                              error={getTransactionFormErrorMessage(
+                                "destinationAccountId",
+                                field.state.meta.errors,
+                              )}
+                              label="Conta de destino"
+                            >
+                              <AccountSelect
+                                onCreate={() => {
+                                  setRelatedAccountField("destinationAccountId");
+                                  setRelatedRecord("account");
+                                }}
+                                accounts={activeAccounts.filter(
+                                  (account) => account.id !== values.sourceAccountId,
+                                )}
+                                disabled={isSubmitting}
+                                error={field.state.meta.errors.length > 0}
+                                onChange={field.handleChange}
+                                value={field.state.value}
+                              />
+                            </FieldShell>
+                          )}
+                        </form.Field>
+                      </div>
+                    )}
+
+                    {isBoleto ? (
+                      <div className={cn("grid gap-4", showBoletoPaymentDate && "sm:grid-cols-2")}>
+                        <form.Field name="dueDate">
+                          {(field) => (
+                            <FieldShell
+                              error={getTransactionFormErrorMessage(
+                                "dueDate",
+                                field.state.meta.errors,
+                              )}
+                              label="Vencimento do boleto"
                             >
                               <DatePicker
                                 aria-invalid={field.state.meta.errors.length > 0}
@@ -826,164 +867,95 @@ export function TransactionForm({
                             </FieldShell>
                           )}
                         </form.Field>
-                      ) : null}
-                    </div>
-                  ) : null}
 
-                  {!isCreditCard ? (
-                    <form.Field name="isSettled">
-                      {(field) => {
-                        const isSettled = field.state.value === "true";
-
-                        return (
-                          <section
-                            className={cn(
-                              "flex items-center justify-between gap-4 rounded-lg border border-input bg-popover px-3 py-2.5 transition-colors",
-                              isSettled && "border-success/20 bg-success/5",
-                            )}
-                          >
-                            <div className="min-w-0">
-                              <p className="text-left font-medium text-sm">
-                                {isTransfer ? "Transferência realizada" : "Pagamento realizado"}
-                              </p>
-                              <p className="text-left text-muted-foreground text-xs">
-                                {isTransfer
-                                  ? "Ative quando a movimentação já tiver sido concluída."
-                                  : "Ative quando o valor já tiver sido pago."}
-                              </p>
-                            </div>
-                            <Button
-                              aria-label={
-                                isTransfer
-                                  ? isSettled
-                                    ? "Marcar transferência como pendente"
-                                    : "Marcar transferência como realizada"
-                                  : isSettled
-                                    ? "Marcar pagamento como pendente"
-                                    : "Marcar pagamento como realizado"
-                              }
-                              aria-pressed={isSettled}
-                              className={
-                                isSettled
-                                  ? "bg-success/10 text-success hover:bg-success/20 hover:text-success"
-                                  : "text-muted-foreground hover:text-foreground"
-                              }
-                              disabled={isSubmitting}
-                              onClick={() => {
-                                const nextValue = isSettled ? "false" : "true";
-                                field.handleChange(nextValue);
-                                if (isBoleto) {
-                                  form.setFieldValue(
-                                    "boletoPaymentDate",
-                                    nextValue === "true"
-                                      ? form.getFieldValue("boletoPaymentDate") ||
-                                          getCurrentDateInBrazil()
-                                      : "",
-                                  );
-                                }
-                              }}
-                              size="icon-sm"
-                              type="button"
-                              variant="ghost"
-                            >
-                              {isSettled ? (
-                                <CircleCheck aria-hidden="true" />
-                              ) : (
-                                <Circle aria-hidden="true" />
-                              )}
-                            </Button>
-                          </section>
-                        );
-                      }}
-                    </form.Field>
-                  ) : null}
-                </section>
-
-                <details
-                  className="group"
-                  onToggle={(event) => setIsAdvancedOpen(event.currentTarget.open)}
-                  open={isAdvancedOpen}
-                >
-                  <summary className="flex cursor-pointer list-none items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground">
-                    <ChevronDown
-                      aria-hidden="true"
-                      className="size-4 transition-transform group-open:rotate-180"
-                    />
-                    Condições, anotações e anexos
-                    {pendingFiles.length ? (
-                      <span className="rounded-full bg-brand/10 px-2 py-0.5 font-medium text-brand-strong text-xs">
-                        {pendingFiles.length} {pendingFiles.length === 1 ? "anexo" : "anexos"}
-                      </span>
-                    ) : null}
-                  </summary>
-
-                  <div className="mt-4 grid gap-4">
-                    {!isTransfer ? (
-                      <div
-                        className={
-                          values.condition === "single" || isSeriesEdit
-                            ? "grid gap-4"
-                            : "grid gap-4 sm:grid-cols-2"
-                        }
-                      >
-                        {!isSeriesEdit && !isTransfer ? (
-                          <form.Field name="condition">
+                        {showBoletoPaymentDate ? (
+                          <form.Field name="boletoPaymentDate">
                             {(field) => (
                               <FieldShell
                                 error={getTransactionFormErrorMessage(
-                                  "condition",
+                                  "boletoPaymentDate",
                                   field.state.meta.errors,
                                 )}
-                                label="Condição"
+                                label="Data do pagamento"
                               >
-                                <Select
-                                  disabled={isSubmitting || isTransfer}
-                                  onValueChange={(value) => {
-                                    const condition = value as TransactionFormValues["condition"];
-                                    field.handleChange(condition);
-                                    if (condition === "recurring" && pendingFiles.length) {
-                                      setPendingFiles([]);
-                                      toast.info("Os anexos selecionados foram removidos", {
-                                        description:
-                                          "Anexos ficam disponíveis quando a recorrência gerar um lançamento.",
-                                      });
-                                    }
-                                  }}
+                                <DatePicker
+                                  aria-invalid={field.state.meta.errors.length > 0}
+                                  disabled={isSubmitting}
+                                  onChange={field.handleChange}
                                   value={field.state.value}
-                                >
-                                  <SelectTrigger
-                                    className="w-full"
-                                    aria-invalid={field.state.meta.errors.length > 0}
-                                  >
-                                    <SelectValue placeholder="Selecione">
-                                      <TransactionConditionOption condition={field.state.value} />
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.entries(transactionConditionLabels)
-                                      .filter(
-                                        ([value]) =>
-                                          (!transaction?.isRecurring || value === "recurring") &&
-                                          (!allowedConditions ||
-                                            allowedConditions.includes(
-                                              value as TransactionFormValues["condition"],
-                                            )),
-                                      )
-                                      .map(([value]) => (
-                                        <SelectItem key={value} value={value}>
-                                          <TransactionConditionOption
-                                            condition={value as TransactionFormValues["condition"]}
-                                          />
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </FieldShell>
                             )}
                           </form.Field>
                         ) : null}
+                      </div>
+                    ) : null}
 
-                        {values.condition === "installment" && !isSeriesEdit ? (
+                    {!isSeriesEdit && !isTransfer ? (
+                      <div
+                        className={cn(
+                          "grid gap-4",
+                          (values.condition === "installment" ||
+                            values.condition === "recurring") &&
+                            "sm:grid-cols-2",
+                        )}
+                      >
+                        <form.Field name="condition">
+                          {(field) => (
+                            <FieldShell
+                              error={getTransactionFormErrorMessage(
+                                "condition",
+                                field.state.meta.errors,
+                              )}
+                              label="Repetição ou parcelamento"
+                            >
+                              <Select
+                                disabled={isSubmitting || isTransfer}
+                                onValueChange={(value) => {
+                                  const condition = value as TransactionFormValues["condition"];
+                                  field.handleChange(condition);
+                                  if (condition === "recurring" && pendingFiles.length) {
+                                    setPendingFiles([]);
+                                    toast.info("Os anexos selecionados foram removidos", {
+                                      description:
+                                        "Anexos ficam disponíveis quando a recorrência gerar um lançamento.",
+                                    });
+                                  }
+                                }}
+                                value={field.state.value}
+                              >
+                                <SelectTrigger
+                                  className="w-full"
+                                  aria-invalid={field.state.meta.errors.length > 0}
+                                >
+                                  <SelectValue placeholder="Selecione">
+                                    <TransactionConditionOption condition={field.state.value} />
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(transactionConditionLabels)
+                                    .filter(
+                                      ([value]) =>
+                                        (!transaction?.isRecurring || value === "recurring") &&
+                                        (!allowedConditions ||
+                                          allowedConditions.includes(
+                                            value as TransactionFormValues["condition"],
+                                          )),
+                                    )
+                                    .map(([value]) => (
+                                      <SelectItem key={value} value={value}>
+                                        <TransactionConditionOption
+                                          condition={value as TransactionFormValues["condition"]}
+                                        />
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </FieldShell>
+                          )}
+                        </form.Field>
+
+                        {values.condition === "installment" ? (
                           <form.Field name="installmentCount">
                             {(field) => (
                               <FieldShell
@@ -1014,7 +986,10 @@ export function TransactionForm({
                                       {getInstallmentLabel(Number(field.state.value))}
                                     </SelectValue>
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent
+                                    align="end"
+                                    className="w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)]"
+                                  >
                                     {Array.from({ length: 59 }, (_, index) => index + 2).map(
                                       (count) => (
                                         <SelectItem key={count} value={String(count)}>
@@ -1025,65 +1000,6 @@ export function TransactionForm({
                                   </SelectContent>
                                 </Select>
                               </FieldShell>
-                            )}
-                          </form.Field>
-                        ) : null}
-
-                        {showStartInstallment ? (
-                          <form.Field name="startInstallment">
-                            {(field) => (
-                              <div className="sm:col-span-2">
-                                <FieldShell
-                                  error={getTransactionFormErrorMessage(
-                                    "startInstallment",
-                                    field.state.meta.errors,
-                                  )}
-                                  label="Primeira parcela a registrar"
-                                >
-                                  <div className="space-y-1.5">
-                                    <Select
-                                      disabled={isSubmitting || !Number.isInteger(installmentCount)}
-                                      onValueChange={(value) => value && field.handleChange(value)}
-                                      value={field.state.value}
-                                    >
-                                      <SelectTrigger
-                                        className="w-full"
-                                        aria-invalid={field.state.meta.errors.length > 0}
-                                      >
-                                        <SelectValue placeholder="Selecione">
-                                          {Number.isInteger(startInstallment)
-                                            ? `${startInstallment}ª parcela`
-                                            : "Selecione"}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {Array.from(
-                                          {
-                                            length:
-                                              Number.isInteger(installmentCount) &&
-                                              installmentCount > 0
-                                                ? installmentCount
-                                                : 0,
-                                          },
-                                          (_, index) => index + 1,
-                                        ).map((installment) => (
-                                          <SelectItem key={installment} value={String(installment)}>
-                                            {installment}ª parcela
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    {startInstallment > 1 ? (
-                                      <p className="text-muted-foreground text-xs">
-                                        {getTrackedInstallmentHelper(
-                                          installmentCount,
-                                          startInstallment,
-                                        )}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                </FieldShell>
-                              </div>
                             )}
                           </form.Field>
                         ) : null}
@@ -1132,124 +1048,297 @@ export function TransactionForm({
                       </div>
                     ) : null}
 
-                    <form.Field name="note">
-                      {(field) => (
-                        <FieldShell
-                          error={getTransactionFormErrorMessage("note", field.state.meta.errors)}
-                          label="Observação"
-                        >
-                          <Textarea
-                            aria-invalid={field.state.meta.errors.length > 0}
+                    {!isCreditCard ? (
+                      <form.Field name="isSettled">
+                        {(field) => {
+                          const isSettled = field.state.value === "true";
+
+                          return (
+                            <section
+                              className={cn(
+                                "flex items-center justify-between gap-4 rounded-lg border border-input bg-popover px-3 py-2.5 transition-colors",
+                                isSettled && "border-success/20 bg-success/5",
+                              )}
+                            >
+                              <div className="min-w-0">
+                                <p className="text-left font-medium text-sm">
+                                  {isTransfer
+                                    ? "Transferência realizada"
+                                    : values.type === "income"
+                                      ? "Recebimento realizado"
+                                      : "Pagamento realizado"}
+                                </p>
+                                <p className="text-left text-muted-foreground text-xs">
+                                  {isTransfer
+                                    ? "Ative quando a movimentação já tiver sido concluída."
+                                    : values.type === "income"
+                                      ? "Ative quando o valor já tiver sido recebido."
+                                      : "Ative quando o valor já tiver sido pago."}
+                                </p>
+                              </div>
+                              <Button
+                                aria-label={
+                                  isTransfer
+                                    ? isSettled
+                                      ? "Marcar transferência como pendente"
+                                      : "Marcar transferência como realizada"
+                                    : isSettled
+                                      ? values.type === "income"
+                                        ? "Marcar recebimento como pendente"
+                                        : "Marcar pagamento como pendente"
+                                      : values.type === "income"
+                                        ? "Marcar recebimento como realizado"
+                                        : "Marcar pagamento como realizado"
+                                }
+                                aria-pressed={isSettled}
+                                className={
+                                  isSettled
+                                    ? "bg-success/10 text-success hover:bg-success/20 hover:text-success"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }
+                                disabled={isSubmitting}
+                                onClick={() => {
+                                  const nextValue = isSettled ? "false" : "true";
+                                  field.handleChange(nextValue);
+                                  if (isBoleto) {
+                                    form.setFieldValue(
+                                      "boletoPaymentDate",
+                                      nextValue === "true"
+                                        ? form.getFieldValue("boletoPaymentDate") ||
+                                            getCurrentDateInBrazil()
+                                        : "",
+                                    );
+                                  }
+                                }}
+                                size="icon-sm"
+                                type="button"
+                                variant="ghost"
+                              >
+                                {isSettled ? (
+                                  <CircleCheck aria-hidden="true" />
+                                ) : (
+                                  <Circle aria-hidden="true" />
+                                )}
+                              </Button>
+                            </section>
+                          );
+                        }}
+                      </form.Field>
+                    ) : null}
+                  </section>
+
+                  {!isTransfer && showStartInstallment ? (
+                    <div className="grid gap-4">
+                      <form.Field name="startInstallment">
+                        {(field) => (
+                          <FieldShell
+                            error={getTransactionFormErrorMessage(
+                              "startInstallment",
+                              field.state.meta.errors,
+                            )}
+                            label="Primeira parcela a registrar"
+                          >
+                            <div className="space-y-1.5">
+                              <Select
+                                disabled={isSubmitting || !Number.isInteger(installmentCount)}
+                                onValueChange={(value) => value && field.handleChange(value)}
+                                value={field.state.value}
+                              >
+                                <SelectTrigger
+                                  className="w-full"
+                                  aria-invalid={field.state.meta.errors.length > 0}
+                                >
+                                  <SelectValue placeholder="Selecione">
+                                    {Number.isInteger(startInstallment)
+                                      ? `${startInstallment}ª parcela`
+                                      : "Selecione"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from(
+                                    {
+                                      length:
+                                        Number.isInteger(installmentCount) && installmentCount > 0
+                                          ? installmentCount
+                                          : 0,
+                                    },
+                                    (_, index) => index + 1,
+                                  ).map((installment) => (
+                                    <SelectItem key={installment} value={String(installment)}>
+                                      {installment}ª parcela
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {startInstallment > 1 ? (
+                                <p className="text-muted-foreground text-xs">
+                                  {getTrackedInstallmentHelper(installmentCount, startInstallment)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </FieldShell>
+                        )}
+                      </form.Field>
+                    </div>
+                  ) : null}
+
+                  <details
+                    className="group"
+                    onToggle={(event) => setIsAdvancedOpen(event.currentTarget.open)}
+                    open={isAdvancedOpen}
+                  >
+                    <summary className="flex cursor-pointer list-none items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground">
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="size-4 transition-transform group-open:rotate-180"
+                      />
+                      Anotações e anexos
+                      {pendingFiles.length ? (
+                        <span className="rounded-full bg-brand/10 px-2 py-0.5 font-medium text-brand-strong text-xs">
+                          {pendingFiles.length} {pendingFiles.length === 1 ? "anexo" : "anexos"}
+                        </span>
+                      ) : null}
+                    </summary>
+
+                    <div className="mt-4 grid gap-4">
+                      <form.Field name="note">
+                        {(field) => (
+                          <FieldShell
+                            error={getTransactionFormErrorMessage("note", field.state.meta.errors)}
+                            label="Observação"
+                          >
+                            <Textarea
+                              aria-invalid={field.state.meta.errors.length > 0}
+                              disabled={isSubmitting}
+                              maxLength={1000}
+                              onChange={(event) => field.handleChange(event.target.value)}
+                              placeholder="Adicione observações sobre o lançamento"
+                              rows={1}
+                              value={field.state.value}
+                            />
+                          </FieldShell>
+                        )}
+                      </form.Field>
+                      {mode === "edit" ? (
+                        <FieldShell label="Anexos">
+                          {transaction?.recordId ? (
+                            <TransactionAttachments
+                              onBusyChange={onAttachmentBusyChange}
+                              transactionId={transaction.recordId}
+                            />
+                          ) : (
+                            <p className="rounded-lg border bg-muted/40 p-3 text-muted-foreground text-xs">
+                              Anexos ficam disponíveis em ocorrências já registradas.
+                            </p>
+                          )}
+                        </FieldShell>
+                      ) : values.condition === "recurring" ? (
+                        <FieldShell label="Anexos">
+                          <p className="rounded-lg border bg-muted/40 p-3 text-muted-foreground text-xs">
+                            Anexos poderão ser adicionados quando houver um lançamento registrado
+                            para a recorrência.
+                          </p>
+                        </FieldShell>
+                      ) : (
+                        <FieldShell label="Anexos">
+                          <AttachmentFilePicker
                             disabled={isSubmitting}
-                            maxLength={1000}
-                            onChange={(event) => field.handleChange(event.target.value)}
-                            placeholder="Adicione observações sobre o lançamento"
-                            rows={1}
-                            value={field.state.value}
+                            files={pendingFiles}
+                            onAdd={(file) => setPendingFiles((current) => [...current, file])}
+                            onRemove={(file) =>
+                              setPendingFiles((current) => current.filter((item) => item !== file))
+                            }
                           />
+                          {values.condition === "installment" ? (
+                            <p className="text-muted-foreground text-xs">
+                              Os anexos desta compra ficam vinculados à primeira parcela.
+                            </p>
+                          ) : null}
                         </FieldShell>
                       )}
-                    </form.Field>
-                    {mode === "edit" ? (
-                      <FieldShell label="Anexos">
-                        {transaction?.recordId ? (
-                          <TransactionAttachments
-                            onBusyChange={onAttachmentBusyChange}
-                            transactionId={transaction.recordId}
-                          />
-                        ) : (
-                          <p className="rounded-lg border bg-muted/40 p-3 text-muted-foreground text-xs">
-                            Anexos ficam disponíveis em ocorrências já registradas.
-                          </p>
-                        )}
-                      </FieldShell>
-                    ) : values.condition === "recurring" ? (
-                      <FieldShell label="Anexos">
-                        <p className="rounded-lg border bg-muted/40 p-3 text-muted-foreground text-xs">
-                          Anexos poderão ser adicionados quando houver um lançamento registrado para
-                          a recorrência.
-                        </p>
-                      </FieldShell>
-                    ) : (
-                      <FieldShell label="Anexos">
-                        <AttachmentFilePicker
-                          disabled={isSubmitting}
-                          files={pendingFiles}
-                          onAdd={(file) => setPendingFiles((current) => [...current, file])}
-                          onRemove={(file) =>
-                            setPendingFiles((current) => current.filter((item) => item !== file))
-                          }
-                        />
-                        {values.condition === "installment" ? (
-                          <p className="text-muted-foreground text-xs">
-                            Os anexos desta compra ficam vinculados à primeira parcela.
-                          </p>
-                        ) : null}
-                      </FieldShell>
-                    )}
-                  </div>
-                </details>
-              </div>
+                    </div>
+                  </details>
+                </div>
 
-              <DialogFooter>
-                <Button
-                  disabled={isSubmitting || attachmentBusy}
-                  onClick={onCancel}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  disabled={
-                    !canSubmit ||
-                    !formIsValid ||
-                    isSubmitting ||
-                    attachmentBusy ||
-                    (mode === "edit" && !isDirty)
-                  }
-                  type="submit"
-                >
-                  {isSubmitting ? (
-                    <Loader2 aria-hidden="true" className="animate-spin" size={16} />
-                  ) : (
-                    <Save aria-hidden="true" size={16} />
-                  )}
-                  {mode === "edit"
-                    ? "Atualizar"
-                    : (submitLabel ??
-                      `Salvar ${transactionTypeLabels[values.type].toLocaleLowerCase("pt-BR")}`)}
-                </Button>
-              </DialogFooter>
-            </>
-          );
-        }}
-      </form.Subscribe>
-      <InstallmentActionDialog
-        action="edit"
-        key={`edit-${transaction?.id ?? "closed"}`}
-        onConfirm={async (scope) => {
-          if (!pendingInstallmentUpdate) return;
-          try {
-            await persistTransactionUpdate(
-              pendingInstallmentUpdate.data,
-              scope,
-              pendingInstallmentUpdate.value,
+                <DialogFooter>
+                  <Button
+                    disabled={isSubmitting || attachmentBusy}
+                    onClick={onCancel}
+                    type="button"
+                    variant="outline"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    disabled={isSubmitting || attachmentBusy || (mode === "edit" && !isDirty)}
+                    type="submit"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 aria-hidden="true" className="animate-spin" size={16} />
+                    ) : (
+                      <Save aria-hidden="true" size={16} />
+                    )}
+                    {mode === "edit"
+                      ? transaction?.isRecurring
+                        ? "Atualizar recorrência inteira"
+                        : "Atualizar"
+                      : (submitLabel ??
+                        `Salvar ${transactionTypeLabels[values.type].toLocaleLowerCase("pt-BR")}`)}
+                  </Button>
+                </DialogFooter>
+              </>
             );
-          } catch (error) {
-            toast.error("Não foi possível salvar o lançamento", {
-              description: getTransactionMutationErrorMessage(error),
-            });
-          }
-        }}
-        onOpenChange={(open) => {
-          if (!open) setPendingInstallmentUpdate(null);
-        }}
-        open={Boolean(pendingInstallmentUpdate)}
-        pending={updateTransaction.isPending}
-        transaction={transaction}
-      />
-    </form>
+          }}
+        </form.Subscribe>
+        <InstallmentActionDialog
+          action="edit"
+          key={`edit-${transaction?.id ?? "closed"}`}
+          onConfirm={async (scope) => {
+            if (!pendingInstallmentUpdate) return;
+            try {
+              await persistTransactionUpdate(
+                pendingInstallmentUpdate.data,
+                scope,
+                pendingInstallmentUpdate.value,
+              );
+            } catch (error) {
+              toast.error("Não foi possível salvar o lançamento", {
+                description: getTransactionMutationErrorMessage(error),
+              });
+            }
+          }}
+          onOpenChange={(open) => {
+            if (!open) setPendingInstallmentUpdate(null);
+          }}
+          open={Boolean(pendingInstallmentUpdate)}
+          pending={updateTransaction.isPending}
+          transaction={transaction}
+        />
+      </form>
+      <form.Subscribe selector={(state) => state.values.type}>
+        {(type) => (
+          <TransactionRelatedRecordDialog
+            kind={relatedRecord}
+            categoryType={type === "income" ? "income" : "expense"}
+            accounts={accounts}
+            onClose={() => setRelatedRecord(null)}
+            onCreated={(kind, id) => {
+              if (kind === "card") handleCardChange(id);
+              else
+                form.setFieldValue(
+                  kind === "account"
+                    ? relatedAccountField
+                    : kind === "person"
+                      ? "personId"
+                      : "categoryId",
+                  id,
+                );
+              setRelatedRecord(null);
+            }}
+          />
+        )}
+      </form.Subscribe>
+    </>
   );
 }
 
@@ -1260,17 +1349,16 @@ type FieldShellProps = {
 };
 
 function FieldShell({ label, error, children }: FieldShellProps) {
-  const labelId = useId();
   return (
-    <div className="flex min-w-0 flex-col gap-1.5" data-invalid={error ? "true" : undefined}>
-      <Label htmlFor={labelId}>{label}</Label>
-      <div id={labelId}>{children}</div>
+    <fieldset className="flex min-w-0 flex-col gap-1.5" data-invalid={error ? "true" : undefined}>
+      <legend className="mb-1.5 text-sm font-medium">{label}</legend>
+      {children}
       {error ? (
-        <p className="sr-only" role="alert">
+        <p className="text-destructive text-xs" role="alert">
           {error}
         </p>
       ) : null}
-    </div>
+    </fieldset>
   );
 }
 
@@ -1280,15 +1368,27 @@ type AccountSelectProps = {
   disabled: boolean;
   error: boolean;
   onChange: (value: string) => void;
+  onCreate: () => void;
 };
 
-function AccountSelect({ accounts, value, disabled, error, onChange }: AccountSelectProps) {
+function AccountSelect({
+  accounts,
+  value,
+  disabled,
+  error,
+  onChange,
+  onCreate,
+}: AccountSelectProps) {
   return (
     <Select
       disabled={disabled}
-      onValueChange={(nextValue) =>
-        onChange(nextValue === noneValue || nextValue === null ? "" : nextValue)
-      }
+      onValueChange={(nextValue) => {
+        if (nextValue === createValue) {
+          onCreate();
+          return;
+        }
+        onChange(nextValue === noneValue || nextValue === null ? "" : nextValue);
+      }}
       value={value || noneValue}
     >
       <SelectTrigger className="w-full" aria-invalid={error}>
@@ -1303,6 +1403,11 @@ function AccountSelect({ accounts, value, disabled, error, onChange }: AccountSe
             <EntityOption entity={account} />
           </SelectItem>
         ))}
+        <SelectSeparator />
+        <SelectItem value={createValue}>
+          <Plus aria-hidden="true" className="size-4" />
+          Criar conta…
+        </SelectItem>
       </SelectContent>
     </Select>
   );
@@ -1336,7 +1441,7 @@ function TransactionConditionOption({
   condition: TransactionFormValues["condition"];
 }) {
   const Icon =
-    condition === "recurring" ? RefreshCw : condition === "installment" ? CalendarClock : Check;
+    condition === "recurring" ? Repeat2 : condition === "installment" ? CalendarClock : Check;
 
   return (
     <span className="flex items-center gap-2">

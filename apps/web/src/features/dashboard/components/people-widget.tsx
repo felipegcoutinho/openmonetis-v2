@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getInitials } from "@/lib/name-presentation";
 import { dashboardPeopleExpensesQueryOptions } from "../dashboard.queries";
 import { DashboardItemLinkArrow } from "./dashboard-item-link-arrow";
 import { DashboardWidget } from "./dashboard-widget";
@@ -92,7 +93,7 @@ function PeopleList({ people }: { people: PersonExpense[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <Link
-                    className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
                     params={{ personId: person.personId }}
                     to="/people/$personId"
                   >
@@ -159,16 +160,6 @@ function PeopleEmpty() {
       title="Nenhuma despesa por pessoa"
     />
   );
-}
-
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join("")
-    .toLocaleUpperCase("pt-BR");
 }
 
 function formatPercentage(value: number) {

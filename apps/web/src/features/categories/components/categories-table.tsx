@@ -1,6 +1,6 @@
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, LockKeyhole, Pencil, Trash2 } from "lucide-react";
+import { ChevronRight, LockKeyhole, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CategoryIcon } from "../category-icons";
 
 export function CategoriesTable({
@@ -60,16 +61,30 @@ export function CategoriesTable({
                 to="/categories/$categoryId"
               >
                 {category.name}
-                <ExternalLink className="size-3 text-muted-foreground" />
+                <ChevronRight className="size-3 text-muted-foreground" />
               </Link>
             </TableCell>
             <TableCell>
               <div className="flex justify-end gap-1">
                 {category.isSystem ? (
-                  <span className="inline-flex items-center gap-1.5 px-2 text-muted-foreground text-xs">
-                    <LockKeyhole aria-hidden="true" className="size-3.5" />
-                    Sistema
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded px-2 text-muted-foreground text-xs focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                      }
+                      aria-label={`Por que ${category.name} é automática?`}
+                    >
+                      <LockKeyhole aria-hidden="true" className="size-3.5" />
+                      Automática
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      Criada pelo sistema para operações automáticas. Esta categoria não pode ser
+                      editada ou removida.
+                    </TooltipContent>
+                  </Tooltip>
                 ) : (
                   <>
                     <Button
@@ -120,7 +135,9 @@ function RemoveAction({
         <AlertDialogHeader>
           <AlertDialogTitle>Remover categoria?</AlertDialogTitle>
           <AlertDialogDescription>
-            A categoria &quot;{category.name}&quot; será removida.
+            A categoria &quot;{category.name}&quot; será removida. Se ela estiver vinculada a
+            lançamentos ou recorrências, altere a categoria desses registros antes de excluir.
+            Orçamentos vinculados também precisam ser removidos primeiro.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -135,11 +135,11 @@ export function InvoicePaymentDialog({
             description={
               paymentResult.accountAmount > 0
                 ? paymentResult.status === "paid"
-                  ? "A fatura foi quitada e a sua parcela já foi registrada no extrato."
-                  : "A sua parcela foi registrada no extrato. A fatura continua com saldo em aberto."
+                  ? "A fatura foi quitada e a sua parte já foi registrada no extrato."
+                  : "A sua parte foi registrada no extrato. A fatura continua com saldo em aberto."
                 : paymentResult.status === "paid"
                   ? "A fatura foi quitada sem movimentar suas contas."
-                  : "A parcela da pessoa foi quitada sem movimentar suas contas."
+                  : "A parte da pessoa foi quitada sem movimentar suas contas."
             }
             onClose={() => {
               setPaymentResult(null);
@@ -161,7 +161,7 @@ export function InvoicePaymentDialog({
                     width={40}
                   />
                 ) : null}
-                <DialogTitle>Pagar fatura</DialogTitle>
+                <DialogTitle>Registrar pagamento da fatura</DialogTitle>
               </div>
               <DialogDescription>
                 {invoice
@@ -186,23 +186,26 @@ export function InvoicePaymentDialog({
                     }
                     value={field.state.value}
                   >
-                    <TabsList className="min-w-0" variant="line">
+                    <TabsList
+                      className="min-h-11 min-w-0 items-stretch group-data-horizontal/tabs:h-auto"
+                      variant="line"
+                    >
                       <TabsTrigger
-                        className="min-w-0 whitespace-normal px-1 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                        className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
                         value="invoice"
                       >
                         Fatura inteira
                       </TabsTrigger>
                       {canPayByPerson ? (
                         <TabsTrigger
-                          className="min-w-0 whitespace-normal px-1 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                          className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
                           value="person"
                         >
-                          Quitar pessoa
+                          Registrar parte da pessoa
                         </TabsTrigger>
                       ) : null}
                       <TabsTrigger
-                        className="min-w-0 whitespace-normal px-1 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                        className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
                         value="manual"
                       >
                         Valor parcial
@@ -301,7 +304,7 @@ export function InvoicePaymentDialog({
                     </form.Field>
                   ) : (
                     <p className="rounded-md bg-muted px-3 py-2 text-muted-foreground text-sm">
-                      Este pagamento quita somente a parcela da pessoa e não movimenta suas contas.
+                      Este pagamento quita somente a parte da pessoa e não movimenta suas contas.
                     </p>
                   )
                 }

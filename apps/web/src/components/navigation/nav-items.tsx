@@ -1,6 +1,5 @@
 import {
   ArrowLeftRight,
-  BarChart3,
   ClipboardList,
   CreditCard,
   FileChartColumn,
@@ -11,6 +10,7 @@ import {
   Paperclip,
   Repeat2,
   Tags,
+  Target,
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -20,11 +20,16 @@ export type NavLinkItem = {
   label: string;
   description: string;
   icon: ReactNode;
+  isShortcut?: boolean;
   preservePeriod?: boolean;
   search?: Record<string, string>;
 };
 
 export type NavItem = NavLinkItem;
+
+export function isPathActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 type NavSection = {
   label: string;
@@ -53,6 +58,7 @@ export const navSections: NavSection[] = [
         label: "Lançamentos compartilhados",
         description: "Envie e importe lançamentos entre pessoas",
         icon: <HandCoins className="size-4" aria-hidden="true" />,
+        isShortcut: true,
         preservePeriod: true,
         search: { view: "external" },
       },
@@ -77,7 +83,7 @@ export const navSections: NavSection[] = [
         href: "/budgets",
         label: "Orçamentos",
         description: "Limites mensais por categoria",
-        icon: <BarChart3 className="size-4" aria-hidden="true" />,
+        icon: <Target className="size-4" aria-hidden="true" />,
         preservePeriod: true,
       },
     ],
@@ -117,7 +123,7 @@ export const navSections: NavSection[] = [
     items: [
       {
         href: "/reports/category-trends",
-        label: "Tendências",
+        label: "Evolução por categoria",
         description: "Evolução de categorias por período",
         icon: <FileChartColumn className="size-4" aria-hidden="true" />,
         preservePeriod: true,
@@ -142,6 +148,6 @@ export const navSections: NavSection[] = [
 
 export const dashboardNavItem = {
   href: "/dashboard",
-  label: "Dashboard",
+  label: "Visão geral",
   // icon: <ChartNoAxesCombined className="size-4" aria-hidden="true" />,
 };

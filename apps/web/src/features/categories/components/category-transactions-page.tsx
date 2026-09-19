@@ -2,6 +2,7 @@ import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, ChartNoAxesCombined, Tags, Users } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { EntityLoadError } from "@/components/entity-load-error";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
@@ -49,7 +50,15 @@ export function CategoryTransactionsPage({
       <main className="min-h-svh bg-background">
         <Navbar />
         {categoryQuery.isLoading ? <CategoryTransactionsLoading /> : null}
-        {categoryQuery.isError ? <CategoryTransactionsNotFound /> : null}
+        {categoryQuery.isError ? (
+          <EntityLoadError
+            error={categoryQuery.error}
+            entity="a categoria"
+            onRetry={() => void categoryQuery.refetch()}
+          >
+            <CategoryTransactionsNotFound />
+          </EntityLoadError>
+        ) : null}
         {categoryQuery.data ? (
           <TransactionsContainer
             onSearchChange={onSearchChange}
@@ -92,7 +101,6 @@ function getCategoryTransactionsScope(
         { label: "Organização" },
         { label: "Categorias", href: "/categories" },
         { label: category.name },
-        { label: `Histórico de ${periodLabel}` },
       ],
       summary: (
         <CategoryTransactionsSummary
@@ -206,7 +214,7 @@ function CategoryTransactionsSummary({
         },
         {
           icon: <ChartNoAxesCombined aria-hidden="true" className="size-3.5" />,
-          label: "Vs. mês anterior",
+          label: "Comparado ao mês anterior",
           value: trendsQuery.isLoading
             ? "Carregando..."
             : trendsQuery.isError || !periodTrend
@@ -214,7 +222,13 @@ function CategoryTransactionsSummary({
               : formatTrendPercentage(periodTrend.changePercentage, periodTrend.changeKind),
         },
       ]}
-      primaryLabel={isIncome ? "Receitas no período" : "Despesas no período"}
+      primaryLabel={
+        personScope === "admin"
+          ? isIncome
+            ? "Suas receitas no período"
+            : "Suas despesas no período"
+          : `${isIncome ? "Receitas" : "Despesas"} de ${selected?.label ?? "pessoa indisponível"}`
+      }
       primaryValue={
         trendsQuery.isLoading ? (
           <Skeleton className="h-10 w-48 bg-current/20 before:via-current/20" />

@@ -13,7 +13,7 @@ import type {
 } from "@openmonetis/validators/device-tokens";
 import { conflict, notFound } from "../utils/errors";
 
-export type DeviceTokenRecord = {
+type DeviceTokenRecord = {
   id: string;
   userId: string;
   name: string;

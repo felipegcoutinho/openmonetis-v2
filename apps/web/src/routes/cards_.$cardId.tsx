@@ -6,6 +6,7 @@ import {
 } from "@/features/transactions/transactions.presentation";
 
 export const Route = createFileRoute("/cards_/$cardId")({
+  head: () => ({ meta: [{ title: "Fatura do cartão · OpenMonetis" }] }),
   component: CardInvoicesRoute,
   validateSearch: validateCardInvoiceSearch,
 });

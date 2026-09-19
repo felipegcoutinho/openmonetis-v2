@@ -1,11 +1,35 @@
 /*
- * Google Fonts preset.
+ * Optional Google Fonts fallbacks.
  *
- * To use another family, update this URL and --font-google-sans below with the
- * family name provided by Google Fonts. Keep the requested weights aligned
- * with the weights used by the application (400, 500 and 700).
+ * Keep the requested weights aligned with the weights used by the application
+ * (400, 500 and 700).
  */
-/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"); */
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"); */
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/gt-america-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/gt-america-medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "GT America";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/gt-america-bold.woff2") format("woff2");
+}
 
 @font-face {
   font-family: "Aeonik Fono";
@@ -32,11 +56,14 @@
 }
 
 :root {
-  --font-local-sans: "Aeonik Fono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  --font-google-sans: "Inter", system-ui, sans-serif;
+  --font-gt-america: "GT America", "Inter", system-ui, sans-serif;
+  --font-aeonik-fono:
+    "Aeonik Fono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  /* --font-inter: "Inter", system-ui, sans-serif;
+  --font-space-grotesk: "Space Grotesk", system-ui, monospace; */
 
-  /* Font source used by the application: local (default) or Google Fonts. */
-  --font-app-sans: var(--font-local-sans);
-  --font-app-mono: var(--font-local-sans);
-  --font-app-heading: var(--font-local-sans);
+  /* GT America drives the interface; Aeonik Fono remains reserved for numeric/monospace content. */
+  --font-app-sans: var(--font-gt-america);
+  --font-app-mono: var(--font-aeonik-fono);
+  --font-app-heading: var(--font-gt-america);
 }

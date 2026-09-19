@@ -3,6 +3,7 @@ import { validateAttachmentsSearch } from "@/features/attachments/attachments.pr
 import { AttachmentsPage } from "@/features/attachments/components/attachments-page";
 
 export const Route = createFileRoute("/attachments")({
+  head: () => ({ meta: [{ title: "Anexos · OpenMonetis" }] }),
   component: AttachmentsRoute,
   validateSearch: validateAttachmentsSearch,
 });

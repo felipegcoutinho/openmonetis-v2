@@ -60,7 +60,15 @@ export function AccountCard({
             )}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <CardTitle className="truncate">{account.name}</CardTitle>
+                <CardTitle className="truncate">
+                  <Link
+                    className="hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                    to="/accounts/$accountId"
+                    params={{ accountId: account.id }}
+                  >
+                    {account.name}
+                  </Link>
+                </CardTitle>
                 {hasAccountingNote ? (
                   <Tooltip>
                     <TooltipTrigger
@@ -84,7 +92,7 @@ export function AccountCard({
               </div>
               <p className="mt-0.5 truncate text-muted-foreground text-xs">
                 {accountTypeLabels[account.type]}
-                {account.excludeFromBalance ? " · Fora do saldo" : null}
+                {account.excludeFromBalance ? " · Fora do saldo total" : null}
               </p>
             </div>
           </div>
@@ -109,14 +117,6 @@ export function AccountCard({
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
-        <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          onClick={() => onEdit(account)}
-          type="button"
-        >
-          <Pencil aria-hidden="true" className="size-3.5" />
-          Editar
-        </button>
         <Link
           className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
           params={{ accountId: account.id }}
@@ -125,9 +125,17 @@ export function AccountCard({
           <FileText aria-hidden="true" className="size-3.5" />
           Extrato
         </Link>
+        <button
+          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          onClick={() => onEdit(account)}
+          type="button"
+        >
+          <Pencil aria-hidden="true" className="size-3.5" />
+          Editar
+        </button>
         {onArchive ? (
           <button
-            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-muted-foreground text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
             disabled={pending}
             onClick={() => setArchiveOpen(true)}
             type="button"

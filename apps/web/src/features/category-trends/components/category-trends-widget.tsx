@@ -123,7 +123,7 @@ function CategoryTrendRow({ item, period }: { item: TrendItem; period: string })
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
-            className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
             params={{ categoryId: category.categoryId }}
             search={{ period }}
             to="/categories/$categoryId"

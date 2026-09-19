@@ -1,6 +1,7 @@
 import {
   type AccountPeriodSummary,
   type AccountType,
+  calculateAccountBalanceAdjustment,
   calculateAccountPeriodSummary,
   createAccountBalanceAdjustmentDraft,
   createAccountDraft,
@@ -11,6 +12,7 @@ import {
   buildTransferPostings,
   deriveTransactionPeriod,
   deriveTransactionPostingPeriod,
+  getPeriodEndDate,
   getPeriodFromDate,
   listRecurrenceDatesInPeriod,
   type PaymentMethod,
@@ -28,7 +30,7 @@ import type {
 } from "@openmonetis/validators/accounts";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
-export type AccountRecord = {
+type AccountRecord = {
   id: string;
   userId: string;
   name: string;
@@ -52,7 +54,7 @@ type AccountCreateRecord = {
 
 type AccountUpdateRecord = Partial<Omit<AccountCreateRecord, "userId"> & { isArchived: boolean }>;
 
-export type AccountBalancePostingRecord = {
+type AccountBalancePostingRecord = {
   accountId: string | null;
   period: string;
   postingDate?: string;
@@ -86,7 +88,7 @@ type DeleteAccountResult =
   | { status: "deleted"; id: string }
   | { status: "not_found" };
 
-export type AccountRecurringRuleRecord = {
+type AccountRecurringRuleRecord = {
   id: string;
   accountId: string | null;
   sourceAccountId: string | null;
@@ -101,7 +103,7 @@ export type AccountRecurringRuleRecord = {
   isSettled: boolean | null;
 };
 
-export type AccountRecurringOccurrenceRecord = {
+type AccountRecurringOccurrenceRecord = {
   recurringRuleId: string;
   purchaseDate: string;
   isSettled: boolean;
@@ -166,12 +168,16 @@ export function createAccountsService(
     const accountId = accounts.length === 1 ? accounts[0]?.id : undefined;
     const [persistedPostings, recurringRules] = await Promise.all([
       repository.listSettledAccountPostingsThroughPeriod(userId, period, accountId),
-      repository.listAccountRecurringRulesThroughPeriod(userId, getPeriodEnd(period), accountId),
+      repository.listAccountRecurringRulesThroughPeriod(
+        userId,
+        getPeriodEndDate(period),
+        accountId,
+      ),
     ]);
     const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
       userId,
       recurringRules.map((rule) => rule.id),
-      getPeriodEnd(period),
+      getPeriodEndDate(period),
     );
     const postings = [
       ...persistedPostings
@@ -228,12 +234,16 @@ export function createAccountsService(
 
     const [persistedPostings, recurringRules] = await Promise.all([
       repository.listSettledAccountPostingsThroughPeriod(userId, period, accountId),
-      repository.listAccountRecurringRulesThroughPeriod(userId, getPeriodEnd(period), accountId),
+      repository.listAccountRecurringRulesThroughPeriod(
+        userId,
+        getPeriodEndDate(period),
+        accountId,
+      ),
     ]);
     const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
       userId,
       recurringRules.map((rule) => rule.id),
-      getPeriodEnd(period),
+      getPeriodEndDate(period),
     );
     const recurringPostings = expandSettledRecurringPostings(
       recurringRules,
@@ -258,7 +268,29 @@ export function createAccountsService(
     };
   }
 
+  async function previewBalanceAdjustment(
+    id: string,
+    userId: string,
+    input: AdjustAccountBalanceInput,
+  ) {
+    const account = await repository.findByIdForUser(id, userId);
+    if (!account || account.isArchived) throw notFound("Account not found", "account_not_found");
+    if (input.date > today())
+      throw badRequest(
+        "Balance adjustment date cannot be in the future",
+        "balance_adjustment_date_future",
+      );
+    const current = await summarizeAccount(account, userId, input.date.slice(0, 7), input.date);
+    return {
+      currentBalance: current.summary.balance,
+      desiredBalance: input.balance,
+      adjustmentAmount: calculateAccountBalanceAdjustment(current.summary.balance, input.balance),
+      date: input.date,
+    };
+  }
+
   return {
+    previewBalanceAdjustment,
     getBalanceSnapshot,
     async create(input: CreateAccountInput, userId: string) {
       const account = await repository.insert(
@@ -327,24 +359,11 @@ export function createAccountsService(
     },
 
     async adjustBalance(id: string, userId: string, input: AdjustAccountBalanceInput) {
+      const preview = await previewBalanceAdjustment(id, userId, input);
       const account = await repository.findByIdForUser(id, userId);
-      if (!account || account.isArchived) {
-        throw notFound("Account not found", "account_not_found");
-      }
-
-      if (input.date > today()) {
-        throw badRequest(
-          "Balance adjustment date cannot be in the future",
-          "balance_adjustment_date_future",
-        );
-      }
-
+      if (!account || account.isArchived) throw notFound("Account not found", "account_not_found");
       const period = input.date.slice(0, 7);
-      const current = await summarizeAccount(account, userId, period, input.date);
-      const adjustment = createAccountBalanceAdjustmentDraft(
-        current.summary.balance,
-        input.balance,
-      );
+      const adjustment = createAccountBalanceAdjustmentDraft(preview.currentBalance, input.balance);
 
       if (adjustment) {
         await repository.insertBalanceAdjustment({
@@ -353,7 +372,7 @@ export function createAccountsService(
           ...adjustment,
           userId,
           date: input.date,
-          note: createBalanceChangeNote("Ajuste de saldo", current.summary.balance, input.balance),
+          note: createBalanceChangeNote("Ajuste de saldo", preview.currentBalance, input.balance),
         });
       }
 
@@ -427,11 +446,6 @@ function createBalanceChangeNote(label: string, previousBalance: number, current
 
 function formatCurrency(amount: number) {
   return amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function getPeriodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 function expandSettledRecurringPostings(

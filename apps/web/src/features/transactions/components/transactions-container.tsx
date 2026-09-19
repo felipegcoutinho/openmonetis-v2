@@ -134,6 +134,14 @@ export function TransactionsContainer({
 
   return (
     <TransactionsScreen
+      onRetry={() => {
+        void transactionsQuery.refetch();
+        void accountsQuery.refetch();
+        void cardsQuery.refetch();
+        void categoriesQuery.refetch();
+        void peopleQuery.refetch();
+      }}
+      isUpdating={transactionsQuery.isFetching && !transactionsQuery.isLoading}
       accounts={accountsQuery.data ?? []}
       cards={cardsQuery.data ?? []}
       categories={categoriesQuery.data ?? []}
@@ -152,26 +160,71 @@ export function TransactionsContainer({
         peopleQuery.isLoading
       }
       onDeleteTransaction={handleDeleteTransaction}
-      onSettleTransactions={async (ids, isSettled) => {
+      onSettleTransactions={async (ids, isSettled, settledDate) => {
         try {
-          await settleTransactions.mutateAsync({ ids, isSettled });
-          toast.success(isSettled ? "Pagamento marcado como pago" : "Pagamento marcado em aberto");
+          await settleTransactions.mutateAsync({ ids, isSettled, settledDate });
+          const item = transactionsQuery.data?.items.find((item) =>
+            ids.includes(item.recordId ?? item.id),
+          );
+          toast.success(
+            isSettled
+              ? item?.type === "income"
+                ? "Recebimento registrado"
+                : item?.type === "transfer"
+                  ? "Transferência confirmada"
+                  : "Pagamento registrado"
+              : "Lançamento marcado em aberto",
+            {
+              action:
+                isSettled && item && !item.isDivided
+                  ? {
+                      label: "Desfazer",
+                      onClick: () =>
+                        settleTransactions.mutate(
+                          { ids, isSettled: false },
+                          {
+                            onError: () =>
+                              toast.error(
+                                "Não foi possível desfazer. Tente pela lista de lançamentos.",
+                              ),
+                          },
+                        ),
+                    }
+                  : undefined,
+            },
+          );
         } catch (error) {
-          toast.error("Não foi possível atualizar o pagamento", {
+          toast.error("Não foi possível atualizar a situação", {
             description: getTransactionMutationErrorMessage(error),
           });
         }
       }}
-      onSettleRecurringOccurrence={async (recurringRuleId, purchaseDate, isSettled) => {
+      onSettleRecurringOccurrence={async (
+        recurringRuleId,
+        purchaseDate,
+        isSettled,
+        settledDate,
+      ) => {
         try {
           await settleRecurringOccurrence.mutateAsync({
             recurringRuleId,
             purchaseDate,
             isSettled,
+            settledDate,
           });
-          toast.success(isSettled ? "Pagamento marcado como pago" : "Pagamento marcado em aberto");
+          const item = transactionsQuery.data?.items.find(
+            (item) =>
+              item.recurringRuleId === recurringRuleId && item.purchaseDate === purchaseDate,
+          );
+          toast.success(
+            isSettled
+              ? item?.type === "income"
+                ? "Recebimento registrado"
+                : "Pagamento registrado"
+              : "Lançamento marcado em aberto",
+          );
         } catch {
-          toast.error("Não foi possível atualizar o pagamento");
+          toast.error("Não foi possível atualizar a situação");
         }
       }}
       onRecurringStatus={async (id, status) => {

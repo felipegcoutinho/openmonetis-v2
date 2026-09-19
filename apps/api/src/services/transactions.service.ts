@@ -22,6 +22,7 @@ import {
   canDeleteTransactionOrigin,
   deriveImportedPeriod,
   deriveTransactionPeriod,
+  getPeriodEndDate,
   getPeriodFromDate,
   InsufficientTransferBalanceError,
   listRecurrenceDatesInPeriod,
@@ -269,12 +270,6 @@ export function createTransactionsService(
 
   function listRecentEstablishments(userId: string) {
     return recentEstablishmentsService.list(userId);
-  }
-
-  function getPeriodEnd(period: string) {
-    const [year, month] = period.split("-").map(Number);
-
-    return new Date(Date.UTC(year, month, 0));
   }
 
   function getPeriodStart(period: string) {
@@ -1135,7 +1130,7 @@ export function createTransactionsService(
 
   async function listTransactions(userId: string, query: ListTransactionsQuery) {
     const period = query.period ?? currentPeriod();
-    const periodEnd = query.dateEnd ? toDate(query.dateEnd) : getPeriodEnd(period);
+    const periodEnd = query.dateEnd ? toDate(query.dateEnd) : getPeriodEndDate(period);
     const periodStart = query.dateStart ? toDate(query.dateStart) : getPeriodStart(period);
     const persistedFilters = {
       type: query.type,
@@ -1265,18 +1260,34 @@ export function createTransactionsService(
       .filter((item) => matchesTransactionFilters(item, query))
       .sort(
         (a, b) =>
-          b.purchaseDate.localeCompare(a.purchaseDate) ||
+          (query.sort === "oldest"
+            ? a.purchaseDate.localeCompare(b.purchaseDate)
+            : query.sort === "dueDate"
+              ? (a.dueDate ?? "9999-12-31").localeCompare(b.dueDate ?? "9999-12-31")
+              : query.sort === "amount"
+                ? Math.abs(b.amount) - Math.abs(a.amount)
+                : b.purchaseDate.localeCompare(a.purchaseDate)) ||
           a.name.localeCompare(b.name) ||
           (a.allocation?.personName ?? a.personName).localeCompare(
             b.allocation?.personName ?? b.personName,
           ) ||
           a.id.localeCompare(b.id),
       );
+    // Paginate purchases/occurrences, keeping every matching allocation together.
+    const groups = new Map<string, TransactionOutput[]>();
+    for (const item of filtered) {
+      const key =
+        item.recordId ??
+        (item.recurringRuleId ? `${item.recurringRuleId}:${item.purchaseDate}` : item.id);
+      const group = groups.get(key);
+      if (group) group.push(item);
+      else groups.set(key, [item]);
+    }
     const start = (query.page - 1) * query.pageSize;
 
     return {
-      items: filtered.slice(start, start + query.pageSize),
-      total: filtered.length,
+      items: [...groups.values()].slice(start, start + query.pageSize).flat(),
+      total: groups.size,
       page: query.page,
       pageSize: query.pageSize,
     };
@@ -1303,6 +1314,22 @@ export function createTransactionsService(
         item.cardName,
         item.paymentMethod,
         item.condition,
+        item.paymentMethod
+          ? {
+              credit_card: "cartão de crédito",
+              debit_card: "cartão de débito",
+              pix: "Pix",
+              cash: "dinheiro",
+              boleto: "boleto",
+              benefits: "benefício vale",
+              bank_transfer: "transferência bancária",
+            }[item.paymentMethod]
+          : null,
+        {
+          single: "única à vista",
+          installment: "parcelada parcelas",
+          recurring: "recorrente recorrência",
+        }[item.condition],
       ]
         .filter(Boolean)
         .join(" ")
@@ -1320,7 +1347,11 @@ export function createTransactionsService(
       (!query.condition || item.condition === query.condition) &&
       (!query.paymentMethod || item.paymentMethod === query.paymentMethod) &&
       (!query.settlement ||
-        (query.settlement === "paid" ? item.isSettled === true : item.isSettled === false)) &&
+        (query.settlement === "invoice"
+          ? item.isSettled === null
+          : query.settlement === "paid"
+            ? item.isSettled === true
+            : item.isSettled === false)) &&
       (!query.personIds.length ||
         query.personIds.includes(item.allocation?.personId ?? item.personId)) &&
       (!query.categoryIds.length ||
@@ -1776,7 +1807,14 @@ export function createTransactionsService(
     }
   }
 
-  async function settleTransactions(ids: string[], userId: string, isSettled: boolean) {
+  async function settleTransactions(
+    ids: string[],
+    userId: string,
+    isSettled: boolean,
+    settledDate?: string,
+  ) {
+    if (settledDate && settledDate > getCurrentDateInBrazil())
+      throw badRequest("Settlement date cannot be in the future", "SETTLEMENT_DATE_FUTURE");
     const balancePeriod = currentPeriod();
     const balanceSnapshots = isSettled
       ? Object.fromEntries(
@@ -1805,7 +1843,7 @@ export function createTransactionsService(
         isSettled,
         balancePeriod,
         balanceSnapshots,
-        toDate(getCurrentDateInBrazil()),
+        toDate(settledDate ?? getCurrentDateInBrazil()),
       ),
     );
     if (settled.length !== new Set(ids).size)
@@ -1818,7 +1856,10 @@ export function createTransactionsService(
     purchaseDate: string,
     userId: string,
     isSettled: boolean,
+    settledDate?: string,
   ) {
+    if (settledDate && settledDate > getCurrentDateInBrazil())
+      throw badRequest("Settlement date cannot be in the future", "SETTLEMENT_DATE_FUTURE");
     const rule = await findRecurringRuleByIdForUser(recurringRuleId, userId);
     if (!rule) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     const validDates = listRecurrenceDatesInPeriod({
@@ -1835,7 +1876,9 @@ export function createTransactionsService(
       toDate(purchaseDate),
       userId,
       isSettled,
-      rule.paymentMethod === "boleto" && isSettled ? toDate(getCurrentDateInBrazil()) : null,
+      rule.paymentMethod === "boleto" && isSettled
+        ? toDate(settledDate ?? getCurrentDateInBrazil())
+        : null,
     );
     if (!occurrence) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     return { recurringRuleId, purchaseDate, isSettled };

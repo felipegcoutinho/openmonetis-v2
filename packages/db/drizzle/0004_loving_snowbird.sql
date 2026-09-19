@@ -1,0 +1,1 @@
+ALTER TABLE "external_expenses" ADD COLUMN "establishment_logo_domain" varchar(253);

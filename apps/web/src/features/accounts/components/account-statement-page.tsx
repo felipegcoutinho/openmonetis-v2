@@ -5,10 +5,11 @@ import type {
 } from "@openmonetis/validators/accounts";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
-import { CircleCheck, Landmark, Scale, TrendingUp } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Scale, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { EntityLoadError } from "@/components/entity-load-error";
 import {
   FinancialSummaryAction,
   FinancialSummaryHeader,
@@ -68,7 +69,15 @@ export function AccountStatementPage({
       <main className="min-h-svh bg-background">
         <Navbar />
         {accountQuery.isLoading ? <AccountStatementLoading /> : null}
-        {accountQuery.isError ? <AccountStatementNotFound /> : null}
+        {accountQuery.isError ? (
+          <EntityLoadError
+            error={accountQuery.error}
+            entity="a conta"
+            onRetry={() => void accountQuery.refetch()}
+          >
+            <AccountStatementNotFound />
+          </EntityLoadError>
+        ) : null}
         {accountQuery.data ? (
           <>
             <TransactionsContainer
@@ -177,17 +186,17 @@ function AccountStatementSummary({
       identity={<AccountStatementIcon account={account} />}
       metrics={[
         {
-          icon: <Landmark aria-hidden="true" className="size-3.5" />,
+          icon: <ArrowDownLeft aria-hidden="true" className="size-3.5" />,
           label: "Entradas",
           value: <MoneyValue amount={account.summary.income} />,
         },
         {
-          icon: <CircleCheck aria-hidden="true" className="size-3.5" />,
+          icon: <ArrowUpRight aria-hidden="true" className="size-3.5" />,
           label: "Saídas",
           value: <MoneyValue amount={account.summary.expenses} />,
         },
       ]}
-      primaryLabel="Saldo atual"
+      primaryLabel={`Saldo acumulado até ${periodLabel}`}
       primaryValue={<MoneyValue amount={account.summary.balance} />}
       subtitle={accountTypeLabels[account.type]}
       title={account.name}

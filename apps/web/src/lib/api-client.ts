@@ -53,3 +53,7 @@ export async function requestApi<T>(
 
   return payload.data;
 }
+
+export function requestApiWithResponseMessage<T>(path: string, init?: RequestInit): Promise<T> {
+  return requestApi<T>(path, init, { useResponseMessage: true });
+}

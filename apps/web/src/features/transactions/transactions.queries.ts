@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import {
   getRecentEstablishments,
   getTransaction,
@@ -16,6 +16,7 @@ export const transactionKeys = {
 export function transactionsQueryOptions(search: TransactionsApiSearch) {
   return queryOptions({
     queryKey: transactionKeys.list(search),
+    placeholderData: keepPreviousData,
     queryFn: () => getTransactions(search),
   });
 }

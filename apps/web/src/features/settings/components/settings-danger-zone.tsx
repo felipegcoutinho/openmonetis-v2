@@ -4,7 +4,7 @@ import {
   settingsConfirmation,
 } from "@openmonetis/validators/settings";
 import { useForm } from "@tanstack/react-form";
-import { RotateCcw, Trash2, TriangleAlert } from "lucide-react";
+import { Trash2, TriangleAlert } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { SettingsPanel, SettingsSection } from "@/components/settings-panel";
@@ -28,14 +28,14 @@ type DangerousAction = "reset" | "delete";
 
 const actionContent = {
   reset: {
-    title: "Zerar dados financeiros",
-    dialogTitle: "Zerar todos os dados?",
+    title: "Apagar dados financeiros",
+    dialogTitle: "Apagar todos os dados financeiros?",
     description:
       "Recomece seu controle financeiro mantendo o acesso. A exclusão dos dados é permanente.",
     dialogDescription:
       "Lançamentos, contas, cartões, anexos, pendências externas e demais dados financeiros serão removidos de forma permanente. Lançamentos já importados por outra pessoa permanecem na conta dela, e conexões ativas serão encerradas.",
     confirmation: settingsConfirmation.reset,
-    submitLabel: "Zerar dados",
+    submitLabel: "Apagar dados financeiros",
     pendingLabel: "Zerando...",
     successMessage: "Dados zerados",
   },
@@ -74,7 +74,7 @@ export function SettingsDangerZone() {
           "Histórico já importado por outras pessoas nas contas delas",
         ]}
         note="A pessoa principal e as categorias padrão serão recriadas."
-        icon={RotateCcw}
+        icon={Trash2}
         onSelect={setAction}
       />
       <DangerousActionSection
@@ -116,7 +116,7 @@ function DangerousActionSection({
   removed: string[];
   retained: string[];
   note?: string;
-  icon: typeof RotateCcw;
+  icon: typeof Trash2;
   onSelect: (action: DangerousAction) => void;
 }) {
   const content = actionContent[action];

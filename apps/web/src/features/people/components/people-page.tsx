@@ -75,7 +75,7 @@ export function PeoplePage() {
               </Button>
             }
             breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
-            description="Gerencie quem participa dos seus lançamentos e divisões de despesas."
+            description="Cadastre pessoas para organizar e dividir valores. Isso não cria um acesso nem ativa compartilhamento. Gerencie quem participa dos seus lançamentos e divisões de despesas."
             eyebrow="Organização"
             icon={<Users aria-hidden="true" className="size-5" />}
             title="Pessoas"

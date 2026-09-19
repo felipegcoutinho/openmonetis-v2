@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
   AccountBalanceAdjustmentOutputSchema,
+  AccountBalanceAdjustmentPreviewSchema,
   AccountOutputSchema,
   AccountParamsSchema,
   AccountPeriodQuerySchema,
@@ -308,5 +309,52 @@ export function createAccountsRoute(service: AccountsService) {
     },
   );
 
+  accountsRoute.openapi(
+    createRoute({
+      method: "post",
+      path: "/{id}/balance-adjustments/preview",
+      tags: ["Accounts"],
+      request: {
+        params: AccountParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: AdjustAccountBalanceInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Read-only balance adjustment preview",
+          content: {
+            "application/json": {
+              schema: z.object({ data: AccountBalanceAdjustmentPreviewSchema, error: z.null() }),
+            },
+          },
+        },
+        400: {
+          description: "Invalid adjustment",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        404: {
+          description: "Account not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.previewBalanceAdjustment(
+            context.req.valid("param").id,
+            context.get("userId"),
+            context.req.valid("json"),
+          ),
+        ),
+        200,
+      ),
+  );
   return accountsRoute;
 }

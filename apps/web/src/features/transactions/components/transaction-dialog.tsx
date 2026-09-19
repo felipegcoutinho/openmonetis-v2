@@ -90,11 +90,11 @@ export function TransactionDialog({
   const createCopy = {
     income: {
       title: "Nova receita",
-      description: "Informe os dados abaixo para registrar uma nova receita.",
+      description: "Registre o valor recebido ou previsto e onde ele será recebido.",
     },
     expense: {
       title: "Nova despesa",
-      description: "Informe os dados abaixo para registrar uma nova despesa.",
+      description: "Registre o valor, quem é responsável e como será pago.",
     },
     transfer: {
       title: "Nova transferência",
@@ -128,14 +128,22 @@ export function TransactionDialog({
           <DialogHeader>
             <DialogTitle>
               {mode === "edit"
-                ? "Editar lançamento"
+                ? transaction?.recurringRuleId
+                  ? "Editar recorrência inteira"
+                  : transaction?.isDivided
+                    ? "Editar lançamento inteiro"
+                    : "Editar lançamento"
                 : mode === "copy"
                   ? "Copiar lançamento"
                   : (createTitle ?? createCopy.title)}
             </DialogTitle>
             <DialogDescription>
               {mode === "edit"
-                ? "Atualize as informações do lançamento selecionado."
+                ? transaction?.recurringRuleId
+                  ? "As alterações atualizam a recorrência inteira. Ocorrências calculadas em meses anteriores também podem mudar; lançamentos registrados separadamente permanecem no histórico."
+                  : transaction?.isDivided
+                    ? "A edição afeta o lançamento inteiro e suas participações."
+                    : "Atualize as informações do lançamento selecionado."
                 : mode === "copy"
                   ? "Revise os dados e salve para criar um novo lançamento."
                   : (createDescription ?? createCopy.description)}
@@ -172,16 +180,22 @@ export function TransactionDialog({
       </Dialog>
 
       <AlertDialog onOpenChange={setDiscardOpen} open={discardOpen}>
-        <AlertDialogContent size="sm">
+        <AlertDialogContent
+          size="sm"
+          className="w-[calc(100%-2rem)] data-[size=sm]:max-w-sm sm:data-[size=sm]:max-w-md"
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
             <AlertDialogDescription>
               As informações preenchidas neste lançamento serão perdidas.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continuar</AlertDialogCancel>
+          <AlertDialogFooter className="grid-cols-1 sm:grid-cols-2">
+            <AlertDialogCancel className="min-w-0 whitespace-nowrap px-3">
+              Continuar editando
+            </AlertDialogCancel>
             <AlertDialogAction
+              className="min-w-0 whitespace-nowrap px-3"
               onClick={() => {
                 setDiscardOpen(false);
                 onOpenChange(false);

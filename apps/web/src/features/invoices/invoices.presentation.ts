@@ -2,8 +2,8 @@ import {
   dateOnlyToSafeInstant,
   differenceInCalendarDaysFromTodayInBrazil,
   formatDateInBrazil,
-  formatDateToPartsInBrazil,
 } from "@openmonetis/shared/date-time";
+import { formatRecordedPaymentDate } from "@/lib/payment-presentation";
 
 export function invoiceDueLabel(value: string) {
   const days = differenceInCalendarDaysFromTodayInBrazil(value);
@@ -15,17 +15,7 @@ export function invoiceDueLabel(value: string) {
 }
 
 export function invoicePaidLabel(value: string) {
-  const parts = formatDateToPartsInBrazil(dateOnlyToSafeInstant(value), {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const day = parts.find((part) => part.type === "day")?.value ?? "";
-  const month = parts.find((part) => part.type === "month")?.value ?? "";
-  const year = parts.find((part) => part.type === "year")?.value ?? "";
-  const capitalizedMonth = month.charAt(0).toLocaleUpperCase("pt-BR") + month.slice(1);
-
-  return `Pago em ${day} de ${capitalizedMonth} ${year}`;
+  return formatRecordedPaymentDate(value);
 }
 
 export function formatInvoicePaymentOption(amount: number, paidAt: string) {

@@ -39,15 +39,9 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --radius-card: var(--radius-cards);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --shadow-xs: 0 0 transparent;
 }
@@ -66,7 +60,7 @@
   --popover-foreground: var(--foreground);
   --primary: var(--palette-coral);
   --primary-foreground: var(--palette-charcoal);
-  --secondary: #efe9df;
+  --secondary: oklch(93.597% 0.01475 80.639);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: color-mix(in srgb, var(--palette-charcoal) 68%, var(--background));
@@ -79,7 +73,7 @@
   --brand: var(--palette-coral);
   --brand-strong: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-charcoal));
   --brand-foreground: var(--palette-charcoal);
-  --border: #c2bcb6;
+  --border: oklch(79.839% 0.0107 67.485);
   --input: color-mix(in srgb, var(--palette-charcoal) 30%, var(--background));
   --ring: var(--info);
   --overlay: color-mix(in srgb, var(--palette-charcoal) 18%, transparent);
@@ -91,16 +85,17 @@
   --chart-4: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-blue));
   --chart-5: color-mix(in srgb, var(--palette-blue) 55%, var(--palette-charcoal));
   --financial-summary-neutral: #343434;
-  --financial-summary-neutral-foreground: #ffffff;
+  --financial-summary-neutral-foreground: oklch(100% 0.00011 271.152);
   --text-body: 1rem;
   --page-max-width: 89.5rem;
   --section-gap: 1.5rem;
   --shadow-md: color-mix(in srgb, var(--foreground) 10%, transparent) 0 0 10px;
+  --primary-action-shadow-color: var(--foreground);
 }
 
 .dark {
-  --background: #141311;
-  --foreground: #f7f4f0;
+  --background: oklch(17.722% 0.002 106.763);
+  --foreground: oklch(96.835% 0.00612 75.134);
   --card: color-mix(in srgb, var(--foreground) 4%, var(--background));
   --card-foreground: var(--foreground);
   --popover: color-mix(in srgb, var(--foreground) 7%, var(--background));
@@ -113,22 +108,23 @@
   --muted-foreground: color-mix(in srgb, var(--foreground) 68%, var(--background));
   --accent: color-mix(in srgb, var(--brand) 14%, var(--popover));
   --accent-foreground: var(--foreground);
-  --destructive: #ff786f;
-  --info: #91a7ff;
-  --success: #6acb93;
-  --warning: #f5b56b;
-  --brand-strong: #fda164;
+  --destructive: oklch(72.97% 0.16638 25.828);
+  --info: oklch(74.732% 0.12972 272.274);
+  --success: oklch(76.781% 0.12333 156.578);
+  --warning: oklch(81.758% 0.11763 68.9);
+  --brand-strong: oklch(76.042% 0.16904 61.306);
   --brand-foreground: var(--palette-charcoal);
   --border: color-mix(in srgb, var(--foreground) 10%, var(--background));
   --input: color-mix(in srgb, var(--foreground) 25%, var(--background));
   --ring: var(--info);
   --overlay: color-mix(in srgb, black 58%, transparent);
-  --chart-1: #ff9b5c;
-  --chart-2: #8ea7ff;
+  --chart-1: oklch(78.088% 0.14307 51.443);
+  --chart-2: oklch(74.537% 0.13059 270.931);
   --chart-3: var(--success);
-  --chart-4: #c997df;
-  --chart-5: #e8c06f;
+  --chart-4: oklch(74.853% 0.11425 315.196);
+  --chart-5: oklch(82.6% 0.10977 83.736);
   --shadow-md: color-mix(in srgb, black 45%, transparent) 0 0 10px;
+  --primary-action-shadow-color: var(--primary);
 }
 
 @utility project-container {
@@ -151,7 +147,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50 antialiased;
   }
 
   html {
@@ -164,7 +160,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
     font-family: var(--font-app-sans);
     font-size: var(--text-body);
     line-height: 1.5;
@@ -205,7 +201,7 @@
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 48%, transparent),
     inset 0 0 0 1px color-mix(in srgb, white 16%, transparent),
-    0 2px 3px color-mix(in srgb, var(--foreground) 22%, transparent);
+    0 2px 3px color-mix(in srgb, var(--primary-action-shadow-color) 22%, transparent);
 }
 
 .primary-action:hover {
@@ -220,7 +216,7 @@
   box-shadow:
     inset 0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent),
     inset 0 0 0 1px color-mix(in srgb, white 12%, transparent),
-    0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent);
+    0 1px 2px color-mix(in srgb, var(--primary-action-shadow-color) 18%, transparent);
 }
 
 .primary-action[data-popup-open] {
@@ -232,7 +228,7 @@
   box-shadow:
     inset 0 1px 2px color-mix(in srgb, var(--foreground) 14%, transparent),
     inset 0 0 0 1px color-mix(in srgb, white 12%, transparent),
-    0 1px 2px color-mix(in srgb, var(--foreground) 18%, transparent);
+    0 1px 2px color-mix(in srgb, var(--primary-action-shadow-color) 18%, transparent);
 }
 
 [data-slot="card"] {
@@ -293,4 +289,93 @@
       transparent 72%
     );
   filter: blur(64px) saturate(108%);
+}
+
+.dashboard-atmosphere {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: min(46rem, 70svh);
+  background:
+    radial-gradient(
+      ellipse 52% 60% at -4% 20%,
+      color-mix(in srgb, var(--brand) 13%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 48% 58% at 78% 6%,
+      color-mix(in srgb, var(--palette-blue) 8%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 42% 50% at 52% 34%,
+      color-mix(in srgb, var(--chart-4) 9%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 34% 42% at 98% 58%,
+      color-mix(in srgb, var(--brand) 4%, transparent),
+      transparent 76%
+    );
+  mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 100%);
+  pointer-events: none;
+}
+
+.dark .dashboard-atmosphere {
+  background:
+    radial-gradient(
+      ellipse 52% 60% at -4% 20%,
+      color-mix(in srgb, var(--brand) 8%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 48% 58% at 78% 6%,
+      color-mix(in srgb, var(--info) 7%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 42% 50% at 52% 34%,
+      color-mix(in srgb, var(--chart-4) 5%, transparent),
+      transparent 74%
+    );
+}
+
+.app-navbar::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    var(--primary) 22%,
+    color-mix(in srgb, var(--primary) 48%, transparent) 54%,
+    transparent 82%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+[data-slot="table-row"] > [data-slot="table-cell"]:first-child {
+  border-left: 3px solid transparent;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+[data-slot="table-row"]:hover {
+  background-color: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+[data-slot="table-row"]:hover > [data-slot="table-cell"]:first-child,
+[data-slot="table-row"][data-state="selected"] > [data-slot="table-cell"]:first-child,
+[data-slot="table-row"]:has([aria-expanded="true"]) > [data-slot="table-cell"]:first-child {
+  border-left-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="table-row"] > [data-slot="table-cell"]:first-child {
+    transition: none;
+  }
 }

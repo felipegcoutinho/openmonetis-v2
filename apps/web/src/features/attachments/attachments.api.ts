@@ -6,11 +6,7 @@ import type {
   PaginatedAttachmentsOutput,
   PrepareAttachmentInput,
 } from "@openmonetis/validators/attachments";
-import { requestApi } from "@/lib/api-client";
-
-async function request<T>(path: string, init?: RequestInit) {
-  return requestApi<T>(path, init, { useResponseMessage: true });
-}
+import { requestApiWithResponseMessage as request } from "@/lib/api-client";
 
 export function getAttachments(query: ListAttachmentsQuery) {
   const params = new URLSearchParams({

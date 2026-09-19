@@ -66,7 +66,7 @@ export function FinancialSummaryHeader({
               {identity}
               <div className="min-w-0">
                 <p className="text-current/70 text-sm">{eyebrow}</p>
-                <h2 className="truncate font-heading text-2xl font-normal">{title}</h2>
+                <h2 className="truncate font-heading text-2xl font-medium">{title}</h2>
                 <div className="mt-1 flex items-center gap-2 text-current/70 text-xs">
                   {subtitle}
                 </div>

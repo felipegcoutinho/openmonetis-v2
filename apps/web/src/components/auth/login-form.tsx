@@ -29,13 +29,24 @@ export function LoginForm() {
         return;
       }
 
-      const result = await authClient.signIn.email({
-        ...input.data,
-        callbackURL: "/dashboard",
-      });
+      const result = await authClient.signIn
+        .email({
+          ...input.data,
+          callbackURL: "/dashboard",
+        })
+        .catch(() => null);
+      if (!result) {
+        setError("Não foi possível conectar. Verifique sua conexão e tente novamente.");
+        return;
+      }
 
       if (result.error) {
-        const message = "E-mail ou senha inválidos.";
+        const message =
+          result.error.status === 429
+            ? "Muitas tentativas. Aguarde um pouco e tente novamente."
+            : result.error.status >= 500
+              ? "O serviço está indisponível. Tente novamente em instantes."
+              : "E-mail ou senha inválidos.";
         setError(message);
         toast.error("Não foi possível entrar.", { description: message });
         return;
@@ -53,7 +64,7 @@ export function LoginForm() {
     try {
       const result = await authClient.signIn.passkey();
       if (result.error) {
-        const message = "Não foi possível entrar com a passkey. Tente novamente.";
+        const message = "Não foi possível entrar com a chave de acesso. Tente novamente.";
         setError(message);
         toast.error(message);
         return;
@@ -62,7 +73,7 @@ export function LoginForm() {
       toast.success("Acesso realizado");
       await navigate({ to: "/dashboard" });
     } catch {
-      const message = "A confirmação da passkey foi cancelada ou não pôde ser concluída.";
+      const message = "A confirmação da chave de acesso foi cancelada ou não pôde ser concluída.";
       setError(message);
       toast.error(message);
     } finally {
@@ -174,6 +185,13 @@ export function LoginForm() {
           {error}
         </p>
       ) : null}
+      <details className="text-sm">
+        <summary className="cursor-pointer text-muted-foreground">Não consegue acessar?</summary>
+        <p className="mt-2 text-muted-foreground">
+          Tente o Google ou uma chave de acesso já vinculados à sua conta. Se você usa somente
+          senha, contate quem administra esta instalação para recuperar o acesso.
+        </p>
+      </details>
       <div className="relative flex items-center py-1" aria-hidden="true">
         <div className="grow border-t border-border" />
         <span className="px-3 text-muted-foreground text-xs uppercase">ou</span>
@@ -198,7 +216,7 @@ export function LoginForm() {
               variant="outline"
             >
               <Fingerprint aria-hidden="true" className="size-4" />
-              {isPasskeySubmitting ? "Confirmando..." : "Entrar com Passkey"}
+              {isPasskeySubmitting ? "Confirmando..." : "Entrar com chave de acesso"}
             </Button>
           )}
         </form.Subscribe>

@@ -179,6 +179,7 @@ const personSettlementsRoute = createPersonSettlementsRoute(
 );
 const externalExpensesService = createExternalExpensesService(externalExpensesRepository, {
   transactionCreator: transactionsService,
+  buildEstablishmentLogoUrl: logoDevGateway.buildLogoUrl,
 });
 const externalExpensesRoute = createExternalExpensesRoute(externalExpensesService);
 const recurringExpensesRoute = createRecurringExpensesRoute(

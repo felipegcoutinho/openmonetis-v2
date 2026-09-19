@@ -27,19 +27,19 @@ export type PersonSettlementRecord = {
   createdAt: Date;
 };
 
-export type PersonBalanceEntryRecord = {
+type PersonBalanceEntryRecord = {
   kind: "expense" | "refund";
   amount: string;
 };
 
-export type PersonRecord = {
+type PersonRecord = {
   id: string;
   name: string;
   role: "admin" | "external";
   status: "active" | "inactive";
 };
 
-export type PersonSettlementSummaryPersonRecord = PersonRecord & {
+type PersonSettlementSummaryPersonRecord = PersonRecord & {
   avatarUrl: string | null;
 };
 

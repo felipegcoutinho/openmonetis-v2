@@ -6,6 +6,8 @@ import {
 import type { CardOutput } from "@openmonetis/validators/cards";
 import { getLogoLabel } from "@/lib/logo-catalog";
 
+export { formatCurrency, parseCurrencyInput } from "@/lib/money-presentation";
+
 export const cardBrandLabels: Record<CardOutput["brand"], string> = {
   visa: "Visa",
   mastercard: "Mastercard",
@@ -21,19 +23,6 @@ export const cardBrandOptions = Object.entries(cardBrandLabels).map(([value, lab
 }));
 
 export const daysOfMonth = Array.from({ length: 31 }, (_, index) => index + 1);
-
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-export function parseCurrencyInput(value: string) {
-  const compactValue = value.replace(/[^\d,.-]/g, "");
-  const normalized = compactValue.includes(",")
-    ? compactValue.replace(/\./g, "").replace(",", ".")
-    : compactValue;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
 
 export function getCardLogoDisplayName(logo?: string | null) {
   return getLogoLabel(logo);

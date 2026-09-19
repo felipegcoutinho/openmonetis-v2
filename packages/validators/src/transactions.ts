@@ -326,7 +326,8 @@ export const ListTransactionsQuerySchema = z
     type: z.enum(transactionTypes).optional(),
     condition: z.enum(transactionConditions).optional(),
     paymentMethod: z.enum(paymentMethods).optional(),
-    settlement: z.enum(["paid", "unpaid"]).optional(),
+    settlement: z.enum(["paid", "unpaid", "invoice"]).optional(),
+    sort: z.enum(["recent", "oldest", "dueDate", "amount"]).optional(),
     personIds: csvUuidSchema,
     categoryIds: csvUuidSchema,
     accountIds: csvUuidSchema,
@@ -381,6 +382,7 @@ export const TransactionActionQuerySchema =
 export const BulkTransactionsInputSchema = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
 export const SettleTransactionsInputSchema = BulkTransactionsInputSchema.extend({
   isSettled: z.boolean(),
+  settledDate: dateSchema.optional(),
 });
 export const RecurringRuleActionInputSchema = z.object({
   status: z.enum(["active", "paused", "cancelled"]),
@@ -389,6 +391,7 @@ export const SettleRecurringOccurrenceInputSchema = z.object({
   recurringRuleId: z.string().uuid(),
   purchaseDate: dateSchema,
   isSettled: z.boolean(),
+  settledDate: dateSchema.optional(),
 });
 
 export const PreviewTransactionImportInputSchema = z

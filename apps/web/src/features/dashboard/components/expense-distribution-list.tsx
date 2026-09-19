@@ -32,7 +32,7 @@ export function ExpenseDistributionList({ items }: { items: ExpenseDistributionL
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <Link
-                  className="group flex items-center gap-1 font-medium text-sm outline-none hover:underline focus-visible:underline"
+                  className="group flex items-center gap-1 font-medium text-sm outline-none transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 motion-reduce:transition-none"
                   search={item.search}
                   to="/transactions"
                 >

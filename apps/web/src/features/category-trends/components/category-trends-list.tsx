@@ -44,38 +44,41 @@ function CategorySection({
 }) {
   if (!categories.length) return null;
 
+  const tableMinWidth = 232 + periods.length * 110 + 116 + 128;
+
   return (
-    <section className="grid gap-3">
+    <section className="grid min-w-0 gap-3">
       <h2 className="font-semibold text-base">{type === "expense" ? "Despesas" : "Receitas"}</h2>
-      <Card className="hidden overflow-hidden py-0 md:block [&_[data-slot=table-container]]:overflow-x-hidden">
-        <Table className="table-fixed">
+      <Card className="hidden min-w-0 overflow-hidden py-0 xl:block">
+        <Table className="table-fixed" style={{ minWidth: tableMinWidth }}>
           <colgroup>
-            <col style={{ width: "18%" }} />
+            <col style={{ width: 232 }} />
             {periods.map((period) => (
-              <col key={period.period} style={{ width: `${62 / periods.length}%` }} />
+              <col key={period.period} style={{ width: 110 }} />
             ))}
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "10%" }} />
+            <col style={{ width: 116 }} />
+            <col style={{ width: 128 }} />
           </colgroup>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-10 bg-card px-4">Categoria</TableHead>
+              <TableHead className="bg-card px-5">Categoria</TableHead>
               {periods.map((period) => (
-                <TableHead
-                  className="overflow-hidden text-ellipsis px-1 text-right"
-                  key={period.period}
-                >
+                <TableHead className="overflow-hidden px-3 text-right text-xs" key={period.period}>
                   {formatTrendPeriod(period.period, true)}
                 </TableHead>
               ))}
-              <TableHead className="overflow-hidden px-1 text-right">Média</TableHead>
-              <TableHead className="overflow-hidden pr-4 text-right">Total</TableHead>
+              <TableHead className="overflow-hidden border-l bg-muted/20 px-4 text-right text-xs">
+                Média
+              </TableHead>
+              <TableHead className="overflow-hidden bg-muted/20 px-4 text-right text-xs">
+                Total
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {categories.map((category) => (
               <TableRow key={category.categoryId}>
-                <TableCell className="sticky left-0 z-10 overflow-hidden bg-card px-4 shadow-[1px_0_0_var(--border)]">
+                <TableCell className="overflow-hidden bg-card px-5 py-3">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
                       <CategoryIcon className="size-4" name={category.icon} />
@@ -84,14 +87,14 @@ function CategorySection({
                   </div>
                 </TableCell>
                 {category.values.map((value, index) => (
-                  <TableCell className="overflow-hidden px-1 text-right" key={value.period}>
+                  <TableCell className="overflow-hidden px-3 py-3 text-right" key={value.period}>
                     <TrendValueCell showChange={index > 0} type={category.type} value={value} />
                   </TableCell>
                 ))}
-                <TableCell className="overflow-hidden px-1 text-right">
+                <TableCell className="overflow-hidden border-l bg-muted/10 px-4 py-3 text-right">
                   <MoneyValue amount={category.averageAmount} className="font-medium text-info" />
                 </TableCell>
-                <TableCell className="overflow-hidden pr-4 text-right">
+                <TableCell className="overflow-hidden bg-muted/10 px-4 py-3 text-right">
                   <MoneyValue amount={category.totalAmount} className="font-semibold" />
                 </TableCell>
               </TableRow>
@@ -99,9 +102,9 @@ function CategorySection({
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell className="sticky left-0 bg-muted px-4 font-medium">Total</TableCell>
+              <TableCell className="bg-muted px-5 py-3 font-medium">Total</TableCell>
               {periods.map((period) => (
-                <TableCell className="overflow-hidden px-1 text-right" key={period.period}>
+                <TableCell className="overflow-hidden px-3 py-3 text-right" key={period.period}>
                   <MoneyValue
                     amount={type === "expense" ? period.expenseAmount : period.incomeAmount}
                     className="font-medium"
@@ -115,7 +118,7 @@ function CategorySection({
         </Table>
       </Card>
 
-      <div className="grid gap-3 md:hidden">
+      <div className="grid gap-3 xl:hidden">
         {categories.map((category) => (
           <Card className="gap-4" key={category.categoryId}>
             <CardHeader className="flex-row items-start justify-between gap-3">
@@ -132,20 +135,18 @@ function CategorySection({
               </div>
               <MoneyValue amount={category.totalAmount} className="shrink-0 font-semibold" />
             </CardHeader>
-            <CardContent className="-mx-1 overflow-x-auto px-1 pb-1">
-              <div className="flex min-w-max gap-2">
-                {category.values.map((value, index) => (
-                  <div
-                    className="grid min-w-36 gap-2 rounded-lg border bg-muted/30 p-3"
-                    key={value.period}
-                  >
-                    <span className="text-muted-foreground text-xs">
-                      {formatTrendPeriod(value.period, true)}
-                    </span>
-                    <TrendValueCell showChange={index > 0} type={category.type} value={value} />
-                  </div>
-                ))}
-              </div>
+            <CardContent className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {category.values.map((value, index) => (
+                <div
+                  className="grid min-w-0 gap-2 rounded-lg border bg-muted/30 p-3"
+                  key={value.period}
+                >
+                  <span className="text-muted-foreground text-xs">
+                    {formatTrendPeriod(value.period, true)}
+                  </span>
+                  <TrendValueCell showChange={index > 0} type={category.type} value={value} />
+                </div>
+              ))}
             </CardContent>
           </Card>
         ))}
@@ -175,16 +176,16 @@ function TrendValueCell({
 
   return (
     <Tooltip>
-      <TooltipTrigger className="ml-auto grid w-fit justify-items-end gap-0.5">
+      <TooltipTrigger className="ml-auto grid w-full justify-items-end gap-0.5">
         <MoneyValue amount={value.totalAmount} className="font-medium" />
         <span
           className={cn(
-            "inline-flex items-center gap-0.5 text-muted-foreground text-xs",
+            "inline-flex max-w-full items-start justify-end gap-0.5 whitespace-normal text-right text-muted-foreground text-xs",
             favorable && "text-success",
             unfavorable && "text-destructive",
           )}
         >
-          <ChangeIcon aria-hidden="true" className="size-3" />
+          <ChangeIcon aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
           {formatTrendPercentage(value.changePercentage, value.changeKind)}
           {value.recurringAmount > 0 ? (
             <Repeat2 aria-label="Inclui recorrência" className="ml-1 size-3" />

@@ -146,7 +146,10 @@ export function InboxRuleForm({
         <form.Field name="priority">
           {(field) => (
             <div className="grid gap-1.5">
-              <Label htmlFor={`${id}-priority`}>Prioridade</Label>
+              <Label htmlFor={`${id}-priority`}>Ordem de aplicação</Label>
+              <p className="text-muted-foreground text-xs">
+                Números menores são aplicados primeiro.
+              </p>
               <Input
                 id={`${id}-priority`}
                 inputMode="numeric"

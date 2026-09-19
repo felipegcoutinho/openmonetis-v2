@@ -6,7 +6,7 @@ import type {
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { BarChart3, Copy, Plus, RefreshCw, Tags } from "lucide-react";
+import { Copy, Plus, RefreshCw, Tags, Target } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -112,7 +112,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
               { label: "Orçamentos" },
             ]}
             description="Defina limites mensais por categoria e acompanhe despesas realizadas e recorrências previstas."
-            icon={<BarChart3 aria-hidden="true" className="size-5" />}
+            icon={<Target aria-hidden="true" className="size-5" />}
             title="Orçamentos"
           />
 
@@ -150,7 +150,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
 
           {!loading && !failed && overview ? (
             <>
-              <BudgetsSummary overview={overview} />
+              {overview.items.length ? <BudgetsSummary overview={overview} /> : null}
               <section aria-labelledby="budget-list-title" className="grid gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -230,7 +230,7 @@ function BudgetsEmptyState({
       <div className="max-w-md">
         <span className="mx-auto grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
           {hasExpenseCategories ? (
-            <BarChart3 aria-hidden="true" className="size-5" />
+            <Target aria-hidden="true" className="size-5" />
           ) : (
             <Tags aria-hidden="true" className="size-5" />
           )}

@@ -25,7 +25,7 @@ type InboxDateGroup = {
 
 export const inboxStatusLabels = {
   pending: "Pendentes",
-  processed: "Processados",
+  processed: "Confirmados",
   discarded: "Descartados",
 } as const;
 

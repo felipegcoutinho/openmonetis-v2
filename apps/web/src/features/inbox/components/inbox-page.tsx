@@ -6,11 +6,12 @@ import type { InboxRuleSuggestionOutput } from "@openmonetis/validators/inbox-ru
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
+  ArchiveX,
   ArrowLeft,
   ArrowRight,
   CalendarDays,
-  Check,
   CircleCheck,
+  ClipboardPen,
   CreditCard,
   Eye,
   Inbox,
@@ -19,7 +20,6 @@ import {
   RotateCcw,
   Trash2,
   Workflow,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -260,7 +260,7 @@ export function InboxPage({
                   type="button"
                   variant="outline"
                 >
-                  <Trash2 aria-hidden="true" /> Limpar tudo
+                  <Trash2 aria-hidden="true" /> Excluir todo este histórico
                 </Button>
               ) : null}
             </div>
@@ -364,8 +364,8 @@ export function InboxPage({
           cards={cardsQuery.data}
           categories={categoriesQuery.data}
           createDefaults={processDefaults}
-          createDescription={describeInboxRuleSuggestion(processSuggestion)}
-          createTitle="Confirmar lançamento"
+          createDescription={`${describeInboxRuleSuggestion(processSuggestion) ?? "Confira os dados capturados e complete o que faltar."} Ao confirmar, será criado um lançamento e a captura sairá das pendentes.`}
+          createTitle="Revisar captura"
           defaultType="expense"
           key={processItem?.id ?? "closed"}
           onCreate={async (data) => {
@@ -387,7 +387,7 @@ export function InboxPage({
           open={Boolean(processItem)}
           people={peopleQuery.data}
           showTypeSelector
-          submitLabel="Confirmar"
+          submitLabel="Confirmar e criar lançamento"
           transaction={null}
         />
       ) : null}
@@ -474,7 +474,7 @@ function InboxPendingSummary({
         </span>
       }
       metrics={[]}
-      primaryLabel="Total pendente"
+      primaryLabel="Valor das capturas a revisar"
       primaryValue={
         isLoading ? (
           <Skeleton className="h-12 w-52 bg-current/15 before:via-current/20" />
@@ -736,12 +736,12 @@ function InboxItemCard({
                       />
                     }
                   >
-                    <X aria-hidden="true" />
+                    <ArchiveX aria-hidden="true" />
                   </TooltipTrigger>
                   <TooltipContent>Descartar</TooltipContent>
                 </Tooltip>
                 <Button disabled={processing} onClick={onProcess} size="sm">
-                  <Check aria-hidden="true" /> Confirmar
+                  <ClipboardPen aria-hidden="true" /> Revisar
                 </Button>
               </>
             ) : item.status === "discarded" ? (
@@ -817,17 +817,23 @@ function InboxEmpty({ filtered, status }: { filtered: boolean; status: InboxItem
     return (
       <Card>
         <CardContent className="grid place-items-center py-16 text-center">
-          <p className="font-medium">Nenhum item deste app</p>
+          <p className="font-medium">Nenhuma captura com estes filtros</p>
           <p className="mt-1 text-muted-foreground text-sm">
-            Selecione “Todos os apps” para remover o filtro.
+            Remova os filtros de aplicativo ou data para ampliar a busca.
           </p>
         </CardContent>
       </Card>
     );
   }
   const copy = {
-    pending: ["Tudo revisado", "Novas capturas do Companion aparecerão aqui."],
-    processed: ["Nenhum item processado", "Itens confirmados ficam disponíveis neste histórico."],
+    pending: [
+      "Nada para revisar",
+      "Conecte o Companion em Ajustes para receber capturas. Se já está conectado, suas próximas capturas aparecerão aqui.",
+    ],
+    processed: [
+      "Nenhuma captura confirmada",
+      "Itens confirmados ficam disponíveis neste histórico.",
+    ],
     discarded: ["Nenhum item descartado", "Capturas ignoradas podem ser restauradas por aqui."],
   }[status];
   return (

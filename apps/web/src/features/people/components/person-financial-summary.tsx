@@ -1,8 +1,19 @@
 import type { PersonFinancialSummaryOutput } from "@openmonetis/validators/people";
-import { CreditCard, Landmark, TrendingUp } from "lucide-react";
+import {
+  Banknote,
+  Barcode,
+  ChartNoAxesCombined,
+  CreditCard,
+  Landmark,
+  QrCode,
+  ReceiptText,
+  Ticket,
+} from "lucide-react";
+import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type ChartConfig,
@@ -65,11 +76,12 @@ export function PersonFinancialSummary({ data, isError, isLoading }: PersonFinan
 }
 
 function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
+  const [showAllMethods, setShowAllMethods] = useState(false);
   return (
     <Card>
       <CardHeader className="gap-1">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Landmark aria-hidden="true" className="size-4 text-brand-strong" />
+          <ReceiptText aria-hidden="true" className="size-4 text-brand-strong" />
           Totais do mês
         </CardTitle>
         <p className="text-muted-foreground text-xs">{formatPeriod(data.period)}</p>
@@ -83,31 +95,41 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {data.paymentMethods.map((item) => (
-            <div
-              className="grid min-w-0 gap-2 overflow-hidden rounded-lg border bg-muted/20 p-3"
-              key={item.paymentMethod}
-            >
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                <span className="flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
-                  <CreditCard aria-hidden="true" className="size-3.5 shrink-0" />
-                  <span className="block truncate">
-                    {personPaymentMethodLabels[item.paymentMethod]}
+          {data.paymentMethods
+            .filter((item) => showAllMethods || item.amount !== 0)
+            .map((item) => (
+              <div
+                className="grid min-w-0 gap-2 overflow-hidden rounded-lg border bg-muted/20 p-3"
+                key={item.paymentMethod}
+              >
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
+                    <PaymentMethodIcon method={item.paymentMethod} />
+                    <span className="block truncate">
+                      {personPaymentMethodLabels[item.paymentMethod]}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-muted-foreground text-xs">{item.percentage}%</span>
+                  <span className="shrink-0 text-muted-foreground text-xs">{item.percentage}%</span>
+                </div>
+                <p className="font-semibold text-sm">
+                  <MoneyValue amount={item.amount} />
+                </p>
+                <Progress
+                  aria-label={`${item.percentage}% das despesas`}
+                  className="min-w-0 max-w-full"
+                  value={item.percentage}
+                />
               </div>
-              <p className="font-semibold text-sm">
-                <MoneyValue amount={item.amount} />
-              </p>
-              <Progress
-                aria-label={`${item.percentage}% das despesas`}
-                className="min-w-0 max-w-full"
-                value={item.percentage}
-              />
-            </div>
-          ))}
+            ))}
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit"
+          onClick={() => setShowAllMethods(!showAllMethods)}
+        >
+          {showAllMethods ? "Mostrar apenas meios com despesas" : "Ver todos os meios de pagamento"}
+        </Button>
       </CardContent>
     </Card>
   );
@@ -120,7 +142,7 @@ function HistoryCard({ data }: { data: PersonFinancialSummaryOutput }) {
     <Card className="h-full">
       <CardHeader className="gap-1">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <TrendingUp aria-hidden="true" className="size-4 text-brand-strong" />
+          <ChartNoAxesCombined aria-hidden="true" className="size-4 text-brand-strong" />
           Evolução (últimos 6 meses)
         </CardTitle>
         <p className="text-muted-foreground text-xs">Despesas mensais desta pessoa</p>
@@ -177,4 +199,20 @@ function HistoryCard({ data }: { data: PersonFinancialSummaryOutput }) {
       </CardContent>
     </Card>
   );
+}
+
+function PaymentMethodIcon({ method }: { method: string }) {
+  const Icon =
+    method === "pix"
+      ? QrCode
+      : method === "boleto"
+        ? Barcode
+        : method === "cash"
+          ? Banknote
+          : method === "benefits"
+            ? Ticket
+            : method === "bank_transfer"
+              ? Landmark
+              : CreditCard;
+  return <Icon aria-hidden="true" className="size-3.5 shrink-0" />;
 }

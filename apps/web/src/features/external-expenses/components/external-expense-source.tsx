@@ -14,17 +14,20 @@ export function ExternalExpenseSource({
 }) {
   if (!sourceLabel) return null;
   const logoUrl = sourceLogoUrl ?? (sourceCardBrand ? getCardBrandAsset(sourceCardBrand) : null);
+  const label = sourceLabel.replace(/^Fatura\s+/i, "");
 
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex items-center gap-2">
       {logoUrl ? (
-        <span className="grid size-4 shrink-0 place-items-center overflow-hidden rounded-sm bg-background">
-          <Image alt="" height={16} src={logoUrl} width={16} />
+        <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-full bg-background">
+          <Image alt="" height={28} src={logoUrl} width={28} />
         </span>
       ) : (
-        <CreditCard aria-hidden="true" className="size-3.5 shrink-0" />
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted">
+          <CreditCard aria-hidden="true" className="size-4" />
+        </span>
       )}
-      <span>{sourceLabel}</span>
+      <span>{label}</span>
     </span>
   );
 }

@@ -15,7 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { formatCurrency, parseCurrencyInput } from "../accounts.presentation";
+import { formatAccountPeriod, formatCurrency, parseCurrencyInput } from "../accounts.presentation";
+import { AccountBalanceAdjustmentPreview } from "./account-balance-adjustment-preview";
 
 type Props = {
   account: AccountOutput;
@@ -96,7 +97,8 @@ function AdjustAccountBalanceForm({
       <div className="rounded-md border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{account.name}</p>
         <p className="text-muted-foreground text-xs">
-          Saldo atual: {formatCurrency(account.summary.balance)}
+          Saldo acumulado até {formatAccountPeriod(period)}:{" "}
+          {formatCurrency(account.summary.balance)}
         </p>
       </div>
       <form.Field name="balance">
@@ -129,6 +131,14 @@ function AdjustAccountBalanceForm({
           </div>
         )}
       </form.Field>
+      <form.Subscribe selector={(state) => state.values}>
+        {(values) => (
+          <AccountBalanceAdjustmentPreview
+            accountId={account.id}
+            input={{ balance: parseCurrencyInput(values.balance), date: values.date }}
+          />
+        )}
+      </form.Subscribe>
       {error ? (
         <p className="text-destructive text-sm" role="alert">
           {error}

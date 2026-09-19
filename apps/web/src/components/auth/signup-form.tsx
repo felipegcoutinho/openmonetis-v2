@@ -4,7 +4,7 @@ import {
   SignupInputSchema,
 } from "@openmonetis/validators/auth";
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -179,9 +179,13 @@ export function SignupForm() {
         {(field) => (
           <div className="grid gap-2">
             <Label htmlFor={`${id}-password`}>Senha</Label>
+            <p id={`${id}-password-help`} className="text-muted-foreground text-xs">
+              Use de 8 a 128 caracteres.
+            </p>
             <PasswordInput
               aria-invalid={field.state.meta.errors.length > 0}
               autoComplete="new-password"
+              aria-describedby={`${id}-password-help`}
               id={`${id}-password`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -212,6 +216,7 @@ export function SignupForm() {
             <PasswordInput
               aria-invalid={field.state.meta.errors.length > 0}
               autoComplete="new-password"
+              aria-describedby={`${id}-password-help`}
               id={`${id}-password-confirmation`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -232,9 +237,14 @@ export function SignupForm() {
         )}
       </form.Subscribe>
       {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
+        <div className="grid gap-1 text-destructive text-sm" role="alert">
+          <p>{error}</p>
+          {error.startsWith("Este e-mail já") ? (
+            <Link className="font-medium underline" to="/">
+              Entrar na minha conta
+            </Link>
+          ) : null}
+        </div>
       ) : null}
       <div className="relative flex items-center py-1" aria-hidden="true">
         <div className="grow border-t border-border" />

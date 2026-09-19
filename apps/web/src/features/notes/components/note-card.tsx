@@ -3,9 +3,8 @@ import {
   Archive,
   CalendarCheck2,
   CalendarDays,
-  CheckSquare2,
-  Eye,
   FileText,
+  ListChecks,
   Pencil,
   RotateCcw,
   Trash2,
@@ -51,13 +50,13 @@ export function NoteCard({
   const hiddenItemCount = note.items.length - visibleItems.length;
 
   return (
-    <Card className={cn("min-h-72 gap-5", note.isArchived && "opacity-70")}>
-      <CardHeader className="gap-4">
+    <Card className={cn("gap-4", note.isArchived && "opacity-70")}>
+      <CardHeader className="gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
               {isChecklist ? (
-                <CheckSquare2 aria-hidden="true" className="size-5" />
+                <ListChecks aria-hidden="true" className="size-5" />
               ) : isTask ? (
                 <CalendarCheck2 aria-hidden="true" className="size-5" />
               ) : (
@@ -203,14 +202,6 @@ export function NoteCard({
       </CardContent>
 
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
-        <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          onClick={() => onOpen(note)}
-          type="button"
-        >
-          <Eye aria-hidden="true" className="size-3.5" />
-          Abrir
-        </button>
         {!note.isArchived ? (
           <button
             className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"

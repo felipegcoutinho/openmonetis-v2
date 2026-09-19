@@ -4,6 +4,7 @@ import { PublicOnlyRoute } from "@/components/auth/public-only-route";
 import { OpenMonetisLogo } from "@/components/openmonetis-logo";
 
 export const Route = createFileRoute("/")({
+  head: () => ({ meta: [{ title: "Entrar · OpenMonetis" }] }),
   component: LoginPage,
 });
 
@@ -20,7 +21,9 @@ function LoginPage() {
         </Link>
         <section className="w-full max-w-md rounded-card border border-border bg-background/85 p-6 backdrop-blur-md sm:p-8">
           <h1 className="mt-3 font-heading text-4xl font-normal">Entrar</h1>
-          <p className="mt-3 text-muted-foreground text-sm">Acesse seu dashboard do OpenMonetis.</p>
+          <p className="mt-3 text-muted-foreground text-sm">
+            Acesse seu controle financeiro do OpenMonetis.
+          </p>
           <div className="mt-8">
             <LoginForm />
           </div>

@@ -74,7 +74,7 @@ function initialValues(note?: NoteOutput | null): NoteFormValues {
 function FieldError({ errors }: { errors: unknown[] }) {
   const message = errors.find((error): error is string => typeof error === "string");
   return message ? (
-    <p aria-live="polite" className="sr-only" role="alert">
+    <p aria-live="polite" className="text-destructive text-xs" role="alert">
       {message}
     </p>
   ) : null;
@@ -225,25 +225,24 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
                         />
                         <span
                           className={cn(
-                            "flex h-full min-h-24 items-start gap-3 rounded-xl border border-border bg-background p-3.5 text-left transition-[border-color,background-color,box-shadow] group-hover:border-brand-strong/40 group-hover:bg-brand/5 peer-focus-visible:outline-none peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 sm:min-h-32 sm:flex-col sm:gap-2.5",
+                            "flex h-full items-start rounded-xl border border-border bg-background p-3 text-left transition-[border-color,background-color,box-shadow] group-hover:border-brand-strong/40 group-hover:bg-brand/5 peer-focus-visible:outline-none peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
                             selected &&
                               "border-brand-strong/50 bg-brand/10 ring-1 ring-brand-strong/20 group-hover:border-brand-strong/60 group-hover:bg-brand/10",
                           )}
                         >
-                          <span className="flex min-w-0 flex-1 items-start gap-3 sm:block sm:w-full">
-                            <span
-                              className={cn(
-                                "grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors",
-                                selected && "bg-brand text-brand-foreground",
-                              )}
-                            >
-                              <Icon aria-hidden="true" className="size-4" />
+                          <span className="grid min-w-0 flex-1 gap-1">
+                            <span className="flex items-center gap-1.5 font-semibold text-sm">
+                              <Icon
+                                aria-hidden="true"
+                                className={cn(
+                                  "size-3.5 shrink-0 text-muted-foreground transition-colors",
+                                  selected && "text-brand-strong",
+                                )}
+                              />
+                              <span>{option.label}</span>
                             </span>
-                            <span className="grid min-w-0 gap-1 sm:mt-2.5">
-                              <span className="font-semibold text-sm">{option.label}</span>
-                              <span className="text-muted-foreground text-xs leading-relaxed">
-                                {option.description}
-                              </span>
+                            <span className="text-muted-foreground text-xs leading-relaxed">
+                              {option.description}
                             </span>
                           </span>
                         </span>

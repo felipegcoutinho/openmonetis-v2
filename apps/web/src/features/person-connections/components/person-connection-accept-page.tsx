@@ -122,8 +122,8 @@ export function PersonConnectionAcceptPage() {
             }
             variant="outline"
           >
-            {result ? <CheckCircle2 aria-hidden="true" /> : <Clock3 aria-hidden="true" />}
-            {result ? "Aguardando confirmação" : "Revisão necessária"}
+            <Clock3 aria-hidden="true" />
+            {result ? "Aguardando confirmação" : token ? "Revisão necessária" : "Link incompleto"}
           </Badge>
         </div>
 

@@ -67,7 +67,15 @@ export function BudgetsWidget({ period }: { period: string }) {
                 Ver orçamentos <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             </div>
-          ) : undefined
+          ) : (
+            <Link
+              className={dashboardWidgetFooterNavigationLinkClassName}
+              search={{ period }}
+              to="/budgets"
+            >
+              Criar orçamento <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          )
         }
         icon={<Target aria-hidden="true" />}
         title="Progresso de orçamentos"
@@ -163,7 +171,7 @@ function BudgetProgressRow({
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-3">
             <Link
-              className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
               params={{ categoryId: budget.categoryId }}
               search={{ period }}
               to="/categories/$categoryId"

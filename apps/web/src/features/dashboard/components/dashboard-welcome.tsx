@@ -7,7 +7,7 @@ export function DashboardWelcome({ name }: { name?: string | null }) {
   return (
     <header className="space-y-2 pt-1">
       {displayName ? (
-        <h1 className="font-heading text-2xl font-normal tracking-tight sm:text-3xl">
+        <h1 className="font-heading text-2xl font-medium tracking-tight sm:text-3xl">
           <span className="text-muted-foreground" suppressHydrationWarning>
             {getDashboardGreeting()},
           </span>{" "}
@@ -16,7 +16,7 @@ export function DashboardWelcome({ name }: { name?: string | null }) {
       ) : (
         <div className="flex items-center gap-2">
           <h1
-            className="font-heading text-2xl font-normal tracking-tight text-muted-foreground sm:text-3xl"
+            className="font-heading text-2xl font-medium tracking-tight text-muted-foreground sm:text-3xl"
             suppressHydrationWarning
           >
             {getDashboardGreeting()},

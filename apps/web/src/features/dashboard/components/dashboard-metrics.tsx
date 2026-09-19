@@ -44,7 +44,7 @@ const cards: Array<{
     key: "income",
     label: "Suas receitas",
     description: "Sua parte nas entradas do mês",
-    help: "Soma das receitas atribuídas à pessoa principal em contas consideradas no saldo.",
+    help: "Soma das receitas atribuídas a você em contas consideradas no saldo.",
     icon: ArrowDownLeft,
     iconClassName: "text-success",
     invertTrend: false,
@@ -54,7 +54,7 @@ const cards: Array<{
     key: "expenses",
     label: "Suas despesas",
     description: "Sua parte nas despesas do mês",
-    help: "Soma das despesas atribuídas à pessoa principal em contas consideradas no saldo.",
+    help: "Soma das despesas atribuídas a você em contas consideradas no saldo.",
     icon: ArrowUpRight,
     iconClassName: "text-destructive",
     invertTrend: true,
@@ -64,7 +64,7 @@ const cards: Array<{
     key: "balance",
     label: "Resultado do mês",
     description: "Suas receitas menos suas despesas",
-    help: "Receitas menos despesas atribuídas à pessoa principal no período de competência.",
+    help: "Receitas menos despesas atribuídas a você no mês selecionado.",
     icon: Scale,
     iconClassName: "text-warning",
     invertTrend: false,
@@ -119,7 +119,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                   {card.transactionType && primarySlug ? (
                     <Link
                       aria-label={`Ver lançamentos de ${card.label.toLocaleLowerCase("pt-BR")}`}
-                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="group/metric-link rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       search={{
                         period: metrics.period,
                         type: card.transactionType,
@@ -127,7 +127,10 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                       }}
                       to="/transactions"
                     >
-                      <ArrowRight aria-hidden="true" className="size-4" />
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 transition-transform duration-200 ease-out group-hover/metric-link:translate-x-1 group-focus-visible/metric-link:translate-x-1 motion-reduce:transition-none"
+                      />
                     </Link>
                   ) : null}
                 </div>
@@ -170,7 +173,9 @@ function MetricComparison({
 
   if (!hasPreviousData) {
     return (
-      <div className="flex min-h-5 items-center text-muted-foreground text-xs">Sem histórico</div>
+      <div className="flex min-h-5 items-center text-muted-foreground text-xs">
+        Sem dados do mês anterior
+      </div>
     );
   }
 

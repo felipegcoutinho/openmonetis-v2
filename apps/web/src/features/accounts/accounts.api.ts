@@ -1,5 +1,6 @@
 import type {
   AccountBalanceAdjustmentOutput,
+  AccountBalanceAdjustmentPreview,
   AccountOutput,
   AddAccountYieldInput,
   AdjustAccountBalanceInput,
@@ -65,4 +66,11 @@ export function addAccountYield(id: string, input: AddAccountYieldInput) {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export function previewAccountBalanceAdjustment(id: string, input: AdjustAccountBalanceInput) {
+  return request<AccountBalanceAdjustmentPreview>(
+    `/accounts/${encodeURIComponent(id)}/balance-adjustments/preview`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
 }

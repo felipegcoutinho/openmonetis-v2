@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { EntityLoadError } from "@/components/entity-load-error";
 import {
   FinancialSummaryAction,
   FinancialSummaryHeader,
@@ -77,7 +78,15 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
       <main className="min-h-svh bg-background">
         <Navbar />
         {cardQuery.isLoading ? <CardInvoicesLoading /> : null}
-        {cardQuery.isError ? <CardInvoicesNotFound /> : null}
+        {cardQuery.isError ? (
+          <EntityLoadError
+            error={cardQuery.error}
+            entity="o cartão"
+            onRetry={() => void cardQuery.refetch()}
+          >
+            <CardInvoicesNotFound />
+          </EntityLoadError>
+        ) : null}
         {cardQuery.data ? (
           <TransactionsContainer
             onSearchChange={onSearchChange}
@@ -202,20 +211,27 @@ function CardInvoiceSummary({
                   }
                 >
                   <RotateCcw aria-hidden="true" className="size-4" />
-                  Reabrir fatura
+                  Reabrir e desfazer todos os pagamentos
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="w-[calc(100%-2rem)]">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Reabrir esta fatura?</AlertDialogTitle>
+                    <AlertDialogTitle>Reabrir fatura?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Todos os {payments.length} pagamento{payments.length === 1 ? "" : "s"} serão
-                      desfeitos, e cada movimentação de conta vinculada será estornada. Depois
-                      disso, você poderá ajustar e pagar a fatura novamente.
+                      {payments.length === 1
+                        ? "O pagamento registrado será desfeito."
+                        : `Os ${payments.length} pagamentos registrados serão desfeitos.`}{" "}
+                      Os lançamentos correspondentes nas contas serão removidos, e os saldos no
+                      sistema serão recalculados. Depois, você poderá ajustar a fatura e registrar
+                      novos pagamentos.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogFooter className="grid-cols-1 sm:grid-cols-2">
+                    <AlertDialogCancel disabled={reopenMutation.isPending}>
+                      Cancelar
+                    </AlertDialogCancel>
                     <AlertDialogAction
+                      disabled={reopenMutation.isPending}
+                      variant="destructive"
                       onClick={async () => {
                         try {
                           await reopenMutation.mutateAsync({ cardId: card.id, period });
@@ -227,7 +243,7 @@ function CardInvoiceSummary({
                         }
                       }}
                     >
-                      Reabrir fatura
+                      {reopenMutation.isPending ? "Reabrindo…" : "Reabrir fatura"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -241,11 +257,11 @@ function CardInvoiceSummary({
                   }
                 >
                   <RotateCcw aria-hidden="true" className="size-4" />
-                  Desfazer pagamento
+                  Desfazer um pagamento
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Desfazer pagamento?</AlertDialogTitle>
+                    <AlertDialogTitle>Desfazer um pagamento?</AlertDialogTitle>
                     <AlertDialogDescription>
                       {payments.length > 1
                         ? "Selecione o pagamento que deseja desfazer. O valor será devolvido à conta e o limite usado do cartão será restaurado."
@@ -291,7 +307,7 @@ function CardInvoiceSummary({
                         }
                       }}
                     >
-                      Desfazer pagamento
+                      Desfazer um pagamento
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

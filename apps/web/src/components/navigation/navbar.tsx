@@ -40,13 +40,15 @@ import { ReleaseMenuItems } from "@/features/releases/components/release-menu-it
 import { ReleaseNotice } from "@/features/releases/components/release-notice";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { dashboardNavItem, type NavItem, type NavLinkItem, navSections } from "./nav-items";
+import {
+  dashboardNavItem,
+  isPathActive,
+  type NavItem,
+  type NavLinkItem,
+  navSections,
+} from "./nav-items";
 import { NavLink } from "./nav-link";
 import { PreviewNavigationMenu } from "./preview-navigation-menu";
-
-function isPathActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
 
 function getInitials(name?: string | null) {
   if (!name) {
@@ -58,7 +60,16 @@ function getInitials(name?: string | null) {
 }
 
 const headerIconButtonClassName =
-  "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground aria-expanded:bg-primary-foreground/10 aria-expanded:text-primary-foreground focus-visible:border-primary-foreground/40 focus-visible:ring-primary-foreground/30 dark:text-card-foreground dark:hover:bg-card-foreground/10 dark:hover:text-card-foreground dark:aria-expanded:bg-card-foreground/10 dark:aria-expanded:text-card-foreground dark:focus-visible:border-card-foreground/40 dark:focus-visible:ring-card-foreground/30";
+  "text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground focus-visible:border-primary/40 focus-visible:ring-primary/25";
+
+const desktopNavigationItemClassName =
+  "group/header-nav inline-flex h-9 items-center rounded-sm border-0 bg-transparent px-1 font-medium text-foreground text-sm tracking-tight hover:bg-transparent hover:text-foreground focus:bg-transparent focus:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40";
+
+const desktopNavigationLabelClassName =
+  "relative inline-flex pb-px after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 after:ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:after:transition-none";
+
+const desktopNavigationPopupClassName =
+  "rounded-sm bg-popover/95 shadow-xl ring-border/80 backdrop-blur-sm";
 
 const previewNavigationSections = new Set(["Finanças", "Organização"]);
 
@@ -107,21 +118,23 @@ export function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 bg-primary text-primary-foreground dark:border-b dark:bg-linear-to-b dark:from-card dark:to-background dark:text-card-foreground">
-        <div className="project-container grid h-20 grid-cols-[auto_1fr_auto] items-center gap-3 px-[clamp(1rem,3vw,2.5rem)]">
+      <header className="app-navbar fixed inset-x-0 top-0 z-50 border-b bg-background/80 text-foreground backdrop-blur-sm dark:bg-background/80 dark:text-foreground">
+        <div className="project-container grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] xl:h-17.5 xl:grid-cols-[1fr_auto_1fr]">
           <Link
-            className="flex justify-self-start items-center gap-2 text-primary-foreground dark:text-card-foreground"
+            className="flex justify-self-start items-center gap-2 text-foreground"
             to="/dashboard"
           >
-            <OpenMonetisLogo compactOnMobile onPrimary />
+            <OpenMonetisLogo compactOnMobile />
           </Link>
 
           <nav
             aria-label="Navegação principal"
-            className="hidden min-w-0 items-center justify-start pl-6 xl:flex"
+            className="hidden min-w-0 justify-self-center xl:flex"
           >
             <NavigationMenu
               className="justify-start"
+              closeDelay={50}
+              delay={30}
               onValueChange={(value) => {
                 const nextSection = String(value ?? "") || null;
                 setOpenNavigationSection(nextSection);
@@ -134,39 +147,52 @@ export function Navbar() {
               popupClassName={
                 navigationPopupVariant === "preview"
                   ? "bg-transparent shadow-none ring-0"
-                  : undefined
+                  : desktopNavigationPopupClassName
               }
             >
-              <NavigationMenuList className="justify-start gap-1">
+              <NavigationMenuList className="gap-5">
                 <NavigationMenuItem>
                   <NavLink
-                    className={cn(
-                      "inline-flex h-20 items-center gap-2 border-transparent border-b-2 bg-transparent px-3 font-medium text-sm text-primary-foreground/70 tracking-tight transition-colors hover:bg-transparent hover:text-primary-foreground focus:bg-transparent focus:text-primary-foreground dark:text-card-foreground/70 dark:hover:text-card-foreground dark:focus:text-card-foreground",
-                      location.pathname === dashboardNavItem.href &&
-                        "border-primary-foreground text-primary-foreground dark:border-primary dark:text-card-foreground",
-                    )}
+                    className={desktopNavigationItemClassName}
                     href={dashboardNavItem.href}
                     preservePeriod
                   >
-                    {dashboardNavItem.label}
+                    <span
+                      className={cn(
+                        desktopNavigationLabelClassName,
+                        location.pathname === dashboardNavItem.href &&
+                          "after:scale-x-100 after:bg-primary",
+                      )}
+                    >
+                      {dashboardNavItem.label}
+                    </span>
                   </NavLink>
                 </NavigationMenuItem>
 
                 {navSections.map((section) => {
                   const sectionActive = section.items.some(
-                    (item) => "href" in item && isPathActive(location.pathname, item.href),
+                    (item) =>
+                      "href" in item &&
+                      !item.isShortcut &&
+                      isPathActive(location.pathname, item.href),
                   );
 
                   return (
                     <NavigationMenuItem key={section.label} value={section.label}>
                       <NavigationMenuTrigger
                         className={cn(
-                          "h-20 rounded-none border-transparent border-b-2 bg-transparent! px-3 text-sm text-primary-foreground/70 tracking-tight hover:bg-transparent! hover:text-primary-foreground focus:bg-transparent! focus:text-primary-foreground data-open:bg-transparent! data-open:text-primary-foreground data-popup-open:bg-transparent! data-popup-open:text-primary-foreground dark:text-card-foreground/70 dark:hover:text-card-foreground dark:focus:text-card-foreground dark:data-open:text-card-foreground dark:data-popup-open:text-card-foreground",
-                          sectionActive &&
-                            "border-primary-foreground text-primary-foreground dark:border-primary dark:text-card-foreground",
+                          desktopNavigationItemClassName,
+                          "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-open:bg-transparent! data-open:text-foreground data-popup-open:bg-transparent! data-popup-open:text-foreground",
                         )}
                       >
-                        {section.label}
+                        <span
+                          className={cn(
+                            desktopNavigationLabelClassName,
+                            sectionActive && "after:scale-x-100 after:bg-primary",
+                          )}
+                        >
+                          {section.label}
+                        </span>
                       </NavigationMenuTrigger>
                       <NavigationMenuContent
                         className={previewNavigationSections.has(section.label) ? "p-0" : "p-2"}
@@ -181,7 +207,7 @@ export function Navbar() {
                           />
                         ) : (
                           <NavigationSectionItems
-                            className="w-80"
+                            className="w-92 max-w-[calc(100vw-2rem)]"
                             items={section.items}
                             pathname={location.pathname}
                           />
@@ -234,7 +260,7 @@ export function Navbar() {
             </Tooltip>
 
             <NotificationPanel
-              badgeClassName="bg-primary-foreground text-white ring-0 dark:bg-card-foreground dark:text-card"
+              badgeClassName="bg-primary text-primary-foreground ring-0"
               enabled={Boolean(user)}
               triggerClassName={headerIconButtonClassName}
             />
@@ -260,7 +286,7 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Abrir menu do usuário"
-                className="appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:ring-3 focus-visible:ring-primary-foreground/30 dark:focus-visible:ring-card-foreground/30"
+                className="appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
               >
                 <Avatar className="overflow-hidden" showBorder={false} size="lg">
                   <AvatarImage
@@ -268,7 +294,7 @@ export function Navbar() {
                     className="scale-[1.06]"
                     src={user?.image?.trim() || defaultAdminPersonAvatarUrl}
                   />
-                  <AvatarFallback className="bg-primary-foreground/10 font-semibold text-primary-foreground dark:bg-card-foreground/10 dark:text-card-foreground">
+                  <AvatarFallback className="bg-primary/10 font-semibold text-foreground">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -360,7 +386,7 @@ export function Navbar() {
           </div>
         </div>
       </header>
-      <div aria-hidden="true" className="h-20" />
+      <div aria-hidden="true" className="h-16 xl:h-17.5" />
       <ReleaseNotice enabled={Boolean(user)} />
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />
     </>
@@ -381,12 +407,12 @@ function NavigationSectionItems({
   return (
     <div className={cn("grid gap-1", className)}>
       {items.map((item) => {
-        const active = isPathActive(pathname, item.href);
+        const active = !item.isShortcut && isPathActive(pathname, item.href);
 
         return (
           <NavLink
             className={cn(
-              "flex items-center gap-3 rounded-sm px-3 py-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+              "flex items-start gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
               active && "bg-accent text-accent-foreground",
             )}
             href={item.href}
@@ -395,10 +421,12 @@ function NavigationSectionItems({
             preservePeriod={item.preservePeriod}
             search={item.search}
           >
-            <span className="shrink-0 text-brand-strong">{item.icon}</span>
-            <span className="grid min-w-0 gap-1">
+            <span className="mt-0.5 shrink-0 text-brand-strong">{item.icon}</span>
+            <span className="grid min-w-0 gap-0.5">
               <span className="font-medium">{item.label}</span>
-              <span className="truncate text-muted-foreground text-xs">{item.description}</span>
+              <span className="text-muted-foreground text-xs leading-snug xl:whitespace-nowrap">
+                {item.description}
+              </span>
             </span>
           </NavLink>
         );

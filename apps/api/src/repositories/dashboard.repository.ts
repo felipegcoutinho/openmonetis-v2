@@ -15,6 +15,7 @@ import {
   transactions,
 } from "@openmonetis/db";
 import { resolveCardClosingRule } from "@openmonetis/domain/cards";
+import { getPeriodEndDate } from "@openmonetis/domain/transactions";
 import { and, eq, gte, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { DashboardRepository } from "../services/dashboard.service";
@@ -37,11 +38,6 @@ const recurringSplitPeople = alias(people, "dashboard_recurring_split_people");
 
 function periodStart(period: string) {
   return new Date(`${period}-01T00:00:00.000Z`);
-}
-
-function periodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 function toDateString(value: Date | null) {
@@ -177,7 +173,10 @@ export const dashboardRepository = {
                 gte(transactions.purchaseDate, periodStart(startPeriod)),
               )
             : undefined,
-          or(lte(transactions.period, period), lte(transactions.purchaseDate, periodEnd(period))),
+          or(
+            lte(transactions.period, period),
+            lte(transactions.purchaseDate, getPeriodEndDate(period)),
+          ),
         ),
       );
 
@@ -376,7 +375,10 @@ export const dashboardRepository = {
       .where(
         and(
           eq(transactionSplits.userId, userId),
-          or(lte(transactions.period, period), lte(transactions.purchaseDate, periodEnd(period))),
+          or(
+            lte(transactions.period, period),
+            lte(transactions.purchaseDate, getPeriodEndDate(period)),
+          ),
         ),
       );
   },

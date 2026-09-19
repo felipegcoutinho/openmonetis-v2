@@ -73,7 +73,7 @@ function initialValues(card: CardOutput | null | undefined, accounts: AccountOut
 
 function FieldError({ message }: { message?: string }) {
   return message ? (
-    <p className="sr-only" role="alert">
+    <p className="text-destructive text-xs" role="alert">
       {message}
     </p>
   ) : null;

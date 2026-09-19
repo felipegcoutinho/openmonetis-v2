@@ -44,11 +44,11 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
             breadcrumbs={[
               { label: "Visão geral", href: "/dashboard" },
               { label: "Relatórios" },
-              { label: "Tendências" },
+              { label: "Evolução por categoria" },
             ]}
             description="Acompanhe a evolução dos seus gastos e receitas por categoria ao longo do tempo."
             icon={<FileChartColumn aria-hidden="true" className="size-5" />}
-            title="Tendências"
+            title="Evolução por categoria"
           />
 
           {report ? (
@@ -88,6 +88,10 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
           {report && !reportQuery.isError ? (
             report.categories.length ? (
               <div className="grid gap-6" aria-busy={reportQuery.isFetching}>
+                <p className="text-muted-foreground text-sm">
+                  A média de cada categoria considera apenas os meses com movimento. Os totais
+                  incluem os valores previstos de recorrências.
+                </p>
                 <Tabs className="gap-0" defaultValue="table">
                   <TabsList variant="line">
                     <TabsTrigger value="table">

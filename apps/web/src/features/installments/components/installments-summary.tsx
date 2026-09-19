@@ -1,5 +1,5 @@
 import type { InstallmentsReportOutput } from "@openmonetis/validators/installments";
-import { CircleCheckBig, Layers3, WalletCards } from "lucide-react";
+import { CircleCheckBig, Layers3 } from "lucide-react";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 
@@ -15,7 +15,7 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
       eyebrow="Relatório"
       identity={
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
-          <WalletCards aria-hidden="true" className="size-6" />
+          <Layers3 aria-hidden="true" className="size-6" />
         </span>
       }
       metrics={[
@@ -33,7 +33,7 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
               {summary.paidInstallmentCount}/{summary.trackedInstallmentCount}
             </span>
           ),
-          description: "Pagas entre todas as parcelas acompanhadas.",
+          description: "Pagas entre todas as parcelas registradas.",
         },
       ]}
       primaryLabel="Total em aberto"

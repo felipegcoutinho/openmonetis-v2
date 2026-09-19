@@ -20,7 +20,8 @@ export type TransactionsSearch = {
   type?: TransactionType;
   condition?: TransactionCondition;
   paymentMethod?: PaymentMethod;
-  settlement?: "paid" | "unpaid";
+  settlement?: "paid" | "unpaid" | "invoice";
+  sort?: "recent" | "oldest" | "dueDate" | "amount";
   people?: string;
   categories?: string;
   accounts?: string;
@@ -77,9 +78,14 @@ export function validateTransactionsSearch(search: Record<string, unknown>): Tra
         ? search.paymentMethod
         : undefined,
     settlement:
-      search.settlement === "paid" || search.settlement === "unpaid"
+      search.settlement === "paid" ||
+      search.settlement === "unpaid" ||
+      search.settlement === "invoice"
         ? search.settlement
         : undefined,
+    sort: ["recent", "oldest", "dueDate", "amount"].includes(String(search.sort))
+      ? (search.sort as TransactionsSearch["sort"])
+      : undefined,
     people: slugList(search.people),
     categories: slugList(search.categories),
     accounts: slugList(search.accounts),
@@ -135,7 +141,7 @@ export const transactionTypeLabels: Record<TransactionType, string> = {
 };
 
 export const transactionConditionLabels: Record<TransactionCondition, string> = {
-  single: "À vista",
+  single: "Única",
   installment: "Parcelada",
   recurring: "Recorrente",
 };
@@ -198,7 +204,7 @@ export function formatPeriod(period: string) {
   return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }
 
-export function formatCurrency(value: number) {
+function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -286,6 +292,7 @@ export function serializeFilterSlugs(values: string[]) {
 }
 
 const transactionMutationErrorMessages: Record<string, string> = {
+  SETTLEMENT_DATE_FUTURE: "A data do pagamento não pode estar no futuro.",
   validation_error: "Revise os campos destacados e tente novamente.",
   CARD_LIMIT_EXCEEDED: "O valor ultrapassa o limite disponível do cartão.",
   INSUFFICIENT_TRANSFER_BALANCE: "O valor ultrapassa o saldo disponível da conta de origem.",
@@ -351,4 +358,45 @@ export function groupTransactionRows<
               : ("middle" as const),
     })),
   );
+}
+
+export function getTransactionSettlementLabel(
+  transaction: Pick<TransactionOutput, "type" | "isSettled" | "paymentMethod">,
+) {
+  if (transaction.paymentMethod === "credit_card" || transaction.isSettled === null)
+    return "Pagamento pela fatura";
+  if (!transaction.isSettled) return "Em aberto";
+  return transaction.type === "income"
+    ? "Recebido"
+    : transaction.type === "transfer"
+      ? "Realizada"
+      : "Pago";
+}
+
+export function getTransactionSettlementAction(
+  transaction: Pick<TransactionOutput, "type" | "isSettled">,
+) {
+  if (transaction.isSettled)
+    return transaction.type === "income"
+      ? "Desfazer recebimento"
+      : transaction.type === "transfer"
+        ? "Desfazer confirmação"
+        : "Desfazer pagamento";
+  return transaction.type === "income"
+    ? "Registrar recebimento"
+    : transaction.type === "transfer"
+      ? "Confirmar transferência"
+      : "Registrar pagamento";
+}
+
+export function formatTransactionFilterDate(value: string) {
+  return formatDateInBrazil(dateOnlyToSafeInstant(value), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+export function formatTransactionFilterAmount(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }

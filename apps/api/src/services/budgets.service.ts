@@ -8,6 +8,7 @@ import {
   createBudgetDraft,
   getPreviousBudgetPeriod,
 } from "@openmonetis/domain/budgets";
+import { getPeriodEndDate } from "@openmonetis/domain/transactions";
 import type {
   BudgetOutput,
   CopyPreviousBudgetsInput,
@@ -27,7 +28,7 @@ type BudgetRecord = {
   updatedAt: Date;
 };
 
-export type BudgetWithCategoryRecord = BudgetRecord & {
+type BudgetWithCategoryRecord = BudgetRecord & {
   categoryName: string;
   categoryIcon: string | null;
 };
@@ -70,7 +71,7 @@ export function createBudgetsService(
   }
 
   async function list(userId: string, query: ListBudgetsQuery) {
-    const periodEnd = getPeriodEnd(query.period);
+    const periodEnd = getPeriodEndDate(query.period);
     const [budgetRows, spendingEntries, recurringRules] = await Promise.all([
       repository.listByUserAndPeriod(userId, query.period),
       repository.listSpendingEntries(userId, query.period),
@@ -211,11 +212,6 @@ function toOutput(
     createdAt: budget.createdAt.toISOString(),
     updatedAt: budget.updatedAt.toISOString(),
   };
-}
-
-function getPeriodEnd(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0));
 }
 
 export type BudgetsService = ReturnType<typeof createBudgetsService>;

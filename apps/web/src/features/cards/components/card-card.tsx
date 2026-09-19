@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatPeriod } from "@/features/transactions/transactions.presentation";
 import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
 import {
@@ -59,7 +60,15 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             )}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <CardTitle className="truncate">{card.name}</CardTitle>
+                <CardTitle className="truncate">
+                  <Link
+                    className="hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                    to="/cards/$cardId"
+                    params={{ cardId: card.id }}
+                  >
+                    {card.name}
+                  </Link>
+                </CardTitle>
                 {card.note ? (
                   <Tooltip>
                     <TooltipTrigger
@@ -128,7 +137,9 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
       <CardContent className="flex flex-1 flex-col gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <p className="text-muted-foreground text-xs">Fatura atual</p>
+            <p className="text-muted-foreground text-xs">
+              Fatura de {formatPeriod(card.invoiceSummary.period)}
+            </p>
             <span
               className={cn(
                 "rounded-full bg-muted px-2 py-0.5 font-medium text-[10px]",
@@ -155,6 +166,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             value={<MoneyValue amount={card.invoiceSummary.availableLimit} />}
           />
         </div>
+        <p className="text-muted-foreground text-xs">Parcelas futuras também ocupam o limite.</p>
         <div className="flex flex-col gap-2">
           <div
             aria-label={`${card.invoiceSummary.usagePercentage.toLocaleString("pt-BR")}% do limite utilizado`}
@@ -176,14 +188,6 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
       </CardContent>
 
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
-        <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          onClick={() => onEdit(card)}
-          type="button"
-        >
-          <Pencil aria-hidden="true" className="size-3.5" />
-          Editar
-        </button>
         <Link
           className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
           params={{ cardId: card.id }}
@@ -192,9 +196,17 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
           <FileText aria-hidden="true" className="size-3.5" />
           Fatura
         </Link>
+        <button
+          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          onClick={() => onEdit(card)}
+          type="button"
+        >
+          <Pencil aria-hidden="true" className="size-3.5" />
+          Editar
+        </button>
         {onArchive ? (
           <button
-            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-muted-foreground text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
             disabled={pending}
             onClick={() => setArchiveOpen(true)}
             type="button"

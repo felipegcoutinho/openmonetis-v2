@@ -86,9 +86,21 @@ export function normalizeDashboardWidgetPreferences(
   const wasRecentDefaultOrder =
     migratedPreferenceOrder.length === recentDefaultOrder.length &&
     migratedPreferenceOrder.every((id, index) => id === recentDefaultOrder[index]);
-  const wasDefaultOrder = wasPreviousDefaultOrder || wasRecentDefaultOrder;
+  const wasCanonicalDefaultOrder =
+    preferences.order.length === dashboardWidgetIds.length &&
+    preferences.order.every((id, index) => id === dashboardWidgetIds[index]);
+  const uxFirst = ["payment-status", "inbox", "bills", "invoices"];
+  const uxDefaultOrder = [...uxFirst, ...dashboardWidgetIds.filter((id) => !uxFirst.includes(id))];
+  const wasUxDefaultOrder =
+    preferences.order.length === uxDefaultOrder.length &&
+    preferences.order.every((id, index) => id === uxDefaultOrder[index]);
+  const wasDefaultOrder =
+    wasPreviousDefaultOrder ||
+    wasRecentDefaultOrder ||
+    wasCanonicalDefaultOrder ||
+    wasUxDefaultOrder;
   const order = wasDefaultOrder
-    ? [...dashboardWidgetIds]
+    ? createDefaultDashboardWidgetPreferences().order
     : uniqueDashboardWidgetIds(preferences.order);
   for (const widgetId of dashboardWidgetIds) {
     if (!order.includes(widgetId)) order.push(widgetId);

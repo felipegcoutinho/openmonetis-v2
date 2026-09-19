@@ -161,7 +161,7 @@ export const account = pgTable(
   "account",
   {
     id: uuid("id").default(sql`pg_catalog.gen_random_uuid()`).primaryKey(),
-    issuer: text("issuer").notNull(),
+    issuer: text("issuer"),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: uuid("user_id")
@@ -1150,6 +1150,7 @@ export const externalExpenses = pgTable(
     installmentCount: integer("installment_count"),
     currentInstallment: integer("current_installment"),
     sourceLabel: varchar("source_label", { length: 120 }),
+    establishmentLogoDomain: varchar("establishment_logo_domain", { length: 253 }),
     importedAt: timestamp("imported_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })

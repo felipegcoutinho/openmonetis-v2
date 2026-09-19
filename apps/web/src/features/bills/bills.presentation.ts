@@ -1,4 +1,5 @@
 import { differenceInCalendarDaysFromTodayInBrazil } from "@openmonetis/shared/date-time";
+import { formatRecordedPaymentDate } from "@/lib/payment-presentation";
 
 export function billDueLabel(value: string) {
   const days = differenceInCalendarDaysFromTodayInBrazil(value);
@@ -7,4 +8,8 @@ export function billDueLabel(value: string) {
   if (days > 1) return `Vence em ${days} dias`;
   if (days === -1) return "Venceu ontem";
   return `Venceu há ${Math.abs(days)} dias`;
+}
+
+export function billPaidLabel(date: string) {
+  return formatRecordedPaymentDate(date);
 }

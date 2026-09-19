@@ -4,6 +4,7 @@ import {
   calculateExternalInstallmentAllocationTotal,
   calculateExternalInstallmentTotal,
   canUpdateExternalExpenseSnapshot,
+  preserveExternalExpenseInstallmentBoundary,
   selectNewExternalExpenseAssignmentKeys,
 } from "@openmonetis/domain/external-expenses";
 import { buildNotifications } from "@openmonetis/domain/notifications";
@@ -52,6 +53,7 @@ function expense(overrides: Partial<ExternalExpenseRecord> = {}): ExternalExpens
     installmentCount: null,
     currentInstallment: null,
     sourceLabel: "Fatura Visa",
+    establishmentLogoDomain: null,
     sourceLogoUrl: null,
     sourceCardBrand: "visa",
     importedAt: null,
@@ -132,6 +134,7 @@ function recurringSource(
     name: "Aulas",
     dueDate: null,
     paymentMethod: "pix",
+    establishmentLogoDomain: null,
     sourceLabel: "Conta principal",
     card: null,
     ...overrides,
@@ -241,6 +244,36 @@ test("only pending snapshots can follow source changes", () => {
   assert.equal(canUpdateExternalExpenseSnapshot("imported"), false);
 });
 
+test("pending installment updates never move a delivery boundary backward", () => {
+  const current = {
+    name: "Compra compartilhada",
+    amount: "120.00",
+    purchaseDate: "2026-08-10",
+    period: "2026-10",
+    dueDate: "2026-10-15",
+    paymentMethod: "credit_card" as const,
+    condition: "installment" as const,
+    installmentCount: 3,
+    currentInstallment: 2,
+    sourceLabel: "Fatura Visa",
+  };
+
+  assert.deepEqual(
+    preserveExternalExpenseInstallmentBoundary(current, {
+      ...current,
+      name: "Compra atualizada",
+      purchaseDate: "2026-08-01",
+      period: "2026-09",
+      dueDate: "2026-09-15",
+      currentInstallment: 1,
+    }),
+    {
+      ...current,
+      name: "Compra atualizada",
+    },
+  );
+});
+
 test("only assignments added after connection are eligible for a new delivery", () => {
   const existing = new Set(["transaction:old:person:p2"]);
   assert.deepEqual([...selectNewExternalExpenseAssignmentKeys(existing, existing)], []);
@@ -271,6 +304,27 @@ test("pending listing exposes the complete amount for its summary header", async
 
   assert.equal(result.total, 1);
   assert.equal(result.totalAmount, 120);
+});
+
+test("pending listing exposes the establishment logo selected by its owner", async () => {
+  const service = createExternalExpensesService(
+    repository(expense({ establishmentLogoDomain: "example.com" })).implementation,
+    {
+      transactionCreator: {
+        async createTransactionFromExternalExpense() {
+          throw new Error("must not be called");
+        },
+      },
+      buildEstablishmentLogoUrl: (domain) => (domain ? `https://logos.example/${domain}` : null),
+    },
+  );
+
+  const result = await service.list(
+    { view: "pending", period: "2026-08", page: 1, pageSize: 20 },
+    recipientId,
+  );
+
+  assert.equal(result.items[0]?.establishmentLogoUrl, "https://logos.example/example.com");
 });
 
 test("pending external expenses create one aggregated import notification", () => {
@@ -346,6 +400,43 @@ test("import creates a regular independent transaction from the reviewed form", 
   assert.deepEqual(receivedInstallmentAmounts, [40, 40, 40]);
   assert.equal(result.expense.status, "imported");
   assert.equal(result.expense.importedTransactionId, "90000000-0000-4000-8000-000000000009");
+});
+
+test("installment import can begin after the original series start", async () => {
+  const repo = repository(
+    expense({
+      sourceSeriesId: "90000000-0000-4000-8000-000000000010",
+      sourceCondition: "installment",
+      installmentCount: 3,
+      currentInstallment: 2,
+      period: "2026-10",
+    }),
+  );
+  repo.implementation.installmentAmountsForImport = async () => [40, 40];
+  let receivedInstallmentAmounts: number[] | undefined;
+  const service = createExternalExpensesService(repo.implementation, {
+    transactionCreator: {
+      async createTransactionFromExternalExpense(
+        _input,
+        _userId,
+        _expenseId,
+        _expectedVersion,
+        _confirmedAt,
+        installmentAmounts,
+      ) {
+        receivedInstallmentAmounts = installmentAmounts;
+        repo.markImported();
+        return { id: "created" } as TransactionOutput;
+      },
+    },
+  });
+
+  await service.importExpense(expenseId, recipientId, {
+    expectedVersion: 1,
+    transaction: { ...transactionInput, invoicePeriod: "2026-10", startInstallment: 2 },
+  });
+
+  assert.deepEqual(receivedInstallmentAmounts, [40, 40]);
 });
 
 test("import rejects recurring transactions", async () => {

@@ -28,7 +28,7 @@ const calculatorOperatorSymbols: Record<CalculatorOperator, string> = {
   divide: "÷",
 };
 
-export const initialCalculatorState: CalculatorState = {
+const initialCalculatorState: CalculatorState = {
   accumulator: null,
   display: "0",
   history: null,

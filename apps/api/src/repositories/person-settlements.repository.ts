@@ -9,7 +9,7 @@ import {
   transactionSplits,
   transactions,
 } from "@openmonetis/db";
-import { isExpenseReduction } from "@openmonetis/domain/transactions";
+import { getPeriodEndDate, isExpenseReduction } from "@openmonetis/domain/transactions";
 import { and, asc, desc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import type { PersonSettlementsRepository } from "../services/person-settlements.service";
 
@@ -128,8 +128,7 @@ export const personSettlementsRepository: PersonSettlementsRepository = {
 
   async listRecurringBalanceRulesForPeriod(userId, period) {
     const periodStart = new Date(`${period}-01T00:00:00.000Z`);
-    const [year, month] = period.split("-").map(Number);
-    const periodEnd = new Date(Date.UTC(year, month, 0));
+    const periodEnd = getPeriodEndDate(period);
     const rows = await db
       .select({
         id: recurringTransactionRules.id,

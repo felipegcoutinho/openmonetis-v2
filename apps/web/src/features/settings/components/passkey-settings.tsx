@@ -43,7 +43,7 @@ export function PasskeySettings() {
     try {
       await addMutation.mutateAsync(name || undefined);
       setAddOpen(false);
-      toast.success("Passkey cadastrada");
+      toast.success("Chave de acesso cadastrada");
     } catch (error) {
       toast.error(settingsMutationErrorMessage(error));
     }
@@ -53,7 +53,7 @@ export function PasskeySettings() {
     try {
       await renameMutation.mutateAsync({ id: passkey.id, name });
       setEditing(null);
-      toast.success("Passkey renomeada");
+      toast.success("Chave de acesso renomeada");
     } catch (error) {
       toast.error(settingsMutationErrorMessage(error));
     }
@@ -63,7 +63,7 @@ export function PasskeySettings() {
     try {
       await removeMutation.mutateAsync(passkey.id);
       setDeleting(null);
-      toast.success("Passkey removida");
+      toast.success("Chave de acesso removida");
     } catch (error) {
       toast.error(settingsMutationErrorMessage(error));
     }
@@ -80,7 +80,7 @@ export function PasskeySettings() {
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="font-medium text-sm">Passkeys cadastradas</p>
+            <p className="font-medium text-sm">Chaves de acesso cadastradas</p>
             <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-relaxed">
               Entre com sua digital, rosto, PIN ou chave de segurança.
             </p>
@@ -174,8 +174,9 @@ export function PasskeySettings() {
               </AlertDialogMedia>
               <AlertDialogTitle>Remover esta chave de acesso?</AlertDialogTitle>
               <AlertDialogDescription>
-                Ela deixará de funcionar imediatamente para novos logins. Esta ação não pode ser
-                desfeita.
+                Ela deixará de funcionar imediatamente para novos logins. Certifique-se de que
+                consegue entrar por outra chave, senha ou Google vinculados à conta. Esta ação não
+                pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -209,7 +210,7 @@ function PasskeyRow({
 }) {
   const label = passkey.name || passkey.authenticatorName || "Chave de acesso";
   const deviceLabel =
-    passkey.deviceType === "multiDevice" ? "Sincronizada" : "Vinculada a um dispositivo";
+    passkey.deviceType === "multiDevice" ? "Chave sincronizada" : "Vinculada a um dispositivo";
   const createdAt = passkey.createdAt
     ? formatDateInBrazil(passkey.createdAt, { dateStyle: "medium" })
     : null;

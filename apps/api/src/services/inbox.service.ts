@@ -40,7 +40,7 @@ export type InboxItemRecord = {
   updatedAt: Date;
 };
 
-export type InboxItemDraft = Omit<
+type InboxItemDraft = Omit<
   InboxItemRecord,
   "id" | "status" | "transactionId" | "processedAt" | "discardedAt" | "createdAt" | "updatedAt"
 >;

@@ -4,7 +4,7 @@ import {
 } from "@openmonetis/validators/device-tokens";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
-import { Clipboard, KeyRound, Plus, Smartphone, Trash2 } from "lucide-react";
+import { Clipboard, KeyRound, Plus, Smartphone, Unplug } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { SettingsSection } from "@/components/settings-panel";
@@ -137,7 +137,7 @@ export function DeviceTokenSettings() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="break-all font-medium text-sm">{token.name}</p>
                     <Badge variant="outline">
-                      {token.lastUsedAt ? "Acesso utilizado" : "Aguardando conexão"}
+                      {token.lastUsedAt ? "Uso registrado" : "Sem uso registrado"}
                     </Badge>
                   </div>
                   <p className="mt-1 text-muted-foreground text-sm">
@@ -153,7 +153,7 @@ export function DeviceTokenSettings() {
                   size="icon"
                   variant="ghost"
                 >
-                  <Trash2 aria-hidden="true" />
+                  <Unplug aria-hidden="true" />
                 </Button>
               </li>
             ))}

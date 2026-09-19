@@ -167,6 +167,13 @@ test("balance adjustment uses the balance at the selected date", async () => {
     () => "2026-09-30",
   );
 
+  const preview = await service.previewBalanceAdjustment(accountId, userId, {
+    balance: -50,
+    date: "2026-09-10",
+  });
+  assert.equal(preview.desiredBalance, -50);
+  assert.equal(insertedAmount, "", "preview never writes an adjustment");
+  assert.equal(preview.adjustmentAmount, -50 - preview.currentBalance);
   await service.adjustBalance(accountId, userId, { balance: -50, date: "2026-09-10" });
 
   assert.equal(insertedAmount, "50.00");

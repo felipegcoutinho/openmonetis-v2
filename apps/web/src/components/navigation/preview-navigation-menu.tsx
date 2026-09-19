@@ -14,8 +14,9 @@ import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { personRoleLabels, personStatusLabels } from "@/features/people/people.presentation";
 import { peopleQueryOptions } from "@/features/people/people.queries";
+import { getInitials } from "@/lib/name-presentation";
 import { cn } from "@/lib/utils";
-import type { NavLinkItem } from "./nav-items";
+import { isPathActive, type NavLinkItem } from "./nav-items";
 import { NavLink } from "./nav-link";
 
 type NavigationPreview = "cards" | "accounts" | "people";
@@ -34,10 +35,6 @@ const previewByHref: Partial<Record<string, NavigationPreview>> = {
 
 const previewSkeletonIds = ["first", "second", "third"] as const;
 
-function isPathActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNavigationMenuProps) {
   const [preview, setPreview] = useState<NavigationPreview | null>(null);
 
@@ -45,7 +42,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
     <fieldset
       className={cn(
         "m-0 grid min-w-0 items-start gap-2 border-0 p-1",
-        preview ? "w-170 grid-cols-[22rem_1fr]" : "w-88 grid-cols-1",
+        preview ? "w-[43rem] grid-cols-[23rem_1fr]" : "w-[23rem] grid-cols-1",
       )}
       data-preview-open={preview ? "true" : "false"}
       data-preview-navigation-menu
@@ -54,16 +51,16 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       }}
       onPointerLeave={() => setPreview(null)}
     >
-      <div className="grid content-start gap-1 rounded-lg bg-popover p-2 shadow ring-1 ring-foreground/10">
+      <div className="grid content-start gap-1 rounded-sm bg-popover/95 p-2 shadow-xl ring-1 ring-border/80 backdrop-blur-sm">
         {items.map((item) => {
           const itemPreview = previewByHref[item.href];
-          const active = isPathActive(pathname, item.href);
+          const active = !item.isShortcut && isPathActive(pathname, item.href);
           const selected = itemPreview === preview;
 
           return (
             <NavLink
               className={cn(
-                "group flex items-center gap-3 rounded-sm px-3 py-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                "group flex items-start gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                 (active || selected) && "bg-accent text-accent-foreground",
               )}
               href={item.href}
@@ -73,10 +70,12 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
               preservePeriod={item.preservePeriod}
               search={item.search}
             >
-              <span className="shrink-0 text-brand-strong">{item.icon}</span>
-              <span className="grid min-w-0 flex-1 gap-1">
+              <span className="mt-0.5 shrink-0 text-brand-strong">{item.icon}</span>
+              <span className="grid min-w-0 flex-1 gap-0.5">
                 <span className="font-medium">{item.label}</span>
-                <span className="truncate text-muted-foreground text-xs">{item.description}</span>
+                <span className="whitespace-nowrap text-muted-foreground text-xs leading-snug">
+                  {item.description}
+                </span>
               </span>
               {itemPreview ? (
                 <ChevronRight
@@ -90,7 +89,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       </div>
 
       {preview ? (
-        <div className="mt-4 rounded-lg bg-popover p-2 shadow ring-1 ring-foreground/10">
+        <div className="rounded-sm bg-popover/95 p-2 shadow-xl ring-1 ring-border/80 backdrop-blur-sm">
           {preview === "cards" ? <CardsPreview enabled={isOpen} /> : null}
           {preview === "accounts" ? <AccountsPreview enabled={isOpen} /> : null}
           {preview === "people" ? <PeoplePreview enabled={isOpen} /> : null}
@@ -353,16 +352,6 @@ function PersonPreviewItem({ person }: { person: PersonOutput }) {
       </span>
     </Link>
   );
-}
-
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join("")
-    .toLocaleUpperCase("pt-BR");
 }
 
 function FinanceLogo({ logo, name }: { logo: string | null; name: string }) {

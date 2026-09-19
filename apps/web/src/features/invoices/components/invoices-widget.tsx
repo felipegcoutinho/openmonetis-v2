@@ -36,7 +36,7 @@ export function InvoicesWidget({ period }: { period: string }) {
   return (
     <>
       <DashboardWidget
-        title="Faturas"
+        title="Minhas faturas"
         description="Valores, vencimentos e pagamentos acumulados"
         icon={<ReceiptText />}
         footer={
@@ -173,7 +173,7 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
             type="button"
             variant="link"
           >
-            Pagar
+            Registrar pagamento
           </Button>
         ) : (
           <span className="text-success text-xs">Paga</span>
@@ -185,7 +185,7 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
 
 function InvoiceCardName({ invoice }: { invoice: DashboardInvoice }) {
   const linkClassName =
-    "group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+    "group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none";
 
   if (invoice.people.length === 0) {
     return (

@@ -4,6 +4,7 @@ import { Navbar } from "@/components/navigation/navbar";
 import { TransactionImportContainer } from "@/features/transactions/components/transaction-import-container";
 
 export const Route = createFileRoute("/transactions_/import")({
+  head: () => ({ meta: [{ title: "Importar lançamentos · OpenMonetis" }] }),
   component: TransactionImportRoute,
 });
 

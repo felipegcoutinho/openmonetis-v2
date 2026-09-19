@@ -17,8 +17,10 @@ import { cn } from "@/lib/utils";
 type TransactionAction = Extract<TransactionInput["type"], "expense" | "income" | "transfer">;
 
 const transactionActions: Array<{
+  hoverClassName: string;
   icon: typeof ArrowDownLeft;
   iconClassName: string;
+  iconMotionClassName: string;
   label: string;
   shortLabel: string;
   type: TransactionAction;
@@ -29,6 +31,9 @@ const transactionActions: Array<{
     shortLabel: "Receita",
     icon: ArrowDownLeft,
     iconClassName: "text-success",
+    hoverClassName: "hover:bg-success/10",
+    iconMotionClassName:
+      "group-hover/quick-action:-translate-x-0.5 group-hover/quick-action:translate-y-0.5 group-focus-visible/quick-action:-translate-x-0.5 group-focus-visible/quick-action:translate-y-0.5",
   },
   {
     type: "expense",
@@ -36,6 +41,9 @@ const transactionActions: Array<{
     shortLabel: "Despesa",
     icon: ArrowUpRight,
     iconClassName: "text-destructive",
+    hoverClassName: "hover:bg-destructive/10",
+    iconMotionClassName:
+      "group-hover/quick-action:translate-x-0.5 group-hover/quick-action:-translate-y-0.5 group-focus-visible/quick-action:translate-x-0.5 group-focus-visible/quick-action:-translate-y-0.5",
   },
   {
     type: "transfer",
@@ -43,6 +51,9 @@ const transactionActions: Array<{
     shortLabel: "Transferir",
     icon: ArrowLeftRight,
     iconClassName: "text-info",
+    hoverClassName: "hover:bg-info/10",
+    iconMotionClassName:
+      "group-hover/quick-action:scale-x-110 group-focus-visible/quick-action:scale-x-110",
   },
 ];
 
@@ -75,12 +86,15 @@ export function DashboardQuickActions({ period }: { period: string }) {
   return (
     <section
       aria-label="Ações rápidas"
-      className="grid grid-cols-2 gap-1 rounded-card border bg-card/70 p-1 sm:grid-cols-4"
+      className="grid grid-cols-2 gap-0.5 rounded-card border bg-card/75 p-1 shadow-xs backdrop-blur-sm sm:grid-cols-4"
     >
       {transactionActions.map((action) => (
         <Button
           aria-label={action.label}
-          className="h-9 justify-start gap-2 px-3 text-muted-foreground text-sm hover:bg-background hover:text-foreground sm:justify-center"
+          className={cn(
+            "group/quick-action h-10 justify-start gap-2 px-3 text-foreground text-sm hover:text-foreground sm:justify-center",
+            action.hoverClassName,
+          )}
           disabled={referenceLoading}
           key={action.type}
           onClick={() => openTransaction(action.type)}
@@ -88,20 +102,30 @@ export function DashboardQuickActions({ period }: { period: string }) {
           type="button"
           variant="ghost"
         >
-          <action.icon aria-hidden="true" className={cn("size-4", action.iconClassName)} />
+          <action.icon
+            aria-hidden="true"
+            className={cn(
+              "size-4 transition-transform duration-200 ease-out motion-reduce:transition-none",
+              action.iconClassName,
+              action.iconMotionClassName,
+            )}
+          />
           {action.shortLabel}
         </Button>
       ))}
 
       <Button
         aria-label="Nova anotação"
-        className="h-9 justify-start gap-2 px-3 text-muted-foreground text-sm hover:bg-background hover:text-foreground sm:justify-center"
+        className="group/quick-action h-10 justify-start gap-2 px-3 text-foreground text-sm hover:bg-warning/10 hover:text-foreground sm:justify-center"
         onClick={() => setNoteOpen(true)}
         size="sm"
         type="button"
         variant="ghost"
       >
-        <NotebookPen aria-hidden="true" className="size-4 text-warning" />
+        <NotebookPen
+          aria-hidden="true"
+          className="size-4 text-warning transition-transform duration-200 ease-out group-hover/quick-action:-translate-y-0.5 group-hover/quick-action:-rotate-6 group-focus-visible/quick-action:-translate-y-0.5 group-focus-visible/quick-action:-rotate-6 motion-reduce:transition-none"
+        />
         Anotação
       </Button>
 

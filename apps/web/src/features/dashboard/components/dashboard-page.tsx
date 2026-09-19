@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
 import { Navbar } from "@/components/navigation/navbar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { authClient } from "@/lib/auth-client";
 import { dashboardMetricsQueryOptions } from "../dashboard.queries";
 import { DashboardCustomizer } from "./dashboard-customizer";
@@ -22,13 +26,15 @@ export function DashboardPage({
   period: string;
 }) {
   const session = authClient.useSession();
+  const accountsQuery = useQuery(accountsQueryOptions());
   const metricsQuery = useQuery(dashboardMetricsQueryOptions(period));
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
+      <main className="relative isolate min-h-svh bg-background">
+        <div aria-hidden="true" className="dashboard-atmosphere" />
         <Navbar />
-        <div className="app-page project-container">
+        <div className="app-page project-container relative z-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <DashboardWelcome name={session.data?.user.name} />
             <div className="flex w-full items-center gap-1 lg:w-auto">
@@ -39,6 +45,17 @@ export function DashboardPage({
             </div>
           </div>
 
+          {accountsQuery.data?.length === 0 ? (
+            <Card className="gap-3 p-5">
+              <h2 className="font-semibold">Comece cadastrando sua primeira conta</h2>
+              <p className="text-muted-foreground text-sm">
+                Depois, informe o saldo que você já tem e registre suas receitas e despesas.
+              </p>
+              <Button asChild className="w-fit">
+                <Link to="/accounts">Cadastrar primeira conta</Link>
+              </Button>
+            </Card>
+          ) : null}
           <MonthNavigation
             className="sticky top-24 z-20"
             onPeriodChange={onPeriodChange}

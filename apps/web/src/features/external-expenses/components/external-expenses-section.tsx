@@ -30,7 +30,6 @@ import { categoriesQueryOptions } from "@/features/categories/categories.queries
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
-import { TransactionTypeBadge } from "@/features/transactions/components/transaction-type-badge";
 import {
   formatCompactDate,
   formatPaymentMethodTable,
@@ -171,7 +170,6 @@ function ExternalExpensesTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Estabelecimento</TableHead>
-                <TableHead>Transação</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Condição</TableHead>
                 <TableHead>Forma de pagamento</TableHead>
@@ -231,19 +229,20 @@ function ExternalExpenseRow({
   return (
     <TableRow>
       <TableCell>
-        <div className="flex min-w-44 items-center gap-2.5">
-          <EstablishmentLogo name={item.snapshot.name} />
+        <div className="flex min-w-56 items-center gap-2.5">
+          <EstablishmentLogo
+            fallbackLogoUrl={item.establishmentLogoUrl}
+            name={item.snapshot.name}
+            size={36}
+          />
           <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="max-w-56 truncate font-medium">{item.snapshot.name}</span>
             <span className="whitespace-nowrap text-muted-foreground text-xs">
               {recurringDateLabel}
               {formatCompactDate(displayedDate)}
             </span>
-            <span className="max-w-40 truncate font-medium">{item.snapshot.name}</span>
           </span>
         </div>
-      </TableCell>
-      <TableCell>
-        <TransactionTypeBadge type="expense" />
       </TableCell>
       <TableCell className="whitespace-nowrap">
         <MoneyValue amount={-item.snapshot.amount} className="font-medium" />

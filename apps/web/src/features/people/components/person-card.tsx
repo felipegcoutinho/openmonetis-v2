@@ -1,7 +1,7 @@
 import type { PersonOutput } from "@openmonetis/validators/people";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { FileText, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, Pencil, Trash2, UserRound } from "lucide-react";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -38,7 +38,15 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
             )}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <CardTitle className="truncate">{person.name}</CardTitle>
+                <CardTitle className="truncate">
+                  <Link
+                    to="/people/$personId"
+                    params={{ personId: person.id }}
+                    className="hover:underline"
+                  >
+                    {person.name}
+                  </Link>
+                </CardTitle>
                 {isAdmin ? <CurrentUserBadge /> : null}
                 {person.note ? (
                   <Tooltip>
@@ -52,9 +60,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
                   </Tooltip>
                 ) : null}
               </div>
-              <p className="mt-0.5 text-muted-foreground text-xs">
-                {isAdmin ? "Administradora" : "Pessoa"}
-              </p>
+              <p className="mt-0.5 text-muted-foreground text-xs">{isAdmin ? "Você" : "Pessoa"}</p>
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-muted-foreground text-xs">
@@ -76,6 +82,14 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
       </CardContent>
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
+        <Link
+          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          params={{ personId: person.id }}
+          to="/people/$personId"
+        >
+          <UserRound aria-hidden="true" className="size-3.5" />
+          Ver painel
+        </Link>
         <button
           className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
           onClick={() => onEdit(person)}
@@ -84,14 +98,6 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>
-        <Link
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          params={{ personId: person.id }}
-          to="/people/$personId"
-        >
-          <FileText aria-hidden="true" className="size-3.5" />
-          Detalhes
-        </Link>
         {onRemove ? (
           <button
             className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"

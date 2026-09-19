@@ -10,11 +10,7 @@ import type {
   UndoInstallmentAnticipationInput,
   UndoInstallmentAnticipationOutput,
 } from "@openmonetis/validators/installments";
-import { requestApi } from "@/lib/api-client";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  return requestApi<T>(path, init, { useResponseMessage: true });
-}
+import { requestApiWithResponseMessage as request } from "@/lib/api-client";
 
 export function getInstallments(query: ListInstallmentsQuery) {
   const params = new URLSearchParams({ period: query.period, status: query.status });

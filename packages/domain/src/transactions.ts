@@ -361,6 +361,11 @@ export function addMonthsToPeriod(period: string, months: number) {
   return getPeriodFromDate(createUtcDate(year, month - 1 + months, 1));
 }
 
+export function getPeriodEndDate(period: string) {
+  const [year, month] = period.split("-").map(Number);
+  return createUtcDate(year, month, 0);
+}
+
 export function addMonthsToDate(value: string, months: number) {
   return toDateString(addMonths(parseDate(value), months));
 }

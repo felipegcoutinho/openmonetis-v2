@@ -79,7 +79,9 @@ export function CategoryTrendsChart({ categories, periods }: CategoryTrendsChart
       <CardHeader className="flex-row items-center gap-3 border-b py-5">
         <div className="min-w-0 flex-1">
           <CardTitle>Evolução por categoria</CardTitle>
-          <CardDescription>{periodLabel}</CardDescription>
+          <CardDescription>
+            {periodLabel} · Categorias com maior valor acumulado no período
+          </CardDescription>
         </div>
         <Select onValueChange={(value) => value && setLimit(value)} value={limit}>
           <SelectTrigger aria-label="Número de categorias" className="hidden w-28 sm:flex">

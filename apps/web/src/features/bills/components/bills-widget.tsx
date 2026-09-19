@@ -1,12 +1,14 @@
 import type { DashboardBill } from "@openmonetis/validators/bills";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Barcode, RefreshCw } from "lucide-react";
+import { ArrowRight, Barcode, CheckCircle2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardItemLinkArrow } from "@/features/dashboard/components/dashboard-item-link-arrow";
 import { DashboardWidget } from "@/features/dashboard/components/dashboard-widget";
 import { DashboardWidgetEmptyState } from "@/features/dashboard/components/dashboard-widget-empty-state";
 import { dashboardWidgetFooterNavigationLinkClassName } from "@/features/dashboard/components/dashboard-widget-footer-link";
@@ -14,7 +16,7 @@ import { DashboardWidgetListSheet } from "@/features/dashboard/components/dashbo
 import { DashboardWidgetRow } from "@/features/dashboard/components/dashboard-widget-row";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { cn } from "@/lib/utils";
-import { billDueLabel } from "../bills.presentation";
+import { billDueLabel, billPaidLabel } from "../bills.presentation";
 import { billsQueryOptions } from "../bills.queries";
 import { BillPaymentDialog } from "./bill-payment-dialog";
 
@@ -30,7 +32,14 @@ export function BillsWidget({ period }: { period: string }) {
   const rows = (items: DashboardBill[]) => (
     <ul className="divide-y">
       {items.map((bill) => (
-        <BillRow bill={bill} key={bill.id} onSettle={() => setSelectedBill(bill)} />
+        <BillRow
+          bill={bill}
+          key={bill.id}
+          onSettle={() => {
+            setListOpen(false);
+            setSelectedBill(bill);
+          }}
+        />
       ))}
     </ul>
   );
@@ -38,7 +47,7 @@ export function BillsWidget({ period }: { period: string }) {
   return (
     <>
       <DashboardWidget
-        description="Vencimentos e pagamentos do mês"
+        description="Valores, vencimentos e pagamentos do mês"
         footer={
           bills.length > 0 ? (
             <div className="flex items-center justify-between gap-3">
@@ -113,32 +122,16 @@ export function BillsWidget({ period }: { period: string }) {
 function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void }) {
   return (
     <DashboardWidgetRow>
-      <EstablishmentLogo className="size-9" name={bill.name} size={36} />
+      <Link
+        className="shrink-0"
+        to="/transactions"
+        search={{ period: bill.period, paymentMethod: "boleto", q: bill.name }}
+      >
+        <EstablishmentLogo editable={false} className="size-9" name={bill.name} size={36} />
+      </Link>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate font-medium text-sm">{bill.name}</span>
-          {bill.people.length > 1 ? (
-            <ul
-              aria-label={`Pessoas: ${bill.people.map((person) => person.personName).join(", ")}`}
-              className="flex shrink-0 -space-x-1"
-            >
-              {bill.people.slice(0, 3).map((person) => (
-                <li key={person.personId} title={person.personName}>
-                  <Avatar className="data-[size=sm]:size-5.5" showBorder={false} size="sm">
-                    <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
-                    <AvatarFallback>
-                      {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
-                    </AvatarFallback>
-                  </Avatar>
-                </li>
-              ))}
-              {bill.people.length > 3 ? (
-                <li className="grid size-5.5 place-items-center rounded-full bg-muted font-medium text-[9px] text-muted-foreground">
-                  +{bill.people.length - 3}
-                </li>
-              ) : null}
-            </ul>
-          ) : null}
+          <BillName bill={bill} />
         </div>
         <p
           className={cn(
@@ -147,23 +140,77 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
             bill.status === "paid" && "text-success",
           )}
         >
-          {bill.status === "paid" ? "Pago" : billDueLabel(bill.dueDate)}
+          {bill.status === "paid" ? (
+            <span className="inline-flex items-center gap-1">
+              <CheckCircle2 aria-hidden="true" className="size-3" />
+              {bill.boletoPaymentDate ? billPaidLabel(bill.boletoPaymentDate) : "Pago"}
+            </span>
+          ) : (
+            billDueLabel(bill.dueDate)
+          )}
           {bill.currentInstallment && bill.installmentCount
             ? ` · ${bill.currentInstallment}/${bill.installmentCount}`
             : null}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end">
-        <MoneyValue amount={bill.amount} className="font-medium text-sm" />
+        <MoneyValue
+          amount={bill.amount}
+          className={cn("font-medium text-sm", bill.isSettled && "text-success")}
+        />
         {bill.isSettled ? (
           <span className="text-success text-xs">Pago</span>
         ) : (
-          <Button className="h-auto px-0" onClick={onSettle} size="xs" type="button" variant="link">
-            Pagar
+          <Button
+            className="h-auto px-0 text-xs"
+            onClick={onSettle}
+            size="xs"
+            type="button"
+            variant="link"
+          >
+            Registrar pagamento
           </Button>
         )}
       </div>
     </DashboardWidgetRow>
+  );
+}
+
+function BillName({ bill }: { bill: DashboardBill }) {
+  return (
+    <HoverCard>
+      <HoverCardTrigger
+        render={
+          <Link
+            to="/transactions"
+            search={{ period: bill.period, paymentMethod: "boleto", q: bill.name }}
+            className="group inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-sm transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
+          />
+        }
+      >
+        <span className="truncate">{bill.name}</span>
+        <DashboardItemLinkArrow />
+      </HoverCardTrigger>
+      <HoverCardContent align="start" className="w-72">
+        <p className="font-medium">Valores por pessoa</p>
+        <div className="mt-3 grid gap-3">
+          {bill.people.map((person) => (
+            <div key={person.personId} className="flex items-center gap-3">
+              <Avatar showBorder={false}>
+                <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
+                <AvatarFallback>
+                  {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
+                </AvatarFallback>
+              </Avatar>
+              <span className="min-w-0 flex-1 truncate font-medium text-sm">
+                {person.personName}
+              </span>
+              <MoneyValue amount={person.amount} className="shrink-0 font-medium text-sm" />
+            </div>
+          ))}
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 

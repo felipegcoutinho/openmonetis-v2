@@ -53,6 +53,7 @@ export type ExternalExpenseRecord = {
   installmentCount: number | null;
   currentInstallment: number | null;
   sourceLabel: string | null;
+  establishmentLogoDomain: string | null;
   sourceLogoUrl: string | null;
   sourceCardBrand: "visa" | "mastercard" | "elo" | "amex" | "hipercard" | "other" | null;
   importedAt: Date | null;
@@ -91,6 +92,7 @@ export type RecurringExternalExpenseSourceRecord = RecurringAllocationRule & {
   name: string;
   dueDate: string | null;
   paymentMethod: ExternalExpenseSnapshot["paymentMethod"];
+  establishmentLogoDomain: string | null;
   sourceLabel: string | null;
   card: {
     closingDay: number | null;
@@ -117,16 +119,17 @@ export type RecurringExternalExpenseDraft = {
   sourceRecurringSeriesId: string;
   sourceRecurringRuleId: string;
   sourceOccurrenceDate: string;
+  establishmentLogoDomain: string | null;
   snapshot: ExternalExpenseSnapshot;
 };
 
-export type RecurringExternalExpenseSyncResult = {
+type RecurringExternalExpenseSyncResult = {
   created: number;
   updated: number;
   deleted: number;
 };
 
-export type ExternalExpenseSummaryRecord = {
+type ExternalExpenseSummaryRecord = {
   pendingCount: number;
   totalAmount: number;
   counterpartCount: number;
@@ -211,6 +214,7 @@ export async function synchronizeRecurringExternalExpenses(
           sourceRecurringSeriesId: allocation.seriesId,
           sourceRecurringRuleId: allocation.ruleId,
           sourceOccurrenceDate: allocation.occurrenceDate,
+          establishmentLogoDomain: source.establishmentLogoDomain,
           snapshot: {
             name: source.name,
             amount: Math.abs(allocation.amount).toFixed(2),
@@ -238,9 +242,14 @@ export async function synchronizeRecurringExternalExpenses(
 
 export function createExternalExpensesService(
   repository: ExternalExpensesRepository,
-  options: { transactionCreator: TransactionCreator; now?: () => Date },
+  options: {
+    transactionCreator: TransactionCreator;
+    buildEstablishmentLogoUrl?: (domain: string | null) => string | null;
+    now?: () => Date;
+  },
 ) {
   const now = options.now ?? (() => new Date());
+  const buildEstablishmentLogoUrl = options.buildEstablishmentLogoUrl ?? (() => null);
 
   return {
     synchronizeRecurringPeriod: (input?: { period?: string; ownerUserId?: string }) =>
@@ -252,7 +261,7 @@ export function createExternalExpensesService(
       const result = await repository.listForRecipient(recipientUserId, query);
 
       return {
-        items: result.items.map(toExpenseOutput),
+        items: result.items.map((record) => toExpenseOutput(record, buildEstablishmentLogoUrl)),
         page: query.page,
         pageSize: query.pageSize,
         total: result.total,
@@ -262,7 +271,10 @@ export function createExternalExpensesService(
     },
 
     async get(id: string, recipientUserId: string) {
-      return toExpenseOutput(await requiredExpense(id, recipientUserId, repository));
+      return toExpenseOutput(
+        await requiredExpense(id, recipientUserId, repository),
+        buildEstablishmentLogoUrl,
+      );
     },
 
     async summary(recipientUserId: string): Promise<ExternalExpenseSummaryOutput> {
@@ -337,7 +349,7 @@ export function createExternalExpensesService(
         throw conflict("External expense changed", "external_expense_version_conflict");
       }
 
-      return { expense: toExpenseOutput(imported), transaction };
+      return { expense: toExpenseOutput(imported, buildEstablishmentLogoUrl), transaction };
     },
   };
 }
@@ -356,7 +368,10 @@ function toDate(value: Date | null) {
   return value?.toISOString().slice(0, 10) ?? null;
 }
 
-function toExpenseOutput(record: ExternalExpenseRecord): ExternalExpenseOutput {
+function toExpenseOutput(
+  record: ExternalExpenseRecord,
+  buildEstablishmentLogoUrl: (domain: string | null) => string | null,
+): ExternalExpenseOutput {
   return {
     id: record.id,
     connectionId: record.connectionId,
@@ -383,6 +398,7 @@ function toExpenseOutput(record: ExternalExpenseRecord): ExternalExpenseOutput {
       currentInstallment: record.currentInstallment,
       sourceLabel: record.sourceLabel,
     },
+    establishmentLogoUrl: buildEstablishmentLogoUrl(record.establishmentLogoDomain),
     sourceLogoUrl: record.sourceLogoUrl,
     sourceCardBrand: record.sourceCardBrand,
     importedAt: record.importedAt?.toISOString() ?? null,

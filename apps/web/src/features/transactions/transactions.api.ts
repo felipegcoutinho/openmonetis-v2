@@ -47,6 +47,7 @@ export function getTransactions(search: TransactionsApiSearch) {
     condition: search.condition,
     paymentMethod: search.paymentMethod,
     settlement: search.settlement,
+    sort: search.sort,
     minAmount: search.minAmount,
     maxAmount: search.maxAmount,
     dateStart: search.dateStart,
@@ -163,7 +164,11 @@ export function deleteTransaction({
   });
 }
 
-export const settleTransactions = (input: { ids: string[]; isSettled: boolean }) =>
+export const settleTransactions = (input: {
+  ids: string[];
+  isSettled: boolean;
+  settledDate?: string;
+}) =>
   request<{ ids: string[]; isSettled: boolean }>("/transactions/settlement", {
     method: "PATCH",
     body: JSON.stringify(input),
@@ -172,6 +177,7 @@ export const settleRecurringOccurrence = (input: {
   recurringRuleId: string;
   purchaseDate: string;
   isSettled: boolean;
+  settledDate?: string;
 }) =>
   request<typeof input>("/transactions/recurring-occurrences/settlement", {
     method: "PATCH",

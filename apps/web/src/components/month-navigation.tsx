@@ -59,7 +59,7 @@ export function MonthNavigation({ className, onPeriodChange, period }: MonthNavi
     <nav
       aria-label="Navegação por mês"
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-lg shadow-xs border bg-card px-3 py-3",
+        "flex w-full items-center justify-between gap-2 rounded-lg border bg-card/80 px-3 py-3 shadow-xs backdrop-blur-sm",
         className,
       )}
     >
@@ -83,7 +83,7 @@ export function MonthNavigation({ className, onPeriodChange, period }: MonthNavi
             <span className="truncate">{periodLabel}</span>
             <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto bg-popover/85 p-0 backdrop-blur-md">
+          <PopoverContent align="start" className="w-auto bg-popover/80 p-0 backdrop-blur-sm">
             <MonthPicker
               key={selectedPeriod}
               onMonthSelect={(date) => selectPeriod(dateToPeriod(date))}

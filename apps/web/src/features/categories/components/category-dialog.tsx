@@ -13,11 +13,13 @@ import {
 import { CategoryForm } from "./category-form";
 export function CategoryDialog({
   category,
+  defaultType,
   onOpenChange,
   onSubmit,
   open,
 }: {
   category: CategoryOutput | null;
+  defaultType?: CreateCategoryInput["type"];
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: CreateCategoryInput | ReplaceCategoryInput) => Promise<void>;
   open: boolean;
@@ -36,6 +38,7 @@ export function CategoryDialog({
         <CategoryForm
           key={category?.id ?? "new-category"}
           category={category}
+          defaultType={defaultType}
           onCancel={() => onOpenChange(false)}
           onSubmit={onSubmit}
         />

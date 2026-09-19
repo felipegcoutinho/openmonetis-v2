@@ -126,6 +126,8 @@ export function createCategoriesService(repository: CategoriesRepository) {
     },
     async remove(id: string, userId: string) {
       await editableCategory(id, userId);
+      if (await repository.hasFinancialReferencesForUser(id, userId))
+        throw badRequest("Category has financial references", "category_in_use");
       const category = await repository.deleteForUser(id, userId);
       if (!category) throw notFound("Category not found", "category_not_found");
       return { id: category.id };

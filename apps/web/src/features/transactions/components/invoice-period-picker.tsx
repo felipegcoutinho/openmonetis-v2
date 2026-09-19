@@ -49,7 +49,7 @@ export function InvoicePeriodPicker({
               ? "Calculando fatura..."
               : "Selecione a data para calcular a fatura"}
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-auto bg-popover/85 p-0 backdrop-blur-md">
+        <PopoverContent align="start" className="w-auto bg-popover/80 p-0 backdrop-blur-sm">
           <MonthPicker
             onMonthSelect={(date) => {
               onChange(dateToPeriod(date));

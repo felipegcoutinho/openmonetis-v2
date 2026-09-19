@@ -6,6 +6,7 @@ import {
 import { validateTransactionsSearch } from "@/features/transactions/transactions.presentation";
 
 export const Route = createFileRoute("/people_/$personId")({
+  head: () => ({ meta: [{ title: "Detalhe da pessoa · OpenMonetis" }] }),
   component: PersonDetailsRoute,
   validateSearch: validatePersonDetailsSearch,
 });

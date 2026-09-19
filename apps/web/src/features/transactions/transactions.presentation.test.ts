@@ -5,7 +5,10 @@ import {
   formatPaymentMethod,
   formatPaymentMethodTable,
   getTransactionDateLabel,
+  getTransactionSettlementAction,
+  getTransactionSettlementLabel,
   groupTransactionRows,
+  validateTransactionsSearch,
 } from "./transactions.presentation";
 
 test("balance adjustments identify their internal balance correction", () => {
@@ -67,4 +70,36 @@ test("split rows connect by record identity, preserving every visible share", ()
     ],
   );
   assert.deepEqual(groupTransactionRows([]), []);
+});
+
+test("settlement copy distinguishes receipts, payments and invoice-controlled amounts", () => {
+  assert.equal(
+    getTransactionSettlementLabel({ type: "income", isSettled: true, paymentMethod: "pix" }),
+    "Recebido",
+  );
+  assert.equal(
+    getTransactionSettlementAction({ type: "income", isSettled: false }),
+    "Registrar recebimento",
+  );
+  assert.equal(
+    getTransactionSettlementLabel({
+      type: "expense",
+      isSettled: null,
+      paymentMethod: "credit_card",
+    }),
+    "Pagamento pela fatura",
+  );
+  assert.equal(
+    getTransactionSettlementLabel({ type: "expense", isSettled: false, paymentMethod: "pix" }),
+    "Em aberto",
+  );
+  assert.equal(
+    getTransactionSettlementAction({ type: "transfer", isSettled: false }),
+    "Confirmar transferência",
+  );
+  assert.equal(
+    validateTransactionsSearch({ settlement: "invoice", sort: "dueDate" }).settlement,
+    "invoice",
+  );
+  assert.equal(validateTransactionsSearch({ sort: "invalid" }).sort, undefined);
 });

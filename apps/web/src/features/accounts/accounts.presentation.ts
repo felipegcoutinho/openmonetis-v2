@@ -1,6 +1,12 @@
-import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
+import {
+  formatDateInBrazil,
+  getCurrentPeriodInBrazil,
+  periodToSafeInstant,
+} from "@openmonetis/shared/date-time";
 import type { AccountOutput, CreateAccountInput } from "@openmonetis/validators/accounts";
 import { getLogoLabel } from "@/lib/logo-catalog";
+
+export { formatCurrency, parseCurrencyInput } from "@/lib/money-presentation";
 
 export const accountTypeLabels: Record<AccountOutput["type"], string> = {
   checking: "Conta Corrente",
@@ -19,19 +25,10 @@ export function getLogoDisplayName(logo?: string | null) {
   return getLogoLabel(logo);
 }
 
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-export function parseCurrencyInput(value: string) {
-  const compactValue = value.replace(/[^\d,.-]/g, "");
-  const normalized = compactValue.includes(",")
-    ? compactValue.replace(/\./g, "").replace(",", ".")
-    : compactValue;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 export function getCurrentAccountPeriod() {
   return getCurrentPeriodInBrazil();
+}
+
+export function formatAccountPeriod(period: string) {
+  return formatDateInBrazil(periodToSafeInstant(period), { month: "long", year: "numeric" });
 }

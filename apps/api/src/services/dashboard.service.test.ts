@@ -3,6 +3,7 @@ import test from "node:test";
 import { calculateBudgetOverview, calculateBudgetSpending } from "@openmonetis/domain/budgets";
 import {
   createDefaultDashboardWidgetPreferences,
+  dashboardWidgetIds,
   normalizeDashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
 import {
@@ -504,9 +505,29 @@ test("payment status counts admin recurring shares and preserves occurrence paym
 test("dashboard migrates the recent default order and retains hidden widgets", () => {
   const defaults = createDefaultDashboardWidgetPreferences();
   assert.deepEqual(defaults.order.slice(0, 4), ["accounts", "invoices", "bills", "payment-status"]);
-  const recent = ["accounts", "payment-status", "invoices", "bills", ...defaults.order.slice(4)];
+  const recent = [
+    "accounts",
+    "payment-status",
+    "invoices",
+    "bills",
+    ...dashboardWidgetIds.slice(4),
+  ];
   assert.deepEqual(normalizeDashboardWidgetPreferences({ order: recent, hidden: ["notes"] }), {
     order: defaults.order,
     hidden: ["notes"],
   });
+});
+
+test("dashboard restores the initial accounts, invoices and bills order without changing custom orders", () => {
+  const first = ["payment-status", "inbox", "bills", "invoices"];
+  const uxOrder = [...first, ...dashboardWidgetIds.filter((id) => !first.includes(id))];
+  assert.deepEqual(normalizeDashboardWidgetPreferences({ order: uxOrder, hidden: ["notes"] }), {
+    order: [...dashboardWidgetIds],
+    hidden: ["notes"],
+  });
+  const custom = ["notes", ...dashboardWidgetIds.filter((id) => id !== "notes")];
+  assert.deepEqual(
+    normalizeDashboardWidgetPreferences({ order: custom, hidden: [] }).order,
+    custom,
+  );
 });

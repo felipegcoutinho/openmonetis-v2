@@ -324,6 +324,7 @@ export function createTransactionsRoute(service: TransactionsService) {
             input.purchaseDate,
             c.get("userId"),
             input.isSettled,
+            input.settledDate,
           ),
         ),
         200,
@@ -472,7 +473,12 @@ export function createTransactionsRoute(service: TransactionsService) {
     }),
     async (c) => {
       const input = c.req.valid("json");
-      return c.json(ok(await settleTransactions(input.ids, c.get("userId"), input.isSettled)), 200);
+      return c.json(
+        ok(
+          await settleTransactions(input.ids, c.get("userId"), input.isSettled, input.settledDate),
+        ),
+        200,
+      );
     },
   );
 

@@ -67,7 +67,7 @@ export function PageHeader({
             {title ? (
               <div className="flex items-center gap-2.5">
                 {icon ? <span className="shrink-0 text-brand-strong">{icon}</span> : null}
-                <h1 className="font-heading text-3xl font-normal tracking-tight sm:text-4xl">
+                <h1 className="font-heading text-3xl font-medium tracking-tight sm:text-4xl">
                   {title}
                 </h1>
               </div>

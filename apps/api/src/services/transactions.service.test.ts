@@ -70,9 +70,10 @@ function transactionFixture(
 
 test("divided transactions become allocation rows linked to the same editable record", async () => {
   const transaction = transactionFixture();
+  let listedTransactions = [transaction];
   const dependencies = new Proxy(
     {
-      listTransactionsByPeriod: async () => [transaction],
+      listTransactionsByPeriod: async () => listedTransactions,
       listRecurringRulesForPeriod: async () => [],
       listTransactionSplitsForUser: async () => [
         {
@@ -114,7 +115,7 @@ test("divided transactions become allocation rows linked to the same editable re
     ListTransactionsQuerySchema.parse({ period: "2026-09" }),
   );
 
-  assert.equal(result.total, 2);
+  assert.equal(result.total, 1);
   assert.deepEqual(
     result.items.map((item) => [
       item.id,
@@ -149,6 +150,59 @@ test("divided transactions become allocation rows linked to the same editable re
   assert.equal(filtered.total, 1);
   assert.equal(filtered.items[0]?.allocation?.personId, secondPersonId);
   assert.equal(filtered.items[0]?.allocation?.amount, -50);
+
+  // Five purchases fit on a page, even when one has two allocation rows.
+  listedTransactions = [
+    transaction,
+    ...Array.from({ length: 5 }, (_, index) =>
+      transactionFixture({
+        id: `${index + 7}0000000-0000-4000-8000-000000000001`,
+        purchaseDate: new Date("2026-08-22T00:00:00.000Z"),
+        name: `Compra ${index}`,
+        amount: `-${(index + 2) * 100}.00`,
+      }),
+    ),
+  ];
+  const paged = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09", pageSize: 5 }),
+  );
+  assert.equal(paged.total, 6);
+  assert.equal(paged.items.length, 6);
+  assert.equal(paged.items.filter((item) => item.recordId === transactionId).length, 2);
+  const nextPage = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09", pageSize: 5, page: 2 }),
+  );
+  assert.equal(nextPage.items.length, 1);
+  assert.equal(
+    nextPage.items.some((item) => item.recordId === transactionId),
+    false,
+  );
+  const byAmount = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09", sort: "amount" }),
+  );
+  assert.equal(byAmount.items[0]?.amount, -600);
+  const searched = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09", q: "única" }),
+  );
+  assert.equal(searched.total, 6);
+  listedTransactions = [
+    transactionFixture({
+      paymentMethod: "credit_card",
+      isSettled: null,
+      cardId: "70000000-0000-4000-8000-000000000007",
+    }),
+    transactionFixture({ id: "80000000-0000-4000-8000-000000000008", isSettled: true }),
+  ];
+  const invoiceOnly = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09", settlement: "invoice" }),
+  );
+  assert.equal(invoiceOnly.total, 1);
+  assert.ok(invoiceOnly.items.every((item) => item.isSettled === null));
 });
 
 test("installment series reallocates divided shares proportionally for each target amount", async () => {
@@ -307,4 +361,68 @@ test("invoice adjustments can only be removed through the invoice workflow", asy
     service.deleteTransaction(transactionId, userId),
     (error: { code?: string }) => error.code === "GENERATED_TRANSACTION_IMMUTABLE",
   );
+});
+
+test("settlement preserves the chosen boleto payment date and rejects future dates without writes", async () => {
+  const paymentDates: Date[] = [];
+  const fixture = transactionFixture();
+  const dependencies = new Proxy(
+    {
+      findTransactionByIdForUser: async () => fixture,
+      settleTransactionsForUser: async (
+        _ids: string[],
+        _userId: string,
+        _settled: boolean,
+        _period: string,
+        _snapshots: unknown,
+        date: Date,
+      ) => {
+        paymentDates.push(date);
+        return [fixture];
+      },
+      findRecurringRuleByIdForUser: async () => ({
+        startDate: new Date("2020-01-04T00:00:00.000Z"),
+        endDate: null,
+        frequency: "monthly",
+        paymentMethod: "boleto",
+      }),
+      settleRecurringOccurrenceForUser: async (
+        _id: string,
+        _purchaseDate: Date,
+        _userId: string,
+        _settled: boolean,
+        date: Date,
+      ) => {
+        paymentDates.push(date);
+        return fixture;
+      },
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  await service.settleTransactions([transactionId], userId, true, "2020-02-01");
+  await service.settleRecurringOccurrence(transactionId, "2020-01-04", userId, true, "2020-02-02");
+  assert.deepEqual(
+    paymentDates.map((date) => date.toISOString()),
+    ["2020-02-01T00:00:00.000Z", "2020-02-02T00:00:00.000Z"],
+  );
+  await assert.rejects(service.settleTransactions([transactionId], userId, true, "9999-01-01"), {
+    code: "SETTLEMENT_DATE_FUTURE",
+  });
+  await assert.rejects(
+    service.settleRecurringOccurrence(transactionId, "2020-01-04", userId, true, "9999-01-01"),
+    { code: "SETTLEMENT_DATE_FUTURE" },
+  );
+  assert.equal(paymentDates.length, 2);
 });

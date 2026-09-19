@@ -63,6 +63,7 @@ export function NotesPage() {
     ...noteQueryOptions(viewingNoteId ?? ""),
     enabled: Boolean(viewingNoteId),
   });
+  const [hideCompleted, setHideCompleted] = useState(false);
   const notes = query.data?.pages.flatMap((page) => page.items) ?? [];
   const viewingNote = viewingNoteId
     ? (detailQuery.data ?? notes.find((note) => note.id === viewingNoteId) ?? null)
@@ -173,7 +174,7 @@ export function NotesPage() {
               </Button>
             }
             breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
-            description="Registre ideias, decisões e listas sem misturá-las aos lançamentos financeiros."
+            description="Notas, listas e tarefas com lembretes para acompanhar o que você precisa fazer."
             eyebrow="Organização"
             icon={<NotebookPen aria-hidden="true" className="size-5" />}
             title="Anotações"
@@ -260,38 +261,56 @@ export function NotesPage() {
                 </div>
               ) : null}
 
+              <Button
+                className="w-fit"
+                variant="outline"
+                size="sm"
+                aria-pressed={hideCompleted}
+                onClick={() => setHideCompleted(!hideCompleted)}
+              >
+                {hideCompleted ? "Mostrar tarefas concluídas" : "Ocultar tarefas concluídas"}
+              </Button>
               {notes.length > 0 ? (
                 <>
+                  {hideCompleted &&
+                  notes.every((note) => note.kind === "task" && note.isCompleted) ? (
+                    <p className="rounded-lg border p-6 text-center text-muted-foreground">
+                      As tarefas carregadas estão concluídas. Use “Mostrar tarefas concluídas” para
+                      vê-las.
+                    </p>
+                  ) : null}
                   <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {notes.map((note) => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        onArchive={(item, isArchived) => void setArchived(item, isArchived)}
-                        onEdit={openEdit}
-                        onOpen={(item) => setViewingNoteId(item.id)}
-                        onRemove={setDeletingNote}
-                        onSetItemCompletion={(item, itemId, isCompleted) =>
-                          void setItemCompletion(item, itemId, isCompleted)
-                        }
-                        onSetTaskCompletion={(item, isCompleted) =>
-                          void setTaskCompletion(item, isCompleted)
-                        }
-                        pendingAction={
-                          (archiveMutation.isPending &&
-                            archiveMutation.variables?.id === note.id) ||
-                          (completionMutation.isPending &&
-                            completionMutation.variables?.noteId === note.id) ||
-                          (taskCompletionMutation.isPending &&
-                            taskCompletionMutation.variables?.id === note.id)
-                        }
-                        pendingItemId={
-                          completionMutation.variables?.noteId === note.id
-                            ? pendingItemId
-                            : undefined
-                        }
-                      />
-                    ))}
+                    {notes
+                      .filter((note) => !hideCompleted || note.kind !== "task" || !note.isCompleted)
+                      .map((note) => (
+                        <NoteCard
+                          key={note.id}
+                          note={note}
+                          onArchive={(item, isArchived) => void setArchived(item, isArchived)}
+                          onEdit={openEdit}
+                          onOpen={(item) => setViewingNoteId(item.id)}
+                          onRemove={setDeletingNote}
+                          onSetItemCompletion={(item, itemId, isCompleted) =>
+                            void setItemCompletion(item, itemId, isCompleted)
+                          }
+                          onSetTaskCompletion={(item, isCompleted) =>
+                            void setTaskCompletion(item, isCompleted)
+                          }
+                          pendingAction={
+                            (archiveMutation.isPending &&
+                              archiveMutation.variables?.id === note.id) ||
+                            (completionMutation.isPending &&
+                              completionMutation.variables?.noteId === note.id) ||
+                            (taskCompletionMutation.isPending &&
+                              taskCompletionMutation.variables?.id === note.id)
+                          }
+                          pendingItemId={
+                            completionMutation.variables?.noteId === note.id
+                              ? pendingItemId
+                              : undefined
+                          }
+                        />
+                      ))}
                   </div>
                   {query.isFetchNextPageError ? (
                     <div className="flex flex-col items-center gap-2 text-center" role="alert">

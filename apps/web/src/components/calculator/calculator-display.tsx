@@ -25,7 +25,6 @@ export function CalculatorDisplay({
       className="flex h-28 min-w-0 flex-col overflow-hidden rounded-xl border border-primary/25 bg-primary/15 px-5 py-4 text-right text-foreground dark:border-primary/20 dark:bg-primary/10"
     >
       <div className="flex min-h-5 items-center justify-between gap-3 text-muted-foreground text-xs">
-        <span className="uppercase tracking-[0.12em]">Resultado</span>
         <span className="min-w-0 truncate">
           {history ?? <span aria-hidden="true">&nbsp;</span>}
         </span>
