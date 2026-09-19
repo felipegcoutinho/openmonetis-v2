@@ -1,6 +1,6 @@
 {
   "name": "@openmonetis/api",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "private": true,
   "files": [
@@ -14,26 +14,26 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1127.0",
-    "@aws-sdk/s3-request-presigner": "^3.1127.0",
-    "@better-auth/drizzle-adapter": "^1.7.2",
-    "@better-auth/passkey": "1.7.2",
+    "@aws-sdk/client-s3": "^3.1134.0",
+    "@aws-sdk/s3-request-presigner": "^3.1134.0",
+    "@better-auth/drizzle-adapter": "^1.7.5",
+    "@better-auth/passkey": "1.7.5",
     "@hono/node-server": "^2.1.1",
     "@hono/zod-openapi": "^1.6.3",
     "@openmonetis/db": "workspace:*",
     "@openmonetis/domain": "workspace:*",
     "@openmonetis/shared": "workspace:*",
     "@openmonetis/validators": "workspace:*",
-    "better-auth": "^1.7.2",
+    "better-auth": "^1.7.5",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
-    "hono": "^4.13.7",
+    "hono": "^4.13.8",
     "tsx": "^4.23.13",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.1",
     "@types/pg": "^8.23.1",
     "pg": "^8.23.0",
     "typescript": "^7.0.2"

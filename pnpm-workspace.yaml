@@ -12,21 +12,21 @@ allowBuilds:
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
-  - '@tanstack/react-start-rsc@0.1.32 || 0.1.40'
-  - '@tanstack/react-start@1.168.33 || 1.168.41'
+  - '@tanstack/react-start-rsc@0.1.32 || 0.1.40 || 0.1.55'
+  - '@tanstack/react-start@1.168.33 || 1.168.41 || 1.168.56'
   - '@tanstack/form-core@1.33.4'
   - '@tanstack/react-form@1.33.4'
-  - '@tanstack/react-router@1.170.24'
-  - '@tanstack/react-start-client@1.168.22'
-  - '@tanstack/react-start-server@1.167.29'
-  - '@tanstack/router-core@1.171.20'
-  - '@tanstack/router-generator@1.167.26'
-  - '@tanstack/router-plugin@1.168.28'
-  - '@tanstack/start-client-core@1.170.20'
-  - '@tanstack/start-plugin-core@1.171.32'
-  - '@tanstack/start-server-core@1.169.24'
-  - '@tanstack/start-storage-context@1.167.22'
-  - lucide-react@1.31.0
+  - '@tanstack/react-router@1.170.24 || 1.170.38'
+  - '@tanstack/react-start-client@1.168.22 || 1.168.36'
+  - '@tanstack/react-start-server@1.167.29 || 1.167.43'
+  - '@tanstack/router-core@1.171.20 || 1.171.32'
+  - '@tanstack/router-generator@1.167.26 || 1.167.38'
+  - '@tanstack/router-plugin@1.168.28 || 1.168.40'
+  - '@tanstack/start-client-core@1.170.20 || 1.170.32'
+  - '@tanstack/start-plugin-core@1.171.32 || 1.171.46'
+  - '@tanstack/start-server-core@1.169.24 || 1.169.37'
+  - '@tanstack/start-storage-context@1.167.22 || 1.167.34'
+  - lucide-react@1.31.0 || 1.47.0
   - sonner@2.0.8
   - esbuild@0.25.12
   - uuid@11.1.1
@@ -40,3 +40,5 @@ minimumReleaseAgeExclude:
   - ip-address@10.2.1 || 10.2.2 || 10.3.1
   - hono@4.12.34 || 4.13.7
   - nanoid@3.3.17
+  - '@aws-sdk/client-s3@3.1134.0'
+  - '@aws-sdk/s3-request-presigner@3.1134.0'

@@ -24,3 +24,6 @@ todos.json
 
 # typescript
 *.tsbuildinfo
+
+# pnpm
+/.pnpm-store/
