@@ -1,4 +1,4 @@
-import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
+import { getCurrentDateInBrazil, getPeriodEndDateString } from "@openmonetis/shared/date-time";
 import type { AccountOutput, AddAccountYieldInput } from "@openmonetis/validators/accounts";
 import { AddAccountYieldInputSchema } from "@openmonetis/validators/accounts";
 import { useForm } from "@tanstack/react-form";
@@ -167,7 +167,7 @@ function AddAccountYieldForm({
             <Label htmlFor={`${id}-date`}>Data do rendimento</Label>
             <DatePicker
               id={`${id}-date`}
-              max={getPeriodEndDate(period)}
+              max={getPeriodEndDateString(period)}
               min={`${period}-01`}
               onChange={field.handleChange}
               value={field.state.value}
@@ -198,10 +198,5 @@ function AddAccountYieldForm({
 
 function getEntryDate(period: string) {
   const today = getCurrentDateInBrazil();
-  return today.startsWith(period) ? today : getPeriodEndDate(period);
-}
-
-function getPeriodEndDate(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+  return today.startsWith(period) ? today : getPeriodEndDateString(period);
 }

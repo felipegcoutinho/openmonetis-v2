@@ -26,7 +26,7 @@ export function MoneyValue({
     <span
       aria-label={isPrivacyModeEnabled ? "Valor oculto" : displayValue}
       className={cn(
-        "inline-flex tabular-nums tracking-tighter transition-[filter] duration-200",
+        "inline-flex font-mono tabular-nums tracking-tighter transition-[filter] duration-200",
         isPrivacyModeEnabled && "blur-md select-none hover:blur-none",
         className,
       )}

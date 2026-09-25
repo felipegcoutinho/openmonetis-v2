@@ -86,7 +86,7 @@ export function AvatarPicker({
             uploadedAvatar ? "Trocar imagem personalizada" : "Enviar imagem do computador"
           }
           aria-pressed={uploadedAvatar !== null && uploadedAvatar === value}
-          className={`relative grid size-[3.25rem] place-items-center rounded-full border-2 border-solid bg-muted/40 p-0.5 text-muted-foreground shadow-xs outline-none transition-colors hover:border-brand-strong/60 hover:text-brand-strong focus-visible:ring-3 focus-visible:ring-ring/50 ${uploadedAvatar !== null && uploadedAvatar === value ? "border-brand-strong ring-2 ring-brand-strong" : "border-muted-foreground/25"}`}
+          className="relative grid size-[3.25rem] place-items-center rounded-full bg-muted/40 p-0.5 text-muted-foreground outline-none transition-colors hover:text-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           disabled={processing}
           onClick={() => fileInput.current?.click()}
           type="button"
@@ -130,7 +130,7 @@ function AvatarChoice({
     <button
       aria-label={`Selecionar ${alt.toLocaleLowerCase("pt-BR")}`}
       aria-pressed={selected}
-      className={`relative rounded-full p-0.5 shadow-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${selected ? "ring-2 ring-brand-strong" : ""}`}
+      className="relative rounded-full p-0.5 outline-none transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       onClick={onClick}
       type="button"
     >

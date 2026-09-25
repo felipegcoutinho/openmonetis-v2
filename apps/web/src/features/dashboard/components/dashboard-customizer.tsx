@@ -54,7 +54,7 @@ export function DashboardCustomizer() {
           onClick={() => handleOpenChange(true)}
           render={
             <Button
-              className="text-muted-foreground hover:text-foreground"
+              className="max-md:size-11 text-muted-foreground hover:text-foreground"
               size="icon-sm"
               type="button"
               variant="ghost"
@@ -69,8 +69,8 @@ export function DashboardCustomizer() {
         </TooltipTrigger>
         <TooltipContent>Personalizar dashboard</TooltipContent>
       </Tooltip>
-      <SheetContent className="w-full gap-0 data-[side=right]:sm:max-w-lg">
-        <SheetHeader className="border-b pr-14">
+      <SheetContent className="min-w-0 gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b pr-14">
           <SheetTitle>Personalizar dashboard</SheetTitle>
           <SheetDescription>
             Escolha o que aparece e organize os widgets na ordem mais útil para você.
@@ -129,8 +129,8 @@ function DashboardCustomizationEditor({
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-popover/95 px-4 py-3 backdrop-blur">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 border-b bg-popover/95 px-4 py-3 backdrop-blur">
           <p className="text-muted-foreground text-sm">
             <span className="font-medium text-foreground">{visibleCount}</span> visíveis
           </p>
@@ -146,7 +146,7 @@ function DashboardCustomizationEditor({
           </Button>
         </div>
 
-        <ol className="grid gap-2 p-4">
+        <ol className="grid min-w-0 grid-cols-1 gap-2 p-4">
           {draft.order.map((widgetId, index) => {
             const widget = dashboardWidgetById.get(widgetId);
             return widget ? (
@@ -165,7 +165,7 @@ function DashboardCustomizationEditor({
         </ol>
       </div>
 
-      <SheetFooter className="grid grid-cols-2 border-t bg-popover sm:grid-cols-[auto_auto] sm:justify-end">
+      <SheetFooter className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] border-t bg-popover pb-[max(1rem,env(safe-area-inset-bottom))] sm:grid-cols-[auto_auto] sm:justify-end">
         <Button disabled={saveMutation.isPending} onClick={onClose} variant="outline">
           Cancelar
         </Button>
@@ -233,7 +233,7 @@ function DashboardWidgetEditorItem({
   return (
     <li
       className={cn(
-        "flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors",
+        "grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border bg-card p-3 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]",
         !isVisible && "bg-muted/35 text-muted-foreground",
       )}
       ref={itemRef}
@@ -242,16 +242,17 @@ function DashboardWidgetEditorItem({
         <Icon aria-hidden="true" className="size-4" />
       </span>
       <label className="min-w-0 flex-1 cursor-pointer" htmlFor={checkboxId}>
-        <span className="block truncate font-medium text-sm">{widget.title}</span>
-        <span className="mt-0.5 block truncate text-muted-foreground text-xs">
+        <span className="block break-words font-medium text-sm">{widget.title}</span>
+        <span className="mt-0.5 block break-words text-muted-foreground text-xs">
           {widget.description}
         </span>
       </label>
-      <div className="flex shrink-0 items-center gap-0.5">
+      <div className="col-start-2 row-start-2 flex items-center gap-1 sm:col-start-3 sm:row-start-1">
         <Button
           aria-label={`Mover ${widget.title} para cima`}
           disabled={index === 0}
           onClick={() => onMove(-1)}
+          className="max-sm:size-11"
           size="icon-sm"
           title="Mover para cima"
           variant="ghost"
@@ -262,6 +263,7 @@ function DashboardWidgetEditorItem({
           aria-label={`Mover ${widget.title} para baixo`}
           disabled={index === total - 1}
           onClick={() => onMove(1)}
+          className="max-sm:size-11"
           size="icon-sm"
           title="Mover para baixo"
           variant="ghost"
@@ -272,6 +274,7 @@ function DashboardWidgetEditorItem({
       <Checkbox
         aria-label={`${isVisible ? "Ocultar" : "Exibir"} ${widget.title}`}
         checked={isVisible}
+        className="col-start-3 row-start-1 sm:col-start-4"
         id={checkboxId}
         onCheckedChange={onToggle}
       />

@@ -1,7 +1,18 @@
 import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Calculator, Copy, Eye, EyeOff, LogOut, Menu, Settings } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Calculator,
+  Copy,
+  Eye,
+  EyeOff,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CalculatorDialog } from "@/components/calculator/calculator-dialog";
@@ -60,7 +71,7 @@ function getInitials(name?: string | null) {
 }
 
 const headerIconButtonClassName =
-  "text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground focus-visible:border-primary/40 focus-visible:ring-primary/25";
+  "max-md:size-11 text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground focus-visible:border-primary/40 focus-visible:ring-primary/25";
 
 const desktopNavigationItemClassName =
   "group/header-nav inline-flex h-9 items-center rounded-sm border-0 bg-transparent px-1 font-medium text-foreground text-sm tracking-tight hover:bg-transparent hover:text-foreground focus:bg-transparent focus:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40";
@@ -124,7 +135,7 @@ export function Navbar() {
             className="flex justify-self-start items-center gap-2 text-foreground"
             to="/dashboard"
           >
-            <OpenMonetisLogo compactOnMobile />
+            <OpenMonetisLogo className="max-md:[&_img]:h-7" compactOnMobile />
           </Link>
 
           <nav
@@ -220,13 +231,13 @@ export function Navbar() {
             </NavigationMenu>
           </nav>
 
-          <div className="flex justify-self-end items-center gap-2">
+          <div className="flex justify-self-end items-center gap-1 sm:gap-2">
             <Tooltip>
               <TooltipTrigger
                 aria-label="Abrir calculadora"
                 render={
                   <Button
-                    className={headerIconButtonClassName}
+                    className={cn("hidden md:inline-flex", headerIconButtonClassName)}
                     onClick={() => setCalculatorOpen(true)}
                     size="icon-sm"
                     type="button"
@@ -264,7 +275,7 @@ export function Navbar() {
               enabled={Boolean(user)}
               triggerClassName={headerIconButtonClassName}
             />
-            <ThemeToggle className={headerIconButtonClassName} />
+            <ThemeToggle className={cn("hidden md:inline-flex", headerIconButtonClassName)} />
 
             <Tooltip>
               <TooltipTrigger
@@ -286,9 +297,9 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Abrir menu do usuário"
-                className="appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                className="inline-flex size-11 items-center justify-center appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:size-auto"
               >
-                <Avatar className="overflow-hidden" showBorder={false} size="lg">
+                <Avatar className="overflow-hidden max-md:data-[size=lg]:size-8" size="lg">
                   <AvatarImage
                     alt={user?.name ?? "Usuário"}
                     className="scale-[1.06]"
@@ -339,7 +350,7 @@ export function Navbar() {
             <Sheet onOpenChange={setMobileNavigationOpen} open={mobileNavigationOpen}>
               <SheetTrigger
                 aria-label="Abrir navegação"
-                className="xl:hidden"
+                className="hidden md:inline-flex xl:hidden"
                 render={
                   <Button
                     className={headerIconButtonClassName}
@@ -357,6 +368,41 @@ export function Navbar() {
                   <SheetDescription>Acesse as áreas do seu controle financeiro.</SheetDescription>
                 </SheetHeader>
                 <nav aria-label="Navegação principal" className="grid gap-5 px-4 pb-6">
+                  <section className="grid gap-2 md:hidden">
+                    <h2 className="px-1 font-medium text-muted-foreground text-xs tracking-wider">
+                      Ferramentas
+                    </h2>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button
+                        className="h-20! w-full! flex-col gap-2 rounded-lg p-2 hover:bg-accent"
+                        onClick={() => {
+                          setMobileNavigationOpen(false);
+                          setCalculatorOpen(true);
+                        }}
+                        type="button"
+                        variant="outline"
+                      >
+                        <Calculator aria-hidden="true" className="size-5 text-brand-strong" />
+                        <span className="text-xs">Calculadora</span>
+                      </Button>
+                      <Button
+                        aria-label={isPrivacyModeEnabled ? "Mostrar valores" : "Ocultar valores"}
+                        aria-pressed={isPrivacyModeEnabled}
+                        className="h-20! w-full! flex-col gap-2 rounded-lg p-2 hover:bg-accent"
+                        onClick={togglePrivacyMode}
+                        type="button"
+                        variant="outline"
+                      >
+                        {isPrivacyModeEnabled ? (
+                          <EyeOff aria-hidden="true" className="size-5 text-brand-strong" />
+                        ) : (
+                          <Eye aria-hidden="true" className="size-5 text-brand-strong" />
+                        )}
+                        <span className="text-xs">Valores</span>
+                      </Button>
+                      <ThemeToggle card />
+                    </div>
+                  </section>
                   <NavLink
                     className={cn(
                       "flex min-h-11 items-center rounded-md px-3 font-medium text-sm transition-colors hover:bg-accent",
@@ -386,6 +432,56 @@ export function Navbar() {
           </div>
         </div>
       </header>
+      <nav
+        aria-label="Navegação principal mobile"
+        className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t bg-background/95 px-2 pt-1 pb-[max(0.3rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-18px_rgb(0_0_0/0.5)] backdrop-blur-md md:hidden"
+      >
+        <NavLink
+          className={cn(
+            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
+            location.pathname === "/dashboard" && "text-primary",
+          )}
+          href="/dashboard"
+          preservePeriod
+        >
+          <LayoutDashboard aria-hidden="true" className="size-5" />
+          Visão geral
+        </NavLink>
+        <NavLink
+          className={cn(
+            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
+            isPathActive(location.pathname, "/transactions") && "text-primary",
+          )}
+          href="/transactions"
+          preservePeriod
+        >
+          <ArrowLeftRight aria-hidden="true" className="size-5" />
+          Lançamentos
+        </NavLink>
+        <NavLink
+          className={cn(
+            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
+            isPathActive(location.pathname, "/accounts") && "text-primary",
+          )}
+          href="/accounts"
+          preservePeriod
+        >
+          <Landmark aria-hidden="true" className="size-5" />
+          Contas
+        </NavLink>
+        <button
+          aria-label="Abrir menu"
+          className={cn(
+            "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
+            mobileNavigationOpen && "text-primary",
+          )}
+          onClick={() => setMobileNavigationOpen(true)}
+          type="button"
+        >
+          <Menu aria-hidden="true" className="size-5" />
+          Menu
+        </button>
+      </nav>
       <div aria-hidden="true" className="h-16 xl:h-17.5" />
       <ReleaseNotice enabled={Boolean(user)} />
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />

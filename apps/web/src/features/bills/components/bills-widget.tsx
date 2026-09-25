@@ -196,7 +196,7 @@ function BillName({ bill }: { bill: DashboardBill }) {
         <div className="mt-3 grid gap-3">
           {bill.people.map((person) => (
             <div key={person.personId} className="flex items-center gap-3">
-              <Avatar showBorder={false}>
+              <Avatar>
                 <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
                 <AvatarFallback>
                   {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}

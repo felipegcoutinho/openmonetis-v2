@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { paymentMethodLabels } from "@/features/transactions/transactions.presentation";
 import { dashboardExpenseDistributionQueryOptions } from "../dashboard.queries";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { DashboardWidget } from "./dashboard-widget";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
 import { DashboardWidgetListSheet } from "./dashboard-widget-list-sheet";
@@ -44,7 +45,8 @@ const paymentMethodIcons: Record<PaymentMethod, LucideIcon> = {
 export function PaymentMethodsWidget({ period }: { period: string }) {
   const [isListOpen, setIsListOpen] = useState(false);
   const query = useQuery(dashboardExpenseDistributionQueryOptions(period));
-  const items = query.data ? buildItems(query.data.paymentMethods, period) : [];
+  const adminPersonSlug = useAdminPersonSlug();
+  const items = query.data ? buildItems(query.data.paymentMethods, period, adminPersonSlug) : [];
   const visibleItems = items.slice(0, maximumVisiblePaymentMethods);
   const hiddenCount = Math.max(0, items.length - visibleItems.length);
 
@@ -67,13 +69,15 @@ export function PaymentMethodsWidget({ period }: { period: string }) {
             ) : (
               <span />
             )}
-            <Link
-              className={dashboardWidgetFooterNavigationLinkClassName}
-              search={{ period, type: "expense" }}
-              to="/transactions"
-            >
-              Ver despesas <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
+            {adminPersonSlug ? (
+              <Link
+                className={dashboardWidgetFooterNavigationLinkClassName}
+                search={{ people: adminPersonSlug, period, type: "expense" }}
+                to="/transactions"
+              >
+                Ver despesas <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            ) : null}
           </div>
         ) : undefined
       }
@@ -98,6 +102,7 @@ export function PaymentMethodsWidget({ period }: { period: string }) {
 function buildItems(
   paymentMethods: DashboardExpenseDistributionOutput["paymentMethods"],
   period: string,
+  adminPersonSlug?: string,
 ): ExpenseDistributionListItem[] {
   return paymentMethods.map((paymentMethod) => {
     const Icon = paymentMethodIcons[paymentMethod.key];
@@ -106,7 +111,9 @@ function buildItems(
       ...paymentMethod,
       icon: <Icon aria-hidden="true" />,
       label: paymentMethodLabels[paymentMethod.key],
-      search: { paymentMethod: paymentMethod.key, period, type: "expense" },
+      search: adminPersonSlug
+        ? { paymentMethod: paymentMethod.key, people: adminPersonSlug, period, type: "expense" }
+        : undefined,
     };
   });
 }

@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, CircleDollarSign, Layers3, type LucideIcon, Repeat2 } from "lucide-react";
 import { transactionConditionLabels } from "@/features/transactions/transactions.presentation";
 import { dashboardExpenseDistributionQueryOptions } from "../dashboard.queries";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { DashboardWidget } from "./dashboard-widget";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
 import {
@@ -26,16 +27,17 @@ const conditionIcons: Record<Condition, LucideIcon> = {
 
 export function PaymentConditionsWidget({ period }: { period: string }) {
   const query = useQuery(dashboardExpenseDistributionQueryOptions(period));
-  const items = query.data ? buildItems(query.data.conditions, period) : [];
+  const adminPersonSlug = useAdminPersonSlug();
+  const items = query.data ? buildItems(query.data.conditions, period, adminPersonSlug) : [];
 
   return (
     <DashboardWidget
       description="Despesas à vista, parceladas e recorrentes"
       footer={
-        items.length > 0 ? (
+        items.length > 0 && adminPersonSlug ? (
           <Link
             className={dashboardWidgetFooterNavigationLinkClassName}
-            search={{ period, type: "expense" }}
+            search={{ people: adminPersonSlug, period, type: "expense" }}
             to="/transactions"
           >
             Ver despesas <ArrowRight aria-hidden="true" className="size-4" />
@@ -63,6 +65,7 @@ export function PaymentConditionsWidget({ period }: { period: string }) {
 function buildItems(
   conditions: DashboardExpenseDistributionOutput["conditions"],
   period: string,
+  adminPersonSlug?: string,
 ): ExpenseDistributionListItem[] {
   return conditions.map((condition) => {
     const Icon = conditionIcons[condition.key];
@@ -71,7 +74,9 @@ function buildItems(
       ...condition,
       icon: <Icon aria-hidden="true" />,
       label: transactionConditionLabels[condition.key],
-      search: { condition: condition.key, period, type: "expense" },
+      search: adminPersonSlug
+        ? { condition: condition.key, people: adminPersonSlug, period, type: "expense" }
+        : undefined,
     };
   });
 }

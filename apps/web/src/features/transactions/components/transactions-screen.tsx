@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
   ArrowLeftRight,
+  ArrowUpDown,
   Banknote,
   Barcode,
   CalendarClock,
@@ -67,6 +68,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { InstallmentAnticipationLauncher } from "@/features/installments/components/installment-anticipation-launcher";
 import { InstallmentAnticipationUndoDialog } from "@/features/installments/components/installment-anticipation-undo-dialog";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import {
   buildFilterSlugMap,
@@ -84,6 +86,7 @@ import { TransactionDialog } from "./transaction-dialog";
 import type { TransactionCreateDefaults } from "./transaction-form.validation";
 import { TransactionRefundDialog } from "./transaction-refund-dialog";
 import { transactionTypeIcons } from "./transaction-type-badge";
+import { TransactionsMobileList } from "./transactions-mobile-list";
 import { TransactionsTable } from "./transactions-table";
 
 type TransactionsScreenProps = {
@@ -185,6 +188,7 @@ export function TransactionsScreen({
   contentNavigation,
   contentOverride,
 }: TransactionsScreenProps) {
+  const isMobile = useIsMobile();
   const adminPersonId = people.find((person) => person.role === "admin")?.id ?? null;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<TransactionOutput | null>(null);
@@ -211,6 +215,7 @@ export function TransactionsScreen({
   const cardSlugs = parseFilterSlugs(urlSearch.cards);
   const page = urlSearch.page ?? 1;
   const pageSize = urlSearch.pageSize ?? defaultPageSize;
+  const selectionScopeKey = JSON.stringify([period, page, { ...urlSearch, edit: undefined }]);
   const hiddenFilterSet = new Set(hiddenFilters);
   const showHeaderCreateMenu = !header && allowCreate && createTypes.length > 0;
   const showInlineCreateButtons = allowCreate && createTypes.length > 0 && !showHeaderCreateMenu;
@@ -402,16 +407,17 @@ export function TransactionsScreen({
                 render={
                   <Button
                     aria-label="Criar novo lançamento"
-                    className="gap-0 overflow-hidden p-0"
+                    className="w-full gap-0 overflow-hidden p-0 sm:w-auto"
                     type="button"
                   />
                 }
               >
-                <span className="flex h-full items-center gap-1.5 px-3">
+                <span aria-hidden="true" className="w-9 shrink-0 sm:hidden" />
+                <span className="flex h-full flex-1 items-center justify-center gap-1.5 px-3">
                   <Plus aria-hidden="true" />
                   Novo lançamento
                 </span>
-                <span className="grid h-full w-9 place-items-center border-primary-foreground/25 border-l">
+                <span className="grid h-full w-9 shrink-0 place-items-center border-primary-foreground/25 border-l">
                   <ChevronDown
                     aria-hidden="true"
                     className="transition-transform group-data-popup-open/button:rotate-180"
@@ -436,7 +442,11 @@ export function TransactionsScreen({
           ) : null
         }
         breadcrumbs={pageHeader.breadcrumbs}
-        description={pageHeader.description}
+        description={
+          !header && isMobile === true
+            ? "Acompanhe seus lançamentos do período."
+            : pageHeader.description
+        }
         icon={pageHeader.icon}
         title={pageHeader.title}
       />
@@ -445,9 +455,14 @@ export function TransactionsScreen({
 
       {contextNavigationSection}
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 md:flex md:flex-wrap">
         {showInlineCreateButtons || allowImport ? (
-          <div className="order-1 flex flex-wrap items-center gap-2">
+          <div
+            className={cn(
+              "order-4 col-span-3 flex-wrap items-center gap-2 md:order-1 md:col-span-1 md:flex",
+              showInlineCreateButtons ? "flex" : "hidden",
+            )}
+          >
             {showInlineCreateButtons
               ? createTypes.map((type) => {
                   const Icon = transactionTypeIcons[type];
@@ -478,15 +493,19 @@ export function TransactionsScreen({
         ) : null}
 
         <div className="contents">
-          <div className="order-3 flex shrink-0 items-center gap-2 text-muted-foreground text-sm md:ml-auto">
-            Ordenar por
+          <div className="order-2 flex shrink-0 items-center gap-2 text-muted-foreground text-sm md:order-3 md:ml-auto">
+            <span className="hidden md:inline">Ordenar por</span>
             <Select
               value={urlSearch.sort ?? "recent"}
               onValueChange={(value) =>
                 onSearchChange({ sort: value as TransactionsSearch["sort"], page: undefined })
               }
             >
-              <SelectTrigger aria-label="Ordenar lançamentos" className="w-40">
+              <SelectTrigger
+                aria-label="Ordenar lançamentos"
+                className="w-10 justify-center px-2 [&_[data-slot=select-value]]:hidden [&_svg:last-child]:hidden md:w-40 md:justify-between md:px-2.5 md:[&_[data-slot=select-value]]:flex md:[&_svg:last-child]:block"
+              >
+                <ArrowUpDown aria-hidden="true" className="md:hidden" />
                 <SelectValue>{transactionSortLabels[urlSearch.sort ?? "recent"]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -497,7 +516,7 @@ export function TransactionsScreen({
               </SelectContent>
             </Select>
           </div>
-          <div className="order-4 relative w-full md:w-64">
+          <div className="relative order-1 w-full md:order-4 md:w-64">
             <Search
               aria-hidden="true"
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -506,7 +525,7 @@ export function TransactionsScreen({
               aria-label="Buscar lançamentos"
               className="pr-9 pl-9 placeholder:text-muted-foreground"
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar descrição, pessoa ou categoria"
+              placeholder={isMobile === true ? "Buscar" : "Buscar descrição, pessoa ou categoria"}
               value={search}
             />
             {search ? (
@@ -521,13 +540,14 @@ export function TransactionsScreen({
             ) : null}
           </div>
 
-          <div className="order-2">
+          <div className="order-3 md:order-2">
             <Sheet>
               <SheetTrigger
+                aria-label="Abrir filtros"
                 render={<Button className="relative bg-transparent" variant="outline" />}
               >
                 <Filter aria-hidden="true" />
-                Filtros
+                <span className="hidden md:inline">Filtros</span>
                 {activeFilterCount ? (
                   <span
                     aria-hidden="true"
@@ -940,8 +960,32 @@ export function TransactionsScreen({
           </Button>
         </div>
       ) : null}
-      {!isLoading && !hasLoadError ? (
+      {!isLoading && !hasLoadError && isMobile === true ? (
+        <TransactionsMobileList
+          key={`mobile:${selectionScopeKey}`}
+          allowImport={allowImport}
+          currentPage={Math.min(page, pageCount)}
+          onAnticipate={setAnticipatingTransaction}
+          onCopy={openCopyDialog}
+          onDelete={onDeleteTransaction}
+          onEdit={openEditDialog}
+          onPageChange={setPage}
+          onRecurringStatus={onRecurringStatus}
+          onRefund={setRefundingTransaction}
+          onSettle={onSettleTransactions}
+          onSettleRecurringOccurrence={onSettleRecurringOccurrence}
+          onUndoAnticipation={setUndoingAnticipation}
+          onView={setViewingTransaction}
+          pageCount={pageCount}
+          pendingSettlementKey={pendingSettlementKey}
+          pendingTransactionId={pendingTransactionId}
+          totalItems={totalItems}
+          transactions={transactions}
+        />
+      ) : null}
+      {!isLoading && !hasLoadError && isMobile === false ? (
         <TransactionsTable
+          key={`desktop:${selectionScopeKey}`}
           adminPersonId={adminPersonId}
           currentPage={Math.min(page, pageCount)}
           onAnticipate={setAnticipatingTransaction}

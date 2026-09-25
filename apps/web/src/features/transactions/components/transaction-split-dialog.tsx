@@ -108,7 +108,7 @@ function SplitAvatarStack({
       {shares.slice(0, 3).map((share) => {
         const person = people.find((item) => item.id === share.personId);
         return person ? (
-          <Avatar key={share.personId} showBorder={false} size="sm">
+          <Avatar key={share.personId} size="sm">
             <AvatarImage alt={`Avatar de ${person.name}`} src={person.avatarUrl ?? undefined} />
             <AvatarFallback>{person.name[0]}</AvatarFallback>
           </Avatar>

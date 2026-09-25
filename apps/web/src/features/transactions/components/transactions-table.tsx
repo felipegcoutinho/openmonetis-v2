@@ -58,6 +58,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,8 +91,10 @@ import {
   groupTransactionRows,
   transactionConditionLabels,
 } from "../transactions.presentation";
+import { useTransactionSelection } from "../useTransactionSelection";
 import { InstallmentActionDialog } from "./installment-action-dialog";
 import { RecurringStatusDialog } from "./recurring-status-dialog";
+import { TransactionSelectionSummary } from "./transaction-selection-summary";
 
 type TransactionsTableProps = {
   adminPersonId: string | null;
@@ -147,9 +150,12 @@ export function TransactionsTable({
   onPageChange,
   onPageSizeChange,
 }: TransactionsTableProps) {
+  const selection = useTransactionSelection(transactions);
+
   return (
     <TooltipProvider>
       <div className="grid gap-3">
+        <TransactionSelectionSummary onClear={selection.clear} summary={selection.summary} />
         <Card className="py-2">
           <CardContent className="px-2 sm:px-4">
             {transactions.length ? (
@@ -158,9 +164,17 @@ export function TransactionsTable({
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            aria-label="Selecionar lançamentos operacionais desta página"
+                            checked={selection.allSelectableSelected}
+                            disabled={!selection.selectableCount}
+                            onCheckedChange={selection.setAllSelectableSelected}
+                          />
+                        </TableHead>
                         <TableHead>Descrição</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Condição</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                        <TableHead className="pl-5">Condição</TableHead>
                         <TableHead>Forma</TableHead>
                         <TableHead>Conta/Cartão</TableHead>
                         <TableHead className="w-24 text-right">Ações</TableHead>
@@ -171,6 +185,8 @@ export function TransactionsTable({
                         <TransactionRow
                           adminPersonId={adminPersonId}
                           key={transaction.id}
+                          selected={selection.isSelected(transaction.id)}
+                          selectable={selection.isSelectable(transaction)}
                           splitConnector={splitConnector}
                           onEdit={onEdit}
                           onView={onView}
@@ -182,6 +198,9 @@ export function TransactionsTable({
                           onRecurringStatus={onRecurringStatus}
                           onSettle={onSettle}
                           onSettleRecurringOccurrence={onSettleRecurringOccurrence}
+                          onSelectionChange={(selected) =>
+                            selection.setSelected(transaction.id, selected)
+                          }
                           pending={
                             pendingTransactionId !== null &&
                             pendingTransactionId === transaction.recordId
@@ -282,6 +301,8 @@ export function TransactionsTable({
 
 type TransactionRowProps = {
   adminPersonId: string | null;
+  selected: boolean;
+  selectable: boolean;
   splitConnector: "start" | "middle" | "end" | null;
   transaction: TransactionOutput;
   pending: boolean;
@@ -304,10 +325,13 @@ type TransactionRowProps = {
     purchaseDate: string,
     isSettled: boolean,
   ) => void;
+  onSelectionChange: (selected: boolean) => void;
 };
 
 function TransactionRow({
   adminPersonId,
+  selected,
+  selectable,
   splitConnector,
   transaction,
   pending,
@@ -323,6 +347,7 @@ function TransactionRow({
   onRecurringStatus,
   onSettle,
   onSettleRecurringOccurrence,
+  onSelectionChange,
 }: TransactionRowProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [installmentDeleteOpen, setInstallmentDeleteOpen] = useState(false);
@@ -404,10 +429,28 @@ function TransactionRow({
   return (
     <TableRow
       className={cn(
-        isInvoicePayment ? "bg-muted/30" : isRefund ? "bg-success/5" : undefined,
+        isInvoicePayment
+          ? "bg-success/5 hover:bg-success/10"
+          : isRefund
+            ? "bg-success/5"
+            : undefined,
+        selected && "bg-brand/5",
         splitConnector && splitConnector !== "end" && "border-b-0",
       )}
     >
+      <TableCell>
+        <Checkbox
+          aria-label={
+            selectable
+              ? `Selecionar ${transaction.name}`
+              : `${transaction.name} não participa da conferência`
+          }
+          checked={selected}
+          className={cn(!selectable && "opacity-40!")}
+          disabled={!selectable}
+          onCheckedChange={onSelectionChange}
+        />
+      </TableCell>
       <TableCell>
         <div className="relative flex min-w-64 items-center gap-2.5">
           {splitConnector && splitConnector !== "end" ? (
@@ -428,7 +471,10 @@ function TransactionRow({
                 width={32}
               />
             ) : (
-              <EstablishmentLogo name={transaction.name} />
+              <EstablishmentLogo
+                fallback={<CategoryIcon className="size-4" name={transaction.categoryIcon} />}
+                name={transaction.name}
+              />
             )}
           </span>
           <span className="flex min-w-0 flex-col gap-1">
@@ -519,7 +565,7 @@ function TransactionRow({
           </span>
         </div>
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell className="text-right whitespace-nowrap">
         <span className="sr-only">
           {isRefund
             ? "Reembolso"
@@ -540,7 +586,7 @@ function TransactionRow({
           }
         />
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell className="pl-5 whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
           {transaction.isRecurring ? (
             <RefreshCw aria-hidden="true" className="size-4" />
@@ -855,12 +901,12 @@ function TransactionPeople({ transaction }: { transaction: TransactionOutput }) 
             <span className="flex -space-x-1.5">
               {visibleShares.map((share) => (
                 <Link
-                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   key={share.personId}
                   params={{ personId: share.personId }}
                   to="/people/$personId"
                 >
-                  <Avatar className="size-5 bg-background" showBorder size="sm">
+                  <Avatar className="size-5 bg-background" size="sm">
                     <AvatarImage
                       alt={`Avatar de ${share.personName}`}
                       src={share.personAvatarUrl ?? undefined}
@@ -900,13 +946,13 @@ function PersonLink({
         aria-label={`Pessoa: ${name}`}
         render={
           <Link
-            className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             params={{ personId: id }}
             to="/people/$personId"
           />
         }
       >
-        <Avatar className="size-5" showBorder={false} size="sm">
+        <Avatar className="size-5" size="sm">
           <AvatarImage alt="" src={avatarUrl ?? undefined} />
           <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
         </Avatar>

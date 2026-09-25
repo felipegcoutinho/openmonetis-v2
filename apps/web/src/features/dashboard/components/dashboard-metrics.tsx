@@ -1,5 +1,4 @@
 import type { DashboardMetricsOutput } from "@openmonetis/validators/dashboard";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowDownLeft,
@@ -19,14 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { peopleQueryOptions } from "@/features/people/people.queries";
-import { buildFilterSlugMap } from "@/features/transactions/transactions.presentation";
 import { cn } from "@/lib/utils";
 import {
   formatProjectedMetricHelp,
   getMetricComparison,
   type MetricTrend,
 } from "../dashboard.presentation";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 
 type MetricKey = "balance" | "expenses" | "income" | "projected";
 
@@ -81,18 +79,78 @@ const cards: Array<{
 ];
 
 export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput }) {
-  const peopleQuery = useQuery(peopleQueryOptions());
-  const people = peopleQuery.data ?? [];
-  const primaryPerson = people.find((person) => person.role === "admin");
-  const primarySlug = primaryPerson
-    ? buildFilterSlugMap(people).idToSlug.get(primaryPerson.id)
-    : undefined;
+  const primarySlug = useAdminPersonSlug();
+  const projectedComparison = getMetricComparison(
+    metrics.projected.current,
+    metrics.projected.previous,
+  );
   return (
     <section aria-labelledby="dashboard-metrics-title">
       <h2 className="sr-only" id="dashboard-metrics-title">
         Principais métricas financeiras
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <Card className="relative gap-0 overflow-hidden border py-0 shadow-none md:hidden">
+        <div className="grid gap-5 bg-brand/8 py-5">
+          <CardHeader className="gap-1 px-5">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              Saldo previsto
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label="Como calculamos o saldo previsto"
+                  className="rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <CircleHelp aria-hidden="true" className="size-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>{formatProjectedMetricHelp(metrics.period)}</TooltipContent>
+              </Tooltip>
+            </CardTitle>
+            <CardDescription className="text-xs">Previsão para o fim do mês</CardDescription>
+          </CardHeader>
+          <CardContent className="px-5">
+            <div className="grid gap-3">
+              <MoneyValue
+                amount={metrics.projected.current}
+                className="font-semibold text-3xl leading-none tracking-tight"
+              />
+              <MetricComparison
+                subtle
+                hasPreviousData={metrics.projected.hasPreviousData}
+                invertTrend={false}
+                previous={metrics.projected.previous}
+                trend={projectedComparison.trend}
+                trendLabel={projectedComparison.label}
+              />
+            </div>
+          </CardContent>
+        </div>
+        <CardContent className="border-t bg-card px-5 py-4">
+          <div className="grid gap-1">
+            <MobileMetric
+              amount={metrics.income.current}
+              href={
+                primarySlug
+                  ? { people: primarySlug, period: metrics.period, type: "income" as const }
+                  : null
+              }
+              label="Receitas"
+              valueClassName="text-success"
+            />
+            <MobileMetric
+              amount={metrics.expenses.current}
+              href={
+                primarySlug
+                  ? { people: primarySlug, period: metrics.period, type: "expense" as const }
+                  : null
+              }
+              label="Despesas"
+              valueClassName="text-destructive"
+            />
+            <MobileMetric amount={metrics.balance.current} label="Resultado" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
           const metric = metrics[card.key];
           const comparison = getMetricComparison(metric.current, metric.previous);
@@ -154,13 +212,47 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
   );
 }
 
+function MobileMetric({
+  amount,
+  href,
+  label,
+  valueClassName,
+}: {
+  amount: number;
+  href?: { people: string; period: string; type: "expense" | "income" } | null;
+  label: string;
+  valueClassName?: string;
+}) {
+  const content = (
+    <>
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <MoneyValue amount={amount} className={cn("shrink-0 font-medium text-sm", valueClassName)} />
+    </>
+  );
+
+  return href ? (
+    <Link
+      aria-label={`Ver lançamentos de ${label.toLocaleLowerCase("pt-BR")}`}
+      className="flex min-h-8 min-w-0 items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      search={href}
+      to="/transactions"
+    >
+      {content}
+    </Link>
+  ) : (
+    <div className="flex min-h-8 min-w-0 items-center justify-between gap-3">{content}</div>
+  );
+}
+
 function MetricComparison({
+  subtle = false,
   hasPreviousData,
   invertTrend,
   previous,
   trend,
   trendLabel,
 }: {
+  subtle?: boolean;
   hasPreviousData: boolean;
   invertTrend: boolean;
   previous: number;
@@ -181,14 +273,15 @@ function MetricComparison({
 
   return (
     <div className="flex min-h-5 flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
-      <span>Mês anterior:</span>
-      <MoneyValue amount={previous} className="font-sans text-xs" />
+      <span>{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
+      <MoneyValue amount={previous} className="text-xs" />
       {trendLabel ? (
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium tabular-nums",
-            isPositive && "text-success",
-            isNegative && "text-destructive",
+            "inline-flex items-center gap-1 tabular-nums",
+            !subtle && "rounded-full bg-muted px-2 py-0.5 font-medium",
+            !subtle && isPositive && "text-success",
+            !subtle && isNegative && "text-destructive",
           )}
         >
           <TrendIcon aria-hidden="true" className="size-3" />
@@ -201,23 +294,38 @@ function MetricComparison({
 
 export function DashboardMetricsSkeleton() {
   return (
-    <div
-      aria-label="Carregando métricas"
-      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
-      role="status"
-    >
-      {cards.map((card) => (
-        <Card className="gap-5 border py-5" key={card.key}>
-          <CardHeader className="px-5">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-3 w-36" />
+    <div aria-label="Carregando métricas" role="status">
+      <Card className="gap-0 border py-0 shadow-none md:hidden">
+        <div className="grid gap-5 bg-brand/8 py-5">
+          <CardHeader className="gap-1 px-5">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-4 w-36" />
           </CardHeader>
           <CardContent className="grid gap-3 px-5">
-            <Skeleton className="h-7 w-36" />
-            <Skeleton className="h-4 w-44" />
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-5 w-44" />
           </CardContent>
-        </Card>
-      ))}
+        </div>
+        <CardContent className="grid gap-1 border-t bg-card px-5 py-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </CardContent>
+      </Card>
+      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => (
+          <Card className="gap-5 border py-5" key={card.key}>
+            <CardHeader className="px-5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-36" />
+            </CardHeader>
+            <CardContent className="grid gap-3 px-5">
+              <Skeleton className="h-7 w-36" />
+              <Skeleton className="h-4 w-44" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       <span className="sr-only">Carregando métricas financeiras…</span>
     </div>
   );

@@ -27,7 +27,7 @@ export function validateInstallmentsSearch(search: Record<string, unknown>): Ins
 export function resolveInstallmentsSearch(search: InstallmentsSearch): ListInstallmentsQuery {
   return {
     period: search.period ?? getCurrentPeriod(),
-    status: search.status ?? "all",
+    status: search.status ?? "open",
   };
 }
 
@@ -36,6 +36,16 @@ export function formatInstallmentPeriod(period: string) {
     month: "long",
     year: "numeric",
   });
+  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
+}
+
+export function formatInstallmentChartPeriod(period: string) {
+  const label = formatDateInBrazil(periodToSafeInstant(period), {
+    month: "short",
+    year: "numeric",
+  })
+    .replaceAll(".", "")
+    .replace(" de ", " ");
   return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }
 

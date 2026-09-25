@@ -1,4 +1,4 @@
-import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
+import { getCurrentDateInBrazil, getPeriodEndDateString } from "@openmonetis/shared/date-time";
 import type { AdjustInvoiceInput } from "@openmonetis/validators/invoices";
 import { AdjustInvoiceInputSchema } from "@openmonetis/validators/invoices";
 import type { PersonOutput } from "@openmonetis/validators/people";
@@ -209,7 +209,7 @@ function PersonOption({ person }: { person?: PersonOutput }) {
 
   return (
     <span className="flex min-w-0 items-center gap-2">
-      <Avatar showBorder={false} size="sm">
+      <Avatar size="sm">
         <AvatarImage alt="" src={person.avatarUrl ?? person.providerAvatarUrl ?? undefined} />
         <AvatarFallback>{person.name.slice(0, 1).toLocaleUpperCase("pt-BR")}</AvatarFallback>
       </Avatar>
@@ -225,11 +225,6 @@ function getEntryDate(period: string) {
 
 function getMaximumEntryDate(period: string) {
   const today = getCurrentDateInBrazil();
-  const periodEnd = getPeriodEndDate(period);
+  const periodEnd = getPeriodEndDateString(period);
   return periodEnd < today ? periodEnd : today;
-}
-
-function getPeriodEndDate(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
 }

@@ -9,11 +9,9 @@ import {
   ReceiptText,
   Ticket,
 } from "lucide-react";
-import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type ChartConfig,
@@ -76,7 +74,6 @@ export function PersonFinancialSummary({ data, isError, isLoading }: PersonFinan
 }
 
 function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
-  const [showAllMethods, setShowAllMethods] = useState(false);
   return (
     <Card>
       <CardHeader className="gap-1">
@@ -95,8 +92,8 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {data.paymentMethods
-            .filter((item) => showAllMethods || item.amount !== 0)
+          {[...data.paymentMethods]
+            .sort((first, second) => second.amount - first.amount)
             .map((item) => (
               <div
                 className="grid min-w-0 gap-2 overflow-hidden rounded-lg border bg-muted/20 p-3"
@@ -109,7 +106,9 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
                       {personPaymentMethodLabels[item.paymentMethod]}
                     </span>
                   </span>
-                  <span className="shrink-0 text-muted-foreground text-xs">{item.percentage}%</span>
+                  <span className="shrink-0 font-mono text-muted-foreground text-xs">
+                    {item.percentage}%
+                  </span>
                 </div>
                 <p className="font-semibold text-sm">
                   <MoneyValue amount={item.amount} />
@@ -122,14 +121,6 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
               </div>
             ))}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-fit"
-          onClick={() => setShowAllMethods(!showAllMethods)}
-        >
-          {showAllMethods ? "Mostrar apenas meios com despesas" : "Ver todos os meios de pagamento"}
-        </Button>
       </CardContent>
     </Card>
   );

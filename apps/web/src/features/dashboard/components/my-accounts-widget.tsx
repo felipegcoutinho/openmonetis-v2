@@ -181,7 +181,7 @@ function AccountRow({
       <div className="shrink-0 text-right">
         <MoneyValue
           amount={account.balance}
-          className={cn("font-medium font-sans text-sm", account.balance < 0 && "text-destructive")}
+          className={cn("font-medium text-sm", account.balance < 0 && "text-destructive")}
         />
         {!account.excludeFromBalance ? (
           <p className="mt-0.5 text-muted-foreground text-xs tabular-nums">

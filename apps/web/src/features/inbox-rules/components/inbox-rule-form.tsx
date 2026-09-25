@@ -192,7 +192,7 @@ export function InboxRuleForm({
         {(conditionsField) => (
           <fieldset className="grid gap-3">
             <div className="flex items-center justify-between gap-3">
-              <legend className="font-medium font-mono text-xs tracking-tight">Condições</legend>
+              <legend className="font-medium text-sm tracking-tight">Condições</legend>
               <Button
                 disabled={conditionsField.state.value.length >= inboxRuleMaximumConditions}
                 onClick={() => conditionsField.pushValue(createEmptyCondition())}
@@ -301,7 +301,7 @@ export function InboxRuleForm({
       </form.Field>
 
       <fieldset className="grid gap-3">
-        <legend className="font-medium font-mono text-xs tracking-tight">Preencher</legend>
+        <legend className="font-medium text-sm tracking-tight">Preencher</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <form.Field name="categoryId">
             {(field) => (
@@ -457,7 +457,7 @@ function PersonOption({ person }: { person?: PersonOutput }) {
 
   return (
     <span className="flex min-w-0 items-center gap-2">
-      <Avatar showBorder={false} size="sm">
+      <Avatar size="sm">
         <AvatarImage alt={`Avatar de ${person.name}`} src={person.avatarUrl ?? undefined} />
         <AvatarFallback>{getPersonInitials(person.name)}</AvatarFallback>
       </Avatar>

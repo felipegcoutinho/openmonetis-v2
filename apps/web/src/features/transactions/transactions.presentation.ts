@@ -6,6 +6,9 @@ import {
   periodToSafeInstant,
 } from "@openmonetis/shared/date-time";
 import type { TransactionInput, TransactionOutput } from "@openmonetis/validators/transactions";
+import { formatCurrency } from "../../lib/money-presentation";
+
+export { formatCurrency as formatTransactionFilterAmount } from "../../lib/money-presentation";
 
 type TransactionType = TransactionInput["type"];
 type TransactionCondition = NonNullable<TransactionInput["condition"]>;
@@ -204,13 +207,6 @@ export function formatPeriod(period: string) {
   return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
-
 export function formatInstallmentOption(amount: number, count: number) {
   if (!Number.isInteger(count) || count < 2) return "Selecione";
   if (!Number.isFinite(amount) || amount <= 0) return `${count}x`;
@@ -395,8 +391,4 @@ export function formatTransactionFilterDate(value: string) {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-export function formatTransactionFilterAmount(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }

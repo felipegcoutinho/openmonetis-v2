@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import { Pencil } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { cn } from "@/lib/utils";
 import { getEstablishmentInitials } from "../establishments.presentation";
 import { establishmentLogoQueryOptions } from "../establishments.queries";
@@ -13,6 +13,7 @@ type EstablishmentLogoProps = {
   className?: string;
   editable?: boolean;
   fallbackLogoUrl?: string | null;
+  fallback?: ReactNode;
 };
 
 export function EstablishmentLogo({
@@ -21,6 +22,7 @@ export function EstablishmentLogo({
   className,
   editable = true,
   fallbackLogoUrl = null,
+  fallback,
 }: EstablishmentLogoProps) {
   const { data } = useQuery(establishmentLogoQueryOptions(name));
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
@@ -38,10 +40,13 @@ export function EstablishmentLogo({
   ) : (
     <span
       aria-hidden
-      className="grid shrink-0 place-items-center rounded-full bg-brand/10 font-semibold text-brand-strong"
+      className={cn(
+        "grid shrink-0 place-items-center rounded-full font-semibold",
+        fallback ? "bg-muted text-muted-foreground" : "bg-brand/10 text-brand-strong",
+      )}
       style={{ width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.34)) }}
     >
-      {getEstablishmentInitials(name)}
+      {fallback ?? getEstablishmentInitials(name)}
     </span>
   );
   if (!editable || !data?.enabled)

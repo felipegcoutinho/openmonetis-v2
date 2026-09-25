@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { formatDashboardTransactionCount } from "../dashboard.presentation";
 import { dashboardCategoryBreakdownQueryOptions } from "../dashboard.queries";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
 import { DashboardItemLinkArrow } from "./dashboard-item-link-arrow";
 import { DashboardWidget } from "./dashboard-widget";
@@ -52,6 +53,7 @@ export function CategoryBreakdownWidget({
   const [isListOpen, setIsListOpen] = useState(false);
   const [activeView, setActiveView] = useState<"list" | "chart">("list");
   const query = useQuery(dashboardCategoryBreakdownQueryOptions(period));
+  const adminPersonSlug = useAdminPersonSlug();
   const config = variantContent[variant];
   const items = query.data?.[variant === "expense" ? "expenses" : "income"] ?? [];
   const visibleItems = items.slice(0, maximumVisibleCategories);
@@ -96,13 +98,15 @@ export function CategoryBreakdownWidget({
             ) : (
               <span />
             )}
-            <Link
-              className={dashboardWidgetFooterNavigationLinkClassName}
-              search={{ period, type: variant }}
-              to="/transactions"
-            >
-              Ver {config.itemLabel} <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
+            {adminPersonSlug ? (
+              <Link
+                className={dashboardWidgetFooterNavigationLinkClassName}
+                search={{ people: adminPersonSlug, period, type: variant }}
+                to="/transactions"
+              >
+                Ver {config.itemLabel} <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            ) : null}
           </div>
         ) : undefined
       }

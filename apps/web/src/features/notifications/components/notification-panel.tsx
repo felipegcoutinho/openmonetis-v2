@@ -419,7 +419,7 @@ function NotificationIcon({ notification }: { notification: NotificationOutput }
 
   if (notification.kind === "invoice") {
     return (
-      <Avatar className="size-9" showBorder={false}>
+      <Avatar className="size-9">
         <AvatarImage
           alt={`Logo do cartão ${notification.cardName}`}
           className="object-contain"

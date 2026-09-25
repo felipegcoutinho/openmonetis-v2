@@ -146,9 +146,9 @@ function CategoryTrendRow({ item, period }: { item: TrendItem; period: string })
           ) : null}
         </div>
         <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
-          <MoneyValue amount={value.previousAmount} className="font-sans text-xs" />
+          <MoneyValue amount={value.previousAmount} className="text-xs" />
           <ArrowRight aria-hidden="true" className="size-3" />
-          <MoneyValue amount={value.totalAmount} className="font-medium font-sans text-xs" />
+          <MoneyValue amount={value.totalAmount} className="font-medium text-xs" />
         </p>
       </div>
       <Tooltip>

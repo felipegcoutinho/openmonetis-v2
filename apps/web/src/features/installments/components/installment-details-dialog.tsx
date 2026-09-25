@@ -59,6 +59,13 @@ export function InstallmentDetailsDialog({
           <Metric label="Saldo pendente" value={group.pendingAmount} />
         </div>
 
+        {group.untrackedInstallmentCount > 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Acompanhada desde a parcela {group.trackedFromInstallment}/{group.totalInstallments}; as
+            anteriores não compõem o saldo registrado.
+          </p>
+        ) : null}
+
         {group.missingInstallmentCount > 0 ? (
           <div className="flex gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
             <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />

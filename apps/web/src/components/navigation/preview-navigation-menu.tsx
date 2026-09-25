@@ -331,7 +331,7 @@ function PersonPreviewItem({ person }: { person: PersonOutput }) {
       params={{ personId: person.id }}
       to="/people/$personId"
     >
-      <Avatar className="size-8 overflow-hidden" showBorder={false}>
+      <Avatar className="size-8 overflow-hidden">
         {person.avatarUrl ? (
           <AvatarImage
             alt={`Avatar de ${person.name}`}

@@ -1,19 +1,10 @@
 import type { InstallmentGroupOutput } from "@openmonetis/validators/installments";
 import { Image } from "@unpic/react";
-import {
-  AlertTriangle,
-  CalendarClock,
-  ChevronRight,
-  CircleCheckBig,
-  Info,
-  Landmark,
-} from "lucide-react";
+import { AlertTriangle, ChevronRight, Info } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -48,144 +39,117 @@ export function InstallmentGroupCard({
   const allPendingSelected = pendingIds.length > 0 && selectedInGroup === pendingIds.length;
   const destinationName =
     group.cardName ?? group.accountName ?? installmentPaymentMethodLabels[group.paymentMethod];
-  const statusVariant = group.status === "incomplete" ? "destructive" : "outline";
+  const statusVariant =
+    group.status === "incomplete"
+      ? "destructive"
+      : group.status === "completed"
+        ? "secondary"
+        : "outline";
 
   return (
-    <>
-      <Card
-        className={cn(
-          "overflow-hidden transition-colors",
-          selectedInGroup > 0 && "border-brand-strong/40 bg-brand/[0.02]",
-        )}
-      >
-        <CardHeader className="gap-4">
-          <div className="flex items-start gap-3">
-            <Checkbox
-              aria-label={["Selecionar parcelas pendentes de", group.name].join(" ")}
-              checked={allPendingSelected}
-              disabled={pendingIds.length === 0}
-              onCheckedChange={() => onToggleGroup(pendingIds)}
-            />
-            <EstablishmentLogo name={group.name} size={40} />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <CardTitle className="truncate">{group.name}</CardTitle>
-                  {group.note ? (
-                    <Tooltip>
-                      <TooltipTrigger
-                        aria-label={`Anotação de ${group.name}`}
-                        render={
-                          <button
-                            className="shrink-0 text-muted-foreground hover:text-foreground"
-                            type="button"
-                          />
-                        }
-                      >
-                        <Info aria-hidden="true" className="size-3.5" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs whitespace-pre-wrap wrap-break-word">
-                        {group.note}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : null}
-                </div>
-                <Badge variant={statusVariant}>{installmentSeriesStatusLabels[group.status]}</Badge>
-              </div>
-              <p className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
-                {group.cardId ? (
-                  group.cardLogo ? (
-                    <Image
-                      alt=""
-                      className="size-5 shrink-0 rounded object-contain"
-                      height={20}
-                      layout="fixed"
-                      src={group.cardLogo}
-                      width={20}
-                    />
-                  ) : null
-                ) : (
-                  <Landmark aria-hidden="true" className="size-3.5 shrink-0" />
-                )}
-                <span className="truncate">{destinationName}</span>
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-3">
-            <div>
-              <p className="text-muted-foreground text-xs">Saldo pendente</p>
-              <MoneyValue amount={group.pendingAmount} className="mt-1 font-semibold text-lg" />
-            </div>
-            <div className="text-right">
-              <p className="text-muted-foreground text-xs">Valor registrado</p>
-              <MoneyValue amount={group.trackedAmount} className="mt-1 font-semibold text-lg" />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <CircleCheckBig aria-hidden="true" className="size-3.5 text-success" />
-                {group.paidInstallmentCount} de {group.trackedInstallmentCount} registradas pagas
-              </span>
-              <span className="font-mono tabular-nums">
-                {Math.round(group.progressPercentage)}%
-              </span>
-            </div>
-            <Progress
-              aria-label="Progresso das parcelas registradas"
-              indicatorClassName="bg-success"
-              value={group.progressPercentage}
-            />
-            <p className="text-muted-foreground text-xs">
-              Acompanhando desde {group.trackedFromInstallment}/{group.totalInstallments}
-              {group.untrackedInstallmentCount > 0
-                ? ` · ${group.untrackedInstallmentCount} anteriores fora do acompanhamento`
-                : " · série completa"}
-            </p>
-          </div>
-
-          {group.missingInstallmentCount > 0 ? (
-            <p className="flex items-start gap-1.5 rounded-md bg-destructive/5 p-2 text-destructive text-xs">
-              <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-              Cronograma incompleto: {group.missingInstallmentCount}{" "}
-              {group.missingInstallmentCount === 1 ? "parcela ausente" : "parcelas ausentes"}.
-            </p>
-          ) : null}
-
-          <div className="flex items-center justify-between gap-3 border-t pt-4">
-            <div className="flex min-w-0 items-center gap-2">
-              <Avatar size="sm">
-                <AvatarImage alt={group.personName} src={group.personAvatarUrl ?? undefined} />
-                <AvatarFallback>{initials(group.personName)}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-xs">{group.personName}</p>
-                <p className="flex items-center gap-1 text-muted-foreground text-xs">
-                  <CalendarClock aria-hidden="true" className="size-3" />
-                  {group.nextDueDate
-                    ? `Próxima em ${formatInstallmentDate(group.nextDueDate)}`
-                    : group.nextPeriod
-                      ? `Próxima em ${formatInstallmentPeriod(group.nextPeriod)}`
-                      : "Sem parcela pendente"}
-                </p>
-              </div>
-            </div>
-            <Button onClick={() => setDetailsOpen(true)} size="sm" type="button" variant="outline">
-              Detalhes
+    <li className={cn("py-4 sm:py-5", selectedInGroup > 0 && "bg-brand/5")}>
+      <div className="grid items-center gap-x-5 gap-y-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_auto]">
+        <div className="flex min-w-0 items-center gap-3">
+          <Checkbox
+            aria-label={`Selecionar parcelas pendentes de ${group.name}`}
+            checked={allPendingSelected}
+            disabled={pendingIds.length === 0}
+            onCheckedChange={() => onToggleGroup(pendingIds)}
+          />
+          <EstablishmentLogo className="shrink-0" name={group.name} size={40} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="min-w-0 truncate font-bold">{group.name}</h3>
+              <Badge variant={statusVariant}>{installmentSeriesStatusLabels[group.status]}</Badge>
               {selectedInGroup > 0 ? (
-                <Badge className="ml-1" variant="secondary">
-                  {selectedInGroup}
-                </Badge>
+                <Badge variant="secondary">{selectedInGroup} selecionadas</Badge>
               ) : null}
-              <ChevronRight aria-hidden="true" />
-            </Button>
+              {group.note ? (
+                <Tooltip>
+                  <TooltipTrigger
+                    aria-label={`Anotação de ${group.name}`}
+                    render={<button className="text-muted-foreground" type="button" />}
+                  >
+                    <Info aria-hidden="true" className="size-3.5" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs whitespace-pre-wrap wrap-break-word">
+                    {group.note}
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
+            <p className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+              {group.cardName && group.cardLogo ? (
+                <Image
+                  alt=""
+                  className="size-4 shrink-0 rounded-full object-contain"
+                  height={16}
+                  layout="fixed"
+                  src={group.cardLogo}
+                  width={16}
+                />
+              ) : null}
+              <span className="truncate">
+                {destinationName} · {group.paidInstallmentCount} de {group.trackedInstallmentCount}{" "}
+                parcelas pagas
+              </span>
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 md:block">
+          <div>
+            <p className="text-muted-foreground text-xs">Saldo pendente</p>
+            <MoneyValue amount={group.pendingAmount} className="mt-1 font-medium text-base" />
+          </div>
+          <div className="md:hidden">
+            <p className="text-muted-foreground text-xs">Progresso</p>
+            <p className="mt-1 font-medium tabular-nums">{Math.round(group.progressPercentage)}%</p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-muted-foreground text-xs">Próxima parcela</p>
+          <p className="mt-1 font-medium text-sm">
+            {group.nextDueDate
+              ? formatInstallmentDate(group.nextDueDate)
+              : group.nextPeriod
+                ? formatInstallmentPeriod(group.nextPeriod)
+                : "Sem pendências"}
+          </p>
+        </div>
+
+        <div className="hidden min-w-0 items-center gap-3 xl:flex">
+          <Progress
+            aria-label={`Progresso das parcelas registradas: ${Math.round(group.progressPercentage)}%`}
+            className="min-w-16 flex-1"
+            indicatorClassName="bg-brand"
+            value={group.progressPercentage}
+          />
+          <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+            {Math.round(group.progressPercentage)}%
+          </span>
+        </div>
+
+        <Button
+          aria-label={`Ver detalhes de ${group.name}`}
+          className="w-full justify-between md:col-span-3 xl:col-span-1 xl:w-auto"
+          onClick={() => setDetailsOpen(true)}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Detalhes
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </Button>
+      </div>
+      {group.missingInstallmentCount > 0 ? (
+        <p className="mt-3 flex items-start gap-1.5 rounded-md bg-destructive/5 p-2 text-destructive text-xs">
+          <AlertTriangle aria-hidden="true" className="size-3.5 shrink-0" />
+          Cronograma incompleto: {group.missingInstallmentCount}{" "}
+          {group.missingInstallmentCount === 1 ? "parcela ausente" : "parcelas ausentes"}.
+        </p>
+      ) : null}
 
       <InstallmentDetailsDialog
         group={group}
@@ -194,15 +158,6 @@ export function InstallmentGroupCard({
         open={detailsOpen}
         selectedIds={selectedIds}
       />
-    </>
+    </li>
   );
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toLocaleUpperCase("pt-BR");
 }

@@ -1,4 +1,4 @@
-import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
+import { getCurrentDateInBrazil, getPeriodEndDateString } from "@openmonetis/shared/date-time";
 import type { AccountOutput, AdjustAccountBalanceInput } from "@openmonetis/validators/accounts";
 import { AdjustAccountBalanceInputSchema } from "@openmonetis/validators/accounts";
 import { useForm } from "@tanstack/react-form";
@@ -169,11 +169,6 @@ function getAdjustmentDate(period: string) {
 
 function getMaximumAdjustmentDate(period: string) {
   const today = getCurrentDateInBrazil();
-  const periodEnd = getPeriodEndDate(period);
+  const periodEnd = getPeriodEndDateString(period);
   return periodEnd < today ? periodEnd : today;
-}
-
-function getPeriodEndDate(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
 }

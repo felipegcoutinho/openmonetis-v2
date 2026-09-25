@@ -17,7 +17,7 @@ export type ExpenseDistributionListItem = {
   key: string;
   label: string;
   percentage: number;
-  search: TransactionsSearch;
+  search?: TransactionsSearch;
 };
 
 export function ExpenseDistributionList({ items }: { items: ExpenseDistributionListItem[] }) {
@@ -31,14 +31,18 @@ export function ExpenseDistributionList({ items }: { items: ExpenseDistributionL
           <div className="grid min-w-0 flex-1 gap-2">
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
-                <Link
-                  className="group flex items-center gap-1 font-medium text-sm outline-none transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 motion-reduce:transition-none"
-                  search={item.search}
-                  to="/transactions"
-                >
-                  <span className="truncate">{item.label}</span>
-                  <DashboardItemLinkArrow />
-                </Link>
+                {item.search ? (
+                  <Link
+                    className="group flex items-center gap-1 font-medium text-sm outline-none transition-transform duration-200 ease-out hover:translate-x-1 focus-visible:translate-x-1 motion-reduce:transition-none"
+                    search={item.search}
+                    to="/transactions"
+                  >
+                    <span className="truncate">{item.label}</span>
+                    <DashboardItemLinkArrow />
+                  </Link>
+                ) : (
+                  <span className="font-medium text-sm">{item.label}</span>
+                )}
                 <p className="mt-0.5 text-muted-foreground text-xs">
                   {formatDashboardTransactionCount(item.count)}
                 </p>

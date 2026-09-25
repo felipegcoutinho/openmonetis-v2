@@ -6,10 +6,9 @@ import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { peopleQueryOptions } from "@/features/people/people.queries";
-import { buildFilterSlugMap } from "@/features/transactions/transactions.presentation";
 import { getPaymentStatusPercentage } from "../dashboard.presentation";
 import { dashboardPaymentStatusQueryOptions } from "../dashboard.queries";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { DashboardWidget } from "./dashboard-widget";
 import { DashboardWidgetEmptyState } from "./dashboard-widget-empty-state";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
@@ -18,16 +17,17 @@ type PaymentStatusCategory = DashboardPaymentStatusOutput["income"];
 
 export function PaymentStatusWidget({ period }: { period: string }) {
   const query = useQuery(dashboardPaymentStatusQueryOptions(period));
+  const adminPersonSlug = useAdminPersonSlug();
   const isEmpty = query.data?.income.total === 0 && query.data.expenses.total === 0;
 
   return (
     <DashboardWidget
       description="Sua parte nos valores recebidos, pagos e pendentes"
       footer={
-        query.data && !isEmpty ? (
+        query.data && !isEmpty && adminPersonSlug ? (
           <Link
             className={dashboardWidgetFooterNavigationLinkClassName}
-            search={{ period }}
+            search={{ people: adminPersonSlug, period }}
             to="/transactions"
           >
             Ver lançamentos <ArrowRight aria-hidden="true" className="size-4" />
@@ -63,9 +63,19 @@ export function PaymentStatusWidget({ period }: { period: string }) {
           />
         ) : (
           <div aria-busy={query.isFetching} className="grid flex-1 content-center gap-7">
-            <PaymentStatusSection period={period} category={query.data.income} type="income" />
+            <PaymentStatusSection
+              adminPersonSlug={adminPersonSlug}
+              category={query.data.income}
+              period={period}
+              type="income"
+            />
             <div className="border-t" />
-            <PaymentStatusSection period={period} category={query.data.expenses} type="expenses" />
+            <PaymentStatusSection
+              adminPersonSlug={adminPersonSlug}
+              category={query.data.expenses}
+              period={period}
+              type="expenses"
+            />
           </div>
         )
       ) : null}
@@ -74,17 +84,16 @@ export function PaymentStatusWidget({ period }: { period: string }) {
 }
 
 function PaymentStatusSection({
+  adminPersonSlug,
   period,
   category,
   type,
 }: {
+  adminPersonSlug?: string;
   period: string;
   category: PaymentStatusCategory;
   type: "expenses" | "income";
 }) {
-  const people = useQuery(peopleQueryOptions()).data ?? [];
-  const admin = people.find((person) => person.role === "admin");
-  const adminSlug = admin ? buildFilterSlugMap(people).idToSlug.get(admin.id) : undefined;
   const isIncome = type === "income";
   const percentage = getPaymentStatusPercentage(category.confirmed, category.total);
   const roundedPercentage = Math.round(percentage);
@@ -130,19 +139,23 @@ function PaymentStatusSection({
             <span aria-hidden="true" className="size-2 rounded-full bg-warning" />
             {pendingLabel}
           </span>
-          <Link
-            className="inline-flex rounded-sm hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-            to="/transactions"
-            search={{
-              period,
-              type: isIncome ? "income" : "expense",
-              settlement: "unpaid",
-              people: adminSlug,
-            }}
-            aria-label={`Ver valores ${isIncome ? "a receber" : "a pagar"}`}
-          >
+          {adminPersonSlug ? (
+            <Link
+              aria-label={`Ver valores ${isIncome ? "a receber" : "a pagar"}`}
+              className="inline-flex rounded-sm hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+              search={{
+                people: adminPersonSlug,
+                period,
+                settlement: "unpaid",
+                type: isIncome ? "income" : "expense",
+              }}
+              to="/transactions"
+            >
+              <MoneyValue amount={category.pending} className="mt-1 font-medium text-sm" />
+            </Link>
+          ) : (
             <MoneyValue amount={category.pending} className="mt-1 font-medium text-sm" />
-          </Link>
+          )}
         </div>
       </div>
     </section>

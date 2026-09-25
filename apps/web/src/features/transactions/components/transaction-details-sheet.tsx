@@ -75,10 +75,13 @@ export function TransactionDetailsSheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent className="w-full gap-0 sm:max-w-xl" showCloseButton={false}>
+      <SheetContent
+        className="gap-0 data-[side=right]:w-full! sm:data-[side=right]:w-3/4! sm:max-w-xl!"
+        showCloseButton={false}
+      >
         <Button
           aria-label="Fechar detalhes"
-          className="absolute top-4 right-4 z-10"
+          className="absolute top-3 right-3 z-10 max-sm:size-11"
           onClick={() => onOpenChange(false)}
           size="icon-sm"
           type="button"
@@ -86,25 +89,25 @@ export function TransactionDetailsSheet({
         >
           <X aria-hidden="true" />
         </Button>
-        <SheetHeader className="border-b pr-14">
-          <div className="flex items-start gap-3">
+        <SheetHeader className="shrink-0 px-14 pt-8 pb-0 sm:border-b sm:p-4 sm:pr-14">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
             <EstablishmentLogo name={detail?.name ?? "Lançamento"} />
-            <div className="min-w-0 flex-1">
-              <SheetTitle className="truncate text-base">
+            <div className="min-w-0 w-full text-center sm:flex-1 sm:text-left">
+              <SheetTitle className="break-words text-base">
                 {detail?.name ?? "Detalhes do lançamento"}
               </SheetTitle>
-              <SheetDescription>
+              <SheetDescription className="sr-only sm:not-sr-only">
                 {detail ? formatDate(detail.purchaseDate) : "Carregando lançamento…"}
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
           {!detail ? (
             <TransactionDetailsSkeleton />
           ) : (
-            <div className="grid gap-5 p-4">
+            <div className="grid gap-6 p-5 pt-3 sm:gap-5 sm:p-4">
               {detailQuery.isError ? (
                 <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
                   <p className="font-medium">Os dados mais recentes não puderam ser carregados.</p>
@@ -117,6 +120,7 @@ export function TransactionDetailsSheet({
               <TransactionSummary transaction={detail} />
 
               <DetailsSection icon={<ReceiptText />} title="Informações">
+                <DetailRow label="Tipo" value={<TransactionTypeBadge type={detail.type} />} />
                 <DetailRow label="Data da compra" value={formatDate(detail.purchaseDate)} />
                 <DetailRow label="Competência" value={formatPeriod(detail.period)} />
                 <DetailRow label="Condição" value={transactionConditionLabels[detail.condition]} />
@@ -326,16 +330,28 @@ export function TransactionDetailsSheet({
           )}
         </div>
 
-        <SheetFooter className="border-t sm:flex-row sm:justify-between">
-          <span className="min-h-5 text-muted-foreground text-xs" aria-live="polite">
-            {detailQuery.isFetching && detail ? "Atualizando dados…" : null}
-          </span>
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+        <SheetFooter className="shrink-0 border-t pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between">
+          {detailQuery.isFetching && detail ? (
+            <span className="text-muted-foreground text-xs" role="status">
+              Atualizando dados…
+            </span>
+          ) : null}
+          <div
+            className={cn(
+              "grid w-full gap-2 sm:ml-auto sm:flex sm:w-auto",
+              canEdit ? "grid-cols-2" : "grid-cols-1",
+            )}
+          >
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => onOpenChange(false)}
+              type="button"
+              variant="outline"
+            >
               Fechar
             </Button>
             {canEdit ? (
-              <Button onClick={() => edit(detail)} type="button">
+              <Button className="w-full sm:w-auto" onClick={() => edit(detail)} type="button">
                 <Pencil aria-hidden="true" />
                 Editar lançamento
               </Button>
@@ -370,13 +386,18 @@ function TransactionSummary({ transaction }: { transaction: TransactionOutput })
         : "text-foreground";
 
   return (
-    <section className="rounded-xl border bg-muted/30 p-4">
-      <div className="flex items-start justify-between gap-3">
+    <section className="min-w-0 pb-3 sm:rounded-xl sm:border sm:bg-muted/30 sm:p-4">
+      <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">Total do lançamento</p>
+          <p className="sr-only sm:not-sr-only sm:text-muted-foreground sm:text-xs">
+            Total do lançamento
+          </p>
           <MoneyValue
             amount={transaction.amount}
-            className={cn("mt-1 text-2xl font-semibold", amountClassName)}
+            className={cn(
+              "block max-w-full break-all text-3xl font-semibold tracking-tight sm:mt-1 sm:text-2xl",
+              amountClassName,
+            )}
             showPositiveSign={transaction.type === "income"}
           />
         </div>
@@ -391,9 +412,11 @@ function TransactionSummary({ transaction }: { transaction: TransactionOutput })
           {status.label}
         </Badge>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <TransactionTypeBadge type={transaction.type} />
-        <Badge variant="outline">{transactionConditionLabels[transaction.condition]}</Badge>
+      <div className="mt-3 flex flex-wrap justify-center gap-2 sm:mt-4 sm:justify-start">
+        <span className="hidden sm:contents">
+          <TransactionTypeBadge type={transaction.type} />
+          <Badge variant="outline">{transactionConditionLabels[transaction.condition]}</Badge>
+        </span>
         {transaction.origin === "refund" ? <Badge variant="secondary">Reembolso</Badge> : null}
         {transaction.anticipationId ? <Badge variant="secondary">Antecipada</Badge> : null}
         {transaction.isDivided ? <Badge variant="secondary">Dividido</Badge> : null}
@@ -418,7 +441,7 @@ function DetailsSection({
       <SectionTitle icon={icon} id={id}>
         {title}
       </SectionTitle>
-      <dl className="grid gap-0 rounded-xl border px-3">{children}</dl>
+      <dl className="grid min-w-0 gap-0 sm:rounded-xl sm:border sm:px-3">{children}</dl>
     </section>
   );
 }
@@ -433,8 +456,11 @@ function SectionTitle({
   id: string;
 }) {
   return (
-    <h3 className="flex items-center gap-2 font-medium text-sm" id={id}>
-      <span className="text-muted-foreground [&>svg]:size-4">{icon}</span>
+    <h3
+      className="flex items-center gap-2 font-medium text-muted-foreground text-xs sm:text-foreground sm:text-sm"
+      id={id}
+    >
+      <span className="hidden text-muted-foreground sm:inline [&>svg]:size-4">{icon}</span>
       {children}
     </h3>
   );
@@ -443,8 +469,10 @@ function SectionTitle({
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-4 border-b py-3 last:border-b-0">
-      <dt className="shrink-0 text-muted-foreground text-sm">{label}</dt>
-      <dd className="flex min-w-0 items-center gap-2 text-right text-sm">{value}</dd>
+      <dt className="shrink-0 text-muted-foreground text-xs sm:text-sm">{label}</dt>
+      <dd className="flex min-w-0 items-center justify-end gap-2 break-words text-right text-xs sm:text-sm">
+        {value}
+      </dd>
     </div>
   );
 }

@@ -100,7 +100,7 @@ function PersonSettlementList({
     <ol className="divide-y">
       {items.map((item) => (
         <li className="flex min-h-14 items-center gap-3 py-2" key={item.personId}>
-          <Avatar className="size-9 overflow-hidden" showBorder={false}>
+          <Avatar className="size-9 overflow-hidden">
             {item.personAvatarUrl ? (
               <AvatarImage
                 alt={`Avatar de ${item.personName}`}

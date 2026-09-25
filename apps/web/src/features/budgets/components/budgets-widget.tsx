@@ -203,19 +203,17 @@ function BudgetProgressRow({
             </span>
           </div>
           <p className="mt-0.5 truncate text-muted-foreground text-xs">
-            <MoneyValue amount={budget.committedAmount} className="font-sans text-xs" /> de{" "}
-            <MoneyValue amount={budget.amount} className="font-sans text-xs" />
+            <MoneyValue amount={budget.committedAmount} className="text-xs" /> de{" "}
+            <MoneyValue amount={budget.amount} className="text-xs" />
             <span aria-hidden="true"> · </span>
             <span className={cn(exceeded && "font-medium text-destructive")}>
               {exceeded ? (
                 <>
-                  excedeu{" "}
-                  <MoneyValue amount={budget.exceededAmount} className="font-sans text-xs" />
+                  excedeu <MoneyValue amount={budget.exceededAmount} className="text-xs" />
                 </>
               ) : (
                 <>
-                  restam{" "}
-                  <MoneyValue amount={budget.remainingAmount} className="font-sans text-xs" />
+                  restam <MoneyValue amount={budget.remainingAmount} className="text-xs" />
                 </>
               )}
             </span>

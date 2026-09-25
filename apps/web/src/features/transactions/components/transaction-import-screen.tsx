@@ -752,7 +752,7 @@ export function TransactionImportScreen({
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <fieldset className="grid min-w-0 gap-1.5 border-0 p-0">
-      <legend className="mb-1.5 font-mono font-medium text-xs">{label}</legend>
+      <legend className="mb-1.5 font-medium text-sm">{label}</legend>
       {children}
     </fieldset>
   );

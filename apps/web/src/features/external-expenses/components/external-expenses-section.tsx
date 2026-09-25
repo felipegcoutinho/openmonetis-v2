@@ -272,8 +272,8 @@ function ExternalExpenseRow({
             name={item.counterpartName}
           />
           <span className="grid">
-            <span className="font-medium text-sm">{item.counterpartName}</span>
             <span className="text-muted-foreground text-xs">Compartilhado por</span>
+            <span className="font-medium text-sm">{item.counterpartName}</span>
           </span>
         </span>
       </TableCell>

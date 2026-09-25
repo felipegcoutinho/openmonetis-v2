@@ -410,7 +410,7 @@ function RecurringPeople({ item }: { item: ReportItem }) {
     >
       <span className="inline-flex shrink-0 -space-x-2">
         {item.splitPeople.slice(0, 3).map((person) => (
-          <Avatar key={person.id} showBorder={false} size="sm">
+          <Avatar key={person.id} size="sm">
             <AvatarImage alt={`Avatar de ${person.name}`} src={person.avatarUrl ?? undefined} />
             <AvatarFallback>{person.name.slice(0, 1).toLocaleUpperCase("pt-BR")}</AvatarFallback>
           </Avatar>

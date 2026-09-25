@@ -21,7 +21,7 @@ function InstallmentsRoute() {
       filters={filters}
       onStatusChange={(status) => {
         void navigate({
-          search: { ...search, status: status === "all" ? undefined : status },
+          search: { ...search, status: status === "open" ? undefined : status },
           replace: true,
         });
       }}

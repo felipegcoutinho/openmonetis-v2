@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getInitials } from "@/lib/name-presentation";
+import { formatDashboardTransactionCount } from "../dashboard.presentation";
 import { dashboardPeopleExpensesQueryOptions } from "../dashboard.queries";
 import { DashboardItemLinkArrow } from "./dashboard-item-link-arrow";
 import { DashboardWidget } from "./dashboard-widget";
@@ -78,7 +79,7 @@ function PeopleList({ people }: { people: PersonExpense[] }) {
     <ol className="divide-y">
       {people.map((person) => (
         <DashboardWidgetRow key={person.personId} structure="progress">
-          <Avatar className="size-9 overflow-hidden" showBorder={false}>
+          <Avatar className="size-9 overflow-hidden">
             {person.personAvatarUrl ? (
               <AvatarImage
                 alt={`Avatar de ${person.personName}`}
@@ -106,7 +107,7 @@ function PeopleList({ people }: { people: PersonExpense[] }) {
                   ) : null}
                 </div>
                 <p className="mt-0.5 truncate text-muted-foreground text-xs">
-                  {formatTransactionCount(person.count)}
+                  {formatDashboardTransactionCount(person.count)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
@@ -164,8 +165,4 @@ function PeopleEmpty() {
 
 function formatPercentage(value: number) {
   return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
-}
-
-function formatTransactionCount(count: number) {
-  return `${count} ${count === 1 ? "lançamento" : "lançamentos"}`;
 }

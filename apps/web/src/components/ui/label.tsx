@@ -10,7 +10,7 @@ function Label({ className, htmlFor, ...props }: LabelProps) {
     // biome-ignore lint/a11y/noLabelWithoutControl: callers must pass htmlFor through LabelProps.
     <label
       className={cn(
-        "flex items-center gap-2 font-medium text-xs leading-none font-mono tracking-tight",
+        "flex items-center gap-2 font-medium text-sm leading-none tracking-tight",
         className,
       )}
       data-slot="label"

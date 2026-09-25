@@ -6,7 +6,7 @@ import { useUpdateUserPreferencesMutation } from "@/features/preferences/prefere
 import { cn } from "@/lib/utils";
 import { useTheme } from "./theme-provider";
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({ card = false, className }: { card?: boolean; className?: string }) {
   const { setTheme, theme } = useTheme();
   const updatePreferences = useUpdateUserPreferencesMutation();
 
@@ -32,19 +32,36 @@ export function ThemeToggle({ className }: { className?: string }) {
         render={
           <Button
             className={cn(
-              "relative text-muted-foreground hover:bg-muted hover:text-foreground",
+              card
+                ? "h-20! w-full! flex-col gap-2 rounded-lg p-2 text-foreground text-xs hover:bg-accent"
+                : "relative text-muted-foreground hover:bg-muted hover:text-foreground",
               className,
             )}
             disabled={updatePreferences.isPending}
-            size="icon"
+            size={card ? "default" : "icon"}
             type="button"
-            variant="ghost"
+            variant={card ? "outline" : "ghost"}
           />
         }
         onClick={toggleTheme}
       >
-        <Sun className="size-4 scale-100 rotate-0 transition-transform dark:scale-0 dark:-rotate-90" />
-        <Moon className="absolute size-4 scale-0 rotate-90 transition-transform dark:scale-100 dark:rotate-0" />
+        <span
+          className={cn("relative grid size-5 place-items-center", card && "text-brand-strong")}
+        >
+          <Sun
+            className={cn(
+              "absolute scale-100 rotate-0 transition-transform dark:scale-0 dark:-rotate-90",
+              card ? "size-5" : "size-4",
+            )}
+          />
+          <Moon
+            className={cn(
+              "absolute scale-0 rotate-90 transition-transform dark:scale-100 dark:rotate-0",
+              card ? "size-5" : "size-4",
+            )}
+          />
+        </span>
+        {card ? <span>Tema</span> : null}
       </TooltipTrigger>
       <TooltipContent>Alternar tema</TooltipContent>
     </Tooltip>

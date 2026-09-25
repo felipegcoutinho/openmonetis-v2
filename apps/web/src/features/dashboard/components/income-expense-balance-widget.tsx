@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDashboardPeriod } from "../dashboard.presentation";
 import { dashboardMetricsQueryOptions } from "../dashboard.queries";
+import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { DashboardWidget } from "./dashboard-widget";
 import { DashboardWidgetEmptyState } from "./dashboard-widget-empty-state";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
@@ -30,6 +31,7 @@ type HistoryEntry = DashboardMetricsOutput["history"][number];
 
 export function IncomeExpenseBalanceWidget({ period }: { period: string }) {
   const query = useQuery(dashboardMetricsQueryOptions(period));
+  const adminPersonSlug = useAdminPersonSlug();
   const history = query.data?.history ?? [];
   const isEmpty = history.every(
     (entry) => entry.income === 0 && entry.expenses === 0 && entry.balance === 0,
@@ -39,10 +41,10 @@ export function IncomeExpenseBalanceWidget({ period }: { period: string }) {
     <DashboardWidget
       description="Seus valores nos últimos seis meses"
       footer={
-        query.data && !isEmpty ? (
+        query.data && !isEmpty && adminPersonSlug ? (
           <Link
             className={dashboardWidgetFooterNavigationLinkClassName}
-            search={{ period }}
+            search={{ people: adminPersonSlug, period }}
             to="/transactions"
           >
             Ver lançamentos <ArrowRight aria-hidden="true" className="size-4" />

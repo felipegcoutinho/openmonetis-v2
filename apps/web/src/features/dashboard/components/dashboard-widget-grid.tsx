@@ -1,17 +1,29 @@
-import { createDefaultDashboardWidgetPreferences } from "@openmonetis/domain/dashboard";
+import {
+  createDefaultDashboardWidgetPreferences,
+  type DashboardWidgetId,
+} from "@openmonetis/domain/dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dashboardWidgetPreferencesQueryOptions } from "../dashboard.queries";
 import { dashboardWidgetById } from "./dashboard-widget-registry";
 
-export function DashboardWidgetGrid({ period }: { period: string }) {
+export function DashboardWidgetGrid({
+  excludedWidgetIds = [],
+  period,
+}: {
+  excludedWidgetIds?: readonly DashboardWidgetId[];
+  period: string;
+}) {
   const defaults = createDefaultDashboardWidgetPreferences();
   const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
   const preferences = preferencesQuery.data ?? defaults;
+  const excludedWidgets = new Set(excludedWidgetIds);
   const visibleWidgets = preferences.order.flatMap((widgetId) => {
     const widget = dashboardWidgetById.get(widgetId);
-    return widget && !preferences.hidden.includes(widgetId) ? [widget] : [];
+    return widget && !preferences.hidden.includes(widgetId) && !excludedWidgets.has(widgetId)
+      ? [widget]
+      : [];
   });
 
   return (

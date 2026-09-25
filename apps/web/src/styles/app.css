@@ -342,19 +342,37 @@
     );
 }
 
+.dashboard-mobile-summary {
+  background:
+    radial-gradient(
+      circle at 92% 8%,
+      color-mix(in srgb, var(--brand) 23%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(145deg, color-mix(in srgb, var(--card) 94%, var(--brand)), var(--card));
+}
+
+@media (max-width: 47.999rem) {
+  .app-navbar::before {
+    display: none;
+  }
+
+  main:has(> .app-navbar) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
 .app-navbar::before {
   position: absolute;
   inset: 0 0 auto;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--primary) 0%,
-    var(--primary) 22%,
-    color-mix(in srgb, var(--primary) 48%, transparent) 54%,
-    transparent 82%
-  );
+  height: 2px;
+  background: var(--primary);
   content: "";
   pointer-events: none;
+}
+
+.dark .app-navbar::before {
+  display: none;
 }
 
 [data-slot="table-row"] > [data-slot="table-cell"]:first-child {

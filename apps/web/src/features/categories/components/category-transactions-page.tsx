@@ -149,7 +149,7 @@ function CategoryTransactionsSummary({
       {option.value === "all" ? (
         <Users aria-hidden="true" className="size-5 shrink-0" />
       ) : (
-        <Avatar size="sm" showBorder={false}>
+        <Avatar size="sm">
           <AvatarImage src={option.person?.avatarUrl ?? undefined} alt="" />
           <AvatarFallback>{(option.person?.name ?? option.label).slice(0, 1)}</AvatarFallback>
         </Avatar>

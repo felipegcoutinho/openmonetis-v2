@@ -224,7 +224,7 @@ function InvoiceCardName({ invoice }: { invoice: DashboardInvoice }) {
               className="flex gap-3 border-b pb-3 last:border-b-0 last:pb-0"
               key={person.personId}
             >
-              <Avatar className="overflow-hidden" showBorder={false}>
+              <Avatar className="overflow-hidden">
                 <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
                 <AvatarFallback>
                   {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}

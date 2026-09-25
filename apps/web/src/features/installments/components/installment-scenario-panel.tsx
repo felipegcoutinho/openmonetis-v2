@@ -25,17 +25,17 @@ export function InstallmentScenarioPanel({
   selectedCount,
 }: InstallmentScenarioPanelProps) {
   return (
-    <Card className="border-brand-strong/15 bg-brand/5 shadow-none">
-      <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="gap-0 border-brand-strong/15 bg-brand/5 py-0 shadow-none">
+      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-background text-brand-strong shadow-xs">
-            <Calculator aria-hidden="true" className="size-5" />
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-background text-brand-strong shadow-xs">
+            <Calculator aria-hidden="true" className="size-4" />
           </span>
           <div>
             <p className="font-medium">Simulação de quitação</p>
             {selectedCount === 0 ? (
               <p className="mt-1 text-muted-foreground text-sm">
-                Selecione parcelas pendentes para saber quanto precisaria pagar. Nada será alterado.
+                Selecione parcelas pendentes para simular o valor da quitação. Nada será alterado.
               </p>
             ) : (
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -52,7 +52,7 @@ export function InstallmentScenarioPanel({
             )}
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
           {selectedCount > 0 ? (
             <Button onClick={onClear} type="button" variant="ghost">
               <RotateCcw aria-hidden="true" />
