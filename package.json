@@ -1,6 +1,6 @@
 {
   "name": "openmonetis",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "API-first self-hosted personal finance manager",
   "type": "module",
   "private": true,

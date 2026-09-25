@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-Sustainable%20Use%201.0-f97316" alt="Licença Sustainable Use 1.0" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.5.0-f97316" alt="Versão 0.5.0" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.6.0-f97316" alt="Versão 0.6.0" /></a>
   <img src="https://img.shields.io/badge/Docker-self--hosted-2496ED?logo=docker&logoColor=white" alt="Aplicação self-hosted com Docker" />
 </p>
 
@@ -75,7 +75,7 @@ Para publicar a aplicação com HTTPS, storage privado e segredos próprios, con
 
 ## Desenvolvimento
 
-Tenha Node.js 20 ou superior, Git e Docker com o plugin Compose instalados.
+Tenha Node.js 20.19 ou 22.12 ou superior (LTS), Git e Docker com o plugin Compose instalados.
 
 ```bash
 git clone https://github.com/felipegcoutinho/openmonetis-v2.git
@@ -101,6 +101,13 @@ pnpm check
 pnpm test
 pnpm build
 ```
+
+`pnpm lint` executa o Biome e a integração de `@shadcn/lint` via Oxlint no frontend.
+Para executar apenas essa integração, use `pnpm lint:ui`. O plugin está registrado em
+`apps/web/.oxlintrc.json`, inicialmente sem regras visuais ativadas; adicione as regras em
+`rules` conforme a política visual desejada. Consulte as
+[regras disponíveis](https://github.com/shadcn-ui/lint#rules). O tema e os componentes são
+descobertos pelo `apps/web/components.json`. O Biome continua responsável pelas regras gerais.
 
 ## Arquitetura
 

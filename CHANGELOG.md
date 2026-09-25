@@ -7,6 +7,75 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-25
+
+Amplia a experiência mobile e os relatórios financeiros, preserva o calendário e os pagamentos
+das recorrências versionadas e melhora a apresentação dos lançamentos e do dashboard.
+
+### Alterado
+
+- Formatação de valores e contagem de lançamentos reutilizam os helpers compartilhados; formulários
+  usam um único cálculo do último dia do mês e o total em aberto das contas a pagar é calculado no domain.
+
+- O modo escuro remove a linha colorida acima do cabeçalho; avatares deixam de usar bordas e
+  anéis, com seleção indicada por check e foco de teclado por contorno externo.
+
+- A tabela desktop de lançamentos usa o ícone da categoria quando não há logo do estabelecimento.
+- Despesas compartilhadas em Lançamentos externos são ordenadas pela data do lançamento,
+  da mais recente à mais antiga, antes da paginação.
+
+- O saldo previsto no celular destaca o valor sobre um fundo suave da marca, com comparação
+  discreta e indicadores em uma base neutra.
+
+- Os detalhes de lançamentos no celular destacam nome, valor e status em um resumo centralizado,
+  com informações em linhas simples e menos bordas.
+
+- A personalização do dashboard ocupa a largura do celular e adapta os controles dos indicadores
+  para evitar cortes; o seletor mensal mantém o mesmo estilo das demais páginas.
+
+- O cabeçalho mobile ganha controles com áreas de toque maiores e aparência mais discreta; a
+  Visão Geral simplifica a saudação, reúne atalhos em uma linha e dá mais espaço aos valores.
+
+- A Visão Geral usa também no celular a navegação mensal compartilhada com as demais páginas,
+  com setas para trocar de mês e retorno ao mês atual.
+- Valores monetários usam Aeonik Fono pelo componente compartilhado; a tabela de lançamentos
+  alinha valores à direita.
+- Rótulos de campos e legendas dos formulários usam GT America e tamanho consistente, inclusive
+  em lançamentos.
+- O resumo mensal de cada pessoa exibe todos os meios de pagamento, ordenados pela maior despesa.
+- O relatório de despesas parceladas reúne saldo em aberto, parcelas pendentes do mês e compras em
+  andamento em um resumo compacto; filtros e simulação acompanham a lista de compras.
+- A lista de compras parceladas usa linhas compactas com saldo, próxima parcela e progresso, e
+  distingue ausência de dados de filtros sem resultados.
+- A experiência mobile ganhou navegação inferior, uma Visão Geral com hierarquia própria e uma
+  listagem de lançamentos agrupada por data. A saudação da Visão Geral ocupa a largura da tela;
+  em Lançamentos, o cabeçalho segue o padrão das demais páginas e as ações da lista ficam juntas,
+  preservando o dashboard e a tabela no desktop.
+- O menu mobile reúne calculadora, visibilidade dos valores e tema em três cards compactos.
+- A navegação mensal centraliza o mês no celular e usa um ícone para retornar ao mês atual.
+- Cards de despesas parceladas no celular dão espaço ao nome, situação e próxima parcela sem
+  comprimir a ação de detalhes. O filtro de cartões ocupa toda a largura apenas no celular e
+  identifica cada opção pelo logo tanto no celular quanto no desktop.
+- A lista mobile de lançamentos mostra os logos de estabelecimentos e contas antes de recorrer ao
+  ícone da categoria; os detalhes ocupam a largura da tela no celular e exibem ações lado a lado
+  em toda a largura do rodapé.
+- Recorrências versionadas preservam o dia original do calendário, mantêm pagamentos associados à
+  série e reconciliam todos os períodos externos afetados por alterações retroativas.
+- Boletos recorrentes atribuídos a uma Pessoa recém-conectada passam a ser entregues enquanto ainda
+  não estiverem vencidos, mesmo quando a conexão acontece depois do primeiro dia do mês.
+- Os atalhos dos indicadores calculados para a Pessoa administradora preservam o filtro "Você" ao
+  abrir a lista de lançamentos.
+
+### Adicionado
+
+- A Visão Geral mobile reúne alertas, contas e cartões, lançamentos recentes e um resumo mensal.
+- Gráfico da janela de 12 meses até o mês seguinte com a soma das parcelas registradas e a
+  quantidade de compras com parcelas em cada mês, com dados acessíveis a leitores de tela.
+- A tabela de lançamentos permite selecionar linhas para conferir entradas, despesas e saldo;
+  transferências, ajustes de saldo e pagamentos de fatura ficam com seleção desabilitada.
+- `@shadcn/lint` via Oxlint no frontend, integrado a `pnpm lint` e `pnpm check`, com configuração
+  preparada para ativação explícita de regras visuais.
+
 ## [0.5.0] - 2026-09-19
 
 Amplia a criação e consulta de lançamentos, melhora a confirmação de ajustes e pagamentos e
