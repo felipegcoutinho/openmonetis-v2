@@ -17,6 +17,7 @@ export type RecurringOccurrenceAllocation = {
 export type RecurringAllocationRule = {
   id: string;
   seriesId: string;
+  anchorDate: string;
   personId: string;
   amount: string | number;
   startDate: string;
@@ -34,6 +35,7 @@ export function projectRecurringMonthAllocations(input: {
       ? rule.splits
       : [{ personId: rule.personId, amount: rule.amount }];
     const dates = listRecurrenceDatesInPeriod({
+      anchorDate: rule.anchorDate,
       startDate: rule.startDate,
       endDate: rule.endDate,
       frequency: rule.frequency,
@@ -81,6 +83,7 @@ export function canDeliverRecurringOccurrence(input: {
 }
 
 export function getNextRecurringOccurrenceDate(input: {
+  anchorDate?: string;
   currentDate: string;
   endDate: string | null;
   frequency: RecurrenceFrequency;
@@ -91,6 +94,7 @@ export function getNextRecurringOccurrenceDate(input: {
   for (let offset = 0; offset <= 24; offset += 1) {
     const period = addMonthsToPeriod(currentPeriod, offset);
     const next = listRecurrenceDatesInPeriod({
+      anchorDate: input.anchorDate,
       startDate: input.startDate,
       endDate: input.endDate,
       frequency: input.frequency,
@@ -103,12 +107,14 @@ export function getNextRecurringOccurrenceDate(input: {
 }
 
 export function isValidRecurringExpenseOccurrence(input: {
+  anchorDate?: string;
   date: string;
   endDate: string | null;
   frequency: RecurrenceFrequency;
   startDate: string;
 }) {
   return listRecurrenceDatesInPeriod({
+    anchorDate: input.anchorDate,
     startDate: input.startDate,
     endDate: input.endDate,
     frequency: input.frequency,
@@ -117,6 +123,7 @@ export function isValidRecurringExpenseOccurrence(input: {
 }
 
 export function projectRecurringExpenseOccurrences(input: {
+  anchorDate?: string;
   endDate: string | null;
   frequency: RecurrenceFrequency;
   periods: string[];
@@ -124,6 +131,7 @@ export function projectRecurringExpenseOccurrences(input: {
 }) {
   return input.periods.flatMap((period) =>
     listRecurrenceDatesInPeriod({
+      anchorDate: input.anchorDate,
       startDate: input.startDate,
       endDate: input.endDate,
       frequency: input.frequency,

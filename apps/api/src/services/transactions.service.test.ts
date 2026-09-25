@@ -381,6 +381,7 @@ test("settlement preserves the chosen boleto payment date and rejects future dat
         return [fixture];
       },
       findRecurringRuleByIdForUser: async () => ({
+        anchorDate: new Date("2020-01-04T00:00:00.000Z"),
         startDate: new Date("2020-01-04T00:00:00.000Z"),
         endDate: null,
         frequency: "monthly",

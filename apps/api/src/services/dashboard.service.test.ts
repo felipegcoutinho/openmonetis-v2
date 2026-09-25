@@ -15,11 +15,13 @@ import {
 
 const userId = "10000000-0000-4000-8000-000000000001";
 const recurringRuleId = "20000000-0000-4000-8000-000000000002";
+const recurringSeriesId = "20000000-0000-4000-8000-000000000003";
 const accountId = "30000000-0000-4000-8000-000000000003";
 const cardId = "31000000-0000-4000-8000-000000000003";
 
 const recurringBoleto: DashboardRecurringRuleRecord = {
   id: recurringRuleId,
+  seriesId: recurringSeriesId,
   accountId,
   adminAmount: "-186.40",
   amount: "-186.40",
@@ -41,6 +43,7 @@ const recurringBoleto: DashboardRecurringRuleRecord = {
   personStatus: "active",
   sourceAccountId: null,
   sourceExcludeFromBalance: false,
+  anchorDate: "2026-03-03",
   startDate: "2026-03-03",
   endDate: null,
   destinationAccountId: null,
@@ -55,7 +58,7 @@ const repository: DashboardRepository = {
   listInvoiceStatuses: async () => [],
   listRecurringOccurrenceStates: async () => [
     {
-      recurringRuleId,
+      recurringSeriesId,
       purchaseDate: "2026-08-03",
       boletoPaymentDate: "2026-08-03",
       isSettled: true,
@@ -478,14 +481,22 @@ test("payment status counts admin recurring shares and preserves occurrence paym
         {
           ...recurringBoleto,
           id: "external-owner",
+          seriesId: "external-owner-series",
           amount: "-800.00",
           adminAmount: "-250.50",
           personRole: "external",
         },
-        { ...recurringBoleto, id: "external-only", amount: "-900.00", adminAmount: null },
+        {
+          ...recurringBoleto,
+          id: "external-only",
+          seriesId: "external-only-series",
+          amount: "-900.00",
+          adminAmount: null,
+        },
         {
           ...recurringBoleto,
           id: "income",
+          seriesId: "income-series",
           type: "income",
           amount: "600.00",
           adminAmount: "200.00",

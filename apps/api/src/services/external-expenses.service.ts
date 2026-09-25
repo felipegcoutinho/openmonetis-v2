@@ -186,11 +186,18 @@ export async function synchronizeRecurringExternalExpenses(
         .sort()
         .at(-1) as string;
       const dueDate = getRecurringDueDate(source.dueDate, allocation.occurrenceDate);
-      const deliveryDate = getRecurringOccurrenceDeliveryDate({
+      const scheduledDeliveryDate = getRecurringOccurrenceDeliveryDate({
         occurrenceDate: allocation.occurrenceDate,
         dueDate,
         paymentMethod: source.paymentMethod,
       });
+      const deliveryDate =
+        source.paymentMethod === "boleto" &&
+        dueDate !== null &&
+        activationDate > scheduledDeliveryDate &&
+        activationDate <= dueDate
+          ? activationDate
+          : scheduledDeliveryDate;
       if (!canDeliverRecurringOccurrence({ activationDate, businessDate, deliveryDate })) return [];
       const snapshotPeriod = deriveTransactionPeriod({
         paymentMethod: source.paymentMethod,

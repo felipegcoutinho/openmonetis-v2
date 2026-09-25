@@ -132,6 +132,7 @@ export const invoicesRepository = {
           sql<string>`case when ${recurringTransactionSplits.id} is not null then ${recurringTransactionSplits.amount} else ${recurringTransactionRules.amount} end`.as(
             "amount",
           ),
+        anchorDate: recurringTransactionRules.anchorDate,
         startDate: recurringTransactionRules.startDate,
         endDate: recurringTransactionRules.endDate,
         frequency: recurringTransactionRules.frequency,
@@ -179,6 +180,7 @@ export const invoicesRepository = {
       );
     return rows.map((row) => ({
       ...row,
+      anchorDate: row.anchorDate.toISOString().slice(0, 10),
       startDate: row.startDate.toISOString().slice(0, 10),
       endDate: row.endDate?.toISOString().slice(0, 10) ?? null,
       dueDate: row.dueDate?.toISOString().slice(0, 10) ?? null,

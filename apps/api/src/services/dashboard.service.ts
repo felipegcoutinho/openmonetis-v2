@@ -71,6 +71,7 @@ export type DashboardTransactionRecord = {
 };
 
 export type DashboardRecurringRuleRecord = {
+  seriesId: string;
   accountId: string | null;
   adminAmount: string | null;
   amount: string;
@@ -93,6 +94,7 @@ export type DashboardRecurringRuleRecord = {
   personStatus: "active" | "inactive";
   sourceAccountId: string | null;
   sourceExcludeFromBalance: boolean;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   destinationAccountId: string | null;
@@ -119,7 +121,7 @@ export type DashboardRepository = {
       boletoPaymentDate: string | null;
       isSettled: boolean;
       purchaseDate: string;
-      recurringRuleId: string;
+      recurringSeriesId: string;
     }>
   >;
   listRecurringRules(userId: string, periodEnd: Date): Promise<DashboardRecurringRuleRecord[]>;
@@ -171,13 +173,13 @@ function expandRecurringRules(
     boletoPaymentDate: string | null;
     isSettled: boolean;
     purchaseDate: string;
-    recurringRuleId: string;
+    recurringSeriesId: string;
   }> = [],
   invoiceStatuses: Array<{ cardId: string; isPaid: boolean; period: string }> = [],
 ) {
   const occurrenceByRuleAndDate = new Map(
     occurrenceStates.map((occurrence) => [
-      `${occurrence.recurringRuleId}:${occurrence.purchaseDate}`,
+      `${occurrence.recurringSeriesId}:${occurrence.purchaseDate}`,
       occurrence,
     ]),
   );
@@ -199,6 +201,7 @@ function expandRecurringRules(
       purchasePeriod = addMonthsToPeriod(purchasePeriod, 1)
     ) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,
@@ -211,7 +214,7 @@ function expandRecurringRules(
           dueDate,
           card: rule.card,
         });
-        const occurrence = occurrenceByRuleAndDate.get(`${rule.id}:${purchaseDate}`);
+        const occurrence = occurrenceByRuleAndDate.get(`${rule.seriesId}:${purchaseDate}`);
         const isSettled =
           rule.paymentMethod === "credit_card"
             ? Boolean(rule.cardId && invoiceStatusByCardAndPeriod.get(`${rule.cardId}:${period}`))
@@ -297,7 +300,7 @@ function expandRecurringPaymentStatusEntries(input: {
     boletoPaymentDate: string | null;
     isSettled: boolean;
     purchaseDate: string;
-    recurringRuleId: string;
+    recurringSeriesId: string;
   }>;
   period: string;
   rules: DashboardRecurringRuleRecord[];
@@ -307,7 +310,7 @@ function expandRecurringPaymentStatusEntries(input: {
   );
   const occurrenceStatusByRuleAndDate = new Map(
     input.occurrenceStates.map((occurrence) => [
-      `${occurrence.recurringRuleId}:${occurrence.purchaseDate}`,
+      `${occurrence.recurringSeriesId}:${occurrence.purchaseDate}`,
       occurrence.isSettled,
     ]),
   );
@@ -324,6 +327,7 @@ function expandRecurringPaymentStatusEntries(input: {
       purchasePeriod = addMonthsToPeriod(purchasePeriod, 1)
     ) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,
@@ -342,7 +346,7 @@ function expandRecurringPaymentStatusEntries(input: {
           isSettled:
             rule.paymentMethod === "credit_card"
               ? Boolean(rule.cardId && invoiceStatusByCard.get(`${rule.cardId}:${period}`))
-              : (occurrenceStatusByRuleAndDate.get(`${rule.id}:${purchaseDate}`) ??
+              : (occurrenceStatusByRuleAndDate.get(`${rule.seriesId}:${purchaseDate}`) ??
                 rule.isSettled ??
                 false),
           origin: rule.origin,
@@ -368,6 +372,7 @@ function expandRecurringExpenseDistributionEntries(
 
     for (const purchasePeriod of purchasePeriods) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,
@@ -481,7 +486,7 @@ export function createDashboardService(
               boletoPaymentDate: string | null;
               isSettled: boolean;
               purchaseDate: string;
-              recurringRuleId: string;
+              recurringSeriesId: string;
             }>
           >
         | undefined;

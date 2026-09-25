@@ -56,6 +56,8 @@ export const billsRepository: BillsRepository = {
     );
     return billRows.map((row) => ({
       id: row.id,
+      seriesId: row.seriesId,
+      anchorDate: date(row.anchorDate),
       startDate: date(row.startDate),
       endDate: row.endDate ? date(row.endDate) : null,
       dueDate: date(row.dueDate as Date),
@@ -76,15 +78,15 @@ export const billsRepository: BillsRepository = {
         .map(({ recurringRuleId: _recurringRuleId, ...split }) => split),
     }));
   },
-  async listOccurrenceStates(userId, ruleIds, periodStart, periodEnd) {
+  async listOccurrenceStates(userId, seriesIds, periodStart, periodEnd) {
     const rows = await listRecurringOccurrencesForUser(
-      ruleIds,
+      seriesIds,
       new Date(`${periodStart}T00:00:00.000Z`),
       new Date(`${periodEnd}T00:00:00.000Z`),
       userId,
     );
     return rows.map((row) => ({
-      recurringRuleId: row.recurringRuleId,
+      recurringSeriesId: row.recurringSeriesId,
       purchaseDate: date(row.purchaseDate),
       isSettled: row.isSettled,
       accountId: row.accountId,
@@ -124,11 +126,23 @@ export const billsRepository: BillsRepository = {
     return Boolean(updated);
   },
   async payRecurring(userId, recurringRuleId, purchaseDate, accountId, paidAt) {
+    const [rule] = await db
+      .select({ seriesId: recurringTransactionRules.seriesId })
+      .from(recurringTransactionRules)
+      .where(
+        and(
+          eq(recurringTransactionRules.id, recurringRuleId),
+          eq(recurringTransactionRules.userId, userId),
+        ),
+      )
+      .limit(1);
+    if (!rule) return false;
     const [updated] = await db
       .insert(recurringTransactionOccurrences)
       .values({
         userId,
         recurringRuleId,
+        recurringSeriesId: rule.seriesId,
         purchaseDate: new Date(`${purchaseDate}T00:00:00.000Z`),
         isSettled: true,
         accountId,
@@ -136,10 +150,11 @@ export const billsRepository: BillsRepository = {
       })
       .onConflictDoUpdate({
         target: [
-          recurringTransactionOccurrences.recurringRuleId,
+          recurringTransactionOccurrences.recurringSeriesId,
           recurringTransactionOccurrences.purchaseDate,
         ],
         set: {
+          recurringRuleId,
           isSettled: true,
           accountId,
           boletoPaymentDate: new Date(`${paidAt}T00:00:00.000Z`),
@@ -155,6 +170,7 @@ import {
   db,
   financialAccounts,
   recurringTransactionOccurrences,
+  recurringTransactionRules,
   transactions,
 } from "@openmonetis/db";
 import { and, asc, eq } from "drizzle-orm";

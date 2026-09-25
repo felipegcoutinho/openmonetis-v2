@@ -86,6 +86,11 @@ export function periodToSafeInstant(period: string) {
   return dateOnlyToSafeInstant(`${period}-01`);
 }
 
+export function getPeriodEndDateString(period: string) {
+  const [year, month] = period.split("-").map(Number);
+  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+}
+
 export function isCalendarPeriod(value: unknown): value is string {
   return typeof value === "string" && calendarPeriodPattern.test(value);
 }

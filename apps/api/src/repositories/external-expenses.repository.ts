@@ -170,7 +170,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
       expenseQuery()
         .where(where)
         .orderBy(
-          desc(externalExpenses.updatedAt),
+          desc(externalExpenses.purchaseDate),
           desc(externalExpenses.createdAt),
           desc(externalExpenses.id),
         )
@@ -306,6 +306,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         ownerUserId: recurringTransactionRules.userId,
         personId: recurringTransactionRules.personId,
         amount: recurringTransactionRules.amount,
+        anchorDate: recurringTransactionRules.anchorDate,
         startDate: recurringTransactionRules.startDate,
         endDate: recurringTransactionRules.endDate,
         frequency: recurringTransactionRules.frequency,
@@ -381,6 +382,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         ownerUserId: row.ownerUserId,
         personId: row.personId,
         amount: row.amount,
+        anchorDate: toDate(row.anchorDate) as string,
         startDate: toDate(row.startDate) as string,
         endDate: toDate(row.endDate),
         frequency: row.frequency,

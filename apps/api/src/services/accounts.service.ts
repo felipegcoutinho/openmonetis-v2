@@ -7,6 +7,7 @@ import {
   createAccountDraft,
   createAccountYieldDraft,
 } from "@openmonetis/domain/accounts";
+import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
 import {
   addMonthsToPeriod,
   buildTransferPostings,
@@ -90,12 +91,14 @@ type DeleteAccountResult =
 
 type AccountRecurringRuleRecord = {
   id: string;
+  seriesId: string;
   accountId: string | null;
   sourceAccountId: string | null;
   destinationAccountId: string | null;
   amount: string;
   type: TransactionType;
   paymentMethod: PaymentMethod;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   dueDate: string | null;
@@ -104,7 +107,7 @@ type AccountRecurringRuleRecord = {
 };
 
 type AccountRecurringOccurrenceRecord = {
-  recurringRuleId: string;
+  recurringSeriesId: string;
   purchaseDate: string;
   isSettled: boolean;
   accountId: string | null;
@@ -135,7 +138,7 @@ export type AccountsRepository = {
   ): Promise<AccountRecurringRuleRecord[]>;
   listRecurringOccurrenceStatesThroughPeriod(
     userId: string,
-    recurringRuleIds: string[],
+    recurringSeriesIds: string[],
     periodEnd: Date,
   ): Promise<AccountRecurringOccurrenceRecord[]>;
 };
@@ -176,7 +179,7 @@ export function createAccountsService(
     ]);
     const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
       userId,
-      recurringRules.map((rule) => rule.id),
+      [...new Set(recurringRules.map((rule) => rule.seriesId))],
       getPeriodEndDate(period),
     );
     const postings = [
@@ -242,7 +245,7 @@ export function createAccountsService(
     ]);
     const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
       userId,
-      recurringRules.map((rule) => rule.id),
+      [...new Set(recurringRules.map((rule) => rule.seriesId))],
       getPeriodEndDate(period),
     );
     const recurringPostings = expandSettledRecurringPostings(
@@ -455,7 +458,7 @@ function expandSettledRecurringPostings(
 ): AccountBalancePostingRecord[] {
   const states = new Map(
     occurrenceStates.map((occurrence) => [
-      `${occurrence.recurringRuleId}:${occurrence.purchaseDate}`,
+      `${occurrence.recurringSeriesId}:${occurrence.purchaseDate}`,
       occurrence,
     ]),
   );
@@ -463,7 +466,7 @@ function expandSettledRecurringPostings(
   return rules.flatMap((rule) => {
     const postings: AccountBalancePostingRecord[] = [];
     const latestTrackedPeriod = occurrenceStates
-      .filter((occurrence) => occurrence.recurringRuleId === rule.id)
+      .filter((occurrence) => occurrence.recurringSeriesId === rule.seriesId)
       .reduce(
         (latest, occurrence) =>
           getPeriodFromDate(occurrence.purchaseDate) > latest
@@ -478,19 +481,20 @@ function expandSettledRecurringPostings(
       purchasePeriod = addMonthsToPeriod(purchasePeriod, 1)
     ) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,
         period: purchasePeriod,
       })) {
-        const occurrence = states.get(`${rule.id}:${purchaseDate}`);
+        const occurrence = states.get(`${rule.seriesId}:${purchaseDate}`);
         if (purchasePeriod > throughPeriod && !occurrence) continue;
         if ((occurrence?.isSettled ?? rule.isSettled) !== true) continue;
 
         const scheduledPeriod = deriveTransactionPeriod({
           paymentMethod: rule.paymentMethod,
           purchaseDate,
-          dueDate: getRecurringOccurrenceDueDate(rule.dueDate, purchaseDate),
+          dueDate: getRecurringDueDate(rule.dueDate, purchaseDate),
         });
         const period = deriveTransactionPostingPeriod({
           period: scheduledPeriod,
@@ -524,19 +528,4 @@ function expandSettledRecurringPostings(
 
     return postings;
   });
-}
-
-function getRecurringOccurrenceDueDate(dueDate: string | null, purchaseDate: string) {
-  if (!dueDate) return null;
-  const purchase = new Date(`${purchaseDate}T00:00:00.000Z`);
-  const dueDay = new Date(`${dueDate}T00:00:00.000Z`).getUTCDate();
-  const lastDay = new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth() + 1, 0),
-  ).getUTCDate();
-
-  return new Date(
-    Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth(), Math.min(dueDay, lastDay)),
-  )
-    .toISOString()
-    .slice(0, 10);
 }

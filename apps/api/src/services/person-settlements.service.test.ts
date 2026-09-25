@@ -113,6 +113,7 @@ test("includes the person's recurring allocation in the requested period", async
       {
         id: "00000000-0000-4000-8000-000000000010",
         seriesId: "00000000-0000-4000-8000-000000000011",
+        anchorDate: "2026-08-05",
         personId: "00000000-0000-4000-8000-000000000012",
         amount: "-300.00",
         startDate: "2026-08-05",

@@ -492,6 +492,7 @@ const recurringRuleColumns = {
   paymentMethod: recurringTransactionRules.paymentMethod,
   name: recurringTransactionRules.name,
   amount: recurringTransactionRules.amount,
+  anchorDate: recurringTransactionRules.anchorDate,
   startDate: recurringTransactionRules.startDate,
   endDate: recurringTransactionRules.endDate,
   frequency: recurringTransactionRules.frequency,
@@ -874,15 +875,16 @@ export async function listRecurringSplitsForUser(ruleIds: string[], userId: stri
 }
 
 export async function listRecurringOccurrencesForUser(
-  ruleIds: string[],
+  seriesIds: string[],
   periodStart: Date,
   periodEnd: Date,
   userId: string,
 ) {
-  if (!ruleIds.length) return [];
+  if (!seriesIds.length) return [];
   return db
     .select({
       recurringRuleId: recurringTransactionOccurrences.recurringRuleId,
+      recurringSeriesId: recurringTransactionOccurrences.recurringSeriesId,
       purchaseDate: recurringTransactionOccurrences.purchaseDate,
       isSettled: recurringTransactionOccurrences.isSettled,
       accountId: recurringTransactionOccurrences.accountId,
@@ -892,7 +894,7 @@ export async function listRecurringOccurrencesForUser(
     .where(
       and(
         eq(recurringTransactionOccurrences.userId, userId),
-        inArray(recurringTransactionOccurrences.recurringRuleId, ruleIds),
+        inArray(recurringTransactionOccurrences.recurringSeriesId, seriesIds),
         sql`${recurringTransactionOccurrences.purchaseDate} between ${periodStart} and ${periodEnd}`,
       ),
     );
@@ -912,6 +914,7 @@ export async function settleRecurringOccurrenceForUser(
     .values({
       userId,
       recurringRuleId,
+      recurringSeriesId: rule.seriesId,
       purchaseDate,
       isSettled,
       accountId: null,
@@ -919,10 +922,11 @@ export async function settleRecurringOccurrenceForUser(
     })
     .onConflictDoUpdate({
       target: [
-        recurringTransactionOccurrences.recurringRuleId,
+        recurringTransactionOccurrences.recurringSeriesId,
         recurringTransactionOccurrences.purchaseDate,
       ],
       set: {
+        recurringRuleId,
         isSettled,
         boletoPaymentDate,
         ...(isSettled ? {} : { accountId: null }),

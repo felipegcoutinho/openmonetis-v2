@@ -105,6 +105,13 @@ export const InstallmentsSummaryOutputSchema = z
 export const InstallmentsReportOutputSchema = z
   .object({
     referencePeriod: periodSchema,
+    monthlyHistory: z.array(
+      z.object({
+        period: periodSchema,
+        totalAmount: moneySchema,
+        activePurchaseCount: z.number().int().nonnegative(),
+      }),
+    ),
     summary: InstallmentsSummaryOutputSchema,
     groups: z.array(InstallmentGroupOutputSchema),
   })

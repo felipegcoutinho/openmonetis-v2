@@ -617,6 +617,7 @@ export const recurringTransactionRules = pgTable(
     paymentMethod: paymentMethod("payment_method").notNull(),
     name: varchar("name", { length: 160 }).notNull(),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    anchorDate: date("anchor_date", { mode: "date" }).notNull(),
     startDate: date("start_date", { mode: "date" }).notNull(),
     endDate: date("end_date", { mode: "date" }),
     frequency: recurrenceFrequency("frequency").notNull(),
@@ -1397,6 +1398,9 @@ export const recurringTransactionOccurrences = pgTable(
     recurringRuleId: uuid("recurring_rule_id")
       .notNull()
       .references(() => recurringTransactionRules.id, { onDelete: "cascade" }),
+    recurringSeriesId: uuid("recurring_series_id")
+      .notNull()
+      .references(() => recurringTransactionSeries.id, { onDelete: "cascade" }),
     purchaseDate: date("purchase_date", { mode: "date" }).notNull(),
     isSettled: boolean("is_settled").notNull(),
     accountId: uuid("account_id").references(() => financialAccounts.id, {
@@ -1415,15 +1419,25 @@ export const recurringTransactionOccurrences = pgTable(
       table.purchaseDate,
       table.recurringRuleId,
     ),
+    index("recurring_transaction_occurrences_user_purchase_series_idx").on(
+      table.userId,
+      table.purchaseDate,
+      table.recurringSeriesId,
+    ),
     index("recurring_transaction_occurrences_account_id_idx").on(table.accountId),
-    uniqueIndex("recurring_transaction_occurrences_rule_date_unique").on(
-      table.recurringRuleId,
+    uniqueIndex("recurring_transaction_occurrences_series_date_unique").on(
+      table.recurringSeriesId,
       table.purchaseDate,
     ),
     foreignKey({
       name: "recurring_transaction_occurrences_rule_user_fk",
       columns: [table.recurringRuleId, table.userId],
       foreignColumns: [recurringTransactionRules.id, recurringTransactionRules.userId],
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "recurring_transaction_occurrences_series_user_fk",
+      columns: [table.recurringSeriesId, table.userId],
+      foreignColumns: [recurringTransactionSeries.id, recurringTransactionSeries.userId],
     }).onDelete("cascade"),
     foreignKey({
       name: "recurring_transaction_occurrences_account_user_fk",

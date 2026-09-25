@@ -43,6 +43,13 @@
       "when": 1789777666192,
       "tag": "0005_fluffy_adam_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790094471509,
+      "tag": "0006_silent_boom_boom",
+      "breakpoints": true
     }
   ]
 }

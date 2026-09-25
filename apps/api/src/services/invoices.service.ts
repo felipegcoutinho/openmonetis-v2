@@ -62,6 +62,7 @@ type InvoiceDateRecord = {
   datesCustomized: boolean;
 };
 type InvoiceRecurringMovementRecord = InvoiceMovementRecord & {
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   frequency: RecurrenceFrequency;
@@ -516,6 +517,7 @@ function expandRecurringMovements(
   return rules.flatMap((rule) =>
     purchasePeriods.flatMap((purchasePeriod) =>
       listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,

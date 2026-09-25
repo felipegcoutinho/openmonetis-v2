@@ -37,6 +37,7 @@ export type CategoryTrendRecurringRule = {
   categoryId: string;
   type: CategoryTrendType;
   amount: string | number;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   frequency: RecurrenceFrequency;
@@ -161,6 +162,7 @@ export function calculateCategoryTrends(input: {
       input.endPeriod,
     )) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,

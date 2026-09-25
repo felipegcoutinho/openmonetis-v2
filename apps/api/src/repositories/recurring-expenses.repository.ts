@@ -8,7 +8,7 @@ import {
   recurringTransactionRules,
   recurringTransactionSplits,
 } from "@openmonetis/db";
-import { and, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import type { RecurringExpensesRepository } from "../services/recurring-expenses.service";
 
 export const recurringExpensesRepository = {
@@ -17,6 +17,8 @@ export const recurringExpensesRepository = {
       .select({
         id: recurringTransactionRules.id,
         userId: recurringTransactionRules.userId,
+        seriesId: recurringTransactionRules.seriesId,
+        anchorDate: recurringTransactionRules.anchorDate,
         personId: recurringTransactionRules.personId,
         type: recurringTransactionRules.type,
         paymentMethod: recurringTransactionRules.paymentMethod,
@@ -101,7 +103,7 @@ export const recurringExpensesRepository = {
           lte(recurringTransactionRules.startDate, periodEnd),
           or(
             isNull(recurringTransactionRules.endDate),
-            gt(recurringTransactionRules.endDate, periodStart),
+            gte(recurringTransactionRules.endDate, periodStart),
           ),
         ),
       );
@@ -142,11 +144,11 @@ export const recurringExpensesRepository = {
     return { ...rule, personRole: owner.personRole, splits };
   },
 
-  async listOccurrenceStates(userId, ruleIds, startDate, endDate) {
-    if (!ruleIds.length) return [];
+  async listOccurrenceStates(userId, seriesIds, startDate, endDate) {
+    if (!seriesIds.length) return [];
     return db
       .select({
-        recurringRuleId: recurringTransactionOccurrences.recurringRuleId,
+        recurringSeriesId: recurringTransactionOccurrences.recurringSeriesId,
         purchaseDate: recurringTransactionOccurrences.purchaseDate,
         isSettled: recurringTransactionOccurrences.isSettled,
       })
@@ -154,7 +156,7 @@ export const recurringExpensesRepository = {
       .where(
         and(
           eq(recurringTransactionOccurrences.userId, userId),
-          inArray(recurringTransactionOccurrences.recurringRuleId, ruleIds),
+          inArray(recurringTransactionOccurrences.recurringSeriesId, seriesIds),
           sql`${recurringTransactionOccurrences.purchaseDate} between ${startDate} and ${endDate}`,
         ),
       );
@@ -255,6 +257,7 @@ export const recurringExpensesRepository = {
             paymentMethod: rule.paymentMethod,
             name: changes?.name ?? rule.name,
             amount: changes?.amount ?? rule.amount,
+            anchorDate: rule.anchorDate,
             startDate: new Date(`${startDate}T00:00:00.000Z`),
             endDate: endDate ? new Date(`${endDate}T00:00:00.000Z`) : null,
             frequency: rule.frequency,
@@ -316,14 +319,13 @@ export const recurringExpensesRepository = {
         );
       }
 
-      if (effectiveVersionId) {
+      if (!effectiveVersionId) {
         await transaction
-          .update(recurringTransactionOccurrences)
-          .set({ recurringRuleId: effectiveVersionId, updatedAt: new Date() })
+          .delete(recurringTransactionOccurrences)
           .where(
             and(
               eq(recurringTransactionOccurrences.userId, input.userId),
-              eq(recurringTransactionOccurrences.recurringRuleId, rule.id),
+              eq(recurringTransactionOccurrences.recurringSeriesId, rule.seriesId),
               eq(
                 recurringTransactionOccurrences.purchaseDate,
                 new Date(`${input.effectiveDate}T00:00:00.000Z`),
@@ -332,11 +334,12 @@ export const recurringExpensesRepository = {
           );
       } else {
         await transaction
-          .delete(recurringTransactionOccurrences)
+          .update(recurringTransactionOccurrences)
+          .set({ recurringRuleId: effectiveVersionId, updatedAt: new Date() })
           .where(
             and(
               eq(recurringTransactionOccurrences.userId, input.userId),
-              eq(recurringTransactionOccurrences.recurringRuleId, rule.id),
+              eq(recurringTransactionOccurrences.recurringSeriesId, rule.seriesId),
               eq(
                 recurringTransactionOccurrences.purchaseDate,
                 new Date(`${input.effectiveDate}T00:00:00.000Z`),

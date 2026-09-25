@@ -34,6 +34,7 @@ export type BudgetRecurringRule = {
   categoryId: string | null;
   type: TransactionType;
   amount: string | number;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   frequency: RecurrenceFrequency;
@@ -144,6 +145,7 @@ export function calculateBudgetSpending(
       period,
     ]) {
       for (const purchaseDate of listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,

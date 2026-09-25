@@ -217,6 +217,7 @@ export const cardsRepository = {
         id: recurringTransactionRules.id,
         cardId: recurringTransactionRules.cardId,
         amount: recurringTransactionRules.amount,
+        anchorDate: recurringTransactionRules.anchorDate,
         startDate: recurringTransactionRules.startDate,
         endDate: recurringTransactionRules.endDate,
         frequency: recurringTransactionRules.frequency,
@@ -244,6 +245,7 @@ export const cardsRepository = {
 
     return rows.map((row) => ({
       ...row,
+      anchorDate: row.anchorDate.toISOString().slice(0, 10),
       startDate: row.startDate.toISOString().slice(0, 10),
       endDate: row.endDate?.toISOString().slice(0, 10) ?? null,
       dueDate: row.dueDate?.toISOString().slice(0, 10) ?? null,

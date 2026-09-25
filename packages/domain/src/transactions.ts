@@ -68,6 +68,62 @@ export type RefundCalculation = {
   remainingRefundableAmount: number;
 };
 
+export type TransactionSelectionItem = {
+  amount: number;
+  origin: TransactionOrigin;
+  type: TransactionType;
+};
+
+export type TransactionSelectionSummary = {
+  selectedCount: number;
+  inflow: number;
+  outflow: number;
+  balance: number;
+  neutralCount: number;
+};
+
+export function isNeutralTransactionSelectionItem(
+  item: Pick<TransactionSelectionItem, "origin" | "type">,
+) {
+  return (
+    item.type === "transfer" ||
+    item.origin === "accountBalanceAdjustment" ||
+    item.origin === "invoicePayment"
+  );
+}
+
+export function isTransactionSelectionItemSelectable(
+  item: Pick<TransactionSelectionItem, "origin" | "type">,
+) {
+  return !isNeutralTransactionSelectionItem(item);
+}
+
+export function summarizeTransactionSelection(
+  items: readonly TransactionSelectionItem[],
+): TransactionSelectionSummary {
+  let inflowCents = 0;
+  let outflowCents = 0;
+  let neutralCount = 0;
+
+  for (const item of items) {
+    if (isNeutralTransactionSelectionItem(item)) {
+      neutralCount += 1;
+      continue;
+    }
+    const amountCents = Math.round(item.amount * 100);
+    if (amountCents >= 0) inflowCents += amountCents;
+    else outflowCents += Math.abs(amountCents);
+  }
+
+  return {
+    selectedCount: items.length,
+    inflow: inflowCents / 100,
+    outflow: outflowCents / 100,
+    balance: (inflowCents - outflowCents) / 100,
+    neutralCount,
+  };
+}
+
 export function canDeleteTransactionOrigin(origin: TransactionOrigin) {
   return origin === "regular" || origin === "refund" || origin === "accountBalanceAdjustment";
 }
@@ -805,26 +861,29 @@ export function analyzeTransactionSplitAllocation(input: {
 }
 
 export function listRecurrenceDatesInPeriod(input: {
+  anchorDate?: string;
   endDate?: string | null;
   startDate: string;
   frequency: RecurrenceFrequency;
   period: string;
 }) {
+  const anchor = parseDate(input.anchorDate ?? input.startDate);
   const start = parseDate(input.startDate);
   const periodStart = parseDate(`${input.period}-01`);
   const periodEnd = createUtcDate(periodStart.getUTCFullYear(), periodStart.getUTCMonth() + 1, 0);
   if (start > periodEnd) return [];
+  const effectiveStart = start > periodStart ? start : periodStart;
   const dates: string[] = [];
   if (input.frequency === "weekly") {
     const step = 7;
-    let current = start;
-    if (current < periodStart) {
-      const elapsed = Math.floor((periodStart.getTime() - current.getTime()) / 86_400_000);
+    let current = anchor;
+    if (current < effectiveStart) {
+      const elapsed = Math.floor((effectiveStart.getTime() - current.getTime()) / 86_400_000);
       current = addDays(current, Math.ceil(elapsed / step) * step);
     }
     while (current <= periodEnd) {
       const date = toDateString(current);
-      if (input.endDate === null || input.endDate === undefined || date < input.endDate) {
+      if (input.endDate === null || input.endDate === undefined || date <= input.endDate) {
         dates.push(date);
       }
       current = addDays(current, step);
@@ -833,18 +892,18 @@ export function listRecurrenceDatesInPeriod(input: {
   }
   const interval = frequencyMonths[input.frequency] as number;
   let occurrence = 0;
-  let current = start;
-  while (current < periodStart) {
+  let current = anchor;
+  while (current < effectiveStart) {
     occurrence += 1;
-    current = addMonths(start, interval * occurrence);
+    current = addMonths(anchor, interval * occurrence);
   }
   while (current <= periodEnd) {
     const date = toDateString(current);
-    if (input.endDate === null || input.endDate === undefined || date < input.endDate) {
+    if (input.endDate === null || input.endDate === undefined || date <= input.endDate) {
       dates.push(date);
     }
     occurrence += 1;
-    current = addMonths(start, interval * occurrence);
+    current = addMonths(anchor, interval * occurrence);
   }
   return dates;
 }

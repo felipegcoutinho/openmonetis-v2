@@ -77,6 +77,7 @@ type CardRecurringRuleRecord = {
   id: string;
   cardId: string | null;
   amount: string;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   frequency: RecurrenceFrequency;
@@ -349,6 +350,7 @@ function expandRecurringInvoiceMovements(
   return rules.flatMap((rule) =>
     purchasePeriods.flatMap((purchasePeriod) =>
       listRecurrenceDatesInPeriod({
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         frequency: rule.frequency,

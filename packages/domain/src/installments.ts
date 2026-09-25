@@ -70,6 +70,7 @@ export type InstallmentAnticipationUndoCalculation = {
 
 export type InstallmentReportOptions = {
   referencePeriod: string;
+  historyEndPeriod?: string;
   status: InstallmentReportStatus;
   q?: string;
 };
@@ -124,6 +125,7 @@ export type InstallmentGroupCalculation = {
 
 export type InstallmentsReportCalculation = {
   referencePeriod: string;
+  monthlyHistory: Array<{ period: string; totalAmount: number; activePurchaseCount: number }>;
   summary: {
     openSeriesCount: number;
     totalPendingAmount: number;
@@ -213,18 +215,52 @@ export function calculateInstallmentsReport(
     rowsBySeries.set(row.seriesId, seriesRows);
   }
 
+  const allGroups = [...rowsBySeries.values()].map((seriesRows) =>
+    calculateGroup(seriesRows, options.referencePeriod),
+  );
   const search = normalizeSearch(options.q);
-  const groups = [...rowsBySeries.values()]
-    .map((seriesRows) => calculateGroup(seriesRows, options.referencePeriod))
+  const groups = allGroups
     .filter((group) => matchesStatus(group.status, options.status))
     .filter((group) => matchesSearch(group, search))
     .sort(compareGroups);
 
   return {
     referencePeriod: options.referencePeriod,
-    summary: calculateSummary(groups, options.referencePeriod),
+    monthlyHistory: calculateMonthlyHistory(
+      allGroups,
+      options.historyEndPeriod ?? options.referencePeriod,
+    ),
+    summary: calculateSummary(allGroups, options.referencePeriod),
     groups,
   };
+}
+
+function calculateMonthlyHistory(groups: InstallmentGroupCalculation[], endPeriod: string) {
+  const periods = Array.from({ length: 13 }, (_, index) =>
+    addMonthsToPeriod(endPeriod, index - 12),
+  );
+  const totals = new Map(periods.map((period) => [period, 0]));
+  const purchaseCounts = new Map(periods.map((period) => [period, 0]));
+
+  for (const group of groups) {
+    const groupPeriods = new Set<string>();
+    for (const installment of group.installments) {
+      const total = totals.get(installment.period);
+      if (total !== undefined) {
+        totals.set(installment.period, total + moneyToCents(installment.amount));
+        groupPeriods.add(installment.period);
+      }
+    }
+    for (const period of groupPeriods) {
+      purchaseCounts.set(period, (purchaseCounts.get(period) ?? 0) + 1);
+    }
+  }
+
+  return periods.map((period) => ({
+    period,
+    totalAmount: centsToMoney(totals.get(period) ?? 0),
+    activePurchaseCount: purchaseCounts.get(period) ?? 0,
+  }));
 }
 
 export function calculateInstallmentQuote(items: Array<Pick<InstallmentQuoteItem, "amount">>) {

@@ -123,6 +123,7 @@ function recurringSource(
     ownerUserId: "10000000-0000-4000-8000-000000000001",
     personId: "10000000-0000-4000-8000-000000000012",
     amount: "-50.00",
+    anchorDate: "2026-10-06",
     startDate: "2026-10-06",
     endDate: null,
     frequency: "weekly",
@@ -518,6 +519,7 @@ test("card synchronization keeps the occurrence date and uses the source invoice
   const drafts: RecurringExternalExpenseDraft[] = [];
   const implementation = recurringSynchronizationRepository(
     recurringSource({
+      anchorDate: "2026-08-30",
       startDate: "2026-08-30",
       frequency: "monthly",
       paymentMethod: "credit_card",
@@ -551,7 +553,7 @@ test("card synchronization keeps the occurrence date and uses the source invoice
   );
 });
 
-test("a boleto activated after day one does not deliver that month's occurrences", async () => {
+test("a boleto activated after day one is delivered while it is not overdue", async () => {
   const drafts: RecurringExternalExpenseDraft[] = [];
   const implementation = recurringSynchronizationRepository(
     recurringSource({
@@ -567,6 +569,27 @@ test("a boleto activated after day one does not deliver that month's occurrences
     implementation,
     { period: "2026-10" },
     () => new Date("2026-10-15T15:00:00.000Z"),
+  );
+
+  assert.equal(result.created, 4);
+  assert.equal(drafts.length, 4);
+});
+
+test("a boleto activated after its due date does not backfill that month's occurrences", async () => {
+  const drafts: RecurringExternalExpenseDraft[] = [];
+  const implementation = recurringSynchronizationRepository(
+    recurringSource({
+      dueDate: "2026-10-15",
+      paymentMethod: "boleto",
+    }),
+    recurringConnection({ connectedAt: new Date("2026-10-16T15:00:00.000Z") }),
+    drafts,
+  );
+
+  const result = await synchronizeRecurringExternalExpenses(
+    implementation,
+    { period: "2026-10" },
+    () => new Date("2026-10-16T15:00:00.000Z"),
   );
 
   assert.deepEqual(result, { created: 0, updated: 0, deleted: 0 });

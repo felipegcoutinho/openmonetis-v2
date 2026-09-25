@@ -101,17 +101,20 @@ test("paid split boleto uses only the admin allocation returned by the repositor
 
 test("early recurring boleto payment is posted before its occurrence due month", async () => {
   const recurringRuleId = "30000000-0000-4000-8000-000000000003";
+  const recurringSeriesId = "30000000-0000-4000-8000-000000000004";
   const service = createAccountsService(
     createRepository({
       listAccountRecurringRulesThroughPeriod: async () => [
         {
           id: recurringRuleId,
+          seriesId: recurringSeriesId,
           accountId,
           sourceAccountId: null,
           destinationAccountId: null,
           amount: "-250.00",
           type: "expense",
           paymentMethod: "boleto",
+          anchorDate: "2026-09-01",
           startDate: "2026-09-01",
           endDate: null,
           dueDate: "2026-09-03",
@@ -121,7 +124,7 @@ test("early recurring boleto payment is posted before its occurrence due month",
       ],
       listRecurringOccurrenceStatesThroughPeriod: async () => [
         {
-          recurringRuleId,
+          recurringSeriesId,
           purchaseDate: "2026-09-01",
           isSettled: true,
           accountId,

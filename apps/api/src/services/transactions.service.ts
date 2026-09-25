@@ -8,6 +8,7 @@ import {
   internalTransferCategoryName,
   invoicePaymentCategoryName,
 } from "@openmonetis/domain/categories";
+import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
 import type { ImportedStatement, ImportedTransaction } from "@openmonetis/domain/transactions";
 import {
   addMonthsToDate,
@@ -283,26 +284,6 @@ export function createTransactionsService(
 
   function getEarlierPeriod(period: string) {
     return addMonthsToPeriod(period, -2);
-  }
-
-  function getRecurringOccurrenceDueDate(ruleDueDate: Date | null, purchaseDate: string) {
-    if (!ruleDueDate) {
-      return null;
-    }
-
-    const purchase = toDate(purchaseDate);
-    const lastDay = new Date(
-      Date.UTC(purchase.getUTCFullYear(), purchase.getUTCMonth() + 1, 0),
-    ).getUTCDate();
-    const dueDate = new Date(
-      Date.UTC(
-        purchase.getUTCFullYear(),
-        purchase.getUTCMonth(),
-        Math.min(ruleDueDate.getUTCDate(), lastDay),
-      ),
-    );
-
-    return toDateString(dueDate);
   }
 
   function toTransactionOutput(transaction: TransactionWithRelations): TransactionOutput {
@@ -991,6 +972,7 @@ export function createTransactionsService(
           paymentMethod: data.paymentMethod,
           name: data.name,
           amount: signedAmount.toFixed(2),
+          anchorDate: toDate(data.purchaseDate),
           startDate: toDate(data.purchaseDate),
           endDate: null,
           frequency: data.recurrenceFrequency as NonNullable<
@@ -1016,7 +998,7 @@ export function createTransactionsService(
         throw notFound("Recurring transaction not found", "RECURRING_TRANSACTION_NOT_FOUND");
       }
 
-      await synchronizeRecurringExternalExpenses(data.userId, data.purchaseDate.slice(0, 7));
+      await synchronizeRecurringExternalExpensesFrom(data.userId, data.purchaseDate);
 
       return toRecurringOccurrenceOutput(rule, data.purchaseDate, basePeriod);
     }
@@ -1161,6 +1143,7 @@ export function createTransactionsService(
     const recurringOccurrences = recurringRules.flatMap((rule) => {
       const occurrenceDates = occurrencePeriods.flatMap((occurrencePeriod) =>
         listRecurrenceDatesInPeriod({
+          anchorDate: toDateString(rule.anchorDate),
           startDate: toDateString(rule.startDate),
           endDate: rule.endDate ? toDateString(rule.endDate) : null,
           frequency: rule.frequency,
@@ -1170,7 +1153,10 @@ export function createTransactionsService(
 
       return occurrenceDates
         .map((purchaseDate) => {
-          const dueDate = getRecurringOccurrenceDueDate(rule.dueDate, purchaseDate);
+          const dueDate = getRecurringDueDate(
+            rule.dueDate ? toDateString(rule.dueDate) : null,
+            purchaseDate,
+          );
           const occurrencePeriod = deriveTransactionPeriod({
             paymentMethod: rule.paymentMethod,
             purchaseDate,
@@ -1204,16 +1190,32 @@ export function createTransactionsService(
       userId,
     );
     const ruleIds = recurringRules.map((rule) => rule.id);
+    const seriesIds = [...new Set(recurringRules.map((rule) => rule.seriesId))];
     const [recurringSplits, recurringOccurrenceStates] = await Promise.all([
       listRecurringSplitsForUser(ruleIds, userId),
-      listRecurringOccurrencesForUser(ruleIds, periodStart, periodEnd, userId),
+      listRecurringOccurrencesForUser(seriesIds, periodStart, periodEnd, userId),
     ]);
+    const seriesByRuleId = new Map(recurringRules.map((rule) => [rule.id, rule.seriesId]));
     const occurrenceStates = new Map(
       recurringOccurrenceStates.map((occurrence) => [
-        `${occurrence.recurringRuleId}:${toDateString(occurrence.purchaseDate)}`,
+        `${occurrence.recurringSeriesId}:${toDateString(occurrence.purchaseDate)}`,
         occurrence.isSettled,
       ]),
     );
+    const transactionSplitsById = new Map<string, typeof transactionSplits>();
+    for (const split of transactionSplits) {
+      transactionSplitsById.set(split.transactionId, [
+        ...(transactionSplitsById.get(split.transactionId) ?? []),
+        split,
+      ]);
+    }
+    const recurringSplitsByRuleId = new Map<string, typeof recurringSplits>();
+    for (const split of recurringSplits) {
+      recurringSplitsByRuleId.set(split.recurringRuleId, [
+        ...(recurringSplitsByRuleId.get(split.recurringRuleId) ?? []),
+        split,
+      ]);
+    }
     const attachedTransactions = new Set(
       (
         await listTransactionIdsWithAttachmentsForUser(
@@ -1225,26 +1227,28 @@ export function createTransactionsService(
     const hydratedTransactions = [
       ...transactions.map(toTransactionOutput),
       ...recurringOccurrences,
-    ].map((item) => ({
-      ...item,
-      isSettled:
-        item.isRecurring && item.recurringRuleId
-          ? (occurrenceStates.get(`${item.recurringRuleId}:${item.purchaseDate}`) ?? item.isSettled)
-          : item.isSettled,
-      splitShares: (item.recurringRuleId
-        ? recurringSplits.filter((split) => split.recurringRuleId === item.recurringRuleId)
-        : transactionSplits.filter((split) => split.transactionId === item.recordId)
-      ).map((split) => ({
-        personId: split.personId,
-        personName: split.personName,
-        personAvatarUrl: split.personAvatarUrl,
-        amount: Math.abs(Number(split.amount)),
-      })),
-      isDivided: item.recurringRuleId
-        ? recurringSplits.some((split) => split.recurringRuleId === item.recurringRuleId)
-        : transactionSplits.some((split) => split.transactionId === item.recordId),
-      hasAttachments: item.recordId ? attachedTransactions.has(item.recordId) : false,
-    }));
+    ].map((item) => {
+      const splits = item.recurringRuleId
+        ? (recurringSplitsByRuleId.get(item.recurringRuleId) ?? [])
+        : (transactionSplitsById.get(item.recordId ?? "") ?? []);
+      return {
+        ...item,
+        isSettled:
+          item.isRecurring && item.recurringRuleId
+            ? (occurrenceStates.get(
+                `${seriesByRuleId.get(item.recurringRuleId)}:${item.purchaseDate}`,
+              ) ?? item.isSettled)
+            : item.isSettled,
+        splitShares: splits.map((split) => ({
+          personId: split.personId,
+          personName: split.personName,
+          personAvatarUrl: split.personAvatarUrl,
+          amount: Math.abs(Number(split.amount)),
+        })),
+        isDivided: splits.length > 0,
+        hasAttachments: item.recordId ? attachedTransactions.has(item.recordId) : false,
+      };
+    });
     const output = hydratedTransactions.flatMap((item) =>
       projectTransactionAllocations({
         id: item.id,
@@ -1863,6 +1867,7 @@ export function createTransactionsService(
     const rule = await findRecurringRuleByIdForUser(recurringRuleId, userId);
     if (!rule) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     const validDates = listRecurrenceDatesInPeriod({
+      anchorDate: toDateString(rule.anchorDate),
       startDate: toDateString(rule.startDate),
       endDate: rule.endDate ? toDateString(rule.endDate) : null,
       frequency: rule.frequency,
@@ -1889,9 +1894,11 @@ export function createTransactionsService(
     userId: string,
     status: "active" | "paused" | "cancelled",
   ) {
+    const current = await findRecurringRuleByIdForUser(id, userId);
+    if (!current) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     const updated = await updateRecurringRuleStatusForUser(id, userId, status);
     if (!updated) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
-    await synchronizeRecurringExternalExpenses(userId, getCurrentPeriodInBrazil());
+    await synchronizeRecurringExternalExpensesFrom(userId, toDateString(current.startDate));
     return { id, status };
   }
 
@@ -1907,6 +1914,19 @@ export function createTransactionsService(
     assertBoletoPaymentDateIsNotFuture(validated);
     const context = await assertOwnership(validated, userId);
     const base = buildBaseRecord({ ...validated, userId }, context);
+    const currentAnchorDate = toDateString(current.anchorDate);
+    const currentStartDate = toDateString(current.startDate);
+    const keepsCurrentSchedule =
+      validated.recurrenceFrequency === current.frequency &&
+      listRecurrenceDatesInPeriod({
+        anchorDate: currentAnchorDate,
+        startDate: currentStartDate,
+        endDate: current.endDate ? toDateString(current.endDate) : null,
+        frequency: current.frequency,
+        period: getPeriodFromDate(validated.purchaseDate),
+      }).includes(validated.purchaseDate);
+    const nextAnchorDate = keepsCurrentSchedule ? currentAnchorDate : validated.purchaseDate;
+    const nextStartDate = keepsCurrentSchedule ? currentStartDate : validated.purchaseDate;
     const rule = await updateRecurringRuleWithSplitsForUser(
       id,
       userId,
@@ -1916,7 +1936,8 @@ export function createTransactionsService(
         paymentMethod: validated.paymentMethod,
         name: validated.name.trim(),
         amount: normalizeTransactionAmount(validated.type, validated.amount).toFixed(2),
-        startDate: toDate(validated.purchaseDate),
+        anchorDate: toDate(nextAnchorDate),
+        startDate: toDate(nextStartDate),
         frequency: validated.recurrenceFrequency as NonNullable<
           TransactionInput["recurrenceFrequency"]
         >,
@@ -1948,7 +1969,10 @@ export function createTransactionsService(
       amount: Math.abs(Number(share.amount)),
     }));
     output.isDivided = savedSplits.length > 0;
-    await synchronizeRecurringExternalExpenses(userId, getCurrentPeriodInBrazil());
+    await synchronizeRecurringExternalExpensesFrom(
+      userId,
+      currentStartDate < nextStartDate ? currentStartDate : nextStartDate,
+    );
     return output;
   }
 
@@ -2004,6 +2028,13 @@ export function createTransactionsService(
       await recurringExternalExpenses.synchronize(ownerUserId, period);
     } catch (error) {
       console.error("recurring_external_expense_sync_failed", { ownerUserId, period, error });
+    }
+  }
+
+  async function synchronizeRecurringExternalExpensesFrom(ownerUserId: string, date: string) {
+    const current = getCurrentPeriodInBrazil();
+    for (const period of listPeriodsBetween(date.slice(0, 7), current)) {
+      await synchronizeRecurringExternalExpenses(ownerUserId, period);
     }
   }
 

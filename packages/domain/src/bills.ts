@@ -3,6 +3,11 @@ import { listRecurrenceDatesInPeriod, type RecurrenceFrequency } from "./transac
 export const billStatuses = ["paid", "due", "overdue"] as const;
 export type BillStatus = (typeof billStatuses)[number];
 
+export function calculateOpenBillsTotal(bills: readonly { amount: number; isSettled: boolean }[]) {
+  const total = bills.reduce((sum, bill) => sum + (bill.isSettled ? 0 : bill.amount), 0);
+  return Math.round((total + Number.EPSILON) * 100) / 100;
+}
+
 export function getBillStatus(input: {
   dueDate: string;
   isSettled: boolean;
@@ -14,6 +19,7 @@ export function getBillStatus(input: {
 
 export function listRecurringBillOccurrences(input: {
   ruleId: string;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   dueDate: string;
@@ -23,6 +29,7 @@ export function listRecurringBillOccurrences(input: {
   const dueDay = Number(input.dueDate.slice(8, 10));
 
   return listRecurrenceDatesInPeriod({
+    anchorDate: input.anchorDate,
     startDate: input.startDate,
     endDate: input.endDate,
     frequency: input.frequency,

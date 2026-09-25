@@ -394,6 +394,7 @@ export const accountsRepository = {
       db
         .select({
           id: recurringTransactionRules.id,
+          seriesId: recurringTransactionRules.seriesId,
           accountId: recurringTransactionRules.accountId,
           sourceAccountId: recurringTransactionRules.sourceAccountId,
           destinationAccountId: recurringTransactionRules.destinationAccountId,
@@ -403,6 +404,7 @@ export const accountsRepository = {
             ),
           type: recurringTransactionRules.type,
           paymentMethod: recurringTransactionRules.paymentMethod,
+          anchorDate: recurringTransactionRules.anchorDate,
           startDate: recurringTransactionRules.startDate,
           endDate: recurringTransactionRules.endDate,
           dueDate: recurringTransactionRules.dueDate,
@@ -446,6 +448,7 @@ export const accountsRepository = {
       db
         .select({
           id: recurringTransactionRules.id,
+          seriesId: recurringTransactionRules.seriesId,
           accountId: recurringTransactionRules.accountId,
           sourceAccountId: recurringTransactionRules.sourceAccountId,
           destinationAccountId: recurringTransactionRules.destinationAccountId,
@@ -455,6 +458,7 @@ export const accountsRepository = {
             ),
           type: recurringTransactionRules.type,
           paymentMethod: recurringTransactionRules.paymentMethod,
+          anchorDate: recurringTransactionRules.anchorDate,
           startDate: recurringTransactionRules.startDate,
           endDate: recurringTransactionRules.endDate,
           dueDate: recurringTransactionRules.dueDate,
@@ -500,18 +504,19 @@ export const accountsRepository = {
 
     return [...adminRows, ...billRows].map((row) => ({
       ...row,
+      anchorDate: row.anchorDate.toISOString().slice(0, 10),
       startDate: row.startDate.toISOString().slice(0, 10),
       endDate: row.endDate?.toISOString().slice(0, 10) ?? null,
       dueDate: row.dueDate?.toISOString().slice(0, 10) ?? null,
     }));
   },
 
-  async listRecurringOccurrenceStatesThroughPeriod(userId, recurringRuleIds, periodEnd) {
-    if (!recurringRuleIds.length) return [];
+  async listRecurringOccurrenceStatesThroughPeriod(userId, recurringSeriesIds, periodEnd) {
+    if (!recurringSeriesIds.length) return [];
 
     const rows = await db
       .select({
-        recurringRuleId: recurringTransactionOccurrences.recurringRuleId,
+        recurringSeriesId: recurringTransactionOccurrences.recurringSeriesId,
         purchaseDate: recurringTransactionOccurrences.purchaseDate,
         isSettled: recurringTransactionOccurrences.isSettled,
         accountId: recurringTransactionOccurrences.accountId,
@@ -521,7 +526,7 @@ export const accountsRepository = {
       .where(
         and(
           eq(recurringTransactionOccurrences.userId, userId),
-          inArray(recurringTransactionOccurrences.recurringRuleId, recurringRuleIds),
+          inArray(recurringTransactionOccurrences.recurringSeriesId, recurringSeriesIds),
           or(
             lte(recurringTransactionOccurrences.purchaseDate, periodEnd),
             lte(recurringTransactionOccurrences.boletoPaymentDate, periodEnd),

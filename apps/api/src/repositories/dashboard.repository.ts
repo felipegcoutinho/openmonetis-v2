@@ -192,6 +192,7 @@ export const dashboardRepository = {
     const rows = await db
       .select({
         id: recurringTransactionRules.id,
+        seriesId: recurringTransactionRules.seriesId,
         accountId: sql<
           string | null
         >`coalesce(${recurringTransactionRules.accountId}, ${cards.accountId})`.as("account_id"),
@@ -225,6 +226,7 @@ export const dashboardRepository = {
         destinationAccountId: recurringTransactionRules.destinationAccountId,
         frequency: recurringTransactionRules.frequency,
         paymentMethod: recurringTransactionRules.paymentMethod,
+        anchorDate: recurringTransactionRules.anchorDate,
         startDate: recurringTransactionRules.startDate,
         endDate: recurringTransactionRules.endDate,
         dueDate: recurringTransactionRules.dueDate,
@@ -308,6 +310,7 @@ export const dashboardRepository = {
 
     return rows.map((row) => ({
       id: row.id,
+      seriesId: row.seriesId,
       accountId: row.accountId,
       amount: row.amount,
       categoryId: row.categoryId,
@@ -321,6 +324,7 @@ export const dashboardRepository = {
       destinationAccountId: row.destinationAccountId,
       frequency: row.frequency,
       paymentMethod: row.paymentMethod,
+      anchorDate: row.anchorDate.toISOString().slice(0, 10),
       startDate: row.startDate.toISOString().slice(0, 10),
       endDate: row.endDate?.toISOString().slice(0, 10) ?? null,
       dueDate: row.dueDate?.toISOString().slice(0, 10) ?? null,
@@ -416,7 +420,7 @@ export const dashboardRepository = {
   async listRecurringOccurrenceStates(userId, periodEnd) {
     const rows = await db
       .select({
-        recurringRuleId: recurringTransactionOccurrences.recurringRuleId,
+        recurringSeriesId: recurringTransactionOccurrences.recurringSeriesId,
         purchaseDate: recurringTransactionOccurrences.purchaseDate,
         boletoPaymentDate: recurringTransactionOccurrences.boletoPaymentDate,
         isSettled: recurringTransactionOccurrences.isSettled,

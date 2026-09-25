@@ -1,6 +1,10 @@
-import { getBillStatus, listRecurringBillOccurrences } from "@openmonetis/domain/bills";
+import {
+  calculateOpenBillsTotal,
+  getBillStatus,
+  listRecurringBillOccurrences,
+} from "@openmonetis/domain/bills";
 import type { RecurrenceFrequency, TransactionCondition } from "@openmonetis/domain/transactions";
-import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
+import { getCurrentDateInBrazil, getPeriodEndDateString } from "@openmonetis/shared/date-time";
 import type {
   CreateBillPaymentInput,
   DashboardBill,
@@ -42,6 +46,8 @@ type PersistedBillRecord = BillRelationRecord & {
 
 type RecurringBillRecord = BillRelationRecord & {
   id: string;
+  seriesId: string;
+  anchorDate: string;
   startDate: string;
   endDate?: string | null;
   dueDate: string;
@@ -52,7 +58,7 @@ type RecurringBillRecord = BillRelationRecord & {
 };
 
 type BillOccurrenceStateRecord = {
-  recurringRuleId: string;
+  recurringSeriesId: string;
   purchaseDate: string;
   isSettled: boolean;
   accountId: string | null;
@@ -66,7 +72,7 @@ export type BillsRepository = {
   listRecurring(userId: string, periodEnd: Date): Promise<RecurringBillRecord[]>;
   listOccurrenceStates(
     userId: string,
-    ruleIds: string[],
+    seriesIds: string[],
     periodStart: string,
     periodEnd: string,
   ): Promise<BillOccurrenceStateRecord[]>;
@@ -84,7 +90,7 @@ export type BillsRepository = {
 export function createBillsService(repository: BillsRepository, today = getCurrentDateInBrazil) {
   async function get(period: string, userId: string): Promise<DashboardBillsOutput> {
     const periodStart = `${period}-01`;
-    const periodEnd = lastDayOfPeriod(period);
+    const periodEnd = getPeriodEndDateString(period);
     const [persisted, recurring, accounts] = await Promise.all([
       repository.listPersisted(userId, period),
       repository.listRecurring(userId, new Date(`${periodEnd}T23:59:59.999Z`)),
@@ -92,12 +98,12 @@ export function createBillsService(repository: BillsRepository, today = getCurre
     ]);
     const occurrenceStates = await repository.listOccurrenceStates(
       userId,
-      recurring.map((rule) => rule.id),
+      [...new Set(recurring.map((rule) => rule.seriesId))],
       periodStart,
       periodEnd,
     );
     const states = new Map(
-      occurrenceStates.map((state) => [`${state.recurringRuleId}:${state.purchaseDate}`, state]),
+      occurrenceStates.map((state) => [`${state.recurringSeriesId}:${state.purchaseDate}`, state]),
     );
     const persistedItems: DashboardBill[] = persisted.map((bill) =>
       buildBill({
@@ -112,13 +118,14 @@ export function createBillsService(repository: BillsRepository, today = getCurre
     const recurringItems: DashboardBill[] = recurring.flatMap((rule) =>
       listRecurringBillOccurrences({
         ruleId: rule.id,
+        anchorDate: rule.anchorDate,
         startDate: rule.startDate,
         endDate: rule.endDate,
         dueDate: rule.dueDate,
         frequency: rule.frequency,
         period,
       }).map((occurrence) => {
-        const state = states.get(occurrence.id);
+        const state = states.get(`${rule.seriesId}:${occurrence.purchaseDate}`);
         const paymentAccount = state?.accountId
           ? accounts.find((account) => account.id === state.accountId)
           : null;
@@ -144,9 +151,7 @@ export function createBillsService(repository: BillsRepository, today = getCurre
     const items = [...persistedItems, ...recurringItems].sort(compareBills);
     return {
       period,
-      totalOpen: money(
-        items.reduce((total, bill) => total + (bill.isSettled ? 0 : bill.amount), 0),
-      ),
+      totalOpen: calculateOpenBillsTotal(items),
       overdueCount: items.filter((bill) => bill.status === "overdue").length,
       accounts,
       items,
@@ -243,15 +248,6 @@ function buildBill(
 function compareBills(left: DashboardBill, right: DashboardBill) {
   if (left.isSettled !== right.isSettled) return left.isSettled ? 1 : -1;
   return left.dueDate.localeCompare(right.dueDate) || left.name.localeCompare(right.name);
-}
-
-function lastDayOfPeriod(period: string) {
-  const [year, month] = period.split("-").map(Number) as [number, number];
-  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
-}
-
-function money(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 export type BillsService = ReturnType<typeof createBillsService>;

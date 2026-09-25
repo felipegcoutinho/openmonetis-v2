@@ -8,6 +8,8 @@ import {
   type InstallmentReportRow,
   isInstallmentPaid,
 } from "@openmonetis/domain/installments";
+import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
+import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type {
   CreateInstallmentAnticipationInput,
   DashboardInstallmentExpensesOutput,
@@ -90,7 +92,10 @@ export type InstallmentsRepository = {
   }): Promise<{ id: string } | null>;
 };
 
-export function createInstallmentsService(repository: InstallmentsRepository) {
+export function createInstallmentsService(
+  repository: InstallmentsRepository,
+  getCurrentPeriod: () => string = getCurrentPeriodInBrazil,
+) {
   return {
     async dashboard(userId: string, period: string): Promise<DashboardInstallmentExpensesOutput> {
       const rows = await repository.listForUser(userId, { personScope: "admin" });
@@ -101,6 +106,7 @@ export function createInstallmentsService(repository: InstallmentsRepository) {
       const rows = await repository.listForUser(userId, { personScope: "admin" });
       return calculateInstallmentsReport(rows, {
         referencePeriod: query.period,
+        historyEndPeriod: addMonthsToPeriod(getCurrentPeriod(), 1),
         status: query.status,
         q: query.q,
       });

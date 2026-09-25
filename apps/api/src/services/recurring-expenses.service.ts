@@ -1,6 +1,7 @@
 import { type CardClosingRule, resolveCardClosingRule } from "@openmonetis/domain/cards";
 import {
   getNextRecurringOccurrenceDate,
+  getRecurringDueDate,
   isValidRecurringExpenseOccurrence,
   projectRecurringExpenseOccurrences,
 } from "@openmonetis/domain/recurring-expenses";
@@ -23,6 +24,8 @@ import { badRequest, notFound } from "../utils/errors";
 export type RecurringExpenseRuleRecord = {
   id: string;
   userId: string;
+  seriesId: string;
+  anchorDate: Date;
   personId: string;
   type: "income" | "expense" | "transfer";
   paymentMethod: PaymentMethod;
@@ -90,10 +93,10 @@ export type RecurringExpensesRepository = {
   findForUser(id: string, userId: string): Promise<OwnedRecurringExpenseRule | null>;
   listOccurrenceStates(
     userId: string,
-    ruleIds: string[],
+    seriesIds: string[],
     startDate: Date,
     endDate: Date,
-  ): Promise<Array<{ recurringRuleId: string; purchaseDate: Date; isSettled: boolean }>>;
+  ): Promise<Array<{ recurringSeriesId: string; purchaseDate: Date; isSettled: boolean }>>;
   listSplitPeople(
     userId: string,
     ruleIds: string[],
@@ -128,11 +131,14 @@ export function createRecurringExpensesService(
   } = { synchronize: async () => undefined },
 ) {
   async function synchronizeExternalExpenses(ownerUserId: string, occurrenceDate: string) {
-    const period = occurrenceDate.slice(0, 7);
-    try {
-      await recurringExternalExpenses.synchronize(ownerUserId, period);
-    } catch (error) {
-      console.error("recurring_external_expense_sync_failed", { ownerUserId, period, error });
+    const startPeriod = occurrenceDate.slice(0, 7);
+    const currentPeriod = getToday().slice(0, 7);
+    for (let period = startPeriod; period <= currentPeriod; period = addMonthsToPeriod(period, 1)) {
+      try {
+        await recurringExternalExpenses.synchronize(ownerUserId, period);
+      } catch (error) {
+        console.error("recurring_external_expense_sync_failed", { ownerUserId, period, error });
+      }
     }
   }
   async function getOwnedRule(id: string, userId: string) {
@@ -158,6 +164,7 @@ export function createRecurringExpensesService(
     const endDate = rule.endDate ? dateString(rule.endDate) : null;
     if (
       !isValidRecurringExpenseOccurrence({
+        anchorDate: dateString(rule.anchorDate),
         date: purchaseDate,
         endDate,
         frequency: rule.frequency,
@@ -167,6 +174,7 @@ export function createRecurringExpensesService(
       throw badRequest("Invalid recurring occurrence", "INVALID_RECURRING_OCCURRENCE");
     }
     const nextDate = getNextRecurringOccurrenceDate({
+      anchorDate: dateString(rule.anchorDate),
       currentDate: purchaseDate,
       endDate,
       frequency: rule.frequency,
@@ -181,14 +189,15 @@ export function createRecurringExpensesService(
       const periodEnd = lastInstantOfPeriod(period);
       const rules = await repository.listForPeriod(userId, periodStart, periodEnd);
       const ruleIds = rules.map((rule) => rule.id);
+      const seriesIds = [...new Set(rules.map((rule) => rule.seriesId))];
       const [states, splitPeople] = await Promise.all([
-        repository.listOccurrenceStates(userId, ruleIds, periodStart, periodEnd),
+        repository.listOccurrenceStates(userId, seriesIds, periodStart, periodEnd),
         repository.listSplitPeople(userId, ruleIds),
       ]);
       const splitPeopleByRule = groupSplitPeople(splitPeople);
       const settlement = new Map(
         states.map((state) => [
-          `${state.recurringRuleId}:${dateString(state.purchaseDate)}`,
+          `${state.recurringSeriesId}:${dateString(state.purchaseDate)}`,
           state.isSettled,
         ]),
       );
@@ -232,12 +241,16 @@ export function createRecurringExpensesService(
 
         return purchasePeriods.flatMap((purchasePeriod) =>
           listRecurrenceDatesInPeriod({
+            anchorDate: dateString(rule.anchorDate),
             startDate,
             endDate,
             frequency: rule.frequency,
             period: purchasePeriod,
           }).flatMap((purchaseDate) => {
-            const dueDate = recurringDueDate(rule.dueDate, purchaseDate);
+            const dueDate = getRecurringDueDate(
+              rule.dueDate ? dateString(rule.dueDate) : null,
+              purchaseDate,
+            );
             const occurrencePeriod = deriveTransactionPeriod({
               paymentMethod: rule.paymentMethod,
               purchaseDate,
@@ -264,7 +277,8 @@ export function createRecurringExpensesService(
                 cardName: rule.cardName,
                 cardLogo: rule.cardLogo,
                 splitPeople: splitPeopleByRule.get(rule.id) ?? [],
-                isSettled: settlement.get(`${rule.id}:${purchaseDate}`) ?? rule.isSettled ?? false,
+                isSettled:
+                  settlement.get(`${rule.seriesId}:${purchaseDate}`) ?? rule.isSettled ?? false,
                 canEdit: true,
                 status: "active" as const,
               },
@@ -311,6 +325,7 @@ export function createRecurringExpensesService(
         const startDate = dateString(rule.startDate);
         const endDate = rule.endDate ? dateString(rule.endDate) : null;
         const occurrences = projectRecurringExpenseOccurrences({
+          anchorDate: dateString(rule.anchorDate),
           startDate,
           endDate,
           frequency: rule.frequency,
@@ -326,6 +341,7 @@ export function createRecurringExpensesService(
         const startDate = dateString(rule.startDate);
         const amount = Math.abs(Number(rule.adminAmount));
         const actionDate = getNextRecurringOccurrenceDate({
+          anchorDate: dateString(rule.anchorDate),
           currentDate: today,
           endDate: null,
           frequency: rule.frequency,
@@ -505,14 +521,6 @@ function getCard(rule: RecurringExpenseRuleRecord): {
     }),
     dueDay: rule.cardDueDay,
   };
-}
-
-function recurringDueDate(value: Date | null, purchaseDate: string) {
-  if (!value) return null;
-  const day = value.getUTCDate();
-  const [year, month] = purchaseDate.split("-").map(Number);
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return `${purchaseDate.slice(0, 7)}-${String(Math.min(day, lastDay)).padStart(2, "0")}`;
 }
 
 function dateString(value: Date) {
