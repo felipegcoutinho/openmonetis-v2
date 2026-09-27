@@ -7,6 +7,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-27
+
+Corrige a instalação do aplicativo web em sites com autenticação no proxy e aprimora a hierarquia tipográfica da navegação e do painel.
+
+### Alterado
+
+- Navegação e indicadores do painel destacam melhor os rótulos, os valores e a saudação.
+
+### Corrigido
+
+- Instalação do app web em sites protegidos por autenticação no proxy, permitindo carregar o manifesto com credenciais.
+
 ## [0.8.0] - 2026-09-27
 
 Adiciona metas de economia com acompanhamento por conta, histórico de faturas e filtros por regra na Caixa de entrada.
@@ -361,7 +373,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.5.0...v0.6.0
