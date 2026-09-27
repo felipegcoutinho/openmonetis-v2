@@ -163,6 +163,7 @@ export const cardsRepository = {
         cardId: transactions.cardId,
         period: transactions.period,
         amount: transactions.amount,
+        purchaseDate: transactions.purchaseDate,
       })
       .from(transactions)
       .where(
@@ -171,6 +172,12 @@ export const cardsRepository = {
           isNotNull(transactions.cardId),
           ...(cardId ? [eq(transactions.cardId, cardId)] : []),
         ),
+      )
+      .then((rows) =>
+        rows.map((row) => ({
+          ...row,
+          purchaseDate: row.purchaseDate.toISOString().slice(0, 10),
+        })),
       );
   },
 

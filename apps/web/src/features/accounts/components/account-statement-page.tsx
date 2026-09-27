@@ -2,10 +2,12 @@ import type {
   AccountOutput,
   AddAccountYieldInput,
   AdjustAccountBalanceInput,
+  CreateAccountInput,
+  ReplaceAccountInput,
 } from "@openmonetis/validators/accounts";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
-import { ArrowDownLeft, ArrowUpRight, Scale, TrendingUp } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Pencil, Scale, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -13,6 +15,7 @@ import { EntityLoadError } from "@/components/entity-load-error";
 import {
   FinancialSummaryAction,
   FinancialSummaryHeader,
+  FinancialSummaryTitleAction,
 } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
@@ -22,9 +25,14 @@ import {
   getCurrentPeriod,
   type TransactionsSearch,
 } from "@/features/transactions/transactions.presentation";
-import { useAddAccountYieldMutation, useAdjustAccountBalanceMutation } from "../accounts.mutations";
+import {
+  useAddAccountYieldMutation,
+  useAdjustAccountBalanceMutation,
+  useReplaceAccountMutation,
+} from "../accounts.mutations";
 import { accountTypeLabels } from "../accounts.presentation";
 import { accountQueryOptions } from "../accounts.queries";
+import { AccountDialog } from "./account-dialog";
 import { AddAccountYieldDialog } from "./add-account-yield-dialog";
 import { AdjustAccountBalanceDialog } from "./adjust-account-balance-dialog";
 
@@ -43,8 +51,10 @@ export function AccountStatementPage({
   const accountQuery = useQuery(accountQueryOptions(accountId, selectedPeriod));
   const adjustBalanceMutation = useAdjustAccountBalanceMutation();
   const addYieldMutation = useAddAccountYieldMutation();
+  const replaceMutation = useReplaceAccountMutation();
   const [adjustBalanceOpen, setAdjustBalanceOpen] = useState(false);
   const [addYieldOpen, setAddYieldOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   async function adjustBalance(input: AdjustAccountBalanceInput) {
     const result = await adjustBalanceMutation.mutateAsync({ id: accountId, input });
@@ -62,6 +72,12 @@ export function AccountStatementPage({
     toast.success("Rendimento adicionado", {
       description: "A receita foi registrada no extrato da conta.",
     });
+  }
+
+  async function saveAccount(input: CreateAccountInput | ReplaceAccountInput) {
+    await replaceMutation.mutateAsync({ id: accountId, input: input as ReplaceAccountInput });
+    setEditOpen(false);
+    toast.success("Conta atualizada");
   }
 
   return (
@@ -87,6 +103,7 @@ export function AccountStatementPage({
                 selectedPeriod,
                 () => setAdjustBalanceOpen(true),
                 () => setAddYieldOpen(true),
+                () => setEditOpen(true),
               )}
               search={search}
             />
@@ -104,6 +121,12 @@ export function AccountStatementPage({
               open={addYieldOpen}
               period={selectedPeriod}
             />
+            <AccountDialog
+              account={accountQuery.data}
+              onOpenChange={setEditOpen}
+              onSubmit={saveAccount}
+              open={editOpen}
+            />
           </>
         ) : null}
       </main>
@@ -116,6 +139,7 @@ function getAccountStatementScope(
   period: string,
   onAdjustBalance: () => void,
   onAddYield: () => void,
+  onEdit: () => void,
 ) {
   const periodLabel = formatPeriod(period);
 
@@ -139,6 +163,7 @@ function getAccountStatementScope(
           account={account}
           onAddYield={onAddYield}
           onAdjustBalance={onAdjustBalance}
+          onEdit={onEdit}
           period={period}
           periodLabel={periodLabel}
         />
@@ -154,12 +179,14 @@ function AccountStatementSummary({
   account,
   onAddYield,
   onAdjustBalance,
+  onEdit,
   period,
   periodLabel,
 }: {
   account: AccountOutput;
   onAddYield: () => void;
   onAdjustBalance: () => void;
+  onEdit: () => void;
   period: string;
   periodLabel: string;
 }) {
@@ -200,6 +227,15 @@ function AccountStatementSummary({
       primaryValue={<MoneyValue amount={account.summary.balance} />}
       subtitle={accountTypeLabels[account.type]}
       title={account.name}
+      titleAction={
+        <FinancialSummaryTitleAction
+          aria-label={`Editar conta ${account.name}`}
+          onClick={onEdit}
+          type="button"
+        >
+          <Pencil aria-hidden="true" className="size-3.5" />
+        </FinancialSummaryTitleAction>
+      }
     />
   );
 }

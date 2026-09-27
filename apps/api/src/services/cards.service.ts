@@ -4,6 +4,8 @@ import {
   type CardClosingRuleType,
   type CardInvoiceSummary,
   type CardStatus,
+  calculateCardCycleSpending,
+  calculateCardInvoiceHistory,
   calculateCardInvoiceSummary,
   createCardDraft,
   resolveCardClosingRule,
@@ -56,6 +58,7 @@ type CardMovementRecord = {
   cardId: string | null;
   period: string;
   amount: string;
+  purchaseDate: string;
 };
 
 type CardInvoiceStateRecord = {
@@ -107,7 +110,11 @@ export type CardsRepository = {
   ): Promise<CardRecurringRuleRecord[]>;
 };
 
-function toCardOutput(card: CardRecord, invoiceSummary: CardInvoiceSummary): CardOutput {
+function toCardOutput(
+  card: CardRecord,
+  invoiceSummary: CardInvoiceSummary,
+  cycleSpending: CardOutput["cycleSpending"],
+): CardOutput {
   return {
     id: card.id,
     accountId: card.accountId,
@@ -123,6 +130,7 @@ function toCardOutput(card: CardRecord, invoiceSummary: CardInvoiceSummary): Car
     logo: card.logo,
     note: card.note,
     invoiceSummary,
+    cycleSpending,
     createdAt: card.createdAt.toISOString(),
     updatedAt: card.updatedAt.toISOString(),
   };
@@ -149,7 +157,7 @@ export function createCardsService(
     ]);
     const movements = [
       ...persistedMovements,
-      ...expandRecurringInvoiceMovements(recurringRules, period),
+      ...expandRecurringInvoiceMovements(recurringRules, [period]),
     ];
     const movementsByCard = new Map<string, CardMovementRecord[]>();
     const statesByCard = new Map<string, CardInvoiceStateRecord[]>();
@@ -168,34 +176,50 @@ export function createCardsService(
 
     return cards.map((card) => {
       const states = statesByCard.get(card.id) ?? [];
-      const selectedState = states.find((state) => state.period === period);
-      const hasPayments = invoicePayments.some(
-        (payment) => payment.cardId === card.id && payment.period === period,
-      );
-      return toCardOutput(
-        card,
-        calculateCardInvoiceSummary({
-          period,
+      const cardMovements = movementsByCard.get(card.id) ?? [];
+      const payments = invoicePayments.filter((payment) => payment.cardId === card.id);
+      const paidPeriods = states
+        .filter((state) => state.paymentStatus === "paid")
+        .map((state) => state.period);
+      const summarizeInvoice = (invoicePeriod: string) => {
+        const invoiceState = states.find((state) => state.period === invoicePeriod);
+        return calculateCardInvoiceSummary({
+          period: invoicePeriod,
           limit: Number(card.limit),
           closingDay: card.closingDay,
           closingRule: resolveCardClosingRule(card),
           dueDay: card.dueDay,
           today: getToday(),
-          paymentStatus: selectedState?.paymentStatus ?? "pending",
-          persistedClosingDate: selectedState?.closingDate,
-          persistedDueDate: selectedState?.dueDate,
-          datesCustomized: selectedState?.datesCustomized ?? false,
-          hasPayments,
-          paidPeriods: states
-            .filter((state) => state.paymentStatus === "paid")
-            .map((state) => state.period),
-          movements: (movementsByCard.get(card.id) ?? []).map((movement) => ({
+          paymentStatus: invoiceState?.paymentStatus ?? "pending",
+          persistedClosingDate: invoiceState?.closingDate,
+          persistedDueDate: invoiceState?.dueDate,
+          datesCustomized: invoiceState?.datesCustomized ?? false,
+          hasPayments: payments.some((payment) => payment.period === invoicePeriod),
+          paidPeriods,
+          movements: cardMovements.map((movement) => ({
             period: movement.period,
             amount: Number(movement.amount),
           })),
-          payments: invoicePayments
-            .filter((payment) => payment.cardId === card.id)
-            .map((payment) => ({ period: payment.period, amount: Number(payment.amount) })),
+          payments: payments.map((payment) => ({
+            period: payment.period,
+            amount: Number(payment.amount),
+          })),
+        });
+      };
+      const invoiceSummary = summarizeInvoice(period);
+      const previousInvoiceSummary = summarizeInvoice(addMonthsToPeriod(period, -1));
+      return toCardOutput(
+        card,
+        invoiceSummary,
+        calculateCardCycleSpending({
+          previousClosingDate: previousInvoiceSummary.closingDate,
+          closingDate: invoiceSummary.closingDate,
+          movements: cardMovements
+            .filter((movement) => movement.period === period)
+            .map((movement) => ({
+              purchaseDate: movement.purchaseDate,
+              amount: Number(movement.amount),
+            })),
         }),
       );
     });
@@ -229,6 +253,31 @@ export function createCardsService(
       const card = await repository.findByIdForUser(id, userId);
       if (!card) throw notFound("Card not found", "card_not_found");
       return summarizeCard(card, userId, period);
+    },
+
+    async history(id: string, userId: string, period = currentPeriod()) {
+      const card = await repository.findByIdForUser(id, userId);
+      if (!card) throw notFound("Card not found", "card_not_found");
+      const periods = Array.from({ length: 12 }, (_, index) =>
+        addMonthsToPeriod(period, index - 11),
+      );
+      const [persistedMovements, recurringRules] = await Promise.all([
+        repository.listMovementsByUser(userId, id),
+        repository.listActiveRecurringRulesThroughPeriod(userId, getPeriodEndDate(period), id),
+      ]);
+      const movements = [
+        ...persistedMovements,
+        ...expandRecurringInvoiceMovements(recurringRules, periods),
+      ];
+      return {
+        items: calculateCardInvoiceHistory(
+          movements.map((movement) => ({
+            period: movement.period,
+            amount: Number(movement.amount),
+          })),
+          periods,
+        ),
+      };
     },
 
     async quoteInvoicePeriod(id: string, userId: string, purchaseDate: string) {
@@ -339,35 +388,35 @@ function currentPeriod() {
 
 function expandRecurringInvoiceMovements(
   rules: CardRecurringRuleRecord[],
-  invoicePeriod: string,
+  invoicePeriods: string[],
 ): CardMovementRecord[] {
-  const purchasePeriods = [
-    addMonthsToPeriod(invoicePeriod, -2),
-    addMonthsToPeriod(invoicePeriod, -1),
-    invoicePeriod,
-  ];
-
   return rules.flatMap((rule) =>
-    purchasePeriods.flatMap((purchasePeriod) =>
-      listRecurrenceDatesInPeriod({
-        anchorDate: rule.anchorDate,
-        startDate: rule.startDate,
-        endDate: rule.endDate,
-        frequency: rule.frequency,
-        period: purchasePeriod,
-      }).flatMap((purchaseDate) =>
-        deriveTransactionPeriod({
-          paymentMethod: rule.paymentMethod,
-          purchaseDate,
-          dueDate: rule.dueDate,
-          card: {
-            closingDay: rule.closingDay,
-            closingRule: resolveCardClosingRule(rule),
-            dueDay: rule.dueDay,
-          },
-        }) === invoicePeriod
-          ? [{ cardId: rule.cardId, period: invoicePeriod, amount: rule.amount }]
-          : [],
+    invoicePeriods.flatMap((invoicePeriod) =>
+      [
+        addMonthsToPeriod(invoicePeriod, -2),
+        addMonthsToPeriod(invoicePeriod, -1),
+        invoicePeriod,
+      ].flatMap((purchasePeriod) =>
+        listRecurrenceDatesInPeriod({
+          anchorDate: rule.anchorDate,
+          startDate: rule.startDate,
+          endDate: rule.endDate,
+          frequency: rule.frequency,
+          period: purchasePeriod,
+        }).flatMap((purchaseDate) =>
+          deriveTransactionPeriod({
+            paymentMethod: rule.paymentMethod,
+            purchaseDate,
+            dueDate: rule.dueDate,
+            card: {
+              closingDay: rule.closingDay,
+              closingRule: resolveCardClosingRule(rule),
+              dueDay: rule.dueDay,
+            },
+          }) === invoicePeriod
+            ? [{ cardId: rule.cardId, period: invoicePeriod, amount: rule.amount, purchaseDate }]
+            : [],
+        ),
       ),
     ),
   );

@@ -1,3 +1,4 @@
+import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
 import {
   dateOnlyToSafeInstant,
   formatDateInBrazil,
@@ -64,4 +65,27 @@ export function formatInvoiceDate(value: string) {
     day: "2-digit",
     month: "short",
   }).replace(" de ", " ");
+}
+
+export function formatCardCycleDate(date: string) {
+  return formatDateInBrazil(dateOnlyToSafeInstant(date), {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function formatCardHistoryPeriod(period: string, short = false) {
+  return formatDateInBrazil(dateOnlyToSafeInstant(`${period}-01`), {
+    month: short ? "short" : "long",
+    year: short ? "2-digit" : "numeric",
+  });
+}
+
+export function getCardHistoryWindowEnd(selectedPeriod: string) {
+  const currentPeriod = getCurrentCardPeriod();
+  const oldestCurrentPeriod = addMonthsToPeriod(currentPeriod, -11);
+  return selectedPeriod >= oldestCurrentPeriod && selectedPeriod <= currentPeriod
+    ? currentPeriod
+    : selectedPeriod;
 }

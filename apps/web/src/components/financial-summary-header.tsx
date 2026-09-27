@@ -23,6 +23,7 @@ type FinancialSummaryHeaderProps = {
   primaryValue?: ReactNode;
   subtitle: ReactNode;
   title: string;
+  titleAction?: ReactNode;
   variant?: "solid" | "soft";
 };
 
@@ -37,6 +38,7 @@ export function FinancialSummaryHeader({
   primaryValue,
   subtitle,
   title,
+  titleAction,
   variant = "solid",
 }: FinancialSummaryHeaderProps) {
   const logoColors = useLogoColors(accentImage);
@@ -66,7 +68,10 @@ export function FinancialSummaryHeader({
               {identity}
               <div className="min-w-0">
                 {eyebrow ? <p className="text-current/70 text-sm">{eyebrow}</p> : null}
-                <h2 className="truncate font-heading text-2xl font-medium">{title}</h2>
+                <div className="flex min-w-0 items-center gap-1">
+                  <h2 className="truncate font-heading text-2xl font-medium">{title}</h2>
+                  {titleAction}
+                </div>
                 <div className="mt-1 flex items-center gap-2 text-current/70 text-xs">
                   {subtitle}
                 </div>
@@ -147,6 +152,23 @@ export function FinancialSummaryAction({
       )}
       size={size}
       variant={variant}
+      {...props}
+    />
+  );
+}
+
+export function FinancialSummaryTitleAction({
+  className,
+  ...props
+}: ComponentProps<typeof Button>) {
+  return (
+    <Button
+      className={cn(
+        "rounded-sm border-0 bg-transparent text-current/70 shadow-none hover:bg-transparent hover:text-current focus-visible:ring-current/50 dark:hover:bg-transparent",
+        className,
+      )}
+      size="icon-sm"
+      variant="ghost"
       {...props}
     />
   );

@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
+  CardInvoiceHistoryOutputSchema,
   CardInvoicePeriodOutputSchema,
   CardInvoicePeriodQuerySchema,
   CardOutputSchema,
@@ -104,6 +105,38 @@ export function createCardsRoute(service: CardsService) {
             context.req.valid("param").id,
             context.get("userId"),
             context.req.valid("query").purchaseDate,
+          ),
+        ),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "get",
+      path: "/{id}/invoice-history",
+      tags: ["Cards"],
+      request: { params: CardParamsSchema, query: CardPeriodQuerySchema },
+      responses: {
+        200: {
+          description: "Last twelve invoice amounts through the selected period",
+          content: {
+            "application/json": {
+              schema: z.object({ data: CardInvoiceHistoryOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        401: errorResponses[401],
+        404: errorResponses[404],
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.history(
+            context.req.valid("param").id,
+            context.get("userId"),
+            context.req.valid("query").period,
           ),
         ),
         200,

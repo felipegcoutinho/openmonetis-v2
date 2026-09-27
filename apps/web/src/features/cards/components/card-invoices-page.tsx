@@ -1,4 +1,4 @@
-import type { CardOutput } from "@openmonetis/validators/cards";
+import type { CardOutput, ReplaceCardInput } from "@openmonetis/validators/cards";
 import type { AdjustInvoiceInput, DashboardInvoice } from "@openmonetis/validators/invoices";
 import type { PersonOutput } from "@openmonetis/validators/people";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CircleCheck,
   CreditCard,
+  Pencil,
   RotateCcw,
   Scale,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { EntityLoadError } from "@/components/entity-load-error";
 import {
   FinancialSummaryAction,
   FinancialSummaryHeader,
+  FinancialSummaryTitleAction,
 } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
@@ -39,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardQueryOptions } from "@/features/cards/cards.queries";
 import { AdjustInvoiceDialog } from "@/features/invoices/components/adjust-invoice-dialog";
 import { InvoiceDatesDialog } from "@/features/invoices/components/invoice-dates-dialog";
@@ -57,7 +60,10 @@ import {
   type TransactionsSearch,
 } from "@/features/transactions/transactions.presentation";
 import { getCardBrandAsset } from "../card-brand-assets";
+import { useReplaceCardMutation } from "../cards.mutations";
 import { cardBrandLabels, cardInvoiceStatusLabels, formatInvoiceDate } from "../cards.presentation";
+import { CardDialog } from "./card-dialog";
+import { CardSpendingFlow } from "./card-spending-flow";
 
 type CardInvoicesPageProps = {
   cardId: string;
@@ -70,8 +76,17 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
   const cardQuery = useQuery(cardQueryOptions(cardId, selectedPeriod));
   const invoicesQuery = useQuery(invoicesQueryOptions(selectedPeriod));
   const peopleQuery = useQuery(peopleQueryOptions());
+  const accountsQuery = useQuery(accountsQueryOptions());
+  const replaceMutation = useReplaceCardMutation();
+  const [editOpen, setEditOpen] = useState(false);
   const invoice = invoicesQuery.data?.items.find((item) => item.cardId === cardId);
   const activePeople = peopleQuery.data?.filter((person) => person.status === "active") ?? [];
+
+  async function saveCard(input: ReplaceCardInput) {
+    await replaceMutation.mutateAsync({ id: cardId, input });
+    setEditOpen(false);
+    toast.success("Cartão atualizado");
+  }
 
   return (
     <ProtectedRoute>
@@ -90,8 +105,32 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
         {cardQuery.data ? (
           <TransactionsContainer
             onSearchChange={onSearchChange}
-            scope={getCardInvoiceScope(cardQuery.data, selectedPeriod, activePeople, invoice)}
+            scope={getCardInvoiceScope(
+              cardQuery.data,
+              selectedPeriod,
+              activePeople,
+              () => setEditOpen(true),
+              (period) =>
+                onSearchChange({
+                  period,
+                  dateStart: undefined,
+                  dateEnd: undefined,
+                  page: undefined,
+                }),
+              invoice,
+            )}
             search={search}
+          />
+        ) : null}
+        {cardQuery.data ? (
+          <CardDialog
+            accounts={(accountsQuery.data ?? []).filter(
+              (account) => !account.isArchived || account.id === cardQuery.data.accountId,
+            )}
+            card={cardQuery.data}
+            onOpenChange={setEditOpen}
+            onSubmit={saveCard}
+            open={editOpen}
           />
         ) : null}
       </main>
@@ -103,6 +142,8 @@ function getCardInvoiceScope(
   card: CardOutput,
   period: string,
   people: PersonOutput[],
+  onEdit: () => void,
+  onPeriodChange: (period: string) => void,
   invoice?: DashboardInvoice,
 ) {
   const periodLabel = formatPeriod(period);
@@ -131,10 +172,19 @@ function getCardInvoiceScope(
           people={people}
           period={period}
           periodLabel={periodLabel}
+          onEdit={onEdit}
         />
       ),
     },
     hiddenFilters: ["type", "paymentMethod", "accountCard"] as const,
+    contentNavigation: (
+      <CardSpendingFlow
+        cardId={card.id}
+        cycle={card.cycleSpending}
+        onPeriodChange={onPeriodChange}
+        period={period}
+      />
+    ),
     periodNavigationPlacement: "afterPageHeader" as const,
   };
 }
@@ -145,12 +195,14 @@ function CardInvoiceSummary({
   people,
   period,
   periodLabel,
+  onEdit,
 }: {
   card: CardOutput;
   invoice?: DashboardInvoice;
   people: PersonOutput[];
   period: string;
   periodLabel: string;
+  onEdit?: () => void;
 }) {
   const brandAsset = getCardBrandAsset(card.brand);
   const undoMutation = useUndoInvoicePaymentMutation();
@@ -352,6 +404,17 @@ function CardInvoiceSummary({
           </>
         }
         title={card.name}
+        titleAction={
+          onEdit ? (
+            <FinancialSummaryTitleAction
+              aria-label={`Editar cartão ${card.name}`}
+              onClick={onEdit}
+              type="button"
+            >
+              <Pencil aria-hidden="true" className="size-3.5" />
+            </FinancialSummaryTitleAction>
+          ) : undefined
+        }
       />
       {datesOpen ? (
         <InvoiceDatesDialog

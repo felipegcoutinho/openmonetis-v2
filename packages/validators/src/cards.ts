@@ -133,6 +133,17 @@ export const CardInvoiceSummarySchema = z
   })
   .openapi("CardInvoiceSummary");
 
+export const CardInvoiceHistoryOutputSchema = z
+  .object({
+    items: z.array(
+      z.object({
+        period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+        amount: z.number().nonnegative(),
+      }),
+    ),
+  })
+  .openapi("CardInvoiceHistoryOutput");
+
 export const CardOutputSchema = z
   .object({
     id: z.uuid(),
@@ -149,6 +160,18 @@ export const CardOutputSchema = z
     logo: z.string().nullable(),
     note: z.string().nullable(),
     invoiceSummary: CardInvoiceSummarySchema,
+    cycleSpending: z.object({
+      startDate: z.iso.date(),
+      endDate: z.iso.date(),
+      openingAmount: z.number(),
+      daily: z.array(
+        z.object({
+          date: z.iso.date(),
+          amount: z.number(),
+          cumulativeAmount: z.number(),
+        }),
+      ),
+    }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -158,4 +181,5 @@ export type CreateCardInput = z.infer<typeof CreateCardInputSchema>;
 export type ReplaceCardInput = z.infer<typeof ReplaceCardInputSchema>;
 export type UpdateCardInput = z.infer<typeof UpdateCardInputSchema>;
 export type CardInvoicePeriodOutput = z.infer<typeof CardInvoicePeriodOutputSchema>;
+export type CardInvoiceHistoryOutput = z.infer<typeof CardInvoiceHistoryOutputSchema>;
 export type CardOutput = z.infer<typeof CardOutputSchema>;

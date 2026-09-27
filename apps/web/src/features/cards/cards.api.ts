@@ -1,4 +1,5 @@
 import type {
+  CardInvoiceHistoryOutput,
   CardInvoicePeriodOutput,
   CardOutput,
   CreateCardInput,
@@ -13,6 +14,12 @@ export function getCards(period: string) {
 
 export function getCard(id: string, period: string) {
   return request<CardOutput>(`/cards/${id}?period=${encodeURIComponent(period)}`);
+}
+
+export function getCardInvoiceHistory(id: string, period: string) {
+  return request<CardInvoiceHistoryOutput>(
+    `/cards/${id}/invoice-history?period=${encodeURIComponent(period)}`,
+  );
 }
 
 export function getCardInvoicePeriod(id: string, purchaseDate: string) {

@@ -34,6 +34,59 @@ export type CardInvoiceMovement = {
   amount: number;
 };
 
+export function calculateCardInvoiceHistory(movements: CardInvoiceMovement[], periods: string[]) {
+  const centsByPeriod = sumInvoiceCentsByPeriod(movements);
+  return periods.map((period) => ({
+    period,
+    amount: fromCents(Math.max(0, centsByPeriod.get(period) ?? 0)),
+  }));
+}
+
+export function calculateCardCycleSpending(input: {
+  previousClosingDate: string;
+  closingDate: string;
+  movements: { purchaseDate: string; amount: number }[];
+}) {
+  const start = new Date(`${input.previousClosingDate}T12:00:00Z`);
+  start.setUTCDate(start.getUTCDate() + 1);
+  const startDate = toDateString(start);
+  const centsByDate = new Map<string, number>();
+  let openingCents = 0;
+  for (const movement of input.movements) {
+    if (movement.purchaseDate < startDate || movement.purchaseDate > input.closingDate) {
+      openingCents -= toCents(movement.amount);
+      continue;
+    }
+    centsByDate.set(
+      movement.purchaseDate,
+      (centsByDate.get(movement.purchaseDate) ?? 0) - toCents(movement.amount),
+    );
+  }
+
+  const daily: { date: string; amount: number; cumulativeAmount: number }[] = [];
+  let cumulativeCents = openingCents;
+  for (
+    const date = start;
+    toDateString(date) <= input.closingDate;
+    date.setUTCDate(date.getUTCDate() + 1)
+  ) {
+    const dateString = toDateString(date);
+    const amountCents = centsByDate.get(dateString) ?? 0;
+    cumulativeCents += amountCents;
+    daily.push({
+      date: dateString,
+      amount: fromCents(amountCents),
+      cumulativeAmount: fromCents(cumulativeCents),
+    });
+  }
+  return {
+    startDate,
+    endDate: input.closingDate,
+    openingAmount: fromCents(openingCents),
+    daily,
+  };
+}
+
 export type CardInvoiceSummary = {
   period: string;
   amount: number;
@@ -90,15 +143,8 @@ export function calculateCardInvoiceSummary(input: {
   datesCustomized?: boolean;
   hasPayments?: boolean;
 }): CardInvoiceSummary {
-  const invoiceCentsByPeriod = new Map<string, number>();
+  const invoiceCentsByPeriod = sumInvoiceCentsByPeriod(input.movements);
   const paymentCentsByPeriod = new Map<string, number>();
-
-  for (const movement of input.movements) {
-    invoiceCentsByPeriod.set(
-      movement.period,
-      (invoiceCentsByPeriod.get(movement.period) ?? 0) - toCents(movement.amount),
-    );
-  }
 
   for (const payment of input.payments ?? []) {
     paymentCentsByPeriod.set(
@@ -158,6 +204,17 @@ export function calculateCardInvoiceSummary(input: {
     availableLimit: fromCents(availableLimitCents),
     usagePercentage: limitCents > 0 ? Math.round((usedLimitCents / limitCents) * 10_000) / 100 : 0,
   };
+}
+
+function sumInvoiceCentsByPeriod(movements: CardInvoiceMovement[]) {
+  const centsByPeriod = new Map<string, number>();
+  for (const movement of movements) {
+    centsByPeriod.set(
+      movement.period,
+      (centsByPeriod.get(movement.period) ?? 0) - toCents(movement.amount),
+    );
+  }
+  return centsByPeriod;
 }
 
 export function areValidInvoiceDates(input: { closingDate: string; dueDate: string }) {
