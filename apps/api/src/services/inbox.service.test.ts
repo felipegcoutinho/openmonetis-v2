@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { createInboxService, type InboxItemRecord, type InboxRepository } from "./inbox.service";
+import type { InboxRuleRecord } from "./inbox-rules.service";
 
 const now = new Date("2026-08-10T12:00:00.000Z");
 const userId = "00000000-0000-4000-8000-000000000001";
@@ -48,6 +49,7 @@ function createRepository(overrides: Partial<InboxRepository> = {}): InboxReposi
       activeCards: [],
       activeAccounts: [],
     }),
+    listRuleCandidatesForUser: async () => [],
     snapshotForUser: async () => ({ items: [], pendingCount: 0 }),
     findByIdForUser: async () => null,
     transactionExistsForUser: async () => false,
@@ -238,4 +240,119 @@ test("clearing inbox history deletes only the requested owned status", async () 
   });
   assert.equal(receivedStatus, "processed");
   assert.equal(receivedUserId, userId);
+});
+
+test("rule filtering resolves applied rules before inbox pagination", async () => {
+  const ruleId = "00000000-0000-4000-8000-000000000010";
+  const categoryId = "00000000-0000-4000-8000-000000000011";
+  const rule: InboxRuleRecord = {
+    id: ruleId,
+    userId,
+    name: "Uber",
+    priority: 1,
+    isActive: true,
+    matchMode: "all",
+    conditions: [{ field: "parsedName", operator: "contains", value: "Uber" }],
+    categoryId,
+    categoryName: "Transporte",
+    categoryType: "expense",
+    personId: null,
+    personName: null,
+    personStatus: null,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const candidates = [
+    createRecord({ id: "00000000-0000-4000-8000-000000000020", parsedName: "Mercado" }),
+    createRecord({ id: "00000000-0000-4000-8000-000000000021", parsedName: "Uber ida" }),
+    createRecord({ id: "00000000-0000-4000-8000-000000000022", parsedName: "Uber volta" }),
+  ];
+  let receivedIds: string[] | undefined;
+  const service = createInboxService(
+    createRepository({
+      listRuleCandidatesForUser: async (ownerId) => {
+        assert.equal(ownerId, userId);
+        return candidates;
+      },
+      listForUser: async (_ownerId, query, matchingItemIds) => {
+        receivedIds = matchingItemIds;
+        const matches = candidates.filter((item) => matchingItemIds?.includes(item.id));
+        return {
+          items: matches.slice((query.page - 1) * query.pageSize, query.page * query.pageSize),
+          sourceApps: [],
+          notificationDates: [],
+          total: matches.length,
+          counts: { pending: candidates.length, processed: 0, discarded: 0 },
+          pendingAmountItems: [],
+          activeCards: [],
+          activeAccounts: [],
+        };
+      },
+    }),
+    { rulesRepository: { listActiveByUser: async () => [rule] } },
+  );
+
+  const result = await service.list({ status: "pending", page: 2, pageSize: 1, ruleId }, userId);
+
+  assert.deepEqual(receivedIds, [candidates[1].id, candidates[2].id]);
+  assert.equal(result.total, 2);
+  assert.equal(result.totalPages, 2);
+  assert.deepEqual(
+    result.items.map((item) => item.id),
+    [candidates[2].id],
+  );
+});
+
+test("rule filtering excludes a matching rule when an earlier rule filled its only field", async () => {
+  const categoryId = "00000000-0000-4000-8000-000000000011";
+  const laterRuleId = "00000000-0000-4000-8000-000000000012";
+  const ruleBase: InboxRuleRecord = {
+    id: "00000000-0000-4000-8000-000000000010",
+    userId,
+    name: "Primeira",
+    priority: 1,
+    isActive: true,
+    matchMode: "all",
+    conditions: [{ field: "parsedName", operator: "contains", value: "Uber" }],
+    categoryId,
+    categoryName: "Transporte",
+    categoryType: "expense",
+    personId: null,
+    personName: null,
+    personStatus: null,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  let matchingIds: string[] | undefined;
+  const service = createInboxService(
+    createRepository({
+      listRuleCandidatesForUser: async () => [createRecord({ parsedName: "Uber" })],
+      listForUser: async (_ownerId, _query, ids) => {
+        matchingIds = ids;
+        return {
+          items: [],
+          sourceApps: [],
+          notificationDates: [],
+          total: 0,
+          counts: { pending: 1, processed: 0, discarded: 0 },
+          pendingAmountItems: [],
+          activeCards: [],
+          activeAccounts: [],
+        };
+      },
+    }),
+    {
+      rulesRepository: {
+        listActiveByUser: async () => [
+          ruleBase,
+          { ...ruleBase, id: laterRuleId, name: "Segunda", priority: 2 },
+        ],
+      },
+    },
+  );
+
+  await service.list({ status: "pending", page: 1, pageSize: 20, ruleId: laterRuleId }, userId);
+  assert.deepEqual(matchingIds, []);
 });

@@ -83,7 +83,13 @@ export function DashboardAttentionWidget({ period }: { period: string }) {
               <DashboardWidgetRow>
                 <Link
                   className="group flex min-w-0 flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  search={{ app: undefined, date: undefined, page: undefined, status: undefined }}
+                  search={{
+                    app: undefined,
+                    date: undefined,
+                    page: undefined,
+                    rule: undefined,
+                    status: undefined,
+                  }}
                   to="/inbox"
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-full bg-info/10 text-info">

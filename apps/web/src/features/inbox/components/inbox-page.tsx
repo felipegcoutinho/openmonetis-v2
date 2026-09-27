@@ -60,7 +60,10 @@ import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
 import { InboxRulesDialog } from "@/features/inbox-rules/components/inbox-rules-dialog";
 import { describeInboxRuleSuggestion } from "@/features/inbox-rules/inbox-rules.presentation";
-import { inboxRuleSuggestionQueryOptions } from "@/features/inbox-rules/inbox-rules.queries";
+import {
+  inboxRuleSuggestionQueryOptions,
+  inboxRulesQueryOptions,
+} from "@/features/inbox-rules/inbox-rules.queries";
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
 import type { TransactionCreateDefaults } from "@/features/transactions/components/transaction-form.validation";
@@ -91,21 +94,27 @@ export function InboxPage({
   notificationDate,
   page,
   sourceAppName,
+  ruleId,
   status,
   onSearchChange,
 }: {
   notificationDate: string | undefined;
   page: number;
   sourceAppName: string | undefined;
+  ruleId: string | undefined;
   status: InboxItemStatus;
   onSearchChange: (search: {
     status?: InboxItemStatus;
     page?: number;
     app?: string;
     date?: string;
+    rule?: string;
   }) => void;
 }) {
-  const query = useQuery(inboxItemsQueryOptions(status, sourceAppName, notificationDate, page));
+  const query = useQuery(
+    inboxItemsQueryOptions(status, sourceAppName, notificationDate, ruleId, page),
+  );
+  const rulesQuery = useQuery(inboxRulesQueryOptions());
   const queryClient = useQueryClient();
   const accountsQuery = useQuery(accountsQueryOptions());
   const cardsQuery = useQuery(cardsQueryOptions());
@@ -165,7 +174,7 @@ export function InboxPage({
         `${result.deletedCount} ${result.deletedCount === 1 ? "captura excluída" : "capturas excluídas"}`,
       );
       setClearStatus(null);
-      onSearchChange({ page: undefined, app: undefined, date: undefined });
+      onSearchChange({ page: undefined, app: undefined, date: undefined, rule: undefined });
     } catch {
       toast.error("Não foi possível limpar o histórico.");
     }
@@ -222,6 +231,7 @@ export function InboxPage({
             page: undefined,
             app: undefined,
             date: undefined,
+            rule: undefined,
           })
         }
         value={status}
@@ -247,10 +257,13 @@ export function InboxPage({
                 cards={cardsQuery.data ?? []}
                 notificationDate={notificationDate}
                 notificationDates={query.data.notificationDates}
+                onRuleChange={(rule) => onSearchChange({ rule, page: undefined })}
                 onDateChange={(date) => onSearchChange({ date, page: undefined })}
                 onSourceChange={(app) => onSearchChange({ app, date: undefined, page: undefined })}
                 sourceAppName={sourceAppName}
                 sourceApps={query.data.sourceApps}
+                ruleId={ruleId}
+                rules={rulesQuery.data?.items.filter((rule) => rule.isActive) ?? []}
               />
               {status !== "pending" ? (
                 <Button
@@ -323,7 +336,10 @@ export function InboxPage({
             ))}
           </div>
         ) : (
-          <InboxEmpty filtered={Boolean(sourceAppName || notificationDate)} status={status} />
+          <InboxEmpty
+            filtered={Boolean(sourceAppName || notificationDate || ruleId)}
+            status={status}
+          />
         )
       ) : null}
 

@@ -8,6 +8,7 @@ import {
   normalizeInboxSingleLine,
   summarizePendingInboxBySource,
 } from "@openmonetis/domain/inbox";
+import { resolveInboxRules } from "@openmonetis/domain/inbox-rules";
 import type {
   CompanionInboxItemInput,
   InboxItemOutput,
@@ -18,6 +19,7 @@ import type {
 } from "@openmonetis/validators/inbox";
 import type { TransactionInput, TransactionOutput } from "@openmonetis/validators/transactions";
 import { ApiError, badRequest, conflict, notFound } from "../utils/errors";
+import { availableInboxRuleCandidates, type InboxRulesRepository } from "./inbox-rules.service";
 
 export type InboxItemRecord = {
   id: string;
@@ -53,6 +55,7 @@ export type InboxRepository = {
   listForUser(
     userId: string,
     query: ListInboxItemsQuery,
+    matchingItemIds?: string[],
   ): Promise<{
     items: InboxItemRecord[];
     sourceApps: string[];
@@ -63,6 +66,7 @@ export type InboxRepository = {
     activeCards: Array<{ id: string; name: string; logo: string | null }>;
     activeAccounts: Array<{ id: string; name: string; logo: string | null }>;
   }>;
+  listRuleCandidatesForUser(userId: string, query: ListInboxItemsQuery): Promise<InboxItemRecord[]>;
   snapshotForUser(
     userId: string,
     limit: number,
@@ -107,7 +111,11 @@ type InboxBatchResult = {
 
 export function createInboxService(
   repository: InboxRepository,
-  options: { now?: () => Date; transactionCreator?: InboxTransactionCreator } = {},
+  options: {
+    now?: () => Date;
+    transactionCreator?: InboxTransactionCreator;
+    rulesRepository?: Pick<InboxRulesRepository, "listActiveByUser">;
+  } = {},
 ) {
   const now = options.now ?? (() => new Date());
 
@@ -178,7 +186,34 @@ export function createInboxService(
     },
 
     async list(query: ListInboxItemsQuery, userId: string): Promise<InboxPageOutput> {
-      const result = await repository.listForUser(userId, query);
+      let matchingItemIds: string[] | undefined;
+      if (query.ruleId) {
+        if (!options.rulesRepository) throw new Error("Inbox rules repository is not configured");
+        const rules = availableInboxRuleCandidates(
+          await options.rulesRepository.listActiveByUser(userId),
+        );
+        if (rules.some((rule) => rule.id === query.ruleId)) {
+          const candidates = await repository.listRuleCandidatesForUser(userId, query);
+          matchingItemIds = candidates
+            .filter((item) =>
+              resolveInboxRules(
+                {
+                  sourceApp: item.sourceApp,
+                  sourceAppName: item.sourceAppName,
+                  originalTitle: item.originalTitle,
+                  originalText: item.originalText,
+                  parsedName: item.parsedName,
+                  parsedAmount: item.parsedAmount === null ? null : Number(item.parsedAmount),
+                },
+                rules,
+              ).appliedRules.some((rule) => rule.id === query.ruleId),
+            )
+            .map((item) => item.id);
+        } else {
+          matchingItemIds = [];
+        }
+      }
+      const result = await repository.listForUser(userId, query, matchingItemIds);
       const pendingSummary = summarizePendingInboxBySource(
         result.pendingAmountItems.map((item) => ({
           sourceAppName: item.sourceAppName,

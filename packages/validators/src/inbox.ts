@@ -75,6 +75,7 @@ export const ListInboxItemsQuerySchema = z
     status: z.enum(inboxItemStatuses).default("pending"),
     sourceAppName: z.string().trim().min(1).max(inboxSourceAppNameMaximumLength).optional(),
     notificationDate: z.iso.date().optional(),
+    ruleId: z.uuid().optional(),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(50).default(20),
   })

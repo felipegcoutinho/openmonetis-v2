@@ -3,6 +3,7 @@ import type {
   SetInboxRuleActiveInput,
 } from "@openmonetis/validators/inbox-rules";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { inboxKeys } from "@/features/inbox/inbox.queries";
 import {
   createInboxRule,
   deleteInboxRule,
@@ -15,7 +16,10 @@ function useInboxRuleMutation<T>(mutationFn: (input: T) => Promise<unknown>) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: inboxRuleKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inboxRuleKeys.all });
+      queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+    },
   });
 }
 

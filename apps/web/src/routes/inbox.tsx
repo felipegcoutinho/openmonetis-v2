@@ -23,6 +23,11 @@ export const Route = createFileRoute("/inbox")({
         ? search.app.trim()
         : undefined,
     date: isInboxNotificationDate(search.date) ? search.date : undefined,
+    rule:
+      typeof search.rule === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(search.rule)
+        ? search.rule
+        : undefined,
   }),
 });
 
@@ -42,6 +47,7 @@ function InboxRoute() {
           }
           page={search.page ?? 1}
           notificationDate={search.date}
+          ruleId={search.rule}
           sourceAppName={search.app}
           status={search.status ?? "pending"}
         />

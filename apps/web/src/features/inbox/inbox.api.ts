@@ -17,6 +17,7 @@ export function getInboxItems(search: {
   status: "pending" | "processed" | "discarded";
   sourceAppName?: string;
   notificationDate?: string;
+  ruleId?: string;
   page: number;
   pageSize?: number;
 }) {
@@ -27,6 +28,7 @@ export function getInboxItems(search: {
   });
   if (search.sourceAppName) params.set("sourceAppName", search.sourceAppName);
   if (search.notificationDate) params.set("notificationDate", search.notificationDate);
+  if (search.ruleId) params.set("ruleId", search.ruleId);
   return request<InboxPageOutput>(`/inbox?${params.toString()}`);
 }
 

@@ -1,5 +1,6 @@
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type { CardOutput } from "@openmonetis/validators/cards";
+import type { InboxRuleOutput } from "@openmonetis/validators/inbox-rules";
 import {
   Select,
   SelectContent,
@@ -15,19 +16,25 @@ export function InboxFilters({
   cards,
   notificationDate,
   notificationDates,
+  onRuleChange,
   onDateChange,
   onSourceChange,
   sourceApps,
   sourceAppName,
+  ruleId,
+  rules,
 }: {
   accounts: AccountOutput[];
   cards: CardOutput[];
   notificationDate: string | undefined;
   notificationDates: string[];
+  onRuleChange: (ruleId: string | undefined) => void;
   onDateChange: (notificationDate: string | undefined) => void;
   onSourceChange: (sourceAppName: string | undefined) => void;
   sourceApps: string[];
   sourceAppName: string | undefined;
+  ruleId: string | undefined;
+  rules: InboxRuleOutput[];
 }) {
   const activeMatch = getInboxSourceMatch(sourceAppName ?? null, accounts, cards);
 
@@ -62,6 +69,29 @@ export function InboxFilters({
               </SelectItem>
             );
           })}
+        </SelectContent>
+      </Select>
+
+      <Select
+        onValueChange={(value) =>
+          onRuleChange(typeof value === "string" && value !== "all" ? value : undefined)
+        }
+        value={ruleId ?? "all"}
+      >
+        <SelectTrigger aria-label="Filtrar por regra" className="min-w-48 max-w-64">
+          <SelectValue>
+            {ruleId
+              ? (rules.find((rule) => rule.id === ruleId)?.name ?? "Regra indisponível")
+              : "Todas as regras"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent align="start">
+          <SelectItem value="all">Todas as regras</SelectItem>
+          {rules.map((rule) => (
+            <SelectItem key={rule.id} value={rule.id}>
+              {rule.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

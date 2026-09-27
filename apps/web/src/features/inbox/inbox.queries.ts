@@ -7,8 +7,18 @@ export const inboxKeys = {
     status: string,
     sourceAppName: string | undefined,
     notificationDate: string | undefined,
+    ruleId: string | undefined,
     page: number,
-  ) => ["inbox", "list", status, sourceAppName ?? "all", notificationDate ?? "all", page] as const,
+  ) =>
+    [
+      "inbox",
+      "list",
+      status,
+      sourceAppName ?? "all",
+      notificationDate ?? "all",
+      ruleId ?? "all",
+      page,
+    ] as const,
   snapshot: () => ["inbox", "snapshot"] as const,
   detail: (id: string) => ["inbox", "detail", id] as const,
 };
@@ -17,11 +27,12 @@ export function inboxItemsQueryOptions(
   status: "pending" | "processed" | "discarded",
   sourceAppName: string | undefined,
   notificationDate: string | undefined,
+  ruleId: string | undefined,
   page: number,
 ) {
   return queryOptions({
-    queryKey: inboxKeys.list(status, sourceAppName, notificationDate, page),
-    queryFn: () => getInboxItems({ status, sourceAppName, notificationDate, page }),
+    queryKey: inboxKeys.list(status, sourceAppName, notificationDate, ruleId, page),
+    queryFn: () => getInboxItems({ status, sourceAppName, notificationDate, ruleId, page }),
   });
 }
 

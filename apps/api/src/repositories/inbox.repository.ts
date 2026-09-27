@@ -1,6 +1,6 @@
 import { cards, db, financialAccounts, inboxItems, transactions } from "@openmonetis/db";
 import type { InboxItemStatus } from "@openmonetis/domain/inbox";
-import { and, asc, count, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { InboxRepository } from "../services/inbox.service";
 
 export const inboxRepository: InboxRepository = {
@@ -21,7 +21,7 @@ export const inboxRepository: InboxRepository = {
     return { record: existing, duplicate: true };
   },
 
-  async listForUser(userId, query) {
+  async listForUser(userId, query, matchingItemIds) {
     return db.transaction(
       async (transaction) => {
         const statusWhere = and(eq(inboxItems.userId, userId), eq(inboxItems.status, query.status));
@@ -33,6 +33,7 @@ export const inboxRepository: InboxRepository = {
         const filteredWhere = and(
           sourceFilteredWhere,
           query.notificationDate ? eq(notificationDate, query.notificationDate) : undefined,
+          matchingItemIds ? inArray(inboxItems.id, matchingItemIds) : undefined,
         );
         const items = await transaction
           .select()
@@ -104,6 +105,21 @@ export const inboxRepository: InboxRepository = {
       },
       { isolationLevel: "repeatable read", accessMode: "read only" },
     );
+  },
+
+  async listRuleCandidatesForUser(userId, query) {
+    const notificationDate = sql<string>`((${inboxItems.notificationTimestamp} AT TIME ZONE 'America/Sao_Paulo')::date)::text`;
+    return db
+      .select()
+      .from(inboxItems)
+      .where(
+        and(
+          eq(inboxItems.userId, userId),
+          eq(inboxItems.status, query.status),
+          query.sourceAppName ? eq(inboxItems.sourceAppName, query.sourceAppName) : undefined,
+          query.notificationDate ? eq(notificationDate, query.notificationDate) : undefined,
+        ),
+      );
   },
 
   async snapshotForUser(userId, limit) {

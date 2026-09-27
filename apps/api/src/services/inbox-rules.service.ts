@@ -140,29 +140,31 @@ export function createInboxRulesService(repository: InboxRulesRepository) {
         );
       }
 
-      const rules = (await repository.listActiveByUser(userId)).flatMap<InboxRuleCandidate>(
-        (rule) => {
-          const categoryId = rule.categoryType === "expense" ? rule.categoryId : null;
-          const personId = rule.personStatus === "active" ? rule.personId : null;
-          if (!categoryId && !personId) return [];
-          return [
-            {
-              id: rule.id,
-              name: rule.name,
-              priority: rule.priority,
-              isActive: rule.isActive,
-              matchMode: rule.matchMode,
-              conditions: rule.conditions,
-              categoryId,
-              personId,
-            },
-          ];
-        },
-      );
+      const rules = availableInboxRuleCandidates(await repository.listActiveByUser(userId));
       const { status: _status, ...matchItem } = item;
       return resolveInboxRules(matchItem, rules);
     },
   };
+}
+
+export function availableInboxRuleCandidates(rules: InboxRuleRecord[]): InboxRuleCandidate[] {
+  return rules.flatMap((rule) => {
+    const categoryId = rule.categoryType === "expense" ? rule.categoryId : null;
+    const personId = rule.personStatus === "active" ? rule.personId : null;
+    if (!rule.isActive || (!categoryId && !personId)) return [];
+    return [
+      {
+        id: rule.id,
+        name: rule.name,
+        priority: rule.priority,
+        isActive: rule.isActive,
+        matchMode: rule.matchMode,
+        conditions: rule.conditions,
+        categoryId,
+        personId,
+      },
+    ];
+  });
 }
 
 function buildDraft(

@@ -61,7 +61,13 @@ export function CompanionSettings() {
           <Button asChild variant="outline">
             <Link
               to="/inbox"
-              search={{ status: "pending", page: undefined, app: undefined, date: undefined }}
+              search={{
+                status: "pending",
+                page: undefined,
+                app: undefined,
+                date: undefined,
+                rule: undefined,
+              }}
             >
               Abrir Caixa de entrada
             </Link>
