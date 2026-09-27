@@ -18,7 +18,7 @@ export function DashboardWelcome({
           <span className="text-muted-foreground" suppressHydrationWarning>
             {getDashboardGreeting()},
           </span>{" "}
-          {greetingName}
+          <span className="font-medium">{greetingName}</span>
         </h1>
       ) : (
         <div className="flex items-center gap-2">

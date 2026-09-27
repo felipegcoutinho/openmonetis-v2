@@ -110,7 +110,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             <div className="grid gap-3">
               <MoneyValue
                 amount={metrics.projected.current}
-                className="font-semibold text-3xl leading-none tracking-tight"
+                className="font-bold text-3xl leading-none tracking-tight"
               />
               <MetricComparison
                 subtle
@@ -195,7 +195,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                 <CardDescription className="text-xs">{card.description}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 px-5">
-                <MoneyValue amount={metric.current} className="font-medium text-2xl leading-none" />
+                <MoneyValue amount={metric.current} className="font-bold text-2xl leading-none" />
                 <MetricComparison
                   hasPreviousData={metric.hasPreviousData}
                   invertTrend={card.invertTrend}

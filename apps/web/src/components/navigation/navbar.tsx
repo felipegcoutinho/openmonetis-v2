@@ -74,7 +74,7 @@ const headerIconButtonClassName =
   "max-md:size-11 text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground focus-visible:border-primary/40 focus-visible:ring-primary/25";
 
 const desktopNavigationItemClassName =
-  "inline-flex h-9 items-center justify-center rounded-full border-0 bg-transparent px-3.5 text-sm font-normal text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none";
+  "inline-flex h-9 items-center justify-center rounded-full border-0 bg-transparent px-3.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none";
 
 const desktopNavigationActiveClassName =
   "bg-brand/10 text-brand-strong hover:bg-brand/15 focus:bg-brand/10 data-open:bg-brand/15 data-popup-open:bg-brand/15 data-open:hover:bg-brand/15 data-popup-open:hover:bg-brand/15 data-open:focus:bg-brand/15";
@@ -296,7 +296,7 @@ export function Navbar() {
                     className="scale-[1.06]"
                     src={user?.image?.trim() || defaultAdminPersonAvatarUrl}
                   />
-                  <AvatarFallback className="bg-primary/10 font-semibold text-foreground">
+                  <AvatarFallback className="bg-primary/10 font-bold text-foreground">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
