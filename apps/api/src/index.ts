@@ -24,6 +24,7 @@ import { dashboardRepository } from "./repositories/dashboard.repository";
 import { deviceTokensRepository } from "./repositories/device-tokens.repository";
 import { establishmentsRepository } from "./repositories/establishments.repository";
 import { externalExpensesRepository } from "./repositories/external-expenses.repository";
+import { goalsRepository } from "./repositories/goals.repository";
 import { inboxRepository } from "./repositories/inbox.repository";
 import { inboxRulesRepository } from "./repositories/inbox-rules.repository";
 import { installmentsRepository } from "./repositories/installments.repository";
@@ -54,6 +55,7 @@ import { createDashboardRoute } from "./routes/dashboard";
 import { createCompanionDeviceRoute, createDeviceTokensRoute } from "./routes/device-tokens";
 import { createEstablishmentsRoute } from "./routes/establishments";
 import { createExternalExpensesRoute } from "./routes/external-expenses";
+import { createGoalsRoute } from "./routes/goals";
 import { createCompanionInboxRoute, createInboxRoute } from "./routes/inbox";
 import { createInboxRulesRoute } from "./routes/inbox-rules";
 import { createInstallmentsRoute } from "./routes/installments";
@@ -82,6 +84,7 @@ import {
   createExternalExpensesService,
   synchronizeRecurringExternalExpenses,
 } from "./services/external-expenses.service";
+import { createGoalsService } from "./services/goals.service";
 import { createInboxService } from "./services/inbox.service";
 import { createInboxRulesService } from "./services/inbox-rules.service";
 import { createInstallmentsService } from "./services/installments.service";
@@ -126,6 +129,7 @@ const accountsRoute = createAccountsRoute(accountsService);
 const cardsRoute = createCardsRoute(createCardsService(cardsRepository));
 const budgetsService = createBudgetsService(budgetsRepository, categoriesRepository);
 const budgetsRoute = createBudgetsRoute(budgetsService);
+const goalsRoute = createGoalsRoute(createGoalsService(goalsRepository, accountsService));
 const billsService = createBillsService(billsRepository);
 const billsRoute = createBillsRoute(billsService);
 const categoriesRoute = createCategoriesRoute(createCategoriesService(categoriesRepository));
@@ -210,6 +214,7 @@ const deviceTokensRoute = createDeviceTokensRoute(deviceTokensService);
 const companionDeviceRoute = createCompanionDeviceRoute();
 const inboxService = createInboxService(inboxRepository, {
   transactionCreator: transactionsService,
+  rulesRepository: inboxRulesRepository,
 });
 const inboxRoute = createInboxRoute(inboxService);
 const inboxRulesRoute = createInboxRulesRoute(createInboxRulesService(inboxRulesRepository));
@@ -261,6 +266,10 @@ app.use("/budgets", privateCache);
 app.use("/budgets/*", privateCache);
 app.use("/budgets", requireAuth);
 app.use("/budgets/*", requireAuth);
+app.use("/goals", privateCache);
+app.use("/goals/*", privateCache);
+app.use("/goals", requireAuth);
+app.use("/goals/*", requireAuth);
 app.use("/bills", privateCache);
 app.use("/bills/*", privateCache);
 app.use("/bills", requireAuth);
@@ -483,6 +492,7 @@ app.route("/api/auth/device", companionDeviceRoute);
 app.route("/accounts", accountsRoute);
 app.route("/cards", cardsRoute);
 app.route("/budgets", budgetsRoute);
+app.route("/goals", goalsRoute);
 app.route("/bills", billsRoute);
 app.route("/categories", categoriesRoute);
 app.route("/people", peopleRoute);
