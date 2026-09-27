@@ -32,7 +32,7 @@ export function DashboardWelcome({
         </div>
       )}
       <p
-        className="text-muted-foreground text-xs md:text-brand-strong md:uppercase md:tracking-tight"
+        className="text-muted-foreground text-xs md:text-brand-strong md:uppercase"
         suppressHydrationWarning
       >
         {formatDashboardDate()}

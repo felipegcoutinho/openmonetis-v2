@@ -1,8 +1,11 @@
 import type { DashboardExpenseDistributionOutput } from "@openmonetis/validators/dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CircleDollarSign, Layers3, type LucideIcon, Repeat2 } from "lucide-react";
-import { transactionConditionLabels } from "@/features/transactions/transactions.presentation";
+import { ArrowRight, Layers3 } from "lucide-react";
+import {
+  transactionConditionIcons,
+  transactionConditionLabels,
+} from "@/features/transactions/transactions.presentation";
 import { dashboardExpenseDistributionQueryOptions } from "../dashboard.queries";
 import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { DashboardWidget } from "./dashboard-widget";
@@ -16,14 +19,6 @@ import {
   DistributionError,
   DistributionLoading,
 } from "./expense-distribution-states";
-
-type Condition = DashboardExpenseDistributionOutput["conditions"][number]["key"];
-
-const conditionIcons: Record<Condition, LucideIcon> = {
-  single: CircleDollarSign,
-  installment: Layers3,
-  recurring: Repeat2,
-};
 
 export function PaymentConditionsWidget({ period }: { period: string }) {
   const query = useQuery(dashboardExpenseDistributionQueryOptions(period));
@@ -68,7 +63,7 @@ function buildItems(
   adminPersonSlug?: string,
 ): ExpenseDistributionListItem[] {
   return conditions.map((condition) => {
-    const Icon = conditionIcons[condition.key];
+    const Icon = transactionConditionIcons[condition.key];
 
     return {
       ...condition,
