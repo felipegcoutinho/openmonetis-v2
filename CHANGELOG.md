@@ -7,6 +7,45 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-27
+
+Permite ignorar e restaurar despesas compartilhadas, detalha despesas sem orçamento e simplifica
+a navegação e os filtros de lançamentos.
+
+### Alterado
+
+- Antecipação de parcelas informa quando a fatura de destino já está paga e orienta escolher
+  uma fatura em aberto.
+
+- Navegação do header com item ativo em cápsula, dimensões compactas e divisória sutil.
+
+- Seleção nos filtros de pessoas, categorias e contas/cartões funciona ao clicar em toda a opção,
+  incluindo nome, avatar e logo.
+
+- Ícones dos filtros de lançamentos padronizados com a tabela, com mapeamento compartilhado
+  para condição e forma de pagamento.
+
+- Filtros ativos exibem avatares de pessoas, logos de contas e cartões e ícones por tipo de filtro.
+
+- Barra de filtros ativos dos lançamentos com fundo sutil, identificação e chips com maior
+  contraste, tipo e valor hierarquizados e botão de remoção separado da etiqueta.
+- Orçamentos distinguem consumo, sobras e excessos dos limites, com detalhamento das despesas
+  sem orçamento por categoria e atalho para definir limites.
+
+- Favicon com cantos levemente arredondados nas versões SVG, PNG e ICO.
+
+- Atualizações automáticas de lançamentos, detalhes e anexos ficam silenciosas ao retornar à aba;
+  as listas mantêm o indicador ao exibir resultados anteriores durante mudanças de filtros, período ou página.
+
+### Adicionado
+
+- Despesas compartilhadas permitem ignorar pendências, desfazer e restaurar pela lista de ignorados,
+  preservando o lançamento de origem. Compras parceladas são ignoradas por inteiro; recorrências por ocorrência.
+
+- Logo Nubank Chroma disponível no seletor de logos de contas e cartões.
+- Despesas divididas exibem o ícone de divisão com tooltip na tabela de despesas compartilhadas.
+- A tabela de despesas compartilhadas permite buscar lançamentos e ordená-los por data, valor ou estabelecimento.
+
 ## [0.6.0] - 2026-09-25
 
 Amplia a experiência mobile e os relatórios financeiros, preserva o calendário e os pagamentos
@@ -303,7 +342,9 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.3.1...v0.3.2

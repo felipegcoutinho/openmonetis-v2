@@ -16,7 +16,7 @@ type FinancialSummaryHeaderProps = {
   accentImage?: string | null;
   actions?: ReactNode;
   details?: ReactNode;
-  eyebrow: string;
+  eyebrow?: string;
   identity: ReactNode;
   metrics: FinancialSummaryMetric[];
   primaryLabel?: string;
@@ -65,7 +65,7 @@ export function FinancialSummaryHeader({
             <div className="flex min-w-0 items-center gap-4">
               {identity}
               <div className="min-w-0">
-                <p className="text-current/70 text-sm">{eyebrow}</p>
+                {eyebrow ? <p className="text-current/70 text-sm">{eyebrow}</p> : null}
                 <h2 className="truncate font-heading text-2xl font-medium">{title}</h2>
                 <div className="mt-1 flex items-center gap-2 text-current/70 text-xs">
                   {subtitle}

@@ -1,12 +1,11 @@
 import type { BudgetOverviewOutput } from "@openmonetis/validators/budgets";
-import { CircleDollarSign, ReceiptText, Target, WalletCards } from "lucide-react";
+import { CircleDollarSign, ReceiptText, Target, TriangleAlert } from "lucide-react";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 
 export function BudgetsSummary({ overview }: { overview: BudgetOverviewOutput }) {
   return (
     <FinancialSummaryHeader
-      eyebrow="Planejamento mensal"
       identity={
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
           <Target aria-hidden="true" className="size-6" />
@@ -14,33 +13,38 @@ export function BudgetsSummary({ overview }: { overview: BudgetOverviewOutput })
       }
       metrics={[
         {
-          description: "Despesas lançadas e recorrências previstas nas categorias planejadas.",
+          description: (
+            <>
+              {" "}
+              <MoneyValue amount={overview.actualSpentAmount} /> lançados +{" "}
+              <MoneyValue amount={overview.projectedAmount} /> em recorrências previstas
+            </>
+          ),
           icon: <ReceiptText aria-hidden="true" className="size-3.5" />,
-          label: "Total comprometido",
+          label: "Consumo dos limites",
           value: <MoneyValue amount={overview.committedAmount} />,
         },
         {
-          description: "Quanto resta nos limites planejados deste mês. Não é o saldo das contas.",
+          description: "Soma das sobras nas categorias acompanhadas.",
           icon: <CircleDollarSign aria-hidden="true" className="size-3.5" />,
-          label: "Ainda disponível",
-          value: <MoneyValue amount={overview.availableAmount} className="text-success" />,
+          label: "Restante nos limites",
+          value: <MoneyValue amount={overview.availableAmount} />,
         },
-        {
-          description: "Despesas previstas sem um limite de orçamento correspondente.",
-          icon: <WalletCards aria-hidden="true" className="size-3.5" />,
-          label: "Gastos em categorias sem limite",
-          value: (
-            <MoneyValue
-              amount={overview.unbudgetedCommittedAmount}
-              className={overview.unbudgetedCommittedAmount > 0 ? "text-warning" : undefined}
-            />
-          ),
-        },
+        ...(overview.exceededAmount > 0
+          ? [
+              {
+                description: "Excessos nas categorias que ultrapassaram o limite.",
+                icon: <TriangleAlert aria-hidden="true" className="size-3.5" />,
+                label: "Acima dos limites",
+                value: <MoneyValue amount={overview.exceededAmount} className="text-destructive" />,
+              },
+            ]
+          : []),
       ]}
-      primaryLabel="Limite planejado"
+      primaryLabel="Total dos limites"
       primaryValue={<MoneyValue amount={overview.allocatedAmount} />}
-      subtitle="Despesas realizadas e recorrências previstas no mês"
-      title="Resumo do planejamento"
+      subtitle="Limites e consumo das categorias acompanhadas."
+      title="Orçamentos do mês"
       variant="soft"
     />
   );

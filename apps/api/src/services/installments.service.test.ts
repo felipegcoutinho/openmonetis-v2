@@ -153,3 +153,28 @@ test("monthly purchase count includes each series once per month", async () => {
     activePurchaseCount: 2,
   });
 });
+
+test("anticipation reports a paid target invoice separately from selection conflicts", async () => {
+  const repo = repository(async () => []);
+  const future = installment(2, "2026-10");
+  repo.findByIdsForUser = async () => [
+    {
+      ...future,
+      userId,
+      type: "expense",
+      condition: "installment",
+      splitShares: [],
+    },
+  ];
+  repo.createAnticipation = async () => ({ reason: "targetInvoicePaid" });
+  const service = createInstallmentsService(repo);
+  await assert.rejects(
+    service.anticipate(userId, seriesId, {
+      installmentIds: [future.id],
+      targetPeriod: "2026-09",
+      discount: 0,
+    }),
+    (error: unknown) =>
+      error instanceof Error && "code" in error && error.code === "installment_target_invoice_paid",
+  );
+});

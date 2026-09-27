@@ -1,6 +1,6 @@
 import { calculateInstallmentAllocationTotal } from "./installments";
 
-export const externalExpenseStatuses = ["pending", "imported"] as const;
+export const externalExpenseStatuses = ["pending", "imported", "ignored"] as const;
 export type ExternalExpenseStatus = (typeof externalExpenseStatuses)[number];
 export const externalExpenseSourceKinds = [
   "transaction",
@@ -10,7 +10,7 @@ export const externalExpenseSourceKinds = [
 export type ExternalExpenseSourceKind = (typeof externalExpenseSourceKinds)[number];
 
 export function canUpdateExternalExpenseSnapshot(status: ExternalExpenseStatus) {
-  return status === "pending";
+  return status === "pending" || status === "ignored";
 }
 
 export type ExternalExpenseSnapshot = {
@@ -106,4 +106,11 @@ function toCents(value: string | number) {
   const amount = Math.abs(Number(value));
   if (!Number.isFinite(amount)) throw new RangeError("invalid_external_expense_amount");
   return Math.round(amount * 100);
+}
+
+export function canReviewExternalExpense(
+  status: ExternalExpenseStatus,
+  action: "ignore" | "restore",
+) {
+  return action === "ignore" ? status === "pending" : status === "ignored";
 }

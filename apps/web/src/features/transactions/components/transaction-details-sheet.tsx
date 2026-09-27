@@ -331,11 +331,6 @@ export function TransactionDetailsSheet({
         </div>
 
         <SheetFooter className="shrink-0 border-t pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between">
-          {detailQuery.isFetching && detail ? (
-            <span className="text-muted-foreground text-xs" role="status">
-              Atualizando dados…
-            </span>
-          ) : null}
           <div
             className={cn(
               "grid w-full gap-2 sm:ml-auto sm:flex sm:w-auto",

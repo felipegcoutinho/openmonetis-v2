@@ -13,11 +13,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
   BadgeDollarSign,
-  Banknote,
-  Barcode,
   CalendarArrowDown,
-  CalendarClock,
-  Check,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -28,7 +24,6 @@ import {
   Copy,
   CreditCard,
   Eye,
-  Landmark,
   Loader2,
   MessageSquareMore,
   Minus,
@@ -37,8 +32,6 @@ import {
   PartyPopper,
   Pause,
   Pencil,
-  QrCode,
-  RefreshCw,
   RotateCcw,
   Scale,
   Trash2,
@@ -89,6 +82,8 @@ import {
   formatCompactDate,
   formatPaymentMethodTable,
   groupTransactionRows,
+  paymentMethodIcons,
+  transactionConditionIcons,
   transactionConditionLabels,
 } from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
@@ -360,20 +355,14 @@ function TransactionRow({
       : transaction.type === "transfer"
         ? "text-info"
         : "text-foreground";
+  const ConditionIcon =
+    transactionConditionIcons[transaction.isRecurring ? "recurring" : transaction.condition];
   const PaymentIcon =
     transaction.origin === "accountBalanceAdjustment"
       ? Scale
       : transaction.paymentMethod === null
         ? Minus
-        : transaction.paymentMethod === "credit_card" || transaction.paymentMethod === "debit_card"
-          ? CreditCard
-          : transaction.paymentMethod === "boleto"
-            ? Barcode
-            : transaction.paymentMethod === "pix"
-              ? QrCode
-              : transaction.paymentMethod === "cash"
-                ? Banknote
-                : Landmark;
+        : paymentMethodIcons[transaction.paymentMethod];
   const isInvoicePayment = transaction.categoryName === invoicePaymentCategoryName;
   const categoryLabel =
     transaction.categoryName === internalTransferCategoryName
@@ -588,13 +577,7 @@ function TransactionRow({
       </TableCell>
       <TableCell className="pl-5 whitespace-nowrap">
         <span className="inline-flex items-center gap-2">
-          {transaction.isRecurring ? (
-            <RefreshCw aria-hidden="true" className="size-4" />
-          ) : transaction.condition === "installment" ? (
-            <CalendarClock aria-hidden="true" className="size-4" />
-          ) : (
-            <Check aria-hidden="true" className="size-4" />
-          )}
+          <ConditionIcon aria-hidden="true" className="size-4" />
           {transactionConditionLabels[transaction.condition]}
         </span>
       </TableCell>

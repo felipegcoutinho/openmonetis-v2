@@ -78,7 +78,11 @@ export const personConnectionInvitationStatus = pgEnum("person_connection_invita
 
 export const personConnectionStatus = pgEnum("person_connection_status", ["active", "revoked"]);
 
-export const externalExpenseStatus = pgEnum("external_expense_status", ["pending", "imported"]);
+export const externalExpenseStatus = pgEnum("external_expense_status", [
+  "pending",
+  "imported",
+  "ignored",
+]);
 export const externalExpenseSourceKind = pgEnum("external_expense_source_kind", [
   "transaction",
   "installmentSeries",

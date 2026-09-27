@@ -99,6 +99,7 @@ export function createBudgetsService(
       availableAmount: overview.availableAmount,
       exceededAmount: overview.exceededAmount,
       unbudgetedCommittedAmount: overview.unbudgetedCommittedAmount,
+      unbudgetedItems: overview.unbudgetedItems,
       warningCount: overview.warningCount,
       items,
     };

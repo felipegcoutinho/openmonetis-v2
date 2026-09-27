@@ -353,26 +353,9 @@
 }
 
 @media (max-width: 47.999rem) {
-  .app-navbar::before {
-    display: none;
-  }
-
   main:has(> .app-navbar) {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
   }
-}
-
-.app-navbar::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  background: var(--primary);
-  content: "";
-  pointer-events: none;
-}
-
-.dark .app-navbar::before {
-  display: none;
 }
 
 [data-slot="table-row"] > [data-slot="table-cell"]:first-child {

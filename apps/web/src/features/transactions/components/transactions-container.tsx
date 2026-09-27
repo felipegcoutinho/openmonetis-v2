@@ -141,7 +141,7 @@ export function TransactionsContainer({
         void categoriesQuery.refetch();
         void peopleQuery.refetch();
       }}
-      isUpdating={transactionsQuery.isFetching && !transactionsQuery.isLoading}
+      isUpdating={transactionsQuery.isPlaceholderData}
       accounts={accountsQuery.data ?? []}
       cards={cardsQuery.data ?? []}
       categories={categoriesQuery.data ?? []}

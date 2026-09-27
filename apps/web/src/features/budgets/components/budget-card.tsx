@@ -67,24 +67,22 @@ export function BudgetCard({
 
       <CardContent className="grid gap-5">
         <div>
-          <p className="text-muted-foreground text-xs">
-            {exceeded ? "Acima do limite" : "Ainda disponível"}
+          <p className="text-muted-foreground text-xs">Consumo do limite</p>
+          <p className="mt-1 text-2xl font-medium">
+            <MoneyValue amount={budget.committedAmount} />
+            <span className="text-sm text-muted-foreground">
+              {" "}
+              de <MoneyValue amount={budget.amount} />
+            </span>
           </p>
-          <MoneyValue
-            amount={exceeded ? budget.exceededAmount : budget.remainingAmount}
-            className={cn(
-              "mt-1 font-medium text-2xl",
-              exceeded ? "text-destructive" : "text-foreground",
-            )}
-          />
+          <p className={cn("mt-2 text-sm", exceeded && "text-destructive")}>
+            {exceeded ? "Acima do limite: " : "Restam: "}
+            <MoneyValue amount={exceeded ? budget.exceededAmount : budget.remainingAmount} />
+          </p>
         </div>
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="text-muted-foreground">
-              <MoneyValue amount={budget.committedAmount} /> comprometidos de{" "}
-              <MoneyValue amount={budget.amount} />
-            </span>
             <span className="font-medium tabular-nums">
               {formatBudgetPercentage(budget.usagePercentage)}%
             </span>
@@ -95,8 +93,8 @@ export function BudgetCard({
             value={Math.min(budget.usagePercentage, 100)}
           />
           <p className="text-muted-foreground text-xs">
-            Realizado <MoneyValue amount={budget.actualSpentAmount} /> · Previsto{" "}
-            <MoneyValue amount={budget.projectedAmount} />
+            <MoneyValue amount={budget.actualSpentAmount} /> lançados +{" "}
+            <MoneyValue amount={budget.projectedAmount} /> em recorrências previstas
           </p>
         </div>
       </CardContent>

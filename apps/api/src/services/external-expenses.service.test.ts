@@ -43,6 +43,7 @@ function expense(overrides: Partial<ExternalExpenseRecord> = {}): ExternalExpens
     ownerAvatarUrl: null,
     status: "pending",
     sourceVersion: 1,
+    isDivided: false,
     name: "Compra compartilhada",
     amount: "120.00",
     purchaseDate: new Date("2026-08-10T00:00:00.000Z"),
@@ -66,6 +67,21 @@ function expense(overrides: Partial<ExternalExpenseRecord> = {}): ExternalExpens
 function repository(initial = expense()) {
   let current: ExternalExpenseRecord | null = initial;
   const implementation: ExternalExpensesRepository = {
+    async reviewForRecipient(input) {
+      if (
+        !current ||
+        current.recipientUserId !== input.recipientUserId ||
+        current.sourceVersion !== input.expectedVersion ||
+        current.status !== (input.action === "ignore" ? "pending" : "ignored")
+      )
+        return false;
+      current = {
+        ...current,
+        status: input.action === "ignore" ? "ignored" : "pending",
+        sourceVersion: current.sourceVersion + 1,
+      };
+      return true;
+    },
     async listForRecipient() {
       return {
         items: current ? [current] : [],
@@ -73,8 +89,8 @@ function repository(initial = expense()) {
         totalAmount: current ? Number(current.amount) : 0,
       };
     },
-    async findForRecipient() {
-      return current;
+    async findForRecipient(id, userId) {
+      return current?.id === id && current.recipientUserId === userId ? current : null;
     },
     async installmentAmountsForImport() {
       return [40, 40, 40];
@@ -305,6 +321,26 @@ test("pending listing exposes the complete amount for its summary header", async
 
   assert.equal(result.total, 1);
   assert.equal(result.totalAmount, 120);
+});
+
+test("pending listing identifies expenses divided at the source", async () => {
+  const service = createExternalExpensesService(
+    repository(expense({ isDivided: true })).implementation,
+    {
+      transactionCreator: {
+        async createTransactionFromExternalExpense() {
+          throw new Error("must not be called");
+        },
+      },
+    },
+  );
+
+  const result = await service.list(
+    { view: "pending", period: "2026-08", page: 1, pageSize: 20 },
+    recipientId,
+  );
+
+  assert.equal(result.items[0]?.isDivided, true);
 });
 
 test("pending listing exposes the establishment logo selected by its owner", async () => {
@@ -660,4 +696,46 @@ test("recurring occurrence can only be imported as a single transaction", async 
       transaction: transactionInput,
     }),
   );
+});
+
+for (const sourceKind of ["transaction", "installmentSeries", "recurringOccurrence"] as const) {
+  test(`ignore and restore ${sourceKind} without creating a transaction`, async () => {
+    const repo = repository(expense({ sourceKind }));
+    const service = createExternalExpensesService(repo.implementation, {
+      transactionCreator: {
+        async createTransactionFromExternalExpense() {
+          throw new Error("must not import");
+        },
+      },
+    });
+    const ignored = await service.review(expenseId, recipientId, 1, "ignore");
+    assert.equal(ignored.status, "ignored");
+    assert.equal(ignored.sourceTransactionId, expense().sourceTransactionId);
+    assert.equal((await service.summary(recipientId)).pendingCount, 0);
+    assert.equal((await service.summary(recipientId)).totalAmount, 0);
+    await assert.rejects(service.review(expenseId, recipientId, 1, "restore"));
+    const restored = await service.review(expenseId, recipientId, ignored.sourceVersion, "restore");
+    assert.equal(restored.status, "pending");
+    assert.equal((await service.summary(recipientId)).pendingCount, 1);
+  });
+}
+
+test("review rejects another recipient, stale versions and imported expenses", async () => {
+  const repo = repository();
+  const service = createExternalExpensesService(repo.implementation, {
+    transactionCreator: {
+      async createTransactionFromExternalExpense() {
+        throw new Error("must not import");
+      },
+    },
+  });
+  await assert.rejects(service.review(expenseId, "another-user", 1, "ignore"));
+  await assert.rejects(service.review(expenseId, recipientId, 2, "ignore"));
+  await assert.rejects(service.review(expenseId, recipientId, 1, "restore"));
+  repo.markImported();
+  await assert.rejects(service.review(expenseId, recipientId, 1, "ignore"));
+});
+
+test("ignored snapshots may stay up to date without changing their review status", () => {
+  assert.equal(canUpdateExternalExpenseSnapshot("ignored"), true);
 });

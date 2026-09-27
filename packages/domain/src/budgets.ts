@@ -70,6 +70,7 @@ export type BudgetOverviewCalculation = {
   availableAmount: number;
   exceededAmount: number;
   unbudgetedCommittedAmount: number;
+  unbudgetedItems: Array<{ categoryId: string | null; committedAmount: number }>;
   warningCount: number;
 };
 
@@ -206,11 +207,29 @@ export function calculateBudgetOverview(
     if (progress.status !== "onTrack") warningCount += 1;
   }
 
+  const unbudgetedItems = [
+    ...new Set([...spending.actualByCategory.keys(), ...spending.projectedByCategory.keys()]),
+  ]
+    .filter((categoryId) => !budgetedCategoryIds.has(categoryId))
+    .map((categoryId) => ({
+      categoryId: categoryId as string | null,
+      committedAmount: roundMoney(
+        Math.max(0, spending.actualByCategory.get(categoryId) ?? 0) +
+          Math.max(0, spending.projectedByCategory.get(categoryId) ?? 0),
+      ),
+    }));
+  unbudgetedItems.push({
+    categoryId: null,
+    committedAmount: Math.max(
+      0,
+      roundMoney(spending.uncategorizedActualAmount + spending.uncategorizedProjectedAmount),
+    ),
+  });
+  const positiveUnbudgetedItems = unbudgetedItems
+    .filter((item) => item.committedAmount > 0)
+    .sort((left, right) => right.committedAmount - left.committedAmount);
   const unbudgetedCommittedAmount = roundMoney(
-    spending.uncategorizedActualAmount +
-      spending.uncategorizedProjectedAmount +
-      unbudgetedTotal(spending.actualByCategory, budgetedCategoryIds) +
-      unbudgetedTotal(spending.projectedByCategory, budgetedCategoryIds),
+    positiveUnbudgetedItems.reduce((total, item) => total + item.committedAmount, 0),
   );
 
   allocatedAmount = roundMoney(allocatedAmount);
@@ -224,6 +243,7 @@ export function calculateBudgetOverview(
     availableAmount: roundMoney(availableAmount),
     exceededAmount: roundMoney(exceededAmount),
     unbudgetedCommittedAmount: Math.max(0, unbudgetedCommittedAmount),
+    unbudgetedItems: positiveUnbudgetedItems,
     warningCount,
   };
 }
@@ -255,14 +275,6 @@ function normalizedAmount(amount: string | number) {
 
 function roundedMap(values: Map<string, number>) {
   return new Map([...values].map(([categoryId, amount]) => [categoryId, roundMoney(amount)]));
-}
-
-function unbudgetedTotal(values: Map<string, number>, budgetedCategoryIds: Set<string>) {
-  return [...values].reduce(
-    (total, [categoryId, amount]) =>
-      budgetedCategoryIds.has(categoryId) ? total : total + Math.max(0, amount),
-    0,
-  );
 }
 
 function roundMoney(value: number) {

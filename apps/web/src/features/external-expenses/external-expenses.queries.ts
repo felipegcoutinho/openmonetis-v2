@@ -1,18 +1,22 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getExternalExpenses } from "./external-expenses.api";
+import { type ExternalExpensesListInput, getExternalExpenses } from "./external-expenses.api";
 
 export const externalExpenseKeys = {
   all: ["external-expenses"] as const,
-  list: (view: "pending" | "imported", period: string | undefined, page: number) =>
-    ["external-expenses", "list", view, period ?? "all", page] as const,
+  list: (input: ExternalExpensesListInput) =>
+    [
+      "external-expenses",
+      "list",
+      input.view,
+      input.period ?? "all",
+      input.q ?? "",
+      input.sort ?? "recent",
+      input.page ?? 1,
+    ] as const,
 };
 
-export const externalExpensesQueryOptions = (input: {
-  view: "pending" | "imported";
-  period?: string;
-  page?: number;
-}) =>
+export const externalExpensesQueryOptions = (input: ExternalExpensesListInput) =>
   queryOptions({
-    queryKey: externalExpenseKeys.list(input.view, input.period, input.page ?? 1),
+    queryKey: externalExpenseKeys.list(input),
     queryFn: () => getExternalExpenses(input),
   });

@@ -30,6 +30,7 @@ import { showInvalidFormToast } from "@/lib/form-feedback";
 
 type BudgetDialogProps = {
   budget: BudgetOutput | null;
+  initialCategoryId?: string;
   categories: CategoryOutput[];
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: CreateBudgetInput | UpdateBudgetInput) => Promise<void>;
@@ -39,6 +40,7 @@ type BudgetDialogProps = {
 
 export function BudgetDialog({
   budget,
+  initialCategoryId,
   categories,
   onOpenChange,
   onSubmit,
@@ -50,7 +52,7 @@ export function BudgetDialog({
   const editing = Boolean(budget);
   const form = useForm({
     defaultValues: {
-      categoryId: budget?.categoryId ?? "",
+      categoryId: budget?.categoryId ?? initialCategoryId ?? "",
       amount: budget ? String(budget.amount) : "",
       period: budget?.period ?? period,
     },

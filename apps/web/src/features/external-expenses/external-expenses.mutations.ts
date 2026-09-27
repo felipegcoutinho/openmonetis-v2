@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { refreshFinancialQueries } from "@/lib/financial-query-invalidation";
-import { importExternalExpense } from "./external-expenses.api";
+import { importExternalExpense, reviewExternalExpense } from "./external-expenses.api";
 import { externalExpenseKeys } from "./external-expenses.queries";
 
 function useExternalExpenseMutation<TVariables, TData>(
@@ -18,3 +18,6 @@ function useExternalExpenseMutation<TVariables, TData>(
 
 export const useImportExternalExpenseMutation = () =>
   useExternalExpenseMutation(importExternalExpense);
+
+export const useReviewExternalExpenseMutation = () =>
+  useExternalExpenseMutation(reviewExternalExpense);

@@ -305,10 +305,12 @@ export const installmentsRepository = {
             eq(invoices.period, data.targetPeriod),
           ),
         );
+      if (targetInvoice?.paymentStatus === "paid") {
+        return { reason: "targetInvoicePaid" as const };
+      }
       if (
         selected.length !== data.installmentIds.length ||
         existingItems.length > 0 ||
-        targetInvoice?.paymentStatus === "paid" ||
         selected.some(
           (item) =>
             item.seriesId !== data.seriesId ||

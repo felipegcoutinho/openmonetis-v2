@@ -74,10 +74,10 @@ const headerIconButtonClassName =
   "max-md:size-11 text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground focus-visible:border-primary/40 focus-visible:ring-primary/25";
 
 const desktopNavigationItemClassName =
-  "group/header-nav inline-flex h-9 items-center rounded-sm border-0 bg-transparent px-1 font-medium text-foreground text-sm tracking-tight hover:bg-transparent hover:text-foreground focus:bg-transparent focus:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40";
+  "inline-flex h-9 items-center justify-center rounded-full border-0 bg-transparent px-3.5 text-sm font-normal text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none";
 
-const desktopNavigationLabelClassName =
-  "relative inline-flex pb-px after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 after:ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:after:transition-none";
+const desktopNavigationActiveClassName =
+  "bg-brand/10 text-brand-strong hover:bg-brand/15 focus:bg-brand/10 data-open:bg-brand/15 data-popup-open:bg-brand/15 data-open:hover:bg-brand/15 data-popup-open:hover:bg-brand/15 data-open:focus:bg-brand/15";
 
 const desktopNavigationPopupClassName =
   "rounded-sm bg-popover/95 shadow-xl ring-border/80 backdrop-blur-sm";
@@ -129,8 +129,8 @@ export function Navbar() {
 
   return (
     <>
-      <header className="app-navbar fixed inset-x-0 top-0 z-50 border-b bg-background/80 text-foreground backdrop-blur-sm dark:bg-background/80 dark:text-foreground">
-        <div className="project-container grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] xl:h-17.5 xl:grid-cols-[1fr_auto_1fr]">
+      <header className="app-navbar fixed inset-x-0 top-0 z-50 border-b border-border/50 bg-background/95 text-foreground backdrop-blur-md">
+        <div className="project-container grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] xl:grid-cols-[1fr_auto_1fr]">
           <Link
             className="flex justify-self-start items-center gap-2 text-foreground"
             to="/dashboard"
@@ -161,22 +161,19 @@ export function Navbar() {
                   : desktopNavigationPopupClassName
               }
             >
-              <NavigationMenuList className="gap-5">
+              <NavigationMenuList className="gap-1">
                 <NavigationMenuItem>
                   <NavLink
-                    className={desktopNavigationItemClassName}
+                    aria-current={location.pathname === dashboardNavItem.href ? "page" : undefined}
+                    className={cn(
+                      desktopNavigationItemClassName,
+                      location.pathname === dashboardNavItem.href &&
+                        desktopNavigationActiveClassName,
+                    )}
                     href={dashboardNavItem.href}
                     preservePeriod
                   >
-                    <span
-                      className={cn(
-                        desktopNavigationLabelClassName,
-                        location.pathname === dashboardNavItem.href &&
-                          "after:scale-x-100 after:bg-primary",
-                      )}
-                    >
-                      {dashboardNavItem.label}
-                    </span>
+                    {dashboardNavItem.label}
                   </NavLink>
                 </NavigationMenuItem>
 
@@ -193,17 +190,11 @@ export function Navbar() {
                       <NavigationMenuTrigger
                         className={cn(
                           desktopNavigationItemClassName,
-                          "bg-transparent! hover:bg-transparent! focus:bg-transparent! data-open:bg-transparent! data-open:text-foreground data-popup-open:bg-transparent! data-popup-open:text-foreground",
+                          "focus:bg-muted/70 data-open:bg-muted/70 data-popup-open:bg-muted/70 [&>svg]:size-3 [&>svg]:text-current",
+                          sectionActive && desktopNavigationActiveClassName,
                         )}
                       >
-                        <span
-                          className={cn(
-                            desktopNavigationLabelClassName,
-                            sectionActive && "after:scale-x-100 after:bg-primary",
-                          )}
-                        >
-                          {section.label}
-                        </span>
+                        {section.label}
                       </NavigationMenuTrigger>
                       <NavigationMenuContent
                         className={previewNavigationSections.has(section.label) ? "p-0" : "p-2"}
@@ -482,7 +473,7 @@ export function Navbar() {
           Menu
         </button>
       </nav>
-      <div aria-hidden="true" className="h-16 xl:h-17.5" />
+      <div aria-hidden="true" className="h-16" />
       <ReleaseNotice enabled={Boolean(user)} />
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />
     </>

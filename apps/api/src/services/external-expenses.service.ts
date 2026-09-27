@@ -8,6 +8,7 @@ import type {
   ExternalExpenseSourceKind,
   ExternalExpenseStatus,
 } from "@openmonetis/domain/external-expenses";
+import { canReviewExternalExpense } from "@openmonetis/domain/external-expenses";
 import {
   canDeliverRecurringOccurrence,
   getRecurringDueDate,
@@ -43,6 +44,7 @@ export type ExternalExpenseRecord = {
   ownerAvatarUrl: string | null;
   status: ExternalExpenseStatus;
   sourceVersion: number;
+  isDivided: boolean;
   name: string;
   amount: string;
   purchaseDate: Date;
@@ -62,6 +64,13 @@ export type ExternalExpenseRecord = {
 };
 
 export type ExternalExpensesRepository = {
+  reviewForRecipient(input: {
+    id: string;
+    recipientUserId: string;
+    expectedVersion: number;
+    action: "ignore" | "restore";
+    changedAt: Date;
+  }): Promise<boolean>;
   listForRecipient(
     recipientUserId: string,
     query: ListExternalExpensesQuery,
@@ -292,6 +301,33 @@ export function createExternalExpensesService(
       };
     },
 
+    async review(
+      id: string,
+      recipientUserId: string,
+      expectedVersion: number,
+      action: "ignore" | "restore",
+    ) {
+      const current = await requiredExpense(id, recipientUserId, repository);
+      if (
+        !canReviewExternalExpense(current.status, action) ||
+        current.sourceVersion !== expectedVersion
+      ) {
+        throw conflict("External expense changed", "external_expense_state_conflict");
+      }
+      const updated = await repository.reviewForRecipient({
+        id,
+        recipientUserId,
+        expectedVersion,
+        action,
+        changedAt: now(),
+      });
+      if (!updated) throw conflict("External expense changed", "external_expense_state_conflict");
+      return toExpenseOutput(
+        await requiredExpense(id, recipientUserId, repository),
+        buildEstablishmentLogoUrl,
+      );
+    },
+
     async importExpense(id: string, recipientUserId: string, input: ImportExternalExpenseInput) {
       const current = await requiredExpense(id, recipientUserId, repository);
       if (current.status !== "pending") {
@@ -393,6 +429,7 @@ function toExpenseOutput(
     counterpartAvatarUrl: record.ownerAvatarUrl,
     status: record.status,
     sourceVersion: record.sourceVersion,
+    isDivided: record.isDivided,
     snapshot: {
       name: record.name,
       amount: Math.abs(Number(record.amount)),

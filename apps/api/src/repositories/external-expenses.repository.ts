@@ -30,6 +30,7 @@ import {
   desc,
   eq,
   gte,
+  ilike,
   inArray,
   isNotNull,
   isNull,
@@ -76,6 +77,17 @@ const expenseColumns = {
   ownerAvatarUrl: ownerUsers.image,
   status: externalExpenses.status,
   sourceVersion: externalExpenses.sourceVersion,
+  isDivided: sql<boolean>`(
+    exists (
+      select 1 from ${transactionSplits}
+      where ${transactionSplits.transactionId} = ${externalExpenses.sourceTransactionId}
+        and ${transactionSplits.userId} = ${externalExpenses.ownerUserId}
+    ) or exists (
+      select 1 from ${recurringTransactionSplits}
+      where ${recurringTransactionSplits.recurringRuleId} = ${externalExpenses.sourceRecurringRuleId}
+        and ${recurringTransactionSplits.userId} = ${externalExpenses.ownerUserId}
+    )
+  )`.as("external_expense_is_divided"),
   name: externalExpenses.name,
   amount: externalExpenses.amount,
   purchaseDate: externalExpenses.purchaseDate,
@@ -161,19 +173,33 @@ async function findExpenseForRecipient(id: string, recipientUserId: string) {
 export const externalExpensesRepository: ExternalExpensesRepository = {
   async listForRecipient(recipientUserId, query) {
     const viewFilter = eq(externalExpenses.status, query.view);
+    const searchPattern = query.q ? `%${query.q.replace(/[\\%_]/g, "\\$&")}%` : null;
     const where = and(
       eq(externalExpenses.recipientUserId, recipientUserId),
       viewFilter,
       query.period ? eq(externalExpenses.period, query.period) : undefined,
+      searchPattern
+        ? or(
+            ilike(externalExpenses.name, searchPattern),
+            ilike(ownerUsers.name, searchPattern),
+            ilike(externalExpenses.sourceLabel, searchPattern),
+          )
+        : undefined,
     );
+    const order =
+      query.sort === "oldest"
+        ? [asc(externalExpenses.purchaseDate), asc(externalExpenses.createdAt)]
+        : query.sort === "amountDesc"
+          ? [desc(externalExpenses.amount), desc(externalExpenses.purchaseDate)]
+          : query.sort === "amountAsc"
+            ? [asc(externalExpenses.amount), desc(externalExpenses.purchaseDate)]
+            : query.sort === "name"
+              ? [asc(externalExpenses.name), desc(externalExpenses.purchaseDate)]
+              : [desc(externalExpenses.purchaseDate), desc(externalExpenses.createdAt)];
     const [records, totalRows] = await Promise.all([
       expenseQuery()
         .where(where)
-        .orderBy(
-          desc(externalExpenses.purchaseDate),
-          desc(externalExpenses.createdAt),
-          desc(externalExpenses.id),
-        )
+        .orderBy(...order, desc(externalExpenses.id))
         .limit(query.pageSize)
         .offset((query.page - 1) * query.pageSize),
       db
@@ -182,6 +208,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
           totalAmount: sql<string>`coalesce(sum(${externalExpenses.amount}), 0)`,
         })
         .from(externalExpenses)
+        .innerJoin(ownerUsers, eq(externalExpenses.ownerUserId, ownerUsers.id))
         .where(where),
     ]);
 
@@ -193,6 +220,34 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
   },
 
   findForRecipient: findExpenseForRecipient,
+
+  async reviewForRecipient(input) {
+    const rows = await db
+      .update(externalExpenses)
+      .set({
+        status: input.action === "ignore" ? "ignored" : "pending",
+        sourceVersion: sql`${externalExpenses.sourceVersion} + 1`,
+        updatedAt: input.changedAt,
+      })
+      .where(
+        and(
+          eq(externalExpenses.id, input.id),
+          eq(externalExpenses.recipientUserId, input.recipientUserId),
+          eq(externalExpenses.sourceVersion, input.expectedVersion),
+          eq(externalExpenses.status, input.action === "ignore" ? "pending" : "ignored"),
+          input.action === "restore"
+            ? sql`exists (
+        select 1 from ${personConnections}
+        where ${personConnections.id} = ${externalExpenses.connectionId}
+          and ${personConnections.recipientUserId} = ${input.recipientUserId}
+          and ${personConnections.status} = 'active'
+      ) and (${externalExpenses.sourceTransactionId} is not null or ${externalExpenses.sourceRecurringRuleId} is not null)`
+            : undefined,
+        ),
+      )
+      .returning({ id: externalExpenses.id });
+    return rows.length === 1;
+  },
 
   async installmentAmountsForImport(input) {
     const [expense] = await db
@@ -475,7 +530,9 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
 
       for (const [key, current] of existingByKey) {
         if (current.status !== "pending" || draftByKey.has(key)) continue;
-        await transaction.delete(externalExpenses).where(eq(externalExpenses.id, current.id));
+        await transaction
+          .delete(externalExpenses)
+          .where(and(eq(externalExpenses.id, current.id), eq(externalExpenses.status, "pending")));
         deleted += 1;
       }
 
@@ -503,7 +560,9 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
           created += inserted.length;
           continue;
         }
-        if (current.status !== "pending") continue;
+        if (!canUpdateExternalExpenseSnapshot(current.status)) continue;
+        if (current.status === "ignored" && current.recipientUserId !== draft.recipientUserId)
+          continue;
         const unchanged =
           current.connectionId === draft.connectionId &&
           current.recipientUserId === draft.recipientUserId &&
@@ -707,7 +766,9 @@ export async function synchronizePendingExternalExpensesForTransactions(
     ) {
       continue;
     }
-    await transaction.delete(externalExpenses).where(eq(externalExpenses.id, current.id));
+    await transaction
+      .delete(externalExpenses)
+      .where(and(eq(externalExpenses.id, current.id), eq(externalExpenses.status, "pending")));
   }
 
   for (const item of eligible) {
@@ -732,6 +793,7 @@ export async function synchronizePendingExternalExpensesForTransactions(
     }
 
     if (!canUpdateExternalExpenseSnapshot(current.status)) continue;
+    if (current.status === "ignored" && current.recipientUserId !== item.recipientUserId) continue;
     const currentSnapshot = snapshotFromRow(current);
     const nextSnapshot = preserveExternalExpenseInstallmentBoundary(currentSnapshot, item.snapshot);
     if (

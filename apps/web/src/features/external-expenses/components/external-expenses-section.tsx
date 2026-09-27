@@ -1,20 +1,37 @@
-import type { ExternalExpenseOutput } from "@openmonetis/validators/external-expenses";
+import type {
+  ExternalExpenseOutput,
+  ListExternalExpensesQuery,
+} from "@openmonetis/validators/external-expenses";
 import { useQuery } from "@tanstack/react-query";
 import {
   Banknote,
   Barcode,
   CalendarClock,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   HandCoins,
   Landmark,
   RefreshCw,
+  Search,
+  Split,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
+import { toast } from "sonner";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -24,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
@@ -35,28 +53,151 @@ import {
   formatPaymentMethodTable,
   transactionConditionLabels,
 } from "@/features/transactions/transactions.presentation";
-import { useImportExternalExpenseMutation } from "../external-expenses.mutations";
+import {
+  useImportExternalExpenseMutation,
+  useReviewExternalExpenseMutation,
+} from "../external-expenses.mutations";
 import { externalExpensesQueryOptions } from "../external-expenses.queries";
 import { ExternalCounterpartAvatar } from "./external-counterpart-avatar";
 import { ExternalExpenseSource } from "./external-expense-source";
 
+type ExternalExpenseSort = NonNullable<ListExternalExpensesQuery["sort"]>;
+
+const externalExpenseSortLabels: Record<ExternalExpenseSort, string> = {
+  recent: "Mais recentes",
+  oldest: "Mais antigos",
+  amountDesc: "Maior valor",
+  amountAsc: "Menor valor",
+  name: "Estabelecimento (A–Z)",
+};
+
 export function ExternalExpensesSection({ period }: { period: string }) {
   const [importing, setImporting] = useState<ExternalExpenseOutput | null>(null);
-  const query = useQuery(externalExpensesQueryOptions({ view: "pending", period }));
+  const [view, setView] = useState<"pending" | "ignored">("pending");
+  const reviewExpense = useReviewExternalExpenseMutation();
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<ExternalExpenseSort>("recent");
+  const [pagination, setPagination] = useState({ period, page: 1 });
+  const page = pagination.period === period ? pagination.page : 1;
+  const q = useDeferredValue(search.trim());
+  const summaryQuery = useQuery(externalExpensesQueryOptions({ view: "pending", period }));
+  const query = useQuery(externalExpensesQueryOptions({ view, period, q, sort, page }));
   const categories = useQuery(categoriesQueryOptions());
   const accounts = useQuery(accountsQueryOptions());
   const cards = useQuery(cardsQueryOptions());
   const people = useQuery(peopleQueryOptions());
   const importExpense = useImportExternalExpenseMutation();
 
+  async function review(item: ExternalExpenseOutput, action: "ignore" | "restore") {
+    try {
+      const updated = await reviewExpense.mutateAsync({
+        id: item.id,
+        expectedVersion: item.sourceVersion,
+        action,
+      });
+      setPagination({ period, page: 1 });
+      toast.success(action === "ignore" ? "Lançamento ignorado" : "Lançamento restaurado", {
+        description:
+          action === "ignore"
+            ? "O original permanece na conta de quem compartilhou."
+            : "Disponível novamente para importação.",
+        action:
+          action === "ignore"
+            ? {
+                label: "Desfazer",
+                onClick: () => {
+                  void review(updated, "restore");
+                },
+              }
+            : undefined,
+      });
+    } catch {
+      toast.error("Não foi possível atualizar. Recarregue a lista e tente novamente.");
+    }
+  }
+
   return (
     <div className="grid gap-4">
       <ExternalExpensesSummary
-        isError={query.isError}
-        isLoading={query.isLoading}
-        total={query.data?.total}
-        totalAmount={query.data?.totalAmount}
+        isError={summaryQuery.isError}
+        isLoading={summaryQuery.isLoading}
+        total={summaryQuery.data?.total}
+        totalAmount={summaryQuery.data?.totalAmount}
       />
+
+      <p className="text-sm text-muted-foreground">
+        Ignorar remove apenas a pendência recebida; não quita nem cancela a despesa. Compras
+        parceladas são ignoradas por inteiro; recorrências, somente nesta ocorrência.
+      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <Select
+          value={view}
+          onValueChange={(value) => {
+            if (value !== "pending" && value !== "ignored") return;
+            setView(value);
+            setPagination({ period, page: 1 });
+          }}
+        >
+          <SelectTrigger className="sm:mr-auto w-44" aria-label="Situação dos lançamentos externos">
+            <SelectValue>{view === "pending" ? "Pendentes" : "Ignorados"}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pendentes</SelectItem>
+            <SelectItem value="ignored">Ignorados</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <span>Ordenar por</span>
+          <Select
+            onValueChange={(value) => {
+              setSort(value as ExternalExpenseSort);
+              setPagination({ period, page: 1 });
+            }}
+            value={sort}
+          >
+            <SelectTrigger aria-label="Ordenar despesas compartilhadas" className="w-44">
+              <SelectValue>{externalExpenseSortLabels[sort]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(externalExpenseSortLabels).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            aria-label="Buscar despesas compartilhadas"
+            className="pr-9 pl-9"
+            maxLength={160}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPagination({ period, page: 1 });
+            }}
+            placeholder="Buscar estabelecimento, pessoa ou conta/cartão"
+            value={search}
+          />
+          {search ? (
+            <button
+              aria-label="Limpar busca"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => {
+                setSearch("");
+                setPagination({ period, page: 1 });
+              }}
+              type="button"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          ) : null}
+        </div>
+      </div>
 
       {query.isLoading ? <ExternalExpensesLoading /> : null}
       {query.isError ? (
@@ -73,12 +214,17 @@ export function ExternalExpensesSection({ period }: { period: string }) {
       {query.data ? (
         query.data.items.length ? (
           <ExternalExpensesTable
-            importPending={importExpense.isPending}
+            importPending={importExpense.isPending || reviewExpense.isPending}
+            onReview={(item) => void review(item, item.status === "ignored" ? "restore" : "ignore")}
             items={query.data.items}
             onImport={setImporting}
+            onPageChange={(nextPage) => setPagination({ period, page: nextPage })}
+            page={page}
+            total={query.data.total}
+            totalPages={query.data.totalPages}
           />
         ) : (
-          <ExternalExpensesEmpty />
+          <ExternalExpensesEmpty searched={Boolean(q)} ignored={view === "ignored"} />
         )
       ) : null}
 
@@ -99,6 +245,7 @@ export function ExternalExpensesSection({ period }: { period: string }) {
             expectedVersion: importing.sourceVersion,
             transaction,
           });
+          setPagination({ period, page: 1 });
           return result.transaction;
         }}
         onOpenChange={(open) => !open && setImporting(null)}
@@ -157,10 +304,20 @@ function ExternalExpensesTable({
   importPending,
   items,
   onImport,
+  onReview,
+  onPageChange,
+  page,
+  total,
+  totalPages,
 }: {
   importPending: boolean;
   items: ExternalExpenseOutput[];
   onImport: (item: ExternalExpenseOutput) => void;
+  onReview: (item: ExternalExpenseOutput) => void;
+  onPageChange: (page: number) => void;
+  page: number;
+  total: number;
+  totalPages: number;
 }) {
   return (
     <Card className="py-2">
@@ -185,14 +342,42 @@ function ExternalExpensesTable({
                   item={item}
                   key={item.id}
                   onImport={() => onImport(item)}
+                  onReview={() => onReview(item)}
                 />
               ))}
             </TableBody>
           </Table>
         </div>
-        <p className="border-t px-1 pt-3 text-muted-foreground text-sm">
-          {items.length} {items.length === 1 ? "lançamento" : "lançamentos"}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3 text-muted-foreground text-sm">
+          <span>
+            {total} {total === 1 ? "lançamento" : "lançamentos"}
+          </span>
+          {totalPages > 1 ? (
+            <div className="flex items-center gap-2">
+              <Button
+                aria-label="Página anterior"
+                disabled={page <= 1}
+                onClick={() => onPageChange(page - 1)}
+                size="icon-sm"
+                variant="outline"
+              >
+                <ChevronLeft aria-hidden="true" />
+              </Button>
+              <span>
+                Página {page} de {totalPages}
+              </span>
+              <Button
+                aria-label="Próxima página"
+                disabled={page >= totalPages}
+                onClick={() => onPageChange(page + 1)}
+                size="icon-sm"
+                variant="outline"
+              >
+                <ChevronRight aria-hidden="true" />
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );
@@ -202,10 +387,12 @@ function ExternalExpenseRow({
   importPending,
   item,
   onImport,
+  onReview,
 }: {
   importPending: boolean;
   item: ExternalExpenseOutput;
   onImport: () => void;
+  onReview: () => void;
 }) {
   const PaymentIcon =
     item.snapshot.paymentMethod === "credit_card" || item.snapshot.paymentMethod === "debit_card"
@@ -236,7 +423,20 @@ function ExternalExpenseRow({
             size={36}
           />
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="max-w-56 truncate font-medium">{item.snapshot.name}</span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="max-w-56 truncate font-medium">{item.snapshot.name}</span>
+              {item.isDivided ? (
+                <Tooltip>
+                  <TooltipTrigger
+                    aria-label="Lançamento dividido"
+                    className="inline-flex shrink-0 rounded-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Split aria-hidden="true" className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>Lançamento dividido</TooltipContent>
+                </Tooltip>
+              ) : null}
+            </span>
             <span className="whitespace-nowrap text-muted-foreground text-xs">
               {recurringDateLabel}
               {formatCompactDate(displayedDate)}
@@ -288,24 +488,41 @@ function ExternalExpenseRow({
         </span>
       </TableCell>
       <TableCell className="text-right">
-        <Button disabled={importPending} onClick={onImport} size="sm">
-          Importar para minha conta
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button disabled={importPending} onClick={onReview} size="sm" variant="ghost">
+            {item.status === "ignored" ? "Restaurar" : "Ignorar"}
+          </Button>
+          {item.status === "pending" ? (
+            <Button disabled={importPending} onClick={onImport} size="sm">
+              Importar para minha conta
+            </Button>
+          ) : null}
+        </div>
       </TableCell>
     </TableRow>
   );
 }
 
-function ExternalExpensesEmpty() {
+function ExternalExpensesEmpty({ searched, ignored }: { searched: boolean; ignored: boolean }) {
   return (
     <Card className="border-dashed shadow-none">
       <CardContent className="grid place-items-center py-14 text-center">
         <span className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
           <Check aria-hidden="true" className="size-5" />
         </span>
-        <p className="mt-3 font-medium">Nenhum lançamento pendente</p>
+        <p className="mt-3 font-medium">
+          {searched
+            ? "Nenhum lançamento encontrado"
+            : ignored
+              ? "Nenhum lançamento ignorado"
+              : "Nenhum lançamento pendente"}
+        </p>
         <p className="mt-1 max-w-md text-muted-foreground text-sm">
-          Novos lançamentos externos aparecerão aqui para importação.
+          {searched
+            ? "Tente buscar por outro estabelecimento, pessoa ou conta/cartão."
+            : ignored
+              ? "Os lançamentos ignorados neste mês aparecerão aqui e poderão ser restaurados."
+              : "Novos lançamentos externos aparecerão aqui para importação."}
         </p>
       </CardContent>
     </Card>

@@ -50,6 +50,13 @@
       "when": 1790094471509,
       "tag": "0006_silent_boom_boom",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790520768353,
+      "tag": "0007_narrow_bastion",
+      "breakpoints": true
     }
   ]
 }

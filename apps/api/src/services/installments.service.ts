@@ -74,7 +74,7 @@ export type InstallmentsRepository = {
     personId: string;
     cardId: string;
     categoryId: string | null;
-  }): Promise<{ id: string } | null>;
+  }): Promise<{ id: string } | { reason: "targetInvoicePaid" } | null>;
   findAnticipationForUser(
     userId: string,
     seriesId: string,
@@ -205,6 +205,9 @@ export function createInstallmentsService(
         cardId,
         categoryId: first.categoryId,
       });
+      if (anticipation && "reason" in anticipation) {
+        throw conflict("Target invoice is already paid", "installment_target_invoice_paid");
+      }
       if (!anticipation) {
         throw conflict(
           "Installments changed while the anticipation was being registered",

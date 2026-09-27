@@ -1,0 +1,1 @@
+ALTER TYPE "public"."external_expense_status" ADD VALUE 'ignored';

@@ -6,6 +6,17 @@ import {
   periodToSafeInstant,
 } from "@openmonetis/shared/date-time";
 import type { TransactionInput, TransactionOutput } from "@openmonetis/validators/transactions";
+import {
+  Banknote,
+  Barcode,
+  CalendarClock,
+  Check,
+  CreditCard,
+  Landmark,
+  type LucideIcon,
+  QrCode,
+  RefreshCw,
+} from "lucide-react";
 import { formatCurrency } from "../../lib/money-presentation";
 
 export { formatCurrency as formatTransactionFilterAmount } from "../../lib/money-presentation";
@@ -15,6 +26,22 @@ type TransactionCondition = NonNullable<TransactionInput["condition"]>;
 type PaymentMethod = TransactionInput["paymentMethod"];
 type RecurrenceFrequency = NonNullable<TransactionInput["recurrenceFrequency"]>;
 type TransactionOrigin = TransactionOutput["origin"];
+
+export const transactionConditionIcons: Record<TransactionCondition, LucideIcon> = {
+  single: Check,
+  installment: CalendarClock,
+  recurring: RefreshCw,
+};
+
+export const paymentMethodIcons: Record<NonNullable<PaymentMethod>, LucideIcon> = {
+  credit_card: CreditCard,
+  debit_card: CreditCard,
+  pix: QrCode,
+  cash: Banknote,
+  boleto: Barcode,
+  benefits: Landmark,
+  bank_transfer: Landmark,
+};
 
 export type TransactionsSearch = {
   edit?: string;

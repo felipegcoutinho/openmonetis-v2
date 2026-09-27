@@ -29,6 +29,8 @@ import { BudgetDialog } from "./budget-dialog";
 import { BudgetsSummary } from "./budgets-summary";
 import { CopyBudgetsDialog } from "./copy-budgets-dialog";
 
+import { UnbudgetedExpenses } from "./unbudgeted-expenses";
+
 const cardSkeletonKeys = ["first", "second", "third"] as const;
 
 type BudgetsPageProps = {
@@ -44,6 +46,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
   const deleteMutation = useDeleteBudgetMutation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetOutput | null>(null);
+  const [initialCategoryId, setInitialCategoryId] = useState<string | undefined>();
   const [copyOpen, setCopyOpen] = useState(false);
   const overview = budgetsQuery.data;
   const expenseCategories = (categoriesQuery.data ?? []).filter(
@@ -63,6 +66,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
   }
 
   function openCreate() {
+    setInitialCategoryId(undefined);
     setEditingBudget(null);
     setDialogOpen(true);
   }
@@ -111,7 +115,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
               { label: "Finanças" },
               { label: "Orçamentos" },
             ]}
-            description="Defina limites mensais por categoria e acompanhe despesas realizadas e recorrências previstas."
+            description="Defina limites mensais e acompanhe o consumo por categoria."
             icon={<Target aria-hidden="true" className="size-5" />}
             title="Orçamentos"
           />
@@ -151,6 +155,16 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
           {!loading && !failed && overview ? (
             <>
               {overview.items.length ? <BudgetsSummary overview={overview} /> : null}
+              <UnbudgetedExpenses
+                key={period}
+                overview={overview}
+                categories={categoriesQuery.data ?? []}
+                onCreate={(categoryId) => {
+                  setInitialCategoryId(categoryId);
+                  setEditingBudget(null);
+                  setDialogOpen(true);
+                }}
+              />
               <section aria-labelledby="budget-list-title" className="grid gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -197,8 +211,9 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
 
       <BudgetDialog
         budget={editingBudget}
+        initialCategoryId={initialCategoryId}
         categories={editingBudget ? [] : availableCategories}
-        key={`${editingBudget?.id ?? "new"}-${period}-${dialogOpen ? "open" : "closed"}`}
+        key={`${editingBudget?.id ?? initialCategoryId ?? "new"}-${period}-${dialogOpen ? "open" : "closed"}`}
         onOpenChange={changeDialog}
         onSubmit={saveBudget}
         open={dialogOpen}

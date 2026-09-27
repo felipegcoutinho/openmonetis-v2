@@ -13,7 +13,6 @@ import {
   ArrowLeftRight,
   ArrowUpDown,
   Banknote,
-  Barcode,
   CalendarClock,
   ChevronDown,
   Circle,
@@ -23,19 +22,16 @@ import {
   Filter,
   Landmark,
   type LucideIcon,
-  Minus,
+  Paperclip,
   Plus,
-  QrCode,
-  Repeat2,
   Search,
-  Ticket,
+  Users,
   X,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { MonthNavigation } from "@/components/month-navigation";
 import { type PageBreadcrumb, PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -75,9 +71,11 @@ import {
   formatTransactionFilterAmount,
   formatTransactionFilterDate,
   parseFilterSlugs,
+  paymentMethodIcons,
   paymentMethodLabels,
   serializeFilterSlugs,
   type TransactionsSearch,
+  transactionConditionIcons,
   transactionConditionLabels,
   transactionTypeLabels,
 } from "../transactions.presentation";
@@ -572,12 +570,20 @@ export function TransactionsScreen({
                           onChange={setTypeFilter}
                           options={[
                             { value: "all", label: "Todos" },
-                            { value: "income", label: "Receitas", dotClassName: "bg-success" },
-                            { value: "expense", label: "Despesas", dotClassName: "bg-destructive" },
+                            {
+                              value: "income",
+                              label: "Receitas",
+                              icon: transactionTypeIcons.income,
+                            },
+                            {
+                              value: "expense",
+                              label: "Despesas",
+                              icon: transactionTypeIcons.expense,
+                            },
                             {
                               value: "transfer",
                               label: "Transferências",
-                              dotClassName: "bg-info",
+                              icon: transactionTypeIcons.transfer,
                             },
                           ]}
                           value={typeFilter ?? "all"}
@@ -591,10 +597,18 @@ export function TransactionsScreen({
                           {
                             value: "single",
                             label: transactionConditionLabels.single,
-                            icon: Minus,
+                            icon: transactionConditionIcons.single,
                           },
-                          { value: "installment", label: "Parcelada", icon: CalendarClock },
-                          { value: "recurring", label: "Recorrente", icon: Repeat2 },
+                          {
+                            value: "installment",
+                            label: "Parcelada",
+                            icon: transactionConditionIcons.installment,
+                          },
+                          {
+                            value: "recurring",
+                            label: "Recorrente",
+                            icon: transactionConditionIcons.recurring,
+                          },
                         ]}
                         value={conditionFilter ?? "all"}
                       />
@@ -822,113 +836,167 @@ export function TransactionsScreen({
       </div>
 
       {activeFilterCount ? (
-        <fieldset aria-label="Filtros ativos" className="flex flex-wrap gap-2">
-          {search ? <FilterChip label={`Busca: ${search}`} onRemove={() => setSearch("")} /> : null}
-          {!hiddenFilterSet.has("type") && typeFilter ? (
-            <FilterChip
-              label={`Tipo: ${transactionTypeLabels[typeFilter]}`}
-              onRemove={() => setTypeFilter("all")}
-            />
-          ) : null}
-          {conditionFilter ? (
-            <FilterChip
-              label={`Condição: ${transactionConditionLabels[conditionFilter]}`}
-              onRemove={() => setConditionFilter("all")}
-            />
-          ) : null}
-          {!hiddenFilterSet.has("paymentMethod") && paymentMethodFilter ? (
-            <FilterChip
-              label={`Pagamento: ${paymentMethodLabels[paymentMethodFilter]}`}
-              onRemove={() => setPaymentMethodFilter("all")}
-            />
-          ) : null}
-          {!hiddenFilterSet.has("settlement") && settlementFilter ? (
-            <FilterChip
-              label={`Status: ${settlementFilter === "invoice" ? "Pagamento pela fatura" : settlementFilter === "paid" ? "Pagos / recebidos" : "Em aberto"}`}
-              onRemove={() => setSettlementFilter("all")}
-            />
-          ) : null}
-          {!hiddenFilterSet.has("person") &&
-            personSlugs.map((slug) => (
+        <fieldset
+          aria-label="Filtros ativos"
+          className="flex min-w-0 flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-muted/50 px-3 py-2.5"
+        >
+          <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Filter aria-hidden="true" className="size-3.5" />
+            Filtros ativos
+          </span>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            {search ? (
+              <FilterChip icon={Search} label={`Busca: ${search}`} onRemove={() => setSearch("")} />
+            ) : null}
+            {!hiddenFilterSet.has("type") && typeFilter ? (
               <FilterChip
-                key={`person-${slug}`}
-                label={`Pessoa: ${people.find((person) => peopleSlugMap.idToSlug.get(person.id) === slug)?.name ?? "Pessoa"}`}
+                icon={transactionTypeIcons[typeFilter]}
+                label={`Tipo: ${transactionTypeLabels[typeFilter]}`}
+                onRemove={() => setTypeFilter("all")}
+              />
+            ) : null}
+            {conditionFilter ? (
+              <FilterChip
+                icon={transactionConditionIcons[conditionFilter]}
+                label={`Condição: ${transactionConditionLabels[conditionFilter]}`}
+                onRemove={() => setConditionFilter("all")}
+              />
+            ) : null}
+            {!hiddenFilterSet.has("paymentMethod") && paymentMethodFilter ? (
+              <FilterChip
+                icon={paymentMethodIcons[paymentMethodFilter]}
+                label={`Pagamento: ${paymentMethodLabels[paymentMethodFilter]}`}
+                onRemove={() => setPaymentMethodFilter("all")}
+              />
+            ) : null}
+            {!hiddenFilterSet.has("settlement") && settlementFilter ? (
+              <FilterChip
+                icon={
+                  settlementFilter === "paid"
+                    ? CircleCheck
+                    : settlementFilter === "invoice"
+                      ? CreditCard
+                      : Circle
+                }
+                label={`Status: ${settlementFilter === "invoice" ? "Pagamento pela fatura" : settlementFilter === "paid" ? "Pagos / recebidos" : "Em aberto"}`}
+                onRemove={() => setSettlementFilter("all")}
+              />
+            ) : null}
+            {!hiddenFilterSet.has("person") &&
+              personSlugs.map((slug) => (
+                <FilterChip
+                  key={`person-${slug}`}
+                  imageSrc={
+                    people.find((item) => peopleSlugMap.idToSlug.get(item.id) === slug)
+                      ?.avatarUrl ?? null
+                  }
+                  icon={Users}
+                  label={`Pessoa: ${people.find((person) => peopleSlugMap.idToSlug.get(person.id) === slug)?.name ?? "Pessoa"}`}
+                  onRemove={() =>
+                    setMultipleFilter(
+                      "people",
+                      personSlugs.filter((value) => value !== slug),
+                    )
+                  }
+                />
+              ))}
+            {!hiddenFilterSet.has("category") &&
+              categorySlugs.map((slug) => (
+                <FilterChip
+                  key={`category-${slug}`}
+                  visual={
+                    <CategoryIcon
+                      className="size-4"
+                      name={
+                        categories.find((item) => categoriesSlugMap.idToSlug.get(item.id) === slug)
+                          ?.icon ?? null
+                      }
+                    />
+                  }
+                  label={`Categoria: ${categories.find((category) => categoriesSlugMap.idToSlug.get(category.id) === slug)?.name ?? "Categoria"}`}
+                  onRemove={() =>
+                    setMultipleFilter(
+                      "categories",
+                      categorySlugs.filter((value) => value !== slug),
+                    )
+                  }
+                />
+              ))}
+            {!hiddenFilterSet.has("accountCard") &&
+              accountSlugs.map((slug) => (
+                <FilterChip
+                  key={`account-${slug}`}
+                  imageSrc={
+                    accounts.find((item) => accountsSlugMap.idToSlug.get(item.id) === slug)?.logo ??
+                    null
+                  }
+                  icon={Landmark}
+                  label={`Conta: ${accounts.find((account) => accountsSlugMap.idToSlug.get(account.id) === slug)?.name ?? "Conta"}`}
+                  onRemove={() =>
+                    setMultipleFilter(
+                      "accounts",
+                      accountSlugs.filter((value) => value !== slug),
+                    )
+                  }
+                />
+              ))}
+            {!hiddenFilterSet.has("accountCard") &&
+              cardSlugs.map((slug) => (
+                <FilterChip
+                  key={`card-${slug}`}
+                  imageSrc={
+                    cards.find((item) => cardsSlugMap.idToSlug.get(item.id) === slug)?.logo ?? null
+                  }
+                  icon={CreditCard}
+                  label={`Cartão: ${cards.find((card) => cardsSlugMap.idToSlug.get(card.id) === slug)?.name ?? "Cartão"}`}
+                  onRemove={() =>
+                    setMultipleFilter(
+                      "cards",
+                      cardSlugs.filter((value) => value !== slug),
+                    )
+                  }
+                />
+              ))}
+            {urlSearch.minAmount !== undefined || urlSearch.maxAmount !== undefined ? (
+              <FilterChip
+                icon={Banknote}
+                label={`Valor: ${formatTransactionFilterAmount(urlSearch.minAmount ?? 0)} até ${urlSearch.maxAmount !== undefined ? formatTransactionFilterAmount(urlSearch.maxAmount) : "sem limite"}`}
                 onRemove={() =>
-                  setMultipleFilter(
-                    "people",
-                    personSlugs.filter((value) => value !== slug),
-                  )
+                  onSearchChange({ minAmount: undefined, maxAmount: undefined, page: undefined })
                 }
               />
-            ))}
-          {!hiddenFilterSet.has("category") &&
-            categorySlugs.map((slug) => (
+            ) : null}
+            {urlSearch.dateStart || urlSearch.dateEnd ? (
               <FilterChip
-                key={`category-${slug}`}
-                label={`Categoria: ${categories.find((category) => categoriesSlugMap.idToSlug.get(category.id) === slug)?.name ?? "Categoria"}`}
+                icon={CalendarClock}
+                label={`Datas: ${urlSearch.dateStart ? formatTransactionFilterDate(urlSearch.dateStart) : "início"} até ${urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "fim"}`}
                 onRemove={() =>
-                  setMultipleFilter(
-                    "categories",
-                    categorySlugs.filter((value) => value !== slug),
-                  )
+                  onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
                 }
               />
-            ))}
-          {!hiddenFilterSet.has("accountCard") &&
-            accountSlugs.map((slug) => (
+            ) : null}
+            {urlSearch.hasAttachments ? (
               <FilterChip
-                key={`account-${slug}`}
-                label={`Conta: ${accounts.find((account) => accountsSlugMap.idToSlug.get(account.id) === slug)?.name ?? "Conta"}`}
-                onRemove={() =>
-                  setMultipleFilter(
-                    "accounts",
-                    accountSlugs.filter((value) => value !== slug),
-                  )
-                }
+                icon={Paperclip}
+                label="Com anexo"
+                onRemove={() => onSearchChange({ hasAttachments: undefined, page: undefined })}
               />
-            ))}
-          {!hiddenFilterSet.has("accountCard") &&
-            cardSlugs.map((slug) => (
+            ) : null}
+            {urlSearch.isDivided ? (
               <FilterChip
-                key={`card-${slug}`}
-                label={`Cartão: ${cards.find((card) => cardsSlugMap.idToSlug.get(card.id) === slug)?.name ?? "Cartão"}`}
-                onRemove={() =>
-                  setMultipleFilter(
-                    "cards",
-                    cardSlugs.filter((value) => value !== slug),
-                  )
-                }
+                icon={Users}
+                label="Somente divididos"
+                onRemove={() => onSearchChange({ isDivided: undefined, page: undefined })}
               />
-            ))}
-          {urlSearch.minAmount !== undefined || urlSearch.maxAmount !== undefined ? (
-            <FilterChip
-              label={`Valor: ${formatTransactionFilterAmount(urlSearch.minAmount ?? 0)} até ${urlSearch.maxAmount !== undefined ? formatTransactionFilterAmount(urlSearch.maxAmount) : "sem limite"}`}
-              onRemove={() =>
-                onSearchChange({ minAmount: undefined, maxAmount: undefined, page: undefined })
-              }
-            />
-          ) : null}
-          {urlSearch.dateStart || urlSearch.dateEnd ? (
-            <FilterChip
-              label={`Datas: ${urlSearch.dateStart ? formatTransactionFilterDate(urlSearch.dateStart) : "início"} até ${urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "fim"}`}
-              onRemove={() =>
-                onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
-              }
-            />
-          ) : null}
-          {urlSearch.hasAttachments ? (
-            <FilterChip
-              label="Com anexo"
-              onRemove={() => onSearchChange({ hasAttachments: undefined, page: undefined })}
-            />
-          ) : null}
-          {urlSearch.isDivided ? (
-            <FilterChip
-              label="Somente divididos"
-              onRemove={() => onSearchChange({ isDivided: undefined, page: undefined })}
-            />
-          ) : null}
-          <Button onClick={clearFilters} size="sm" variant="ghost">
+            ) : null}
+          </div>
+          <Button
+            className="ml-auto text-xs font-normal text-muted-foreground hover:bg-background hover:text-foreground"
+            onClick={clearFilters}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
             Limpar filtros
           </Button>
         </fieldset>
@@ -1144,19 +1212,55 @@ function FilterSelectOption({
   );
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  onRemove,
+  icon: Icon,
+  imageSrc,
+  visual,
+}: {
+  label: string;
+  onRemove: () => void;
+  icon?: LucideIcon;
+  imageSrc?: string | null;
+  visual?: ReactNode;
+}) {
+  const separatorIndex = label.indexOf(": ");
+  const filterName = separatorIndex >= 0 ? label.slice(0, separatorIndex) : null;
+  const filterValue = separatorIndex >= 0 ? label.slice(separatorIndex + 2) : label;
+
   return (
-    <Badge className="h-7 gap-1 border-border bg-secondary/70 pr-1 font-normal" variant="secondary">
-      {label}
-      <button
+    <span className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-lg border border-border/60 bg-background py-1 pl-2.5 pr-1">
+      {imageSrc !== undefined ? (
+        <Avatar className="size-5 shrink-0" size="sm" aria-hidden="true">
+          <AvatarImage alt="" src={imageSrc ?? undefined} />
+          <AvatarFallback>{Icon ? <Icon className="size-3.5" /> : null}</AvatarFallback>
+        </Avatar>
+      ) : visual ? (
+        <span aria-hidden="true" className="flex shrink-0 items-center text-muted-foreground">
+          {visual}
+        </span>
+      ) : Icon ? (
+        <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
+      ) : null}
+      <span className="min-w-0 text-left leading-tight">
+        {filterName ? (
+          <span className="block text-[10px] text-muted-foreground">{filterName}</span>
+        ) : null}
+        <span className="block break-words text-xs font-medium">{filterValue}</span>
+      </span>
+      <Button
         aria-label={`Remover filtro ${label}`}
-        className="rounded-full p-0.5 hover:bg-background"
+        className="ml-1 shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         onClick={onRemove}
+        size="icon-sm"
+        title={`Remover filtro ${label}`}
         type="button"
+        variant="ghost"
       >
-        <X aria-hidden="true" className="size-3" />
-      </button>
-    </Badge>
+        <X aria-hidden="true" className="size-3.5" />
+      </Button>
+    </span>
   );
 }
 
@@ -1199,6 +1303,7 @@ function MultiFilterSelect({
   selected: string[];
   onChange: (values: string[]) => void;
 }) {
+  const id = useId();
   const [query, setQuery] = useState("");
   const selectedSet = new Set(selected);
   const selectedOptions = options.filter((option) => selectedSet.has(option.value));
@@ -1256,11 +1361,13 @@ function MultiFilterSelect({
                   .map((option) => {
                     const checked = selectedSet.has(option.value);
                     return (
-                      <div
-                        className="flex items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
+                      <label
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
+                        htmlFor={`${id}-${option.value}`}
                         key={option.value}
                       >
                         <Checkbox
+                          id={`${id}-${option.value}`}
                           aria-label={option.label}
                           checked={checked}
                           onCheckedChange={(next) =>
@@ -1272,7 +1379,7 @@ function MultiFilterSelect({
                           }
                         />
                         <FilterOptionContent option={option} />
-                      </div>
+                      </label>
                     );
                   })}
               </div>
@@ -1364,16 +1471,6 @@ function numberValue(value: string) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : undefined;
 }
-
-const paymentMethodIcons: Record<keyof typeof paymentMethodLabels, LucideIcon> = {
-  credit_card: CreditCard,
-  debit_card: CreditCard,
-  pix: QrCode,
-  cash: Banknote,
-  boleto: Barcode,
-  benefits: Ticket,
-  bank_transfer: Landmark,
-};
 
 const createTransactionLabels: Record<TransactionCreateType, string> = {
   income: "Nova receita",

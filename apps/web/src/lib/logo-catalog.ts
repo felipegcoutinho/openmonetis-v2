@@ -88,6 +88,7 @@ const logoLabels: Record<string, string> = {
   "/logos/nubank-ultravioleta.png": "Nubank Ultravioleta",
   "/logos/nubank.pj.png": "Nubank PJ",
   "/logos/nubank.png": "Nubank",
+  "/logos/nubank_chroma.png": "Nubank Chroma",
   "/logos/nuconta.png": "NuConta",
   "/logos/original.png": "Original",
   "/logos/pag.png": "Pag!",

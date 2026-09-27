@@ -8,6 +8,7 @@ import {
   ImportExternalExpenseInputSchema,
   ImportExternalExpenseOutputSchema,
   ListExternalExpensesQuerySchema,
+  ReviewExternalExpenseInputSchema,
 } from "@openmonetis/validators/external-expenses";
 import type { ExternalExpensesService } from "../services/external-expenses.service";
 import type { ApiVariables } from "../types/context";
@@ -128,6 +129,36 @@ export function createExternalExpensesRoute(service: ExternalExpensesService) {
         200,
       ),
   );
+
+  for (const action of ["ignore", "restore"] as const) {
+    route.openapi(
+      createRoute({
+        method: "post",
+        path: `/{id}/${action}`,
+        tags: ["External expenses"],
+        request: {
+          params: ExternalExpenseParamsSchema,
+          body: {
+            required: true,
+            content: { "application/json": { schema: ReviewExternalExpenseInputSchema } },
+          },
+        },
+        responses: expenseResponse,
+      }),
+      async (context) =>
+        context.json(
+          ok(
+            await service.review(
+              context.req.valid("param").id,
+              context.get("userId"),
+              context.req.valid("json").expectedVersion,
+              action,
+            ),
+          ),
+          200,
+        ),
+    );
+  }
 
   return route;
 }

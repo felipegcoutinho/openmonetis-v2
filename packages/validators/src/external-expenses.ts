@@ -13,11 +13,13 @@ export const ExternalExpenseParamsSchema = z.object({
 
 export const ListExternalExpensesQuerySchema = z
   .object({
-    view: z.enum(["pending", "imported"]).default("pending"),
+    view: z.enum(externalExpenseStatuses).default("pending"),
     period: z
       .string()
       .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
       .optional(),
+    q: z.string().trim().max(160).optional(),
+    sort: z.enum(["recent", "oldest", "amountDesc", "amountAsc", "name"]).optional(),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(50).default(20),
   })
@@ -61,6 +63,7 @@ export const ExternalExpenseOutputSchema = z
     counterpartAvatarUrl: z.url().nullable(),
     status: z.enum(externalExpenseStatuses),
     sourceVersion: z.number().int().positive(),
+    isDivided: z.boolean(),
     snapshot: ExternalExpenseSnapshotSchema,
     establishmentLogoUrl: z.url().nullable(),
     sourceLogoUrl: z.string().max(255).nullable(),
@@ -109,3 +112,10 @@ export type ImportExternalExpenseOutput = z.infer<typeof ImportExternalExpenseOu
 export type ExternalExpenseOutput = z.infer<typeof ExternalExpenseOutputSchema>;
 export type ExternalExpensePageOutput = z.infer<typeof ExternalExpensePageOutputSchema>;
 export type ExternalExpenseSummaryOutput = z.infer<typeof ExternalExpenseSummaryOutputSchema>;
+
+export const ReviewExternalExpenseInputSchema = z
+  .object({
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict()
+  .openapi("ReviewExternalExpenseInput");

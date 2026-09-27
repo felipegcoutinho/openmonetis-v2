@@ -139,7 +139,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
                   </h2>
                   <p className="text-muted-foreground text-sm">
                     {data.total === 1 ? "1 anexo encontrado" : `${data.total} anexos encontrados`}
-                    {query.isFetching ? (
+                    {query.isPlaceholderData ? (
                       <span className="ml-2 inline-flex items-center gap-1" role="status">
                         <Loader2 aria-hidden="true" className="size-3 animate-spin" />
                         Atualizando
@@ -165,7 +165,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
                 <div
                   className={cn(
                     "grid gap-4 transition-opacity sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-                    query.isFetching && "opacity-60",
+                    query.isPlaceholderData && "opacity-60",
                   )}
                 >
                   {data.items.map((attachment) => (

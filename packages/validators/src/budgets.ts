@@ -73,6 +73,12 @@ export const BudgetOverviewOutputSchema = z
     availableAmount: z.number().nonnegative(),
     exceededAmount: z.number().nonnegative(),
     unbudgetedCommittedAmount: z.number().nonnegative(),
+    unbudgetedItems: z.array(
+      z.object({
+        categoryId: z.uuid().nullable(),
+        committedAmount: z.number().nonnegative(),
+      }),
+    ),
     warningCount: z.number().int().nonnegative(),
     items: z.array(BudgetOutputSchema),
   })

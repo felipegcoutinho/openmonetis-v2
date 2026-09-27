@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApiClientError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
   useAnticipateInstallmentsMutation,
@@ -97,10 +98,17 @@ export function InstallmentAnticipationDialog({
           },
         });
         onOpenChange(false);
-      } catch {
-        toast.error("Não foi possível antecipar as parcelas", {
-          description: "A seleção ou a fatura pode ter sido alterada. Atualize e tente novamente.",
-        });
+      } catch (error) {
+        const paidInvoice =
+          error instanceof ApiClientError && error.code === "installment_target_invoice_paid";
+        toast.error(
+          paidInvoice ? "Esta fatura já está paga" : "Não foi possível antecipar as parcelas",
+          {
+            description: paidInvoice
+              ? "Escolha um mês com fatura em aberto para receber as parcelas antecipadas."
+              : "A seleção ou a fatura pode ter sido alterada. Atualize e tente novamente.",
+          },
+        );
       }
     },
   });
