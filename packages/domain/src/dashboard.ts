@@ -17,6 +17,7 @@ export const dashboardWidgetIds = [
   "inbox",
   "person-settlements",
   "budgets",
+  "goals",
   "income-expense-balance",
   "expense-categories",
   "category-trends",
@@ -77,6 +78,14 @@ export function normalizeDashboardWidgetPreferences(
     "bills",
     ...dashboardWidgetIds.slice(4),
   ];
+  const previousWidgetIds = dashboardWidgetIds.filter((id) => id !== "goals");
+  const previousRecentDefaultOrder = [
+    "accounts",
+    "payment-status",
+    "invoices",
+    "bills",
+    ...previousWidgetIds.slice(4),
+  ];
   const migratedPreferenceOrder = preferences.order.map(
     (widgetId) => legacyDashboardWidgetIds[widgetId] ?? widgetId,
   );
@@ -84,16 +93,20 @@ export function normalizeDashboardWidgetPreferences(
     preferences.order.length === previousDefaultDashboardWidgetOrder.length &&
     preferences.order.every((id, index) => id === previousDefaultDashboardWidgetOrder[index]);
   const wasRecentDefaultOrder =
-    migratedPreferenceOrder.length === recentDefaultOrder.length &&
-    migratedPreferenceOrder.every((id, index) => id === recentDefaultOrder[index]);
+    matchesWidgetOrder(migratedPreferenceOrder, recentDefaultOrder) ||
+    matchesWidgetOrder(migratedPreferenceOrder, previousRecentDefaultOrder);
   const wasCanonicalDefaultOrder =
-    preferences.order.length === dashboardWidgetIds.length &&
-    preferences.order.every((id, index) => id === dashboardWidgetIds[index]);
+    matchesWidgetOrder(preferences.order, dashboardWidgetIds) ||
+    matchesWidgetOrder(preferences.order, previousWidgetIds);
   const uxFirst = ["payment-status", "inbox", "bills", "invoices"];
   const uxDefaultOrder = [...uxFirst, ...dashboardWidgetIds.filter((id) => !uxFirst.includes(id))];
+  const previousUxDefaultOrder = [
+    ...uxFirst,
+    ...previousWidgetIds.filter((id) => !uxFirst.includes(id)),
+  ];
   const wasUxDefaultOrder =
-    preferences.order.length === uxDefaultOrder.length &&
-    preferences.order.every((id, index) => id === uxDefaultOrder[index]);
+    matchesWidgetOrder(preferences.order, uxDefaultOrder) ||
+    matchesWidgetOrder(preferences.order, previousUxDefaultOrder);
   const wasDefaultOrder =
     wasPreviousDefaultOrder ||
     wasRecentDefaultOrder ||
@@ -102,6 +115,10 @@ export function normalizeDashboardWidgetPreferences(
   const order = wasDefaultOrder
     ? createDefaultDashboardWidgetPreferences().order
     : uniqueDashboardWidgetIds(preferences.order);
+  if (!order.includes("goals")) {
+    const budgetsIndex = order.indexOf("budgets");
+    order.splice(budgetsIndex < 0 ? order.length : budgetsIndex + 1, 0, "goals");
+  }
   for (const widgetId of dashboardWidgetIds) {
     if (!order.includes(widgetId)) order.push(widgetId);
   }
@@ -110,6 +127,10 @@ export function normalizeDashboardWidgetPreferences(
     order,
     hidden: uniqueDashboardWidgetIds(preferences.hidden),
   };
+}
+
+function matchesWidgetOrder(order: readonly string[], expected: readonly string[]) {
+  return order.length === expected.length && order.every((id, index) => id === expected[index]);
 }
 
 function uniqueDashboardWidgetIds(widgetIds: string[]): DashboardWidgetId[] {

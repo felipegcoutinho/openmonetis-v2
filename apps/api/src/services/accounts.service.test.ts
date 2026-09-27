@@ -218,3 +218,14 @@ test("balance adjustment rejects a future date", async () => {
     (error: ApiError) => error.code === "balance_adjustment_date_future" && error.status === 400,
   );
 });
+
+test("account deletion explains when a goal still links to the account", async () => {
+  const service = createAccountsService(
+    createRepository({ deleteInactiveForUser: async () => ({ status: "linked_goal" }) }),
+  );
+
+  await assert.rejects(
+    service.remove(accountId, userId),
+    (error: ApiError) => error.code === "account_has_linked_goal" && error.status === 409,
+  );
+});

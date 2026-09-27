@@ -57,6 +57,13 @@
       "when": 1790520768353,
       "tag": "0007_narrow_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790524348727,
+      "tag": "0008_freezing_sasquatch",
+      "breakpoints": true
     }
   ]
 }

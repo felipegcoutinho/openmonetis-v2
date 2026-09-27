@@ -18,6 +18,7 @@
     "./attachments": "./src/attachments.ts",
     "./bills": "./src/bills.ts",
     "./budgets": "./src/budgets.ts",
+    "./goals": "./src/goals.ts",
     "./notes": "./src/notes.ts",
     "./person-settlements": "./src/person-settlements.ts",
     "./notifications": "./src/notifications.ts",

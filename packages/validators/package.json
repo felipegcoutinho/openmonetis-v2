@@ -20,6 +20,7 @@
     "./attachments": "./src/attachments.ts",
     "./bills": "./src/bills.ts",
     "./budgets": "./src/budgets.ts",
+    "./goals": "./src/goals.ts",
     "./notes": "./src/notes.ts",
     "./notifications": "./src/notifications.ts",
     "./recurring-expenses": "./src/recurring-expenses.ts",

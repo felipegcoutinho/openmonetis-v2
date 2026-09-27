@@ -1730,6 +1730,46 @@ export const budgets = pgTable(
   ],
 );
 
+export const goalTrackingType = pgEnum("goal_tracking_type", ["manual", "account"]);
+export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
+
+export const goals = pgTable(
+  "goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    targetAmount: numeric("target_amount", { precision: 12, scale: 2 }).notNull(),
+    currentAmount: numeric("current_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+    targetDate: date("target_date", { mode: "string" }),
+    trackingType: goalTrackingType("tracking_type").notNull().default("manual"),
+    accountId: uuid("account_id"),
+    status: goalStatus("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("goals_user_id_status_idx").on(table.userId, table.status),
+    foreignKey({
+      name: "goals_account_user_fk",
+      columns: [table.accountId, table.userId],
+      foreignColumns: [financialAccounts.id, financialAccounts.userId],
+    }).onDelete("restrict"),
+    check("goals_name_not_blank_check", sql`btrim(${table.name}) <> ''`),
+    check("goals_target_positive_check", sql`${table.targetAmount} > 0`),
+    check("goals_current_nonnegative_check", sql`${table.currentAmount} >= 0`),
+    check(
+      "goals_tracking_account_check",
+      sql`(${table.trackingType} = 'manual' AND ${table.accountId} IS NULL) OR (${table.trackingType} = 'account' AND ${table.accountId} IS NOT NULL)`,
+    ),
+  ],
+);
+
 export const notes = pgTable(
   "notes",
   {
@@ -2125,6 +2165,14 @@ export const budgetsRelations = relations(budgets, ({ one }) => ({
   category: one(categories, {
     fields: [budgets.categoryId],
     references: [categories.id],
+  }),
+}));
+
+export const goalsRelations = relations(goals, ({ one }) => ({
+  user: one(user, { fields: [goals.userId], references: [user.id] }),
+  account: one(financialAccounts, {
+    fields: [goals.accountId],
+    references: [financialAccounts.id],
   }),
 }));
 

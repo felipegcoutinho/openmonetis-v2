@@ -7,6 +7,7 @@ import {
   CreditCard,
   FileClock,
   FolderKanban,
+  Goal,
   HandCoins,
   Landmark,
   type LucideIcon,
@@ -23,6 +24,7 @@ import type { ReactNode } from "react";
 import { BillsWidget } from "@/features/bills/components/bills-widget";
 import { BudgetsWidget } from "@/features/budgets/components/budgets-widget";
 import { CategoryTrendsWidget } from "@/features/category-trends/components/category-trends-widget";
+import { GoalsWidget } from "@/features/goals/components/goals-widget";
 import { InboxWidget } from "@/features/inbox/components/inbox-widget";
 import { InstallmentExpensesWidget } from "@/features/installments/components/installment-expenses-widget";
 import { InvoicesWidget } from "@/features/invoices/components/invoices-widget";
@@ -102,6 +104,13 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
     description: "Progresso por categoria no período",
     icon: FolderKanban,
     render: (period) => <BudgetsWidget period={period} />,
+  },
+  {
+    id: "goals",
+    title: "Metas",
+    description: "Progresso dos objetivos ativos",
+    icon: Goal,
+    render: () => <GoalsWidget />,
   },
   {
     id: "category-trends",

@@ -17,6 +17,7 @@ import { Route as CardsRouteImport } from './routes/cards'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as PeopleRouteImport } from './routes/people'
@@ -74,6 +75,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InboxRoute = InboxRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
   '/people': typeof PeopleRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
   '/people': typeof PeopleRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
   '/people': typeof PeopleRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/goals'
     | '/inbox'
     | '/notes'
     | '/people'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/goals'
     | '/inbox'
     | '/notes'
     | '/people'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/goals'
     | '/inbox'
     | '/notes'
     | '/people'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   ChangelogRoute: typeof ChangelogRoute
   DashboardRoute: typeof DashboardRoute
+  GoalsRoute: typeof GoalsRoute
   InboxRoute: typeof InboxRoute
   NotesRoute: typeof NotesRoute
   PeopleRoute: typeof PeopleRoute
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inbox': {
@@ -565,6 +585,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   ChangelogRoute: ChangelogRoute,
   DashboardRoute: DashboardRoute,
+  GoalsRoute: GoalsRoute,
   InboxRoute: InboxRoute,
   NotesRoute: NotesRoute,
   PeopleRoute: PeopleRoute,

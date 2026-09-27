@@ -86,6 +86,7 @@ type AccountYieldRecord = {
 
 type DeleteAccountResult =
   | { status: "active" }
+  | { status: "linked_goal" }
   | { status: "deleted"; id: string }
   | { status: "not_found" };
 
@@ -430,6 +431,9 @@ export function createAccountsService(
           "Only inactive accounts can be permanently deleted",
           "account_must_be_inactive",
         );
+      }
+      if (result.status === "linked_goal") {
+        throw conflict("Account is linked to a goal", "account_has_linked_goal");
       }
 
       return { id: result.id };

@@ -3,6 +3,7 @@ import {
   categories,
   db,
   financialAccounts,
+  goals,
   installmentSeries,
   invoicePayments,
   invoices,
@@ -123,6 +124,13 @@ export const accountsRepository = {
 
       if (!account) return { status: "not_found" as const };
       if (!account.isArchived) return { status: "active" as const };
+
+      const [linkedGoal] = await transaction
+        .select({ id: goals.id })
+        .from(goals)
+        .where(and(eq(goals.accountId, id), eq(goals.userId, userId)))
+        .limit(1);
+      if (linkedGoal) return { status: "linked_goal" as const };
 
       const accountCards = await transaction
         .select({ id: cards.id })

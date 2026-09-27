@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountsApiError } from "../accounts.api";
 import {
   useArchiveAccountMutation,
   useCreateAccountMutation,
@@ -76,10 +77,14 @@ export function AccountsPage() {
       toast.success("Conta excluída permanentemente", {
         description: `${account.name} e seus dados financeiros vinculados foram removidos.`,
       });
-    } catch {
+    } catch (error) {
       toast.error("Não foi possível excluir a conta.", {
-        description: "Confirme que ela continua inativa e tente novamente.",
+        description:
+          error instanceof AccountsApiError && error.code === "account_has_linked_goal"
+            ? "Exclua primeiro as metas vinculadas a esta conta."
+            : "Confirme que ela continua inativa e tente novamente.",
       });
+      throw error;
     }
   }
 

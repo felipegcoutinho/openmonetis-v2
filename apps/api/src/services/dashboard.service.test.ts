@@ -430,10 +430,14 @@ test("dashboard upgrades only the old default order without hiding widgets", () 
   assert.equal(result.order.includes("person-settlements"), true);
   assert.deepEqual(result.hidden, []);
   const custom = [...previous].reverse();
+  const expectedCustom = custom.map((id) =>
+    id === "external-expenses" ? "person-settlements" : id,
+  );
+  expectedCustom.splice(expectedCustom.indexOf("budgets") + 1, 0, "goals");
   assert.deepEqual(
     normalizeDashboardWidgetPreferences({ order: custom, hidden: ["external-expenses"] }),
     {
-      order: custom.map((id) => (id === "external-expenses" ? "person-settlements" : id)),
+      order: expectedCustom,
       hidden: ["person-settlements"],
     },
   );
@@ -536,9 +540,28 @@ test("dashboard restores the initial accounts, invoices and bills order without 
     order: [...dashboardWidgetIds],
     hidden: ["notes"],
   });
+  const previousUxOrder = uxOrder.filter((id) => id !== "goals");
+  assert.deepEqual(
+    normalizeDashboardWidgetPreferences({ order: previousUxOrder, hidden: [] }).order,
+    [...dashboardWidgetIds],
+  );
   const custom = ["notes", ...dashboardWidgetIds.filter((id) => id !== "notes")];
   assert.deepEqual(
     normalizeDashboardWidgetPreferences({ order: custom, hidden: [] }).order,
     custom,
+  );
+});
+
+test("dashboard places the new goals widget after budgets in existing custom layouts", () => {
+  const previousWidgets = dashboardWidgetIds.filter((id) => id !== "goals");
+  const custom = ["notes", ...previousWidgets.filter((id) => id !== "notes")];
+  const normalized = normalizeDashboardWidgetPreferences({ order: custom, hidden: ["budgets"] });
+  const budgetsIndex = normalized.order.indexOf("budgets");
+
+  assert.equal(normalized.order[budgetsIndex + 1], "goals");
+  assert.deepEqual(normalized.hidden, ["budgets"]);
+  assert.equal(
+    createDefaultDashboardWidgetPreferences().order.indexOf("goals"),
+    dashboardWidgetIds.indexOf("budgets") + 1,
   );
 });

@@ -196,7 +196,10 @@ export function AccountCard({
             <AlertDialogAction
               disabled={pending}
               onClick={() => {
-                if (onDelete) void onDelete(account).then(() => setDeleteOpen(false));
+                if (onDelete)
+                  void onDelete(account)
+                    .then(() => setDeleteOpen(false))
+                    .catch(() => {});
               }}
               variant="destructive"
             >
