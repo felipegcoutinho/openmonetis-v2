@@ -7,6 +7,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-27
+
+Adiciona metas de economia com acompanhamento por conta, histórico de faturas e filtros por regra na Caixa de entrada.
+
+### Adicionado
+
+- Filtro por regras ativas na Caixa de entrada, aplicado antes da paginação das capturas.
+- Metas de economia com acompanhamento manual ou pelo saldo persistido de uma conta, data alvo, progresso e estados de pausa, conclusão e arquivamento.
+- Metas aparecem na visão geral após Orçamentos; seleção de acompanhamento e conta exibe rótulos claros e logos, com ações organizadas em menu.
+- Faturas dos cartões exibem o fluxo diário de gastos do ciclo; parcelas e ajustes de outras datas compõem o valor inicial, preservando o total da fatura sem atribuir uma data fictícia à compra.
+- A página da fatura permite alternar entre o fluxo diário e o histórico das últimas 12 faturas, com navegação pelo mês selecionado.
+
+### Alterado
+
+- Cards de metas reservam espaço para o ritmo e usam o mesmo estilo de ações dos rodapés de contas e cartões.
+- Condições de pagamento na visão geral reutilizam os ícones da tabela de lançamentos.
+- Data da saudação da Visão Geral mantém o espaçamento tipográfico padrão em telas maiores.
+- Cabeçalhos dos extratos de contas e faturas de cartões oferecem edição discreta ao lado do nome.
+
 ## [0.7.0] - 2026-09-27
 
 Permite ignorar e restaurar despesas compartilhadas, detalha despesas sem orçamento e simplifica
@@ -342,7 +361,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.4.0...v0.5.0
