@@ -144,8 +144,14 @@ export function updateTransaction(
     body: JSON.stringify(data),
   });
 }
-export function updateRecurringRule(id: string, data: TransactionInput) {
-  return request<TransactionOutput>(`/transactions/recurring-rules/${id}`, {
+export function updateRecurringRule(
+  id: string,
+  data: TransactionInput,
+  scope: TransactionActionScope,
+  occurrenceDate: string,
+) {
+  const params = new URLSearchParams({ scope, occurrenceDate });
+  return request<TransactionOutput>(`/transactions/recurring-rules/${id}?${params}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });

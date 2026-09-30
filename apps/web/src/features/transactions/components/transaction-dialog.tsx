@@ -129,7 +129,7 @@ export function TransactionDialog({
             <DialogTitle>
               {mode === "edit"
                 ? transaction?.recurringRuleId
-                  ? "Editar recorrência inteira"
+                  ? "Editar recorrência"
                   : transaction?.isDivided
                     ? "Editar lançamento inteiro"
                     : "Editar lançamento"
@@ -140,7 +140,7 @@ export function TransactionDialog({
             <DialogDescription>
               {mode === "edit"
                 ? transaction?.recurringRuleId
-                  ? "As alterações atualizam a recorrência inteira. Ocorrências calculadas em meses anteriores também podem mudar; lançamentos registrados separadamente permanecem no histórico."
+                  ? "Revise os dados e escolha se a alteração vale para esta ocorrência, desta em diante ou para todas."
                   : transaction?.isDivided
                     ? "A edição afeta o lançamento inteiro e suas participações."
                     : "Atualize as informações do lançamento selecionado."

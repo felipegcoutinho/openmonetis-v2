@@ -908,6 +908,25 @@ export function listRecurrenceDatesInPeriod(input: {
   return dates;
 }
 
+export function selectRecurringRuleVersionsToUpdate<
+  T extends { id: string; startDate: string | Date },
+>(
+  versions: readonly T[],
+  selectedRuleId: string,
+  occurrenceDate: string,
+  scope: "single" | "future" | "series",
+): T[] {
+  if (scope === "series") return [...versions];
+  if (scope === "single") return [];
+  return versions.filter(
+    (version) =>
+      version.id !== selectedRuleId &&
+      (typeof version.startDate === "string"
+        ? version.startDate
+        : version.startDate.toISOString().slice(0, 10)) >= occurrenceDate,
+  );
+}
+
 function parseDate(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }

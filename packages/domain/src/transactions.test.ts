@@ -4,6 +4,7 @@ import {
   getPeriodEndDate,
   isTransactionSelectionItemSelectable,
   listRecurrenceDatesInPeriod,
+  selectRecurringRuleVersionsToUpdate,
   summarizeTransactionSelection,
   type TransactionSelectionItem,
 } from "./transactions";
@@ -36,6 +37,32 @@ test("versioned recurrence preserves the original calendar anchor", () => {
       period: "2026-03",
     }),
     ["2026-03-31"],
+  );
+});
+
+test("recurring edit scope selects past, current and future rule versions correctly", () => {
+  const versions = [
+    { id: "past", startDate: "2026-01-31" },
+    { id: "current", startDate: "2026-02-28" },
+    { id: "exception", startDate: "2026-03-31" },
+    { id: "later", startDate: "2026-04-30" },
+  ];
+  const selected = (scope: "single" | "future" | "series") =>
+    selectRecurringRuleVersionsToUpdate(versions, "current", "2026-02-28", scope).map(
+      (rule) => rule.id,
+    );
+
+  assert.deepEqual(selected("single"), []);
+  assert.deepEqual(selected("future"), ["exception", "later"]);
+  assert.deepEqual(selected("series"), ["past", "current", "exception", "later"]);
+  assert.deepEqual(
+    selectRecurringRuleVersionsToUpdate(
+      versions.map((rule) => ({ ...rule, startDate: new Date(`${rule.startDate}T00:00:00Z`) })),
+      "current",
+      "2026-02-28",
+      "future",
+    ).map((rule) => rule.id),
+    ["exception", "later"],
   );
 });
 

@@ -72,6 +72,7 @@ import { transactionKeys } from "../transactions.queries";
 import { EstablishmentInput } from "./establishment-input";
 import { InstallmentActionDialog } from "./installment-action-dialog";
 import { InvoicePeriodPicker } from "./invoice-period-picker";
+import { RecurringEditScopeDialog } from "./recurring-edit-scope-dialog";
 import {
   getChangedTransactionInput,
   getDefaultTransactionFormValues,
@@ -157,6 +158,9 @@ export function TransactionForm({
     data: TransactionInput;
     value: TransactionFormValues;
   } | null>(null);
+  const [pendingRecurringUpdate, setPendingRecurringUpdate] = useState<TransactionInput | null>(
+    null,
+  );
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(mode !== "edit" && Boolean(transaction));
   const activeAccounts = useMemo(
     () => accounts.filter((account) => !account.isArchived),
@@ -205,9 +209,7 @@ export function TransactionForm({
         });
 
         if (mode === "edit" && transaction?.isRecurring && transaction.recurringRuleId) {
-          await updateRecurringRule.mutateAsync({ id: transaction.recurringRuleId, data });
-          toast.success("Recorrência atualizada");
-          onSaved();
+          setPendingRecurringUpdate(data);
           return;
         }
         if (mode === "edit" && transaction?.recordId) {
@@ -1048,7 +1050,7 @@ export function TransactionForm({
                       </div>
                     ) : null}
 
-                    {!isCreditCard ? (
+                    {!isCreditCard && !(mode === "edit" && transaction?.isRecurring) ? (
                       <form.Field name="isSettled">
                         {(field) => {
                           const isSettled = field.state.value === "true";
@@ -1280,7 +1282,7 @@ export function TransactionForm({
                     )}
                     {mode === "edit"
                       ? transaction?.isRecurring
-                        ? "Atualizar recorrência inteira"
+                        ? "Revisar alcance"
                         : "Atualizar"
                       : (submitLabel ??
                         `Salvar ${transactionTypeLabels[values.type].toLocaleLowerCase("pt-BR")}`)}
@@ -1313,6 +1315,37 @@ export function TransactionForm({
           open={Boolean(pendingInstallmentUpdate)}
           pending={updateTransaction.isPending}
           transaction={transaction}
+        />
+        <RecurringEditScopeDialog
+          key={`recurring-edit-${transaction?.id ?? "closed"}`}
+          onConfirm={async (scope) => {
+            if (!pendingRecurringUpdate || !transaction?.recurringRuleId) return;
+            try {
+              await updateRecurringRule.mutateAsync({
+                id: transaction.recurringRuleId,
+                data: pendingRecurringUpdate,
+                scope,
+                occurrenceDate: transaction.purchaseDate,
+              });
+              setPendingRecurringUpdate(null);
+              toast.success("Recorrência atualizada");
+              onSaved();
+            } catch (error) {
+              toast.error("Não foi possível salvar a recorrência", {
+                description: getTransactionMutationErrorMessage(error),
+              });
+            }
+          }}
+          onOpenChange={(open) => {
+            if (!open) setPendingRecurringUpdate(null);
+          }}
+          open={Boolean(pendingRecurringUpdate)}
+          pending={updateRecurringRule.isPending}
+          scheduleChanged={Boolean(
+            pendingRecurringUpdate &&
+              (pendingRecurringUpdate.purchaseDate !== transaction?.purchaseDate ||
+                pendingRecurringUpdate.recurrenceFrequency !== transaction?.recurrenceFrequency),
+          )}
         />
       </form>
       <form.Subscribe selector={(state) => state.values.type}>

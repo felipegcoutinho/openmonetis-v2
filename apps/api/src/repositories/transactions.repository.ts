@@ -27,7 +27,10 @@ import {
 } from "@openmonetis/db";
 import { createEstablishmentNameKey } from "@openmonetis/domain/establishments";
 import { selectNewExternalExpenseAssignmentKeys } from "@openmonetis/domain/external-expenses";
-import { assertTransferWithinAvailableBalance } from "@openmonetis/domain/transactions";
+import {
+  assertTransferWithinAvailableBalance,
+  selectRecurringRuleVersionsToUpdate,
+} from "@openmonetis/domain/transactions";
 import {
   and,
   asc,
@@ -1347,6 +1350,23 @@ export async function findRecurringRuleByIdForUser(id: string, userId: string) {
   return rule ?? null;
 }
 
+export async function listRecurringRulesBySeriesForUser(seriesId: string, userId: string) {
+  return db
+    .select({
+      id: recurringTransactionRules.id,
+      startDate: recurringTransactionRules.startDate,
+      updatedAt: recurringTransactionRules.updatedAt,
+    })
+    .from(recurringTransactionRules)
+    .where(
+      and(
+        eq(recurringTransactionRules.seriesId, seriesId),
+        eq(recurringTransactionRules.userId, userId),
+      ),
+    )
+    .orderBy(asc(recurringTransactionRules.startDate));
+}
+
 export async function updateTransactionWithSplitsForUser(
   id: string,
   userId: string,
@@ -1706,12 +1726,35 @@ export async function updateRecurringRuleStatusForUser(
   userId: string,
   status: "active" | "paused" | "cancelled",
 ) {
-  const [rule] = await db
-    .update(recurringTransactionRules)
-    .set({ status, updatedAt: new Date() })
-    .where(and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)))
-    .returning({ id: recurringTransactionRules.id });
-  return rule ?? null;
+  return db.transaction(async (transaction) => {
+    const [rule] = await transaction
+      .select({ seriesId: recurringTransactionRules.seriesId })
+      .from(recurringTransactionRules)
+      .where(
+        and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
+      );
+    if (!rule) return null;
+    await transaction
+      .select({ id: recurringTransactionSeries.id })
+      .from(recurringTransactionSeries)
+      .where(
+        and(
+          eq(recurringTransactionSeries.id, rule.seriesId),
+          eq(recurringTransactionSeries.userId, userId),
+        ),
+      )
+      .for("update");
+    await transaction
+      .update(recurringTransactionRules)
+      .set({ status, updatedAt: new Date() })
+      .where(
+        and(
+          eq(recurringTransactionRules.seriesId, rule.seriesId),
+          eq(recurringTransactionRules.userId, userId),
+        ),
+      );
+    return { id };
+  });
 }
 
 export async function updateRecurringRuleWithSplitsForUser(
@@ -1719,31 +1762,228 @@ export async function updateRecurringRuleWithSplitsForUser(
   userId: string,
   data: RecurringRuleUpdateRecord,
   splits: Array<{ personId: string; amount: string }>,
+  options: {
+    scope: "single" | "future" | "series";
+    occurrenceDate: Date;
+    previousDate: Date;
+    nextDate: Date | null;
+    hasPrevious: boolean;
+    expectedVersions: Array<{ id: string; updatedAt: Date }>;
+  },
 ) {
   const updatedId = await db.transaction(async (transaction) => {
-    const [rule] = await transaction
-      .update(recurringTransactionRules)
-      .set({ ...data, updatedAt: new Date() })
+    const [initial] = await transaction
+      .select({ seriesId: recurringTransactionRules.seriesId })
+      .from(recurringTransactionRules)
+      .where(
+        and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
+      );
+    if (!initial) return null;
+    await transaction
+      .select({ id: recurringTransactionSeries.id })
+      .from(recurringTransactionSeries)
+      .where(
+        and(
+          eq(recurringTransactionSeries.id, initial.seriesId),
+          eq(recurringTransactionSeries.userId, userId),
+        ),
+      )
+      .for("update");
+    const [current] = await transaction
+      .select()
+      .from(recurringTransactionRules)
       .where(
         and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
       )
-      .returning({ id: recurringTransactionRules.id });
-    if (!rule) return null;
-    await transaction
-      .delete(recurringTransactionSplits)
+      .for("update");
+    if (!current) return null;
+
+    const series = await transaction
+      .select({
+        id: recurringTransactionRules.id,
+        startDate: recurringTransactionRules.startDate,
+        paymentMethod: recurringTransactionRules.paymentMethod,
+        isSettled: recurringTransactionRules.isSettled,
+        updatedAt: recurringTransactionRules.updatedAt,
+      })
+      .from(recurringTransactionRules)
+      .where(
+        and(
+          eq(recurringTransactionRules.seriesId, current.seriesId),
+          eq(recurringTransactionRules.userId, userId),
+        ),
+      )
+      .for("update");
+    const expectedVersions = new Map(
+      options.expectedVersions.map((version) => [version.id, version.updatedAt.getTime()]),
+    );
+    if (
+      series.length !== expectedVersions.size ||
+      series.some((rule) => expectedVersions.get(rule.id) !== rule.updatedAt.getTime())
+    ) {
+      return { conflict: true } as const;
+    }
+    const selectedVersion = series.find((rule) => rule.id === id);
+    if (!selectedVersion) return null;
+    const versionsToUpdate = selectRecurringRuleVersionsToUpdate(
+      series,
+      id,
+      options.occurrenceDate.toISOString().slice(0, 10),
+      options.scope,
+    );
+    const originalSplits = await transaction
+      .select({
+        personId: recurringTransactionSplits.personId,
+        amount: recurringTransactionSplits.amount,
+      })
+      .from(recurringTransactionSplits)
       .where(
         and(
           eq(recurringTransactionSplits.recurringRuleId, id),
           eq(recurringTransactionSplits.userId, userId),
         ),
       );
-    if (splits.length) {
+    const replaceSplits = async (
+      ruleId: string,
+      shares: Array<{ personId: string; amount: string }>,
+    ) => {
       await transaction
-        .insert(recurringTransactionSplits)
-        .values(splits.map((split) => ({ ...split, recurringRuleId: id, userId })));
+        .delete(recurringTransactionSplits)
+        .where(
+          and(
+            eq(recurringTransactionSplits.recurringRuleId, ruleId),
+            eq(recurringTransactionSplits.userId, userId),
+          ),
+        );
+      if (shares.length) {
+        await transaction
+          .insert(recurringTransactionSplits)
+          .values(shares.map((share) => ({ ...share, recurringRuleId: ruleId, userId })));
+      }
+    };
+    const insertVersion = async (
+      values: RecurringRuleUpdateRecord,
+      shares: Array<{ personId: string; amount: string }>,
+    ) => {
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...original } = current;
+      const [version] = await transaction
+        .insert(recurringTransactionRules)
+        .values({ ...original, ...values, userId, seriesId: current.seriesId })
+        .returning({ id: recurringTransactionRules.id });
+      if (shares.length) {
+        await transaction
+          .insert(recurringTransactionSplits)
+          .values(shares.map((share) => ({ ...share, recurringRuleId: version.id, userId })));
+      }
+      return version.id;
+    };
+    const updateExistingVersion = async (rule: (typeof series)[number]) => {
+      await transaction
+        .update(recurringTransactionRules)
+        .set({
+          ...data,
+          isSettled:
+            data.paymentMethod === "credit_card"
+              ? null
+              : rule.paymentMethod === "credit_card"
+                ? false
+                : rule.isSettled,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(recurringTransactionRules.id, rule.id),
+            eq(recurringTransactionRules.userId, userId),
+          ),
+        );
+      await replaceSplits(rule.id, splits);
+    };
+
+    if (options.scope === "series") {
+      for (const rule of versionsToUpdate) {
+        await updateExistingVersion(rule);
+      }
+      return id;
     }
-    return rule.id;
+
+    if (options.scope === "future") {
+      if (!options.hasPrevious) {
+        await updateExistingVersion(selectedVersion);
+        for (const rule of versionsToUpdate) {
+          await updateExistingVersion(rule);
+        }
+        return id;
+      }
+      await transaction
+        .update(recurringTransactionRules)
+        .set({ endDate: options.previousDate, updatedAt: new Date() })
+        .where(
+          and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
+        );
+      const versionId = await insertVersion({ ...data, startDate: options.occurrenceDate }, splits);
+      await transaction
+        .update(recurringTransactionOccurrences)
+        .set({ recurringRuleId: versionId, updatedAt: new Date() })
+        .where(
+          and(
+            eq(recurringTransactionOccurrences.userId, userId),
+            eq(recurringTransactionOccurrences.recurringRuleId, id),
+            gte(recurringTransactionOccurrences.purchaseDate, options.occurrenceDate),
+          ),
+        );
+      for (const rule of versionsToUpdate) {
+        await updateExistingVersion(rule);
+      }
+      return versionId;
+    }
+
+    let selectedRuleId = id;
+    if (options.hasPrevious) {
+      await transaction
+        .update(recurringTransactionRules)
+        .set({ endDate: options.previousDate, updatedAt: new Date() })
+        .where(
+          and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
+        );
+      selectedRuleId = await insertVersion(
+        { ...data, startDate: options.occurrenceDate, endDate: options.occurrenceDate },
+        splits,
+      );
+    } else {
+      await transaction
+        .update(recurringTransactionRules)
+        .set({ ...data, endDate: options.occurrenceDate, updatedAt: new Date() })
+        .where(
+          and(eq(recurringTransactionRules.id, id), eq(recurringTransactionRules.userId, userId)),
+        );
+      await replaceSplits(id, splits);
+    }
+    if (options.nextDate) {
+      const followingRuleId = await insertVersion({ startDate: options.nextDate }, originalSplits);
+      await transaction
+        .update(recurringTransactionOccurrences)
+        .set({ recurringRuleId: followingRuleId, updatedAt: new Date() })
+        .where(
+          and(
+            eq(recurringTransactionOccurrences.userId, userId),
+            eq(recurringTransactionOccurrences.recurringRuleId, id),
+            gte(recurringTransactionOccurrences.purchaseDate, options.nextDate),
+          ),
+        );
+    }
+    await transaction
+      .update(recurringTransactionOccurrences)
+      .set({ recurringRuleId: selectedRuleId, updatedAt: new Date() })
+      .where(
+        and(
+          eq(recurringTransactionOccurrences.userId, userId),
+          eq(recurringTransactionOccurrences.recurringSeriesId, current.seriesId),
+          eq(recurringTransactionOccurrences.purchaseDate, options.occurrenceDate),
+        ),
+      );
+    return selectedRuleId;
   });
 
+  if (updatedId && typeof updatedId === "object") return updatedId;
   return updatedId ? findRecurringRuleByIdForUser(updatedId, userId) : null;
 }

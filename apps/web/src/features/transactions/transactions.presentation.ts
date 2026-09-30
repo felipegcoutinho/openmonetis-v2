@@ -328,6 +328,9 @@ const transactionMutationErrorMessages: Record<string, string> = {
   DESTINATION_ACCOUNT_NOT_FOUND: "A conta de destino não está mais disponível. Escolha outra.",
   CARD_NOT_FOUND: "O cartão selecionado não está mais disponível. Escolha outro.",
   TRANSFER_ACCOUNTS_REQUIRED: "Selecione as contas de origem e destino.",
+  RECURRING_SCHEDULE_SCOPE_UNSUPPORTED:
+    "Não é possível alterar a data ou frequência desta recorrência após editar ocorrências separadamente.",
+  RECURRING_RULE_CHANGED: "Esta recorrência mudou. Atualize a página e tente novamente.",
   external_expense_state_conflict:
     "Este lançamento compartilhado mudou ou já foi importado. Atualize a página.",
   external_expense_version_conflict:

@@ -67,10 +67,14 @@ export function useUpdateRecurringRuleMutation() {
     mutationFn: ({
       id,
       data,
+      scope,
+      occurrenceDate,
     }: {
       id: string;
       data: import("@openmonetis/validators/transactions").TransactionInput;
-    }) => updateRecurringRule(id, data),
+      scope: TransactionActionScope;
+      occurrenceDate: string;
+    }) => updateRecurringRule(id, data, scope, occurrenceDate),
     onSuccess: () => refreshFinancialQueries(queryClient),
   });
 }

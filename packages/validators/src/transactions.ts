@@ -379,6 +379,21 @@ export const TransactionActionInputSchema = z.object({
 });
 export const TransactionActionQuerySchema =
   TransactionActionInputSchema.openapi("TransactionActionQuery");
+export const UpdateRecurringRuleQuerySchema = z
+  .object({
+    scope: TransactionActionScopeSchema.default("series"),
+    occurrenceDate: dateSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.scope !== "series" && !data.occurrenceDate) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["occurrenceDate"],
+        message: "Scoped recurring edits require occurrenceDate",
+      });
+    }
+  })
+  .openapi("UpdateRecurringRuleQuery");
 export const BulkTransactionsInputSchema = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
 export const SettleTransactionsInputSchema = BulkTransactionsInputSchema.extend({
   isSettled: z.boolean(),
@@ -606,3 +621,4 @@ export type TransactionImportResult = z.infer<typeof TransactionImportResultSche
 export type CreateTransactionRefundInput = z.infer<typeof CreateTransactionRefundInputSchema>;
 export type TransactionRefundOutput = z.infer<typeof TransactionRefundOutputSchema>;
 export type TransactionActionScope = z.infer<typeof TransactionActionScopeSchema>;
+export type UpdateRecurringRuleQuery = z.infer<typeof UpdateRecurringRuleQuerySchema>;

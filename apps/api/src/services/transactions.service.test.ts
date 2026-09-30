@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ListTransactionsQuerySchema } from "@openmonetis/validators/transactions";
-import type { TransactionWithRelations } from "../repositories/transactions.repository";
+import {
+  ListTransactionsQuerySchema,
+  type TransactionInput,
+  UpdateRecurringRuleQuerySchema,
+} from "@openmonetis/validators/transactions";
+import type {
+  RecurringRuleWithRelations,
+  TransactionWithRelations,
+} from "../repositories/transactions.repository";
 import {
   createTransactionsService,
   type TransactionsServiceDependencies,
@@ -11,6 +18,19 @@ const userId = "10000000-0000-4000-8000-000000000001";
 const transactionId = "20000000-0000-4000-8000-000000000002";
 const firstPersonId = "30000000-0000-4000-8000-000000000003";
 const secondPersonId = "40000000-0000-4000-8000-000000000004";
+const recurringRuleId = "70000000-0000-4000-8000-000000000007";
+
+test("recurring edit query keeps legacy whole-series updates and requires a scoped date", () => {
+  assert.deepEqual(UpdateRecurringRuleQuerySchema.parse({}), { scope: "series" });
+  assert.equal(UpdateRecurringRuleQuerySchema.safeParse({ scope: "single" }).success, false);
+  assert.equal(
+    UpdateRecurringRuleQuerySchema.safeParse({
+      scope: "future",
+      occurrenceDate: "2026-10-01",
+    }).success,
+    true,
+  );
+});
 
 function transactionFixture(
   overrides: Partial<TransactionWithRelations> = {},
@@ -67,6 +87,207 @@ function transactionFixture(
     ...overrides,
   };
 }
+
+test("editing a recurring boleto preserves the rule settlement state", async () => {
+  const rule: RecurringRuleWithRelations = {
+    id: recurringRuleId,
+    userId,
+    seriesId: "80000000-0000-4000-8000-000000000008",
+    personId: firstPersonId,
+    type: "expense",
+    paymentMethod: "boleto",
+    name: "Conta de energia",
+    amount: "-100.00",
+    anchorDate: new Date("2026-09-01T00:00:00.000Z"),
+    startDate: new Date("2026-09-01T00:00:00.000Z"),
+    endDate: null,
+    frequency: "monthly",
+    accountId: "50000000-0000-4000-8000-000000000005",
+    cardId: null,
+    categoryId: "60000000-0000-4000-8000-000000000006",
+    sourceAccountId: null,
+    destinationAccountId: null,
+    dueDate: new Date("2026-09-10T00:00:00.000Z"),
+    isSettled: false,
+    note: null,
+    status: "active",
+    createdAt: new Date("2026-09-01T00:00:00.000Z"),
+    updatedAt: new Date("2026-09-01T00:00:00.000Z"),
+    personName: "Pessoa 1",
+    personAvatarUrl: null,
+    accountName: "Conta principal",
+    accountLogo: null,
+    cardName: null,
+    cardLogo: null,
+    categoryName: "Moradia",
+    categoryIcon: null,
+    sourceAccountName: null,
+    sourceAccountLogo: null,
+    destinationAccountName: null,
+    destinationAccountLogo: null,
+    cardClosingDay: null,
+    cardClosingRuleType: null,
+    cardClosingOffsetDays: null,
+    cardClosingOffsetMode: null,
+    cardDueDay: null,
+  };
+  let savedSettlement: boolean | null | undefined;
+  const versions = [{ id: rule.id, startDate: rule.startDate, updatedAt: rule.updatedAt }];
+  const writes: Array<{
+    values: { isSettled?: boolean | null; anchorDate?: Date; startDate?: Date; frequency?: string };
+    splits: Array<{ personId: string; amount: string }>;
+  }> = [];
+  const scopes: Array<{
+    scope: "single" | "future" | "series";
+    hasPrevious: boolean;
+    previousDate: Date;
+    nextDate: Date | null;
+  }> = [];
+  const dependencies = new Proxy(
+    {
+      findRecurringRuleByIdForUser: async () => rule,
+      listRecurringRulesBySeriesForUser: async () => versions,
+      findPersonByIdForUser: async () => ({ id: firstPersonId, status: "active" }),
+      findCategoryByIdForUser: async () => ({
+        id: rule.categoryId,
+        type: "expense",
+        name: "Moradia",
+      }),
+      findAccountByIdForUser: async () => ({ id: rule.accountId, isArchived: false }),
+      updateRecurringRuleWithSplitsForUser: async (
+        _id: string,
+        _userId: string,
+        values: (typeof writes)[number]["values"],
+        splits: (typeof writes)[number]["splits"],
+        options: (typeof scopes)[number],
+      ) => {
+        savedSettlement = values.isSettled;
+        writes.push({ values, splits });
+        scopes.push(options);
+        return { ...rule, ...values };
+      },
+      listRecurringOccurrencesForUser: async (_seriesIds: string[], startDate: Date) =>
+        startDate.toISOString().startsWith("2026-10")
+          ? [
+              {
+                recurringSeriesId: rule.seriesId,
+                purchaseDate: new Date("2026-10-01T00:00:00.000Z"),
+                isSettled: true,
+              },
+            ]
+          : [],
+      listRecurringSplitsForUser: async () => [],
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  const input: TransactionInput = {
+    type: "expense",
+    condition: "recurring",
+    paymentMethod: "boleto",
+    name: "Conta de energia atualizada",
+    amount: 100,
+    purchaseDate: "2026-09-01",
+    personId: firstPersonId,
+    accountId: rule.accountId,
+    cardId: null,
+    categoryId: rule.categoryId,
+    sourceAccountId: null,
+    destinationAccountId: null,
+    dueDate: "2026-09-10",
+    boletoPaymentDate: null,
+    recurrenceFrequency: "monthly",
+    isSettled: true,
+  };
+
+  const result = await service.updateRecurringRule(recurringRuleId, userId, input);
+
+  assert.equal(savedSettlement, false);
+  assert.equal(result.isSettled, false);
+  assert.equal(result.name, "Conta de energia atualizada");
+
+  const laterInput = {
+    ...input,
+    purchaseDate: "2026-10-01",
+    dueDate: "2026-10-10",
+    splitShares: [
+      { personId: firstPersonId, amount: 60 },
+      { personId: secondPersonId, amount: 40 },
+    ],
+  };
+  const singleResult = await service.updateRecurringRule(recurringRuleId, userId, laterInput, {
+    scope: "single",
+    occurrenceDate: "2026-10-01",
+  });
+  assert.equal(singleResult.isSettled, true);
+  assert.equal(singleResult.dueDate, "2026-10-10");
+  await service.updateRecurringRule(recurringRuleId, userId, laterInput, {
+    scope: "future",
+    occurrenceDate: "2026-10-01",
+  });
+  assert.deepEqual(writes[1]?.splits, [
+    { personId: firstPersonId, amount: "-60.00" },
+    { personId: secondPersonId, amount: "-40.00" },
+  ]);
+  assert.equal(writes[1]?.values.isSettled, false);
+
+  assert.deepEqual(
+    scopes.map(({ scope, hasPrevious, previousDate, nextDate }) => ({
+      scope,
+      hasPrevious,
+      previousDate: previousDate.toISOString().slice(0, 10),
+      nextDate: nextDate?.toISOString().slice(0, 10) ?? null,
+    })),
+    [
+      { scope: "series", hasPrevious: false, previousDate: "2026-08-31", nextDate: "2026-10-01" },
+      { scope: "single", hasPrevious: true, previousDate: "2026-09-30", nextDate: "2026-11-01" },
+      { scope: "future", hasPrevious: true, previousDate: "2026-09-30", nextDate: "2026-11-01" },
+    ],
+  );
+  await assert.rejects(() =>
+    service.updateRecurringRule(
+      recurringRuleId,
+      userId,
+      { ...laterInput, purchaseDate: "2026-10-02" },
+      { scope: "single", occurrenceDate: "2026-10-01" },
+    ),
+  );
+  assert.equal(scopes.length, 3);
+
+  versions.push({
+    id: "90000000-0000-4000-8000-000000000009",
+    startDate: new Date("2026-11-01T00:00:00.000Z"),
+    updatedAt: new Date("2026-11-01T00:00:00.000Z"),
+  });
+  await service.updateRecurringRule(recurringRuleId, userId, laterInput, {
+    scope: "series",
+    occurrenceDate: "2026-10-01",
+  });
+  assert.equal(writes[3]?.values.anchorDate, undefined);
+  assert.equal(writes[3]?.values.startDate, undefined);
+  assert.equal(writes[3]?.values.frequency, undefined);
+  assert.equal(writes[3]?.values.isSettled, undefined);
+  await assert.rejects(() =>
+    service.updateRecurringRule(
+      recurringRuleId,
+      userId,
+      { ...laterInput, recurrenceFrequency: "weekly" },
+      { scope: "series", occurrenceDate: "2026-10-01" },
+    ),
+  );
+  assert.equal(writes.length, 4);
+});
 
 test("divided transactions become allocation rows linked to the same editable record", async () => {
   const transaction = transactionFixture();

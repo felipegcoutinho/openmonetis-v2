@@ -8,7 +8,10 @@ import {
   internalTransferCategoryName,
   invoicePaymentCategoryName,
 } from "@openmonetis/domain/categories";
-import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
+import {
+  getNextRecurringOccurrenceDate,
+  getRecurringDueDate,
+} from "@openmonetis/domain/recurring-expenses";
 import type { ImportedStatement, ImportedTransaction } from "@openmonetis/domain/transactions";
 import {
   addMonthsToDate,
@@ -46,6 +49,7 @@ import type {
   TransactionInput,
   TransactionOutput,
   TransactionRefundOutput,
+  UpdateRecurringRuleQuery,
   UpdateTransactionInput,
 } from "@openmonetis/validators/transactions";
 import { TransactionInputSchema } from "@openmonetis/validators/transactions";
@@ -84,6 +88,7 @@ export type TransactionsServiceDependencies = Pick<
   | "listRecentEstablishmentNamesForUser"
   | "listRecurringOccurrencesForUser"
   | "listRecurringRulesForPeriod"
+  | "listRecurringRulesBySeriesForUser"
   | "listRecurringSplitsForUser"
   | "listTransactionIdsWithAttachmentsForUser"
   | "listTransactionSeriesForUser"
@@ -251,6 +256,7 @@ export function createTransactionsService(
     listRecentEstablishmentNamesForUser,
     listRecurringOccurrencesForUser,
     listRecurringRulesForPeriod,
+    listRecurringRulesBySeriesForUser,
     listRecurringSplitsForUser,
     listTransactionIdsWithAttachmentsForUser,
     listTransactionSeriesForUser,
@@ -1898,11 +1904,20 @@ export function createTransactionsService(
     if (!current) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     const updated = await updateRecurringRuleStatusForUser(id, userId, status);
     if (!updated) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
-    await synchronizeRecurringExternalExpensesFrom(userId, toDateString(current.startDate));
+    const versions = await listRecurringRulesBySeriesForUser(current.seriesId, userId);
+    await synchronizeRecurringExternalExpensesFrom(
+      userId,
+      versions[0] ? toDateString(versions[0].startDate) : toDateString(current.startDate),
+    );
     return { id, status };
   }
 
-  async function updateRecurringRule(id: string, userId: string, input: TransactionInput) {
+  async function updateRecurringRule(
+    id: string,
+    userId: string,
+    input: TransactionInput,
+    query: UpdateRecurringRuleQuery = { scope: "series" },
+  ) {
     const current = await findRecurringRuleByIdForUser(id, userId);
     if (!current) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
     const validated = TransactionInputSchema.parse({
@@ -1913,9 +1928,20 @@ export function createTransactionsService(
     });
     assertBoletoPaymentDateIsNotFuture(validated);
     const context = await assertOwnership(validated, userId);
-    const base = buildBaseRecord({ ...validated, userId }, context);
+    const base = buildBaseRecord({ ...validated, isSettled: current.isSettled, userId }, context);
     const currentAnchorDate = toDateString(current.anchorDate);
     const currentStartDate = toDateString(current.startDate);
+    const selectedDate = query.occurrenceDate ?? validated.purchaseDate;
+    const validSelectedDate = listRecurrenceDatesInPeriod({
+      anchorDate: currentAnchorDate,
+      startDate: currentStartDate,
+      endDate: current.endDate ? toDateString(current.endDate) : null,
+      frequency: current.frequency,
+      period: getPeriodFromDate(selectedDate),
+    }).includes(selectedDate);
+    if (query.scope !== "series" && !validSelectedDate) {
+      throw badRequest("Invalid recurring occurrence date", "INVALID_RECURRING_OCCURRENCE");
+    }
     const keepsCurrentSchedule =
       validated.recurrenceFrequency === current.frequency &&
       listRecurrenceDatesInPeriod({
@@ -1925,8 +1951,33 @@ export function createTransactionsService(
         frequency: current.frequency,
         period: getPeriodFromDate(validated.purchaseDate),
       }).includes(validated.purchaseDate);
+    const versions = await listRecurringRulesBySeriesForUser(current.seriesId, userId);
+    if (
+      (query.scope !== "series" || versions.length > 1) &&
+      (!keepsCurrentSchedule || validated.purchaseDate !== selectedDate)
+    ) {
+      throw badRequest(
+        "Recurring schedule can only change for an unsplit whole series",
+        "RECURRING_SCHEDULE_SCOPE_UNSUPPORTED",
+      );
+    }
     const nextAnchorDate = keepsCurrentSchedule ? currentAnchorDate : validated.purchaseDate;
     const nextStartDate = keepsCurrentSchedule ? currentStartDate : validated.purchaseDate;
+    const previousDate = toDateString(new Date(toDate(selectedDate).getTime() - 86_400_000));
+    const firstDate = getNextRecurringOccurrenceDate({
+      anchorDate: currentAnchorDate,
+      currentDate: toDateString(new Date(current.startDate.getTime() - 86_400_000)),
+      endDate: current.endDate ? toDateString(current.endDate) : null,
+      frequency: current.frequency,
+      startDate: currentStartDate,
+    });
+    const followingDate = getNextRecurringOccurrenceDate({
+      anchorDate: currentAnchorDate,
+      currentDate: selectedDate,
+      endDate: current.endDate ? toDateString(current.endDate) : null,
+      frequency: current.frequency,
+      startDate: currentStartDate,
+    });
     const rule = await updateRecurringRuleWithSplitsForUser(
       id,
       userId,
@@ -1936,32 +1987,62 @@ export function createTransactionsService(
         paymentMethod: validated.paymentMethod,
         name: validated.name.trim(),
         amount: normalizeTransactionAmount(validated.type, validated.amount).toFixed(2),
-        anchorDate: toDate(nextAnchorDate),
-        startDate: toDate(nextStartDate),
-        frequency: validated.recurrenceFrequency as NonNullable<
-          TransactionInput["recurrenceFrequency"]
-        >,
         accountId: base.accountId,
         cardId: base.cardId,
         categoryId: base.categoryId,
         sourceAccountId: base.sourceAccountId,
         destinationAccountId: base.destinationAccountId,
         dueDate: base.dueDate,
-        isSettled: base.isSettled,
         note: base.note,
+        ...(query.scope !== "series" ? { isSettled: base.isSettled } : {}),
+        ...(versions.length === 1 && query.scope === "series"
+          ? {
+              anchorDate: toDate(nextAnchorDate),
+              startDate: toDate(nextStartDate),
+              frequency: validated.recurrenceFrequency as NonNullable<
+                TransactionInput["recurrenceFrequency"]
+              >,
+              isSettled: base.isSettled,
+            }
+          : {}),
       },
       (validated.splitShares ?? []).map((share) => ({
         personId: share.personId,
         amount: normalizeTransactionAmount(validated.type, share.amount).toFixed(2),
       })),
+      {
+        scope: query.scope,
+        occurrenceDate: toDate(selectedDate),
+        previousDate: toDate(previousDate),
+        nextDate: followingDate ? toDate(followingDate) : null,
+        hasPrevious: firstDate !== selectedDate,
+        expectedVersions: versions.map(({ id: versionId, updatedAt }) => ({
+          id: versionId,
+          updatedAt,
+        })),
+      },
     );
     if (!rule) throw notFound("Recurring rule not found", "RECURRING_RULE_NOT_FOUND");
+    if ("conflict" in rule) {
+      throw conflict("Recurring rule changed", "RECURRING_RULE_CHANGED");
+    }
     const output = toRecurringOccurrenceOutput(
       rule,
       validated.purchaseDate,
       derivePeriod(validated, context, validated.purchaseDate),
+      getRecurringDueDate(rule.dueDate ? toDateString(rule.dueDate) : null, validated.purchaseDate),
     );
-    const savedSplits = await listRecurringSplitsForUser([id], userId);
+    const occurrenceStates = await listRecurringOccurrencesForUser(
+      [rule.seriesId],
+      toDate(validated.purchaseDate),
+      toDate(validated.purchaseDate),
+      userId,
+    );
+    output.isSettled =
+      occurrenceStates.find(
+        (occurrence) => toDateString(occurrence.purchaseDate) === validated.purchaseDate,
+      )?.isSettled ?? output.isSettled;
+    const savedSplits = await listRecurringSplitsForUser([rule.id], userId);
     output.splitShares = savedSplits.map((share) => ({
       personId: share.personId,
       personName: share.personName,
@@ -1969,9 +2050,14 @@ export function createTransactionsService(
       amount: Math.abs(Number(share.amount)),
     }));
     output.isDivided = savedSplits.length > 0;
+    const earliestStartDate = versions[0] ? toDateString(versions[0].startDate) : currentStartDate;
     await synchronizeRecurringExternalExpensesFrom(
       userId,
-      currentStartDate < nextStartDate ? currentStartDate : nextStartDate,
+      query.scope === "series"
+        ? earliestStartDate < nextStartDate
+          ? earliestStartDate
+          : nextStartDate
+        : selectedDate,
     );
     return output;
   }

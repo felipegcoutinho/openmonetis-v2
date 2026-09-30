@@ -19,6 +19,7 @@ import {
   TransactionOutputSchema,
   TransactionParamsSchema,
   TransactionRefundOutputSchema,
+  UpdateRecurringRuleQuerySchema,
   UpdateTransactionInputSchema,
 } from "@openmonetis/validators/transactions";
 import type { TransactionsService } from "../services/transactions.service";
@@ -401,6 +402,7 @@ export function createTransactionsRoute(service: TransactionsService) {
       tags: ["Transactions"],
       request: {
         params: TransactionParamsSchema,
+        query: UpdateRecurringRuleQuerySchema,
         body: {
           required: true,
           content: { "application/json": { schema: TransactionInputSchema } },
@@ -413,6 +415,10 @@ export function createTransactionsRoute(service: TransactionsService) {
         },
         400: {
           description: "Invalid request",
+          content: { "application/json": { schema: errorSchema } },
+        },
+        409: {
+          description: "Recurring rule changed during editing",
           content: { "application/json": { schema: errorSchema } },
         },
         401: {
@@ -428,7 +434,12 @@ export function createTransactionsRoute(service: TransactionsService) {
     async (c) =>
       c.json(
         ok(
-          await updateRecurringRule(c.req.valid("param").id, c.get("userId"), c.req.valid("json")),
+          await updateRecurringRule(
+            c.req.valid("param").id,
+            c.get("userId"),
+            c.req.valid("json"),
+            c.req.valid("query"),
+          ),
         ),
         200,
       ),

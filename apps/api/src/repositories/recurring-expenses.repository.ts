@@ -6,6 +6,7 @@ import {
   people,
   recurringTransactionOccurrences,
   recurringTransactionRules,
+  recurringTransactionSeries,
   recurringTransactionSplits,
 } from "@openmonetis/db";
 import { and, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
@@ -187,6 +188,26 @@ export const recurringExpensesRepository = {
 
   async versionForUser(input) {
     return db.transaction(async (transaction) => {
+      const [initial] = await transaction
+        .select({ seriesId: recurringTransactionRules.seriesId })
+        .from(recurringTransactionRules)
+        .where(
+          and(
+            eq(recurringTransactionRules.id, input.id),
+            eq(recurringTransactionRules.userId, input.userId),
+          ),
+        );
+      if (!initial) return false;
+      await transaction
+        .select({ id: recurringTransactionSeries.id })
+        .from(recurringTransactionSeries)
+        .where(
+          and(
+            eq(recurringTransactionSeries.id, initial.seriesId),
+            eq(recurringTransactionSeries.userId, input.userId),
+          ),
+        )
+        .for("update");
       const [rule] = await transaction
         .select()
         .from(recurringTransactionRules)
