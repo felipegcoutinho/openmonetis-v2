@@ -5,16 +5,18 @@ import {
   Barcode,
   CalendarDays,
   CalendarX2,
+  ChevronRight,
   CreditCard,
   Landmark,
   type LucideIcon,
-  MoreHorizontal,
   Pause,
   Pencil,
   Play,
   QrCode,
   RefreshCw,
   Repeat2,
+  Search,
+  SearchX,
   Square,
   Ticket,
 } from "lucide-react";
@@ -30,12 +32,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
@@ -46,6 +58,7 @@ import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
 import { paymentMethodLabels } from "@/features/transactions/transactions.presentation";
 import {
+  formatRecurringExpenseCompactDate,
   formatRecurringExpenseDate,
   recurringFrequencyLabels,
 } from "../recurring-expenses.presentation";
@@ -54,6 +67,8 @@ import { RecurringExpenseActionDialog } from "./recurring-expense-action-dialog"
 import { RecurringExpenseEditDialog } from "./recurring-expense-edit-dialog";
 
 type ReportItem = RecurringExpensesReportOutput["items"][number];
+type StatusFilter = ReportItem["status"] | "all";
+type PaymentFilter = ReportItem["paymentMethod"] | "all";
 
 export function RecurringExpensesReportPage({
   onPeriodChange,
@@ -71,7 +86,21 @@ export function RecurringExpensesReportPage({
   const [editing, setEditing] = useState<ReportItem | null>(null);
   const [action, setAction] = useState<"pause" | "resume" | "skip" | "stop" | null>(null);
   const [actionExpense, setActionExpense] = useState<ReportItem | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
+  const [search, setSearch] = useState("");
   const report = reportQuery.data;
+  const searchTerm = search.trim().toLocaleLowerCase("pt-BR");
+  const visibleItems =
+    report?.items.filter(
+      (item) =>
+        (statusFilter === "all" || item.status === statusFilter) &&
+        (paymentFilter === "all" || item.paymentMethod === paymentFilter) &&
+        (!searchTerm ||
+          [item.name, item.accountName, item.cardName, item.categoryName, item.personName].some(
+            (value) => value?.toLocaleLowerCase("pt-BR").includes(searchTerm),
+          )),
+    ) ?? [];
 
   function chooseAction(expense: ReportItem, nextAction: NonNullable<typeof action>) {
     setActionExpense(expense);
@@ -171,18 +200,83 @@ export function RecurringExpensesReportPage({
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Regras recorrentes</CardTitle>
-                  <CardDescription>
-                    {report.items.length} regra{report.items.length === 1 ? "" : "s"} vinculada
-                    {report.items.length === 1 ? "" : "s"} à pessoa administradora.
-                  </CardDescription>
+              <Card aria-labelledby="recurring-rules-title" className="gap-0 py-0 shadow-none">
+                <CardHeader className="flex flex-col items-stretch gap-4 p-5 sm:p-6">
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div>
+                      <h2 className="font-heading font-medium text-lg" id="recurring-rules-title">
+                        Regras recorrentes
+                      </h2>
+                      <p className="text-muted-foreground text-sm">
+                        {`${visibleItems.length} ${visibleItems.length === 1 ? "regra" : "regras"} na lista`}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:ml-auto xl:justify-end">
+                      <Tabs
+                        onValueChange={(value) => {
+                          if (value === "active" || value === "paused" || value === "all") {
+                            setStatusFilter(value);
+                          }
+                        }}
+                        value={statusFilter}
+                      >
+                        <TabsList
+                          aria-label="Situação das recorrências"
+                          className="xl:border-b-0"
+                          variant="line"
+                        >
+                          <TabsTrigger value="active">Ativas</TabsTrigger>
+                          <TabsTrigger value="paused">Pausadas</TabsTrigger>
+                          <TabsTrigger value="all">Todas</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                      <Select
+                        onValueChange={(value) => {
+                          if (value === "all" || (value && value in paymentMethodLabels)) {
+                            setPaymentFilter(value as PaymentFilter);
+                          }
+                        }}
+                        value={paymentFilter}
+                      >
+                        <SelectTrigger
+                          aria-label="Filtrar recorrências por meio de pagamento"
+                          className="w-full min-w-0 sm:w-45"
+                        >
+                          <SelectValue>
+                            {paymentFilter === "all"
+                              ? "Todos os meios"
+                              : paymentMethodLabels[paymentFilter]}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os meios</SelectItem>
+                          {Object.entries(paymentMethodLabels).map(([method, label]) => (
+                            <SelectItem key={method} value={method}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="relative min-w-0 sm:w-60">
+                        <Search
+                          aria-hidden="true"
+                          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <Input
+                          aria-label="Buscar regras recorrentes"
+                          className="w-full pl-9"
+                          onChange={(event) => setSearch(event.target.value)}
+                          placeholder="Buscar regra ou conta"
+                          value={search}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  {report.items.length ? (
-                    <ul className="divide-y">
-                      {report.items.map((item) => (
+                <CardContent className="grid gap-2 px-5 pb-2 sm:px-6">
+                  {visibleItems.length ? (
+                    <ul aria-busy={reportQuery.isFetching} className="divide-y">
+                      {visibleItems.map((item) => (
                         <RecurringExpenseReportRow
                           key={item.id}
                           item={item}
@@ -192,12 +286,35 @@ export function RecurringExpensesReportPage({
                       ))}
                     </ul>
                   ) : (
-                    <div className="grid min-h-40 place-items-center text-center">
+                    <div className="grid min-h-48 place-items-center p-6 text-center">
                       <div>
-                        <p className="font-medium">Nenhuma recorrência ativa neste período</p>
-                        <p className="mt-1 text-muted-foreground text-sm">
-                          Cadastre uma despesa recorrente para acompanhar suas próximas ocorrências.
+                        <span className="mx-auto grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
+                          <SearchX aria-hidden="true" className="size-5" />
+                        </span>
+                        <p className="mt-3 font-medium">
+                          {report.items.length
+                            ? "Nenhuma regra corresponde aos filtros"
+                            : "Nenhuma recorrência neste período"}
                         </p>
+                        <p className="mt-1 text-muted-foreground text-sm">
+                          {report.items.length
+                            ? "Ajuste a situação, o meio de pagamento ou a busca."
+                            : "Cadastre uma despesa recorrente para acompanhar suas próximas ocorrências."}
+                        </p>
+                        {report.items.length ? (
+                          <Button
+                            className="mt-4"
+                            onClick={() => {
+                              setStatusFilter("all");
+                              setPaymentFilter("all");
+                              setSearch("");
+                            }}
+                            type="button"
+                            variant="outline"
+                          >
+                            Limpar filtros
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   )}
@@ -254,102 +371,200 @@ function RecurringExpenseReportRow({
 }) {
   const PaymentIcon = recurringPaymentMethodIcons[item.paymentMethod];
   const canManage = Boolean(item.actionDate);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const destinationName = item.cardName ?? item.accountName;
+  const destinationLogo = item.cardLogo ?? item.accountLogo;
+
+  function chooseRowAction(nextAction: "pause" | "resume" | "skip" | "stop") {
+    setDetailsOpen(false);
+    onAction(item, nextAction);
+  }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 py-4 sm:flex-nowrap">
-      <EstablishmentLogo name={item.name} size={40} />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-semibold">{item.name}</p>
-          <Badge className="gap-1.5" variant={item.status === "active" ? "secondary" : "outline"}>
-            <span
-              aria-hidden="true"
-              className={`size-1.5 rounded-full ${item.status === "active" ? "bg-success" : "bg-muted-foreground"}`}
-            />
-            {item.status === "active" ? "Ativa" : "Pausada"}
-          </Badge>
+    <li className="py-4 sm:py-5">
+      <div className="grid items-center gap-x-5 gap-y-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_auto]">
+        <div className="flex min-w-0 items-center gap-3">
+          <EstablishmentLogo className="shrink-0" name={item.name} size={40} />
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="min-w-0 truncate font-bold">{item.name}</h3>
+              <Badge variant={item.status === "active" ? "outline" : "secondary"}>
+                {item.status === "active" ? "Ativa" : "Pausada"}
+              </Badge>
+            </div>
+            <p className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+              {destinationLogo ? (
+                <Avatar className="size-4 shrink-0">
+                  <AvatarImage alt="" src={destinationLogo} />
+                  <AvatarFallback>
+                    <PaymentIcon aria-hidden="true" className="size-3" />
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <PaymentIcon aria-hidden="true" className="size-4 shrink-0" />
+              )}
+              <span className="truncate">
+                {destinationName ?? paymentMethodLabels[item.paymentMethod]} ·{" "}
+                {recurringFrequencyLabels[item.frequency]}
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-xs">
-          <span className="inline-flex items-center gap-1.5">
-            <Repeat2 aria-hidden="true" className="size-3.5" />
-            {recurringFrequencyLabels[item.frequency]}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <PaymentIcon aria-hidden="true" className="size-3.5" />
-            {paymentMethodLabels[item.paymentMethod]}
-            <RecurringDestination item={item} />
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="grid size-5 place-items-center rounded-full bg-muted">
-              <CategoryIcon className="size-3" name={item.categoryIcon} />
-            </span>
-            {item.categoryName ?? "Sem categoria"}
-          </span>
-          <RecurringPeople item={item} />
+        <div className="grid grid-cols-2 gap-4 md:col-span-2 md:gap-5 xl:col-span-2">
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">Sua parte</p>
+            <MoneyValue amount={item.amount} className="mt-1 font-medium text-base" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">Próxima ocorrência</p>
+            <p className="mt-1 font-medium text-sm">
+              {item.status === "paused"
+                ? "Pausada"
+                : item.nextOccurrenceDate
+                  ? formatRecurringExpenseCompactDate(item.nextOccurrenceDate)
+                  : "Sem previsão"}
+            </p>
+          </div>
         </div>
-        <p className="mt-1.5 inline-flex items-center gap-1.5 text-muted-foreground text-xs">
-          <CalendarDays aria-hidden="true" className="size-3.5" />
-          {item.status === "paused"
-            ? "Sem lançamentos enquanto estiver pausada"
-            : item.nextOccurrenceDate
-              ? `Próxima ocorrência: ${formatRecurringExpenseDate(item.nextOccurrenceDate)}`
-              : "Nenhum próximo lançamento encontrado"}
-        </p>
+        <Button
+          aria-label={`Ver detalhes de ${item.name}`}
+          className="w-full justify-between md:col-span-3 xl:col-span-1 xl:w-auto"
+          onClick={() => setDetailsOpen(true)}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Detalhes
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </Button>
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
-        <MoneyValue amount={item.amount} className="mr-1 font-semibold" />
-        {item.status === "paused" ? (
-          <Button
-            disabled={!canManage}
-            onClick={() => onAction(item, "resume")}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <Play aria-hidden="true" /> Retomar
-          </Button>
-        ) : null}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={`Ações para ${item.name}`}
-                size="icon-sm"
-                type="button"
-                variant="ghost"
-              />
-            }
-          >
-            <MoreHorizontal />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
+
+      <Dialog onOpenChange={setDetailsOpen} open={detailsOpen}>
+        <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader>
+            <div className="flex min-w-0 items-center gap-3 pr-8">
+              <EstablishmentLogo className="shrink-0" name={item.name} size={40} />
+              <div className="min-w-0">
+                <DialogTitle className="truncate">{item.name}</DialogTitle>
+                <DialogDescription className="mt-1">
+                  {recurringFrequencyLabels[item.frequency]} ·{" "}
+                  {item.status === "active" ? "Ativa" : "Pausada"}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="grid gap-3 rounded-lg bg-muted/40 p-4 sm:grid-cols-2">
+            <div>
+              <p className="text-muted-foreground text-xs">Sua parte por ocorrência</p>
+              <MoneyValue amount={item.amount} className="mt-1 font-semibold" />
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs">Valor total por ocorrência</p>
+              <MoneyValue amount={item.totalAmount} className="mt-1 font-semibold" />
+            </div>
+          </div>
+
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground text-xs">Próxima ocorrência</dt>
+              <dd className="mt-1 flex items-center gap-1.5 font-medium">
+                <CalendarDays
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted-foreground"
+                />
+                {item.status === "paused"
+                  ? "Sem lançamentos durante a pausa"
+                  : item.nextOccurrenceDate
+                    ? formatRecurringExpenseDate(item.nextOccurrenceDate)
+                    : "Sem previsão"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground text-xs">Forma de pagamento</dt>
+              <dd className="mt-1 flex items-center gap-1.5 font-medium">
+                <PaymentIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+                {paymentMethodLabels[item.paymentMethod]}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground text-xs">Conta ou cartão</dt>
+              <dd className="mt-1 font-medium">
+                <RecurringDestination item={item} />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground text-xs">Categoria</dt>
+              <dd className="mt-1 flex items-center gap-1.5 font-medium">
+                <CategoryIcon className="size-4 text-muted-foreground" name={item.categoryIcon} />
+                {item.categoryName ?? "Sem categoria"}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground text-xs">Pessoas</dt>
+              <dd className="mt-1 font-medium">
+                <RecurringPeople item={item} />
+              </dd>
+            </div>
+          </dl>
+
+          <div className="flex flex-wrap justify-end gap-2 border-t pt-4">
             {item.status === "active" ? (
               <>
-                <DropdownMenuItem disabled={!canManage} onClick={() => onEdit(item)}>
-                  <Pencil /> Alterar
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={!canManage} onClick={() => onAction(item, "skip")}>
-                  <CalendarX2 /> Pular próximo lançamento
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={!canManage} onClick={() => onAction(item, "pause")}>
-                  <Pause /> Pausar recorrência
-                </DropdownMenuItem>
+                <Button
+                  disabled={!canManage}
+                  onClick={() => {
+                    setDetailsOpen(false);
+                    onEdit(item);
+                  }}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <Pencil aria-hidden="true" /> Alterar
+                </Button>
+                <Button
+                  disabled={!canManage}
+                  onClick={() => chooseRowAction("skip")}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <CalendarX2 aria-hidden="true" /> Pular próximo
+                </Button>
+                <Button
+                  disabled={!canManage}
+                  onClick={() => chooseRowAction("pause")}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <Pause aria-hidden="true" /> Pausar
+                </Button>
               </>
             ) : (
-              <DropdownMenuItem disabled={!canManage} onClick={() => onAction(item, "resume")}>
-                <Play /> Retomar recorrência
-              </DropdownMenuItem>
+              <Button
+                disabled={!canManage}
+                onClick={() => chooseRowAction("resume")}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <Play aria-hidden="true" /> Retomar
+              </Button>
             )}
-            <DropdownMenuItem
+            <Button
               disabled={!canManage}
-              onClick={() => onAction(item, "stop")}
+              onClick={() => chooseRowAction("stop")}
+              size="sm"
+              type="button"
               variant="destructive"
             >
-              <Square /> Parar recorrência
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              <Square aria-hidden="true" /> Parar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </li>
   );
 }
@@ -368,20 +583,19 @@ function RecurringDestination({ item }: { item: ReportItem }) {
   const isCard = Boolean(item.cardName);
   const name = item.cardName ?? item.accountName;
   const logo = item.cardLogo ?? item.accountLogo;
-  if (!name) return null;
+  if (!name) return "Não informada";
 
   const DestinationIcon = isCard ? CreditCard : Landmark;
   return (
-    <>
-      <span aria-hidden="true">·</span>
+    <span className="inline-flex min-w-0 items-center gap-1.5">
       <Avatar className="size-5" title={isCard ? `Cartão ${name}` : `Conta ${name}`}>
         <AvatarImage alt="" src={logo ?? undefined} />
         <AvatarFallback>
           <DestinationIcon aria-hidden="true" className="size-3" />
         </AvatarFallback>
       </Avatar>
-      <span>{name}</span>
-    </>
+      <span className="truncate">{name}</span>
+    </span>
   );
 }
 

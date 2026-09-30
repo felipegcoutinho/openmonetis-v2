@@ -22,6 +22,14 @@ export function formatRecurringExpenseDate(date: string) {
   }).replace(/^1 de /, "1º de ");
 }
 
+export function formatRecurringExpenseCompactDate(date: string) {
+  return formatDateInBrazil(dateOnlyToSafeInstant(date), {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).replaceAll(".", "");
+}
+
 type RecurringExpensesReportSearch = { period?: string };
 
 export function validateRecurringExpensesReportSearch(
