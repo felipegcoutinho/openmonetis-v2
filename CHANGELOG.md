@@ -7,6 +7,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-29
+
+Adiciona edição de recorrências por ocorrência, ocorrências futuras ou série inteira e aprimora
+a apresentação da interface web em telas pequenas e do relatório de recorrências.
+
+### Adicionado
+
+- Edição de recorrências permite aplicar alterações apenas à ocorrência selecionada, a partir dela ou a toda a série.
+
+### Alterado
+
+- Interface mobile com textos mais legíveis, zoom por gesto bloqueado, caixa de entrada contida na tela, lançamentos simplificados e boletos entre os indicadores.
+- Card da caixa de entrada ajustado para telas pequenas, preservando a apresentação anterior no desktop; seus três filtros ficam lado a lado no mobile. Resumo de categorias, filtros de período e páginas de pessoas e categorias também adaptados para mobile.
+- Filtros ativos de lançamentos organizados em linhas legíveis no celular.
+- Cabeçalho mobile com marca maior e espaçamento equilibrado entre ícones, contador e avatar.
+- Indicador "Onde você mais gastou" com cinco categorias e a mesma densidade de linhas dos demais cards do resumo mobile.
+- Tipografia dos lançamentos mobile alinhada à hierarquia dos outros cards.
+- Lista de regras recorrentes alinhada à de compras parceladas, com filtros, métricas por regra e detalhes para ações.
+
+### Corrigido
+
+- Páginas de categorias, tendências e Caixa de entrada voltam a respeitar a largura máxima no desktop, mantendo o conteúdo contido em telas pequenas.
+- Editar uma recorrência não altera o pagamento das demais ocorrências; o pagamento de cada uma permanece na tabela de lançamentos.
+
 ## [0.8.1] - 2026-09-27
 
 Corrige a instalação do aplicativo web em sites com autenticação no proxy e aprimora a hierarquia tipográfica da navegação e do painel.
@@ -373,7 +397,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.6.0...v0.7.0
