@@ -838,13 +838,24 @@ export function TransactionsScreen({
       {activeFilterCount ? (
         <fieldset
           aria-label="Filtros ativos"
-          className="flex min-w-0 flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-muted/50 px-3 py-2.5"
+          className="grid min-w-0 gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-3 py-2.5"
         >
-          <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Filter aria-hidden="true" className="size-3.5" />
-            Filtros ativos
-          </span>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Filter aria-hidden="true" className="size-3.5 shrink-0" />
+              Filtros ativos
+            </span>
+            <Button
+              className="shrink-0 text-xs font-normal text-muted-foreground hover:bg-background hover:text-foreground"
+              onClick={clearFilters}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              Limpar filtros
+            </Button>
+          </div>
+          <div className="flex min-w-0 flex-wrap gap-2">
             {search ? (
               <FilterChip icon={Search} label={`Busca: ${search}`} onRemove={() => setSearch("")} />
             ) : null}
@@ -990,15 +1001,6 @@ export function TransactionsScreen({
               />
             ) : null}
           </div>
-          <Button
-            className="ml-auto text-xs font-normal text-muted-foreground hover:bg-background hover:text-foreground"
-            onClick={clearFilters}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            Limpar filtros
-          </Button>
         </fieldset>
       ) : null}
 
@@ -1021,32 +1023,14 @@ export function TransactionsScreen({
         </div>
       ) : null}
 
-      {!isLoading && !hasLoadError && !transactions.length && activeFilterCount ? (
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={clearFilters}>
-            Limpar filtros
-          </Button>
-        </div>
-      ) : null}
       {!isLoading && !hasLoadError && isMobile === true ? (
         <TransactionsMobileList
           key={`mobile:${selectionScopeKey}`}
           allowImport={allowImport}
           currentPage={Math.min(page, pageCount)}
-          onAnticipate={setAnticipatingTransaction}
-          onCopy={openCopyDialog}
-          onDelete={onDeleteTransaction}
-          onEdit={openEditDialog}
           onPageChange={setPage}
-          onRecurringStatus={onRecurringStatus}
-          onRefund={setRefundingTransaction}
-          onSettle={onSettleTransactions}
-          onSettleRecurringOccurrence={onSettleRecurringOccurrence}
-          onUndoAnticipation={setUndoingAnticipation}
           onView={setViewingTransaction}
           pageCount={pageCount}
-          pendingSettlementKey={pendingSettlementKey}
-          pendingTransactionId={pendingTransactionId}
           totalItems={totalItems}
           transactions={transactions}
         />
@@ -1113,6 +1097,22 @@ export function TransactionsScreen({
       />
       <TransactionDetailsSheet
         key={`details-${viewingTransaction?.id ?? "closed"}`}
+        mobileActions={
+          isMobile === true
+            ? {
+                onAnticipate: setAnticipatingTransaction,
+                onCopy: openCopyDialog,
+                onDelete: onDeleteTransaction,
+                onRecurringStatus,
+                onRefund: setRefundingTransaction,
+                onSettle: onSettleTransactions,
+                onSettleRecurringOccurrence,
+                onUndoAnticipation: setUndoingAnticipation,
+                pendingSettlementKey,
+                pendingTransactionId,
+              }
+            : undefined
+        }
         onEdit={openEditDialog}
         onOpenChange={(open) => {
           if (!open) setViewingTransaction(null);
@@ -1230,7 +1230,7 @@ function FilterChip({
   const filterValue = separatorIndex >= 0 ? label.slice(separatorIndex + 2) : label;
 
   return (
-    <span className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-lg border border-border/60 bg-background py-1 pl-2.5 pr-1">
+    <span className="inline-flex min-h-10 max-w-full shrink-0 items-center gap-2 rounded-lg border border-border/60 bg-background py-1 pl-2.5 pr-1">
       {imageSrc !== undefined ? (
         <Avatar className="size-5 shrink-0" size="sm" aria-hidden="true">
           <AvatarImage alt="" src={imageSrc ?? undefined} />
@@ -1247,7 +1247,9 @@ function FilterChip({
         {filterName ? (
           <span className="block text-[10px] text-muted-foreground">{filterName}</span>
         ) : null}
-        <span className="block break-words text-xs font-medium">{filterValue}</span>
+        <span className="block truncate text-xs font-medium" title={filterValue}>
+          {filterValue}
+        </span>
       </span>
       <Button
         aria-label={`Remover filtro ${label}`}

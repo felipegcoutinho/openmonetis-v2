@@ -10,7 +10,8 @@
   --font-sans: var(--font-app-sans);
   --font-mono: var(--font-app-mono);
   --font-heading: var(--font-app-heading);
-  --text-xs: 0.8125rem;
+  --text-xs: var(--app-text-xs);
+  --text-sm: var(--app-text-sm);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -73,7 +74,7 @@
   --brand: var(--palette-coral);
   --brand-strong: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-charcoal));
   --brand-foreground: var(--palette-charcoal);
-  --border: oklch(79.839% 0.0107 67.485);
+  --border: #24242433;
   --input: color-mix(in srgb, var(--palette-charcoal) 30%, var(--background));
   --ring: var(--info);
   --overlay: color-mix(in srgb, var(--palette-charcoal) 18%, transparent);
@@ -87,10 +88,25 @@
   --financial-summary-neutral: #343434;
   --financial-summary-neutral-foreground: oklch(100% 0.00011 271.152);
   --text-body: 1rem;
+  --app-text-xs: 0.8125rem;
+  --app-text-sm: 0.875rem;
   --page-max-width: 89.5rem;
   --section-gap: 1.5rem;
   --shadow-md: color-mix(in srgb, var(--foreground) 10%, transparent) 0 0 10px;
   --primary-action-shadow-color: var(--foreground);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --text-body: 1.0625rem;
+    --app-text-xs: 0.875rem;
+    --app-text-sm: 0.9375rem;
+  }
+
+  html,
+  body {
+    touch-action: pan-x pan-y;
+  }
 }
 
 .dark {
@@ -135,6 +151,8 @@
 
 @utility app-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: clamp(1rem, 1.5vw, var(--section-gap));
   padding: clamp(1.5rem, 2vw, 2rem) clamp(1rem, 3vw, 2.5rem);
 }
@@ -169,8 +187,8 @@
   }
 
   ::selection {
-    background-color: var(--foreground);
-    color: var(--background);
+    background-color: var(--palette-charcoal);
+    color: var(--primary);
     text-shadow: none;
   }
 

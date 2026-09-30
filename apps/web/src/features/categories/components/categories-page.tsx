@@ -59,7 +59,7 @@ export function CategoriesPage() {
     <ProtectedRoute>
       <main className="min-h-svh bg-background">
         <Navbar />
-        <section className="app-page project-container">
+        <section className="app-page project-container min-w-0">
           <PageHeader
             actions={
               <Button onClick={() => setOpen(true)}>
@@ -86,7 +86,7 @@ export function CategoriesPage() {
             <p className="text-destructive text-sm">Não foi possível carregar.</p>
           ) : null}
           {query.data ? (
-            <Tabs className="gap-0" defaultValue="expense">
+            <Tabs className="min-w-0 gap-0" defaultValue="expense">
               <TabsList variant="line">
                 <TabsTrigger value="expense">
                   Despesas ({categories.filter((item) => item.type === "expense").length})
@@ -104,10 +104,10 @@ export function CategoriesPage() {
                       .includes(search.toLocaleLowerCase("pt-BR")),
                 );
                 return (
-                  <TabsContent className="pt-5" key={type} value={type}>
-                    <Card className="gap-0 p-4">
+                  <TabsContent className="min-w-0 pt-5" key={type} value={type}>
+                    <Card className="min-w-0 gap-0 p-3 sm:p-4">
                       {items.length ? (
-                        <div className="overflow-x-auto">
+                        <div className="min-w-0 max-w-full overflow-x-auto">
                           <CategoriesTable
                             categories={items}
                             onEdit={(category) => {

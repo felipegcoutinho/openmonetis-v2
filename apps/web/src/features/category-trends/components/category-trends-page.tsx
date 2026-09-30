@@ -28,7 +28,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
     <ProtectedRoute>
       <main className="min-h-svh bg-background">
         <Navbar />
-        <section className="app-page project-container">
+        <section className="app-page project-container min-w-0">
           <PageHeader
             actions={
               <Button

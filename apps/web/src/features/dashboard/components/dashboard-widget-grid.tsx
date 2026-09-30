@@ -11,9 +11,11 @@ import { dashboardWidgetById } from "./dashboard-widget-registry";
 export function DashboardWidgetGrid({
   excludedWidgetIds = [],
   period,
+  placeBillsAfterInvoices = false,
 }: {
   excludedWidgetIds?: readonly DashboardWidgetId[];
   period: string;
+  placeBillsAfterInvoices?: boolean;
 }) {
   const defaults = createDefaultDashboardWidgetPreferences();
   const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
@@ -25,6 +27,15 @@ export function DashboardWidgetGrid({
       ? [widget]
       : [];
   });
+  if (placeBillsAfterInvoices) {
+    const invoicesIndex = visibleWidgets.findIndex((widget) => widget.id === "invoices");
+    const billsIndex = visibleWidgets.findIndex((widget) => widget.id === "bills");
+    if (invoicesIndex >= 0 && billsIndex >= 0) {
+      const [bills] = visibleWidgets.splice(billsIndex, 1);
+      const nextInvoicesIndex = visibleWidgets.findIndex((widget) => widget.id === "invoices");
+      visibleWidgets.splice(nextInvoicesIndex + 1, 0, bills);
+    }
+  }
 
   return (
     <div className="grid gap-6">

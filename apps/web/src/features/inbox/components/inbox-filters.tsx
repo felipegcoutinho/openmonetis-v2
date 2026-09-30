@@ -39,14 +39,17 @@ export function InboxFilters({
   const activeMatch = getInboxSourceMatch(sourceAppName ?? null, accounts, cards);
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3">
       <Select
         onValueChange={(value) =>
           onSourceChange(typeof value === "string" && value !== "all" ? value : undefined)
         }
         value={sourceAppName ?? "all"}
       >
-        <SelectTrigger aria-label="Filtrar por app de origem" className="min-w-52">
+        <SelectTrigger
+          aria-label="Filtrar por app de origem"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-52 sm:w-auto"
+        >
           <SelectValue>
             {sourceAppName ? (
               <span className="flex min-w-0 items-center gap-2">
@@ -54,7 +57,10 @@ export function InboxFilters({
                 <span className="truncate">{sourceAppName}</span>
               </span>
             ) : (
-              "Todos os apps"
+              <>
+                <span className="sm:hidden">Apps</span>
+                <span className="hidden sm:inline">Todos os apps</span>
+              </>
             )}
           </SelectValue>
         </SelectTrigger>
@@ -78,11 +84,21 @@ export function InboxFilters({
         }
         value={ruleId ?? "all"}
       >
-        <SelectTrigger aria-label="Filtrar por regra" className="min-w-48 max-w-64">
+        <SelectTrigger
+          aria-label="Filtrar por regra"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-48 sm:max-w-64 sm:w-auto"
+        >
           <SelectValue>
-            {ruleId
-              ? (rules.find((rule) => rule.id === ruleId)?.name ?? "Regra indisponível")
-              : "Todas as regras"}
+            {ruleId ? (
+              <span className="min-w-0 truncate">
+                {rules.find((rule) => rule.id === ruleId)?.name ?? "Regra indisponível"}
+              </span>
+            ) : (
+              <>
+                <span className="sm:hidden">Regras</span>
+                <span className="hidden sm:inline">Todas as regras</span>
+              </>
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent align="start">
@@ -101,9 +117,19 @@ export function InboxFilters({
         }
         value={notificationDate ?? "all"}
       >
-        <SelectTrigger aria-label="Filtrar por data da captura" className="min-w-44">
+        <SelectTrigger
+          aria-label="Filtrar por data da captura"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-44 sm:w-auto"
+        >
           <SelectValue>
-            {notificationDate ? formatInboxFilterDate(notificationDate) : "Todas as datas"}
+            {notificationDate ? (
+              <span className="min-w-0 truncate">{formatInboxFilterDate(notificationDate)}</span>
+            ) : (
+              <>
+                <span className="sm:hidden">Datas</span>
+                <span className="hidden sm:inline">Todas as datas</span>
+              </>
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent align="start">

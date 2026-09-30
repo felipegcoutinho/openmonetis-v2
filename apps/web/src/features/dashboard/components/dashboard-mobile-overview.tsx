@@ -10,7 +10,6 @@ import { DashboardWidgetGrid } from "./dashboard-widget-grid";
 
 const essentialWidgetIds: readonly DashboardWidgetId[] = [
   "accounts",
-  "bills",
   "expense-categories",
   "inbox",
 ];
@@ -47,9 +46,15 @@ export function DashboardMobileOverview({ period }: { period: string }) {
         <div className="grid gap-6" id={detailsId}>
           <header>
             <h2 className="font-heading font-medium">Outros indicadores</h2>
-            <p className="mt-1 text-muted-foreground text-sm">Na ordem que você escolheu.</p>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Indicadores do período selecionado.
+            </p>
           </header>
-          <DashboardWidgetGrid excludedWidgetIds={essentialWidgetIds} period={period} />
+          <DashboardWidgetGrid
+            excludedWidgetIds={essentialWidgetIds}
+            period={period}
+            placeBillsAfterInvoices
+          />
         </div>
       ) : null}
     </section>

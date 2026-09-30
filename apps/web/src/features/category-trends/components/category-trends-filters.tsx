@@ -86,32 +86,36 @@ export function CategoryTrendsFilters({
   return (
     <section
       aria-label="Filtros do relatório"
-      className="flex flex-col gap-3 lg:flex-row lg:items-end"
+      className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end"
     >
-      <div className="grid gap-1.5">
+      <div className="grid min-w-0 gap-1.5">
         <span className="font-medium text-muted-foreground text-xs">Período</span>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="trend-start-period">
-            Período inicial
-          </label>
-          <PeriodPicker
-            className="w-fit"
-            id="trend-start-period"
-            onChange={(period) => updatePeriod("startPeriod", period)}
-            value={filters.startPeriod}
-          />
-          <span aria-hidden="true" className="text-muted-foreground text-xs">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-2">
+          <div className="grid min-w-0 gap-1">
+            <label className="text-muted-foreground text-xs" htmlFor="trend-start-period">
+              De
+            </label>
+            <PeriodPicker
+              className="min-w-0 w-full sm:w-48"
+              id="trend-start-period"
+              onChange={(period) => updatePeriod("startPeriod", period)}
+              value={filters.startPeriod}
+            />
+          </div>
+          <span aria-hidden="true" className="hidden pb-2 text-muted-foreground text-xs sm:block">
             até
           </span>
-          <label className="sr-only" htmlFor="trend-end-period">
-            Período final
-          </label>
-          <PeriodPicker
-            className="w-fit"
-            id="trend-end-period"
-            onChange={(period) => updatePeriod("endPeriod", period)}
-            value={filters.endPeriod}
-          />
+          <div className="grid min-w-0 gap-1">
+            <label className="text-muted-foreground text-xs" htmlFor="trend-end-period">
+              Até
+            </label>
+            <PeriodPicker
+              className="min-w-0 w-full sm:w-48"
+              id="trend-end-period"
+              onChange={(period) => updatePeriod("endPeriod", period)}
+              value={filters.endPeriod}
+            />
+          </div>
         </div>
       </div>
 

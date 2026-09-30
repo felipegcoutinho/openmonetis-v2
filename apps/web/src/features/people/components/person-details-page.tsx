@@ -143,7 +143,7 @@ function getPersonTransactionsScope(
     hiddenFilters: ["person"] as const,
     contentNavigation: (
       <Tabs
-        className="gap-0"
+        className="min-w-0 max-w-full gap-0"
         onValueChange={(value) =>
           onViewChange(
             value === "external" ? "external" : value === "transactions" ? "transactions" : "panel",
@@ -151,13 +151,15 @@ function getPersonTransactionsScope(
         }
         value={selectedView}
       >
-        <TabsList variant="line">
-          <TabsTrigger value="panel">Painel</TabsTrigger>
-          <TabsTrigger value="transactions">Lançamentos</TabsTrigger>
-          {person.role === "admin" ? (
-            <TabsTrigger value="external">Despesas compartilhadas</TabsTrigger>
-          ) : null}
-        </TabsList>
+        <div className="min-w-0 max-w-full overflow-x-auto">
+          <TabsList className="min-w-max" variant="line">
+            <TabsTrigger value="panel">Painel</TabsTrigger>
+            <TabsTrigger value="transactions">Lançamentos</TabsTrigger>
+            {person.role === "admin" ? (
+              <TabsTrigger value="external">Despesas compartilhadas</TabsTrigger>
+            ) : null}
+          </TabsList>
+        </div>
       </Tabs>
     ),
     contentOverride:
@@ -199,13 +201,15 @@ function PersonSummary({
   const isInactive = person.status === "inactive";
 
   return (
-    <Card className="overflow-hidden py-0">
-      <CardContent className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
+    <Card className="min-w-0 overflow-hidden py-0">
+      <CardContent className="grid min-w-0 gap-4 p-4 sm:gap-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
         <div className="flex min-w-0 items-start gap-4">
           <PersonAvatar person={person} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate font-medium text-2xl tracking-tight">{person.name}</h1>
+              <h1 className="min-w-0 truncate font-medium text-xl tracking-tight sm:text-2xl">
+                {person.name}
+              </h1>
               <Button
                 aria-label={`Editar ${person.name}`}
                 className="text-muted-foreground hover:text-foreground"
@@ -227,7 +231,9 @@ function PersonSummary({
                 {personStatusLabels[person.status]}
               </Badge>
             </div>
-            <p className="mt-1 text-muted-foreground text-sm">Lançamentos de {periodLabel}</p>
+            <p className="mt-1 break-words text-muted-foreground text-sm">
+              Lançamentos de {periodLabel}
+            </p>
             {person.note ? (
               <p className="mt-3 flex max-w-xl items-start gap-2 text-muted-foreground text-sm leading-relaxed">
                 <MessageSquareText aria-hidden="true" className="mt-0.5 size-4 shrink-0" />

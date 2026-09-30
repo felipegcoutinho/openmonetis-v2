@@ -1,27 +1,57 @@
-import type { TransactionOutput } from "@openmonetis/validators/transactions";
+import { balanceAdjustmentCategoryName } from "@openmonetis/domain/categories";
+import { canDeleteTransactionOrigin } from "@openmonetis/domain/transactions";
+import type {
+  TransactionActionScope,
+  TransactionOutput,
+} from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
+  BadgeDollarSign,
+  CalendarArrowDown,
   CalendarDays,
   Circle,
   CircleCheck,
   Clock3,
+  Copy,
   CreditCard,
   FileText,
   Landmark,
   Layers3,
+  Loader2,
+  MoreHorizontal,
   Paperclip,
+  Pause,
   Pencil,
   ReceiptText,
   RefreshCw,
+  RotateCcw,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { MoneyValue } from "@/components/money-value";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -45,6 +75,8 @@ import {
   transactionOriginLabels,
 } from "../transactions.presentation";
 import { transactionDetailQueryOptions } from "../transactions.queries";
+import { InstallmentActionDialog } from "./installment-action-dialog";
+import { RecurringStatusDialog } from "./recurring-status-dialog";
 import { TransactionTypeBadge } from "./transaction-type-badge";
 
 type TransactionDetailsSheetProps = {
@@ -52,6 +84,21 @@ type TransactionDetailsSheetProps = {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   transaction: TransactionOutput | null;
+  mobileActions?: {
+    onAnticipate: (transaction: TransactionOutput) => void;
+    onCopy: (transaction: TransactionOutput) => void;
+    onDelete: (transaction: TransactionOutput, scope?: TransactionActionScope) => void;
+    onRecurringStatus: (
+      id: string,
+      status: "active" | "paused" | "cancelled",
+    ) => Promise<void> | void;
+    onRefund: (transaction: TransactionOutput) => void;
+    onSettle: (ids: string[], isSettled: boolean) => void;
+    onSettleRecurringOccurrence: (id: string, date: string, isSettled: boolean) => void;
+    onUndoAnticipation: (transaction: TransactionOutput) => void;
+    pendingSettlementKey: string | null;
+    pendingTransactionId: string | null;
+  };
 };
 
 export function TransactionDetailsSheet({
@@ -59,7 +106,11 @@ export function TransactionDetailsSheet({
   onOpenChange,
   open,
   transaction,
+  mobileActions,
 }: TransactionDetailsSheetProps) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [installmentDeleteOpen, setInstallmentDeleteOpen] = useState(false);
+  const [recurringAction, setRecurringAction] = useState<"pause" | "cancel" | null>(null);
   const recordId = transaction?.recordId ?? "";
   const detailQuery = useQuery({
     ...transactionDetailQueryOptions(recordId),
@@ -67,10 +118,21 @@ export function TransactionDetailsSheet({
   });
   const detail = detailQuery.data ?? transaction;
   const canEdit = detail?.origin === "regular" && detail.paymentMethod !== null;
+  const hasMobileActions =
+    detail &&
+    (detail.origin === "regular" ||
+      detail.recurringRuleId ||
+      detail.anticipationId ||
+      detail.origin === "invoiceAdjustment");
 
   function edit(transactionToEdit: TransactionOutput) {
     onOpenChange(false);
     onEdit(transactionToEdit);
+  }
+
+  function openRelatedAction(action: () => void) {
+    onOpenChange(false);
+    action();
   }
 
   return (
@@ -118,6 +180,131 @@ export function TransactionDetailsSheet({
               ) : null}
 
               <TransactionSummary transaction={detail} />
+
+              {mobileActions && hasMobileActions ? (
+                <div className="md:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button className="w-full justify-start" type="button" variant="outline" />
+                      }
+                    >
+                      <MoreHorizontal aria-hidden="true" /> Ações do lançamento
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[min(18rem,calc(100vw-2rem))]">
+                      {detail.isSettled !== null &&
+                      detail.paymentMethod !== "credit_card" &&
+                      detail.origin === "regular" ? (
+                        <DropdownMenuItem
+                          disabled={
+                            mobileActions.pendingSettlementKey ===
+                            (detail.recordId ??
+                              (detail.recurringRuleId
+                                ? `${detail.recurringRuleId}:${detail.purchaseDate}`
+                                : null))
+                          }
+                          onClick={() => {
+                            if (detail.recordId) {
+                              mobileActions.onSettle([detail.recordId], !detail.isSettled);
+                            } else if (detail.recurringRuleId) {
+                              mobileActions.onSettleRecurringOccurrence(
+                                detail.recurringRuleId,
+                                detail.purchaseDate,
+                                !detail.isSettled,
+                              );
+                            }
+                          }}
+                        >
+                          {mobileActions.pendingSettlementKey === detail.recordId ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <CircleCheck />
+                          )}
+                          {detail.isSettled ? "Marcar em aberto" : "Marcar como pago"}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {detail.seriesId && detail.anticipationId ? (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            openRelatedAction(() => mobileActions.onUndoAnticipation(detail))
+                          }
+                        >
+                          <RotateCcw /> Desfazer antecipação
+                        </DropdownMenuItem>
+                      ) : null}
+                      {detail.recordId &&
+                      detail.seriesId &&
+                      !detail.anticipationId &&
+                      detail.type === "expense" &&
+                      detail.origin === "regular" &&
+                      detail.condition === "installment" &&
+                      detail.paymentMethod === "credit_card" &&
+                      detail.currentInstallment !== null &&
+                      detail.installmentCount !== null &&
+                      detail.currentInstallment < detail.installmentCount ? (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            openRelatedAction(() => mobileActions.onAnticipate(detail))
+                          }
+                        >
+                          <CalendarArrowDown /> Antecipar parcelas
+                        </DropdownMenuItem>
+                      ) : null}
+                      {detail.recordId &&
+                      detail.type === "expense" &&
+                      detail.origin === "regular" &&
+                      detail.refundableAmount > 0 ? (
+                        <DropdownMenuItem
+                          onClick={() => openRelatedAction(() => mobileActions.onRefund(detail))}
+                        >
+                          <BadgeDollarSign /> Registrar reembolso
+                        </DropdownMenuItem>
+                      ) : null}
+                      {detail.recordId &&
+                      detail.origin === "regular" &&
+                      detail.paymentMethod !== null &&
+                      detail.categoryName !== balanceAdjustmentCategoryName ? (
+                        <DropdownMenuItem
+                          onClick={() => openRelatedAction(() => mobileActions.onCopy(detail))}
+                        >
+                          <Copy /> Copiar
+                        </DropdownMenuItem>
+                      ) : null}
+                      {detail.recurringRuleId ? (
+                        <>
+                          <DropdownMenuItem onClick={() => setRecurringAction("pause")}>
+                            <Pause /> Pausar recorrência
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setRecurringAction("cancel")}
+                            variant="destructive"
+                          >
+                            <Trash2 /> Encerrar recorrência
+                          </DropdownMenuItem>
+                        </>
+                      ) : null}
+                      {detail.recordId &&
+                      (detail.origin === "invoiceAdjustment" ||
+                        canDeleteTransactionOrigin(detail.origin)) ? (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              detail.seriesId && detail.condition === "installment"
+                                ? setInstallmentDeleteOpen(true)
+                                : setDeleteOpen(true)
+                            }
+                            variant="destructive"
+                          >
+                            <Trash2 /> Remover lançamento
+                          </DropdownMenuItem>
+                        </>
+                      ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : null}
 
               <DetailsSection icon={<ReceiptText />} title="Informações">
                 <DetailRow label="Tipo" value={<TransactionTypeBadge type={detail.type} />} />
@@ -353,6 +540,58 @@ export function TransactionDetailsSheet({
             ) : null}
           </div>
         </SheetFooter>
+        {mobileActions && detail ? (
+          <>
+            <AlertDialog onOpenChange={setDeleteOpen} open={deleteOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover lançamento?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O lançamento “{detail.name}” será removido desta base.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={mobileActions.pendingTransactionId === detail.recordId}
+                    onClick={() => {
+                      mobileActions.onDelete(detail, "single");
+                      onOpenChange(false);
+                    }}
+                    variant="destructive"
+                  >
+                    Remover lançamento
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <InstallmentActionDialog
+              action="delete"
+              onConfirm={async (scope) => {
+                await mobileActions.onDelete(detail, scope);
+                setInstallmentDeleteOpen(false);
+                onOpenChange(false);
+              }}
+              onOpenChange={setInstallmentDeleteOpen}
+              open={installmentDeleteOpen}
+              pending={mobileActions.pendingTransactionId === detail.recordId}
+              transaction={detail}
+            />
+            <RecurringStatusDialog
+              action={recurringAction}
+              name={detail.name}
+              onConfirm={(action) =>
+                mobileActions.onRecurringStatus(
+                  detail.recurringRuleId as string,
+                  action === "pause" ? "paused" : "cancelled",
+                )
+              }
+              onOpenChange={(nextOpen) => {
+                if (!nextOpen) setRecurringAction(null);
+              }}
+            />
+          </>
+        ) : null}
       </SheetContent>
     </Sheet>
   );

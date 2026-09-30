@@ -110,11 +110,11 @@ export function NotificationPanel({
             />
           }
         >
-          <Bell aria-hidden="true" className="size-4" />
+          <Bell aria-hidden="true" className="size-5" />
           {unreadCount > 0 ? (
             <span
               className={cn(
-                "absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-foreground px-1 font-medium text-[9px] text-background leading-none ring-2 ring-background",
+                "absolute top-0 right-0 grid size-4.5 place-items-center rounded-full bg-foreground font-semibold text-[10px] text-background leading-none ring-2 ring-background",
                 badgeClassName,
               )}
             >

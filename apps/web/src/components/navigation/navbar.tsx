@@ -135,7 +135,7 @@ export function Navbar() {
             className="flex justify-self-start items-center gap-2 text-foreground"
             to="/dashboard"
           >
-            <OpenMonetisLogo className="max-md:[&_img]:h-7" compactOnMobile />
+            <OpenMonetisLogo className="max-md:[&>img:first-child]:h-10" compactOnMobile />
           </Link>
 
           <nav
@@ -222,7 +222,7 @@ export function Navbar() {
             </NavigationMenu>
           </nav>
 
-          <div className="flex justify-self-end items-center gap-1 sm:gap-2">
+          <div className="flex justify-self-end items-center gap-0 md:gap-2">
             <Tooltip>
               <TooltipTrigger
                 aria-label="Abrir calculadora"
@@ -254,7 +254,11 @@ export function Navbar() {
                   />
                 }
               >
-                {isPrivacyModeEnabled ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                {isPrivacyModeEnabled ? (
+                  <EyeOff aria-hidden="true" className="size-5" />
+                ) : (
+                  <Eye aria-hidden="true" className="size-5" />
+                )}
               </TooltipTrigger>
               <TooltipContent>
                 {isPrivacyModeEnabled ? "Mostrar valores" : "Ocultar valores"}
@@ -262,7 +266,7 @@ export function Navbar() {
             </Tooltip>
 
             <NotificationPanel
-              badgeClassName="bg-primary text-primary-foreground ring-0"
+              badgeClassName="bg-primary text-primary-foreground ring-0 max-md:right-2"
               enabled={Boolean(user)}
               triggerClassName={headerIconButtonClassName}
             />
@@ -288,9 +292,9 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Abrir menu do usuário"
-                className="inline-flex size-11 items-center justify-center appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:size-auto"
+                className="ml-2 inline-flex size-11 items-center justify-center appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:ml-0 md:size-auto"
               >
-                <Avatar className="overflow-hidden max-md:data-[size=lg]:size-8" size="lg">
+                <Avatar className="overflow-hidden max-md:data-[size=lg]:size-9" size="lg">
                   <AvatarImage
                     alt={user?.name ?? "Usuário"}
                     className="scale-[1.06]"
