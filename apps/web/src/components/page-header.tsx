@@ -37,13 +37,16 @@ export function PageHeader({
   const hasContent = Boolean(title || description || actions || (!hasBreadcrumbs && eyebrow));
 
   return (
-    <header data-mobile-page-header className={cn("grid gap-3", className)}>
+    <header
+      data-mobile-page-header
+      className={cn("grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3", className)}
+    >
       {hasBreadcrumbs ? (
-        <Breadcrumb>
-          <BreadcrumbList>
+        <Breadcrumb className="min-w-0 max-w-full">
+          <BreadcrumbList className="min-w-0 max-w-full">
             {breadcrumbItems.map((breadcrumb, index) => (
               <Fragment key={breadcrumb.label}>
-                <BreadcrumbItem>
+                <BreadcrumbItem className="max-md:shrink-0">
                   {breadcrumb.href ? (
                     <BreadcrumbLink render={<a href={breadcrumb.href} />}>
                       {breadcrumb.label}
