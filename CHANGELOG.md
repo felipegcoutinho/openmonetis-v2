@@ -7,6 +7,39 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-03
+
+Amplia os extratos com fluxo diário e histórico de saldo, permite configurar compras no dia do
+fechamento dos cartões e aprimora os formulários e a navegação da interface web em telas pequenas.
+
+### Adicionado
+
+- Cartões permitem enviar compras feitas no dia do fechamento para a próxima fatura, com encerramento do ciclo na véspera e preservação dos lançamentos já registrados.
+- Extratos de contas exibem entradas, saídas e evolução diária do saldo, com histórico navegável dos últimos 12 meses.
+- Atalho da navegação mobile pode ser alterado por pressão longa ou pelo indicador no botão, com a escolha salva nas preferências do usuário.
+
+### Alterado
+
+- Divisões com duas pessoas ajustam automaticamente a participação restante ao editar o valor ou o percentual de uma delas, preservando o total do lançamento.
+- Componentes extensos da interface divididos em seções menores, com formulários compartilhando a mesma instância de estado e ações de lançamentos reutilizadas entre tabela e detalhes.
+- Formulários em telas menores que 768 px usam páginas ou painéis inferiores, com ações acessíveis, campos maiores e ajuste ao teclado; a apresentação desktop permanece preservada.
+- Seleção mobile de contas, cartões, pessoas e categorias nos lançamentos oferece busca, avatares e logos; datas têm calendário ampliado e atalhos para hoje e ontem.
+- Ação “Novo” na navegação inferior permite iniciar despesas, receitas e transferências sem sair da tela atual.
+- Catálogos de instituições e ícones abrem em painéis mobile; voltar fecha a superfície aberta e preserva a confirmação de descarte dos lançamentos.
+- Zoom por gesto volta a ficar disponível para acessibilidade.
+- Seletores, filtros e detalhes usam painéis adaptados ao celular, com ações de toque maiores e preservação dos avatares e logos.
+- Formulários mobile confirmam o descarte de alterações e protegem o envio em andamento; lançamentos começam pelo valor e a busca por descrições fica disponível em um painel próprio.
+- Cabeçalhos, indicadores, cartões de contas e cartões de crédito têm espaçamento compacto no celular; listas de cadastros exibem esqueletos durante o carregamento.
+- Aplicativo instalado tem identidade e escopo definidos no manifesto, com suporte à abertura independente no iOS.
+
+### Corrigido
+
+- Botão “Novo lançamento” da página de lançamentos usa altura de 48 px no mobile, com área ampliada para abrir as opções de criação.
+- Menu mobile inclui acesso a Ajustes, disponível também em telas onde o ícone do cabeçalho fica oculto.
+- Navegação inferior mobile usa fundo desfocado, recolhe ao avançar pelo conteúdo e reaparece ao voltar a rolagem ou ao topo; navegadores compatíveis podem desenhar o fundo até a área de gestos do Android.
+- Categorias do indicador "Onde você mais gastou" abrem o respectivo histórico no mês selecionado.
+- Extratos de contas mostram boletos quitados no mês do pagamento, inclusive recorrências pagas antecipadamente; a lista geral preserva o mês do vencimento e informa a data de pagamento.
+
 ## [0.9.0] - 2026-09-29
 
 Adiciona edição de recorrências por ocorrência, ocorrências futuras ou série inteira e aprimora
@@ -397,7 +430,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.7.0...v0.8.0
