@@ -2,6 +2,7 @@ import {
   type AccountPeriodSummary,
   type AccountType,
   calculateAccountBalanceAdjustment,
+  calculateAccountCashFlow,
   calculateAccountPeriodSummary,
   createAccountBalanceAdjustmentDraft,
   createAccountDraft,
@@ -170,32 +171,7 @@ export function createAccountsService(
     throughDate?: string,
   ) {
     const accountId = accounts.length === 1 ? accounts[0]?.id : undefined;
-    const [persistedPostings, recurringRules] = await Promise.all([
-      repository.listSettledAccountPostingsThroughPeriod(userId, period, accountId),
-      repository.listAccountRecurringRulesThroughPeriod(
-        userId,
-        getPeriodEndDate(period),
-        accountId,
-      ),
-    ]);
-    const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
-      userId,
-      [...new Set(recurringRules.map((rule) => rule.seriesId))],
-      getPeriodEndDate(period),
-    );
-    const postings = [
-      ...persistedPostings
-        .map((posting) => ({
-          ...posting,
-          period: deriveTransactionPostingPeriod({
-            period: posting.period,
-            paymentMethod: posting.paymentMethod ?? null,
-            boletoPaymentDate: posting.boletoPaymentDate,
-          }),
-        }))
-        .filter((posting) => posting.period <= period),
-      ...expandSettledRecurringPostings(recurringRules, occurrenceStates, period),
-    ].filter(
+    const postings = (await loadAccountPostings(userId, period, accountId)).filter(
       (posting) => !throughDate || (posting.postingDate ?? `${posting.period}-31`) <= throughDate,
     );
     const postingsByAccount = new Map<string, AccountBalancePostingRecord[]>();
@@ -220,6 +196,35 @@ export function createAccountsService(
         }),
       ),
     );
+  }
+
+  async function loadAccountPostings(userId: string, period: string, accountId?: string) {
+    const [persistedPostings, recurringRules] = await Promise.all([
+      repository.listSettledAccountPostingsThroughPeriod(userId, period, accountId),
+      repository.listAccountRecurringRulesThroughPeriod(
+        userId,
+        getPeriodEndDate(period),
+        accountId,
+      ),
+    ]);
+    const occurrenceStates = await repository.listRecurringOccurrenceStatesThroughPeriod(
+      userId,
+      [...new Set(recurringRules.map((rule) => rule.seriesId))],
+      getPeriodEndDate(period),
+    );
+    return [
+      ...persistedPostings
+        .map((posting) => ({
+          ...posting,
+          period: deriveTransactionPostingPeriod({
+            period: posting.period,
+            paymentMethod: posting.paymentMethod ?? null,
+            boletoPaymentDate: posting.boletoPaymentDate,
+          }),
+        }))
+        .filter((posting) => posting.period <= period),
+      ...expandSettledRecurringPostings(recurringRules, occurrenceStates, period),
+    ];
   }
 
   async function summarizeAccount(
@@ -322,6 +327,28 @@ export function createAccountsService(
       }
 
       return summarizeAccount(account, userId, period);
+    },
+
+    async cashFlow(id: string, userId: string, period = currentPeriod()) {
+      const account = await repository.findByIdForUser(id, userId);
+      if (!account) throw notFound("Account not found", "account_not_found");
+      const presentPeriod = currentPeriod();
+      const oldestPresentPeriod = addMonthsToPeriod(presentPeriod, -11);
+      const historyEndPeriod =
+        period >= oldestPresentPeriod && period <= presentPeriod ? presentPeriod : period;
+      const postings = await loadAccountPostings(userId, historyEndPeriod, id);
+      return calculateAccountCashFlow({
+        period,
+        historyEndPeriod,
+        postings: postings
+          .filter((posting) => posting.accountId === id)
+          .map((posting) => ({
+            period: posting.period,
+            date: posting.postingDate ?? `${posting.period}-01`,
+            amount: Number(posting.amount),
+            includeInSummary: posting.includeInSummary,
+          })),
+      });
     },
 
     async replace(id: string, userId: string, input: ReplaceAccountInput) {
@@ -500,6 +527,12 @@ function expandSettledRecurringPostings(
           purchaseDate,
           dueDate: getRecurringDueDate(rule.dueDate, purchaseDate),
         });
+        const postingDate =
+          occurrence?.boletoPaymentDate ??
+          (rule.paymentMethod === "boleto"
+            ? getRecurringDueDate(rule.dueDate, purchaseDate)
+            : purchaseDate) ??
+          purchaseDate;
         const period = deriveTransactionPostingPeriod({
           period: scheduledPeriod,
           paymentMethod: rule.paymentMethod,
@@ -515,7 +548,7 @@ function expandSettledRecurringPostings(
             }).map((posting) => ({
               accountId: posting.accountId,
               period,
-              postingDate: occurrence?.boletoPaymentDate ?? purchaseDate,
+              postingDate,
               amount: posting.amount.toFixed(2),
             })),
           );
@@ -523,7 +556,7 @@ function expandSettledRecurringPostings(
           postings.push({
             accountId: occurrence?.accountId ?? rule.accountId,
             period,
-            postingDate: occurrence?.boletoPaymentDate ?? purchaseDate,
+            postingDate,
             amount: rule.amount,
           });
         }

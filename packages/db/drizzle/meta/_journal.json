@@ -64,6 +64,20 @@
       "when": 1790524348727,
       "tag": "0008_freezing_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791061347571,
+      "tag": "0009_thin_mauler",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791065993332,
+      "tag": "0010_card_closing_day_purchases",
+      "breakpoints": true
     }
   ]
 }

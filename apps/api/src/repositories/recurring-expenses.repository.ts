@@ -50,6 +50,7 @@ export const recurringExpensesRepository = {
         cardClosingRuleType: cards.closingRuleType,
         cardClosingOffsetDays: cards.closingOffsetDays,
         cardClosingOffsetMode: cards.closingOffsetMode,
+        cardClosingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
         cardDueDay: cards.dueDay,
         hasSplits: sql<boolean>`exists (
           select 1 from ${recurringTransactionSplits}

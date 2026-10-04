@@ -207,6 +207,52 @@ test("balance adjustments affect balance without becoming income or expenses", a
   });
 });
 
+test("account cash flow uses owned postings and the boleto payment date", async () => {
+  let requestedAccountId: string | undefined;
+  const service = createAccountsService(
+    createRepository({
+      findByIdForUser: async () => account,
+      listSettledAccountPostingsThroughPeriod: async (_userId, _period, id) => {
+        requestedAccountId = id;
+        return [
+          {
+            accountId,
+            period: "2026-09",
+            postingDate: "2026-08-29",
+            paymentMethod: "boleto",
+            boletoPaymentDate: "2026-08-29",
+            amount: "-100.00",
+          },
+          {
+            accountId,
+            period: "2026-08",
+            postingDate: "2026-08-30",
+            amount: "250.00",
+            includeInSummary: false,
+          },
+        ];
+      },
+    }),
+  );
+
+  const flow = await service.cashFlow(accountId, userId, "2026-08");
+  assert.equal(requestedAccountId, accountId);
+  assert.equal(flow.daily[28]?.expenses, 100);
+  assert.equal(flow.daily[28]?.balance, -100);
+  assert.equal(flow.daily[29]?.income, 0);
+  assert.equal(flow.daily[29]?.balance, 150);
+  assert.equal(flow.history.items.find((item) => item.period === "2026-08")?.balance, 150);
+});
+
+test("account cash flow rejects an account outside the user's ownership", async () => {
+  const service = createAccountsService(createRepository({ findByIdForUser: async () => null }));
+
+  await assert.rejects(
+    service.cashFlow(accountId, userId, "2026-09"),
+    (error: ApiError) => error.status === 404 && error.code === "account_not_found",
+  );
+});
+
 test("balance adjustment rejects a future date", async () => {
   const service = createAccountsService(
     createRepository({ findByIdForUser: async () => account }),

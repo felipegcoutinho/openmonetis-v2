@@ -327,6 +327,7 @@ export const ListTransactionsQuerySchema = z
     condition: z.enum(transactionConditions).optional(),
     paymentMethod: z.enum(paymentMethods).optional(),
     settlement: z.enum(["paid", "unpaid", "invoice"]).optional(),
+    view: z.literal("accountStatement").optional(),
     sort: z.enum(["recent", "oldest", "dueDate", "amount"]).optional(),
     personIds: csvUuidSchema,
     categoryIds: csvUuidSchema,
@@ -352,6 +353,13 @@ export const ListTransactionsQuerySchema = z
       .default(30),
   })
   .superRefine((data, ctx) => {
+    if (data.view === "accountStatement" && data.accountIds.length !== 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["accountIds"],
+        message: "An account statement requires exactly one account",
+      });
+    }
     if (
       data.minAmount !== undefined &&
       data.maxAmount !== undefined &&
@@ -546,6 +554,7 @@ export const TransactionOutputSchema = z
       })
       .nullable(),
     purchaseDate: dateSchema.openapi({ example: "2026-07-07" }),
+    postingDate: dateSchema.nullable(),
     period: periodSchema.openapi({ example: "2026-07" }),
     personId: z.string().uuid().openapi({ example: "3f6d2b84-6ed0-4a50-b257-8adf0b6178de" }),
     personName: z.string().openapi({ example: "Maria" }),

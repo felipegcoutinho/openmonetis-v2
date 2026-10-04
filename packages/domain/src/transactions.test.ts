@@ -1,13 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  deriveTransactionPostingDate,
   getPeriodEndDate,
   isTransactionSelectionItemSelectable,
   listRecurrenceDatesInPeriod,
+  rebalanceTwoAmountShares,
+  rebalanceTwoPercentageShares,
   selectRecurringRuleVersionsToUpdate,
   summarizeTransactionSelection,
   type TransactionSelectionItem,
 } from "./transactions";
+
+test("posting date follows payment for settled boletos without moving their due period", () => {
+  assert.equal(
+    deriveTransactionPostingDate({
+      paymentMethod: "boleto",
+      purchaseDate: "2026-07-20",
+      dueDate: "2026-09-10",
+      boletoPaymentDate: "2026-08-28",
+      isSettled: true,
+    }),
+    "2026-08-28",
+  );
+  assert.equal(
+    deriveTransactionPostingDate({
+      paymentMethod: "boleto",
+      purchaseDate: "2026-07-20",
+      dueDate: "2026-09-10",
+      isSettled: false,
+    }),
+    null,
+  );
+});
 
 test("period end uses the final UTC calendar day across month and year boundaries", () => {
   assert.equal(getPeriodEndDate("2026-02").toISOString(), "2026-02-28T00:00:00.000Z");
@@ -99,4 +124,31 @@ test("selection excludes technical and neutral movements", () => {
     balance: -100,
     neutralCount: 3,
   });
+});
+
+test("two amount shares conserve cents when editing either participant", () => {
+  assert.deepEqual(rebalanceTwoAmountShares(100, 35.25), [35.25, 64.75]);
+  assert.deepEqual(rebalanceTwoAmountShares(10.01, 3.33), [3.33, 6.68]);
+  assert.deepEqual(rebalanceTwoAmountShares(0.3, 0.1), [0.1, 0.2]);
+  assert.deepEqual(rebalanceTwoAmountShares(10, 0), [0, 10]);
+  assert.deepEqual(rebalanceTwoAmountShares(10, 10), [10, 0]);
+  assert.deepEqual(rebalanceTwoAmountShares(10, 3.335), [3.34, 6.66]);
+  for (const [total, edited] of [
+    [10, -1],
+    [10, 11],
+    [NaN, 1],
+    [10, Infinity],
+  ]) {
+    assert.throws(() => rebalanceTwoAmountShares(total, edited), RangeError);
+  }
+});
+
+test("two percentage shares complement the edited input without changing precision", () => {
+  assert.deepEqual(rebalanceTwoPercentageShares(33.33), [33.33, 66.67]);
+  assert.deepEqual(rebalanceTwoPercentageShares(0), [0, 100]);
+  assert.deepEqual(rebalanceTwoPercentageShares(100), [100, 0]);
+  assert.deepEqual(rebalanceTwoPercentageShares(33.333), [33.333, 66.667]);
+  for (const percentage of [-1, 101, NaN, Infinity]) {
+    assert.throws(() => rebalanceTwoPercentageShares(percentage), RangeError);
+  }
 });

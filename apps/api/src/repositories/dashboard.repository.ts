@@ -239,6 +239,7 @@ export const dashboardRepository = {
         cardClosingRuleType: cards.closingRuleType,
         cardClosingOffsetDays: cards.closingOffsetDays,
         cardClosingOffsetMode: cards.closingOffsetMode,
+        cardClosingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
         cardDueDay: cards.dueDay,
         excludeFromBalance:
           sql<boolean>`coalesce(${recurringAccounts.excludeFromBalance}, ${recurringCardAccounts.excludeFromBalance}, false)`.as(
@@ -346,6 +347,7 @@ export const dashboardRepository = {
                 closingDay: row.cardClosingDay,
                 closingOffsetDays: row.cardClosingOffsetDays,
                 closingOffsetMode: row.cardClosingOffsetMode,
+                closingDayPurchasesNextInvoice: row.cardClosingDayPurchasesNextInvoice ?? false,
               }),
               dueDay: row.cardDueDay,
             }

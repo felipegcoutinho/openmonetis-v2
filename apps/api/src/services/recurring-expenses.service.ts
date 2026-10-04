@@ -57,6 +57,7 @@ export type RecurringExpenseRuleRecord = {
   cardClosingRuleType: "fixedDay" | "daysBeforeDue" | null;
   cardClosingOffsetDays: number | null;
   cardClosingOffsetMode: "calendarDays" | "weekdays" | null;
+  cardClosingDayPurchasesNextInvoice: boolean | null;
   cardDueDay: number | null;
   hasSplits: boolean;
 };
@@ -77,6 +78,7 @@ type OwnedRecurringExpenseRule = Omit<
   | "cardClosingRuleType"
   | "cardClosingOffsetDays"
   | "cardClosingOffsetMode"
+  | "cardClosingDayPurchasesNextInvoice"
   | "cardDueDay"
   | "hasSplits"
 > & {
@@ -518,6 +520,7 @@ function getCard(rule: RecurringExpenseRuleRecord): {
       closingDay: rule.cardClosingDay,
       closingOffsetDays: rule.cardClosingOffsetDays,
       closingOffsetMode: rule.cardClosingOffsetMode,
+      closingDayPurchasesNextInvoice: rule.cardClosingDayPurchasesNextInvoice ?? false,
     }),
     dueDay: rule.cardDueDay,
   };

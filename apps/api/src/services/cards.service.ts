@@ -38,6 +38,7 @@ type CardRecord = {
   closingRuleType: CardClosingRuleType;
   closingOffsetDays: number | null;
   closingOffsetMode: CardClosingOffsetMode | null;
+  closingDayPurchasesNextInvoice: boolean;
   dueDay: number;
   limit: string;
   logo: string | null;
@@ -90,6 +91,7 @@ type CardRecurringRuleRecord = {
   closingRuleType: CardClosingRuleType;
   closingOffsetDays: number | null;
   closingOffsetMode: CardClosingOffsetMode | null;
+  closingDayPurchasesNextInvoice: boolean;
   dueDay: number;
 };
 
@@ -120,6 +122,7 @@ function toCardOutput(
     accountId: card.accountId,
     name: card.name,
     brand: card.brand,
+    closingDayPurchasesNextInvoice: card.closingDayPurchasesNextInvoice,
     status: card.status,
     closingDay: card.closingDay,
     closingRuleType: card.closingRuleType,
@@ -237,6 +240,7 @@ export function createCardsService(
         createCardDraft({
           ...input,
           userId,
+          closingDayPurchasesNextInvoice: input.closingDayPurchasesNextInvoice ?? false,
           ...normalizeClosingConfiguration(input),
           logo: input.logo ?? null,
           note: input.note ?? null,
@@ -301,6 +305,7 @@ export function createCardsService(
       const card = await repository.updateForUser(id, userId, {
         ...input,
         ...normalizeClosingConfiguration(input),
+        closingDayPurchasesNextInvoice: input.closingDayPurchasesNextInvoice ?? false,
         name: input.name.trim(),
         logo: input.logo?.trim() || null,
         note: input.note?.trim() || null,
@@ -318,6 +323,9 @@ export function createCardsService(
       if (input.accountId !== undefined) values.accountId = input.accountId;
       if (input.name !== undefined) values.name = input.name.trim();
       if (input.brand !== undefined) values.brand = input.brand;
+      if (input.closingDayPurchasesNextInvoice !== undefined) {
+        values.closingDayPurchasesNextInvoice = input.closingDayPurchasesNextInvoice;
+      }
       if (input.status !== undefined) values.status = input.status;
       if (
         input.closingDay !== undefined ||

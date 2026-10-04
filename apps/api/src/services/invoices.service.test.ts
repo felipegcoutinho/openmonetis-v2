@@ -43,6 +43,7 @@ function createRepository(
           closingRuleType: "fixedDay" as const,
           closingOffsetDays: null,
           closingOffsetMode: null,
+          closingDayPurchasesNextInvoice: false,
           dueDay: 10,
         },
       ],

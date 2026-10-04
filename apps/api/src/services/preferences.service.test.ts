@@ -49,6 +49,14 @@ test("saving a preference patch preserves settings omitted by the editor", async
   assert.equal(writes(), 1);
 });
 
+test("saving a mobile shortcut keeps it across preference updates", async () => {
+  const { service } = setup();
+  const saved = await service.update({ mobileShortcut: "cards" }, "user-a");
+  assert.equal(saved.mobileShortcut, "cards");
+  const updated = await service.update({ transactionsPageSize: 50 }, "user-a");
+  assert.equal(updated.mobileShortcut, "cards");
+});
+
 test("unavailable related IDs are rejected without saving preferences", async () => {
   const { service, writes } = setup();
   await assert.rejects(

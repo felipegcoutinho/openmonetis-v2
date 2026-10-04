@@ -334,6 +334,7 @@ export const accountsRepository = {
         accountId: transactions.accountId,
         period: transactions.period,
         purchaseDate: transactions.purchaseDate,
+        dueDate: transactions.dueDate,
         paymentMethod: transactions.paymentMethod,
         boletoPaymentDate: transactions.boletoPaymentDate,
         amount:
@@ -383,6 +384,7 @@ export const accountsRepository = {
         transactions.accountId,
         transactions.period,
         transactions.purchaseDate,
+        transactions.dueDate,
         transactions.origin,
         transactions.paymentMethod,
         transactions.boletoPaymentDate,
@@ -392,6 +394,7 @@ export const accountsRepository = {
       ...posting,
       postingDate:
         posting.boletoPaymentDate?.toISOString().slice(0, 10) ??
+        (posting.paymentMethod === "boleto" ? posting.dueDate?.toISOString().slice(0, 10) : null) ??
         posting.purchaseDate.toISOString().slice(0, 10),
       boletoPaymentDate: posting.boletoPaymentDate?.toISOString().slice(0, 10) ?? null,
     }));

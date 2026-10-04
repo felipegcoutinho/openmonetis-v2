@@ -45,6 +45,7 @@ function recurringRule(id: string, amount: string): RecurringExpenseRuleRecord {
     cardClosingRuleType: null,
     cardClosingOffsetDays: null,
     cardClosingOffsetMode: null,
+    cardClosingDayPurchasesNextInvoice: null,
     cardDueDay: null,
     hasSplits: false,
   };

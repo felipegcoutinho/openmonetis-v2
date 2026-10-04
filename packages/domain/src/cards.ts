@@ -10,23 +10,30 @@ export type CardClosingRuleType = (typeof cardClosingRuleTypes)[number];
 export const cardClosingOffsetModes = ["calendarDays", "weekdays"] as const;
 export type CardClosingOffsetMode = (typeof cardClosingOffsetModes)[number];
 
-export type CardClosingRule =
+export type CardClosingRule = (
   | { type: "fixedDay"; closingDay: number }
-  | { type: "daysBeforeDue"; days: number; mode: CardClosingOffsetMode };
+  | { type: "daysBeforeDue"; days: number; mode: CardClosingOffsetMode }
+) & { closingDayPurchasesNextInvoice?: boolean };
 
 export function resolveCardClosingRule(input: {
   closingRuleType: CardClosingRuleType;
   closingDay: number | null;
   closingOffsetDays: number | null;
   closingOffsetMode: CardClosingOffsetMode | null;
+  closingDayPurchasesNextInvoice: boolean;
 }): CardClosingRule {
   return input.closingRuleType === "daysBeforeDue"
     ? {
         type: "daysBeforeDue",
+        closingDayPurchasesNextInvoice: input.closingDayPurchasesNextInvoice,
         days: input.closingOffsetDays ?? 1,
         mode: input.closingOffsetMode ?? "calendarDays",
       }
-    : { type: "fixedDay", closingDay: input.closingDay ?? 1 };
+    : {
+        type: "fixedDay",
+        closingDay: input.closingDay ?? 1,
+        closingDayPurchasesNextInvoice: input.closingDayPurchasesNextInvoice,
+      };
 }
 
 export type CardInvoiceMovement = {
@@ -104,6 +111,7 @@ export type CardCreateDraft = {
   accountId: string;
   name: string;
   brand: CardBrand;
+  closingDayPurchasesNextInvoice: boolean;
   status: CardStatus;
   closingDay: number | null;
   closingRuleType: CardClosingRuleType;
@@ -245,7 +253,11 @@ export function getInvoiceDates(input: {
       : subtractDays(dueDate, closingRule.days, closingRule.mode);
 
   return {
-    closingDate: toDateString(closingDate),
+    closingDate: toDateString(
+      closingRule.closingDayPurchasesNextInvoice
+        ? subtractDays(closingDate, 1, "calendarDays")
+        : closingDate,
+    ),
     dueDate: toDateString(dueDate),
   };
 }

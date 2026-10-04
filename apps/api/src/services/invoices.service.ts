@@ -37,6 +37,7 @@ type InvoiceCardRecord = {
   closingRuleType: CardClosingRuleType;
   closingOffsetDays: number | null;
   closingOffsetMode: CardClosingOffsetMode | null;
+  closingDayPurchasesNextInvoice: boolean;
   dueDay: number;
 };
 type InvoiceAccountRecord = { id: string; name: string; logo: string | null };
@@ -72,6 +73,7 @@ type InvoiceRecurringMovementRecord = InvoiceMovementRecord & {
   closingRuleType: CardClosingRuleType;
   closingOffsetDays: number | null;
   closingOffsetMode: CardClosingOffsetMode | null;
+  closingDayPurchasesNextInvoice: boolean;
   dueDay: number;
 };
 export type InvoicesRepository = {

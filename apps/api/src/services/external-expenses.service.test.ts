@@ -565,6 +565,7 @@ test("card synchronization keeps the occurrence date and uses the source invoice
         closingRuleType: "fixedDay",
         closingOffsetDays: null,
         closingOffsetMode: null,
+        closingDayPurchasesNextInvoice: false,
         dueDay: 10,
       },
     }),

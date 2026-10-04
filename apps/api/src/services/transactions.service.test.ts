@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   ListTransactionsQuerySchema,
   type TransactionInput,
+  TransactionInputSchema,
   UpdateRecurringRuleQuerySchema,
 } from "@openmonetis/validators/transactions";
 import type {
@@ -19,6 +20,106 @@ const transactionId = "20000000-0000-4000-8000-000000000002";
 const firstPersonId = "30000000-0000-4000-8000-000000000003";
 const secondPersonId = "40000000-0000-4000-8000-000000000004";
 const recurringRuleId = "70000000-0000-4000-8000-000000000007";
+
+test("closing-day purchases shift new singles and installments while existing and explicit periods stay fixed", async () => {
+  const cardId = "80000000-0000-4000-8000-000000000008";
+  let recorded = transactionFixture({
+    paymentMethod: "credit_card",
+    accountId: null,
+    cardId,
+    dueDate: null,
+    purchaseDate: new Date("2026-10-05"),
+    period: "2026-10",
+    isSettled: null,
+  });
+  let installmentPeriods: string[] = [];
+  const overrides = {
+    listPaidInvoicePeriodsForUser: async () => [],
+    getCardExpenseTotalForUser: async () => 0,
+    findPersonByIdForUser: async () => ({ id: firstPersonId, name: "Pessoa", status: "active" }),
+    findCategoryByIdForUser: async () => ({
+      id: recorded.categoryId,
+      name: "Moradia",
+      type: "expense",
+    }),
+    findCardByIdForUser: async () => ({
+      id: cardId,
+      name: "Principal",
+      status: "active",
+      closingDay: 5,
+      closingRuleType: "fixedDay",
+      closingOffsetDays: null,
+      closingOffsetMode: null,
+      closingDayPurchasesNextInvoice: true,
+      dueDay: 10,
+      limit: "1000.00",
+    }),
+    findTransactionByIdForUser: async () => recorded,
+    listTransactionSplitsForUser: async () => [],
+    listTransactionIdsWithAttachmentsForUser: async () => [],
+    updateTransactionWithSplitsForUser: async (
+      _id: string,
+      _ownerId: string,
+      data: Parameters<TransactionsServiceDependencies["updateTransactionWithSplitsForUser"]>[2],
+    ) => {
+      recorded = { ...recorded, ...data };
+      return recorded;
+    },
+    insertTransactionsWithSplits: async (
+      records: Parameters<TransactionsServiceDependencies["insertTransactionsWithSplits"]>[0],
+    ) => records.map((record) => ({ ...recorded, ...record })),
+    insertInstallmentSeriesWithTransactions: async (
+      _series: Parameters<
+        TransactionsServiceDependencies["insertInstallmentSeriesWithTransactions"]
+      >[0],
+      records: Parameters<
+        TransactionsServiceDependencies["insertInstallmentSeriesWithTransactions"]
+      >[1],
+    ) => {
+      installmentPeriods = records.map((record) => record.period);
+      return records.map((record) => ({ ...recorded, ...record }));
+    },
+  };
+  const dependencies = new Proxy(overrides, {
+    get(target, property) {
+      if (property in target) return target[property as keyof typeof target];
+      return async () => {
+        throw new Error(`Unexpected dependency call: ${String(property)}`);
+      };
+    },
+  }) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  const edited = await service.updateTransaction(transactionId, userId, {
+    name: "Compra renomeada",
+  });
+  assert.equal(edited.period, "2026-10");
+  const input = TransactionInputSchema.parse({
+    type: "expense",
+    paymentMethod: "credit_card",
+    name: "Compra nova",
+    amount: 300,
+    purchaseDate: "2026-10-05",
+    personId: firstPersonId,
+    cardId,
+    categoryId: recorded.categoryId,
+  });
+  assert.equal((await service.createTransaction({ ...input, userId })).period, "2026-11");
+  assert.equal(
+    (await service.createTransaction({ ...input, userId, invoicePeriod: "2026-10" })).period,
+    "2026-10",
+  );
+  await service.createTransaction({
+    ...input,
+    userId,
+    condition: "installment",
+    installmentCount: 3,
+  });
+  assert.deepEqual(installmentPeriods, ["2026-11", "2026-12", "2027-01"]);
+});
 
 test("recurring edit query keeps legacy whole-series updates and requires a scoped date", () => {
   assert.deepEqual(UpdateRecurringRuleQuerySchema.parse({}), { scope: "series" });
@@ -88,6 +189,173 @@ function transactionFixture(
   };
 }
 
+test("account statement lists a paid boleto in its payment month while transactions keep the due month", async () => {
+  const accountId = "50000000-0000-4000-8000-000000000005";
+  const paidBoleto = transactionFixture({
+    purchaseDate: new Date("2026-07-20T00:00:00.000Z"),
+    dueDate: new Date("2026-09-10T00:00:00.000Z"),
+    boletoPaymentDate: new Date("2026-08-28T00:00:00.000Z"),
+    isSettled: true,
+  });
+  const dependencies = new Proxy(
+    {
+      listAccountStatementTransactionsForUser: async (_userId: string, period: string) =>
+        period === "2026-08" ? [paidBoleto] : [],
+      listTransactionsByPeriod: async (_userId: string, period: string) =>
+        period === "2026-09" ? [paidBoleto] : [],
+      listRecurringRulesForPeriod: async () => [],
+      listSettledRecurringBoletoOccurrencesByPaymentDateForUser: async () => [],
+      listRecurringSplitsForUser: async () => [],
+      listRecurringOccurrencesForUser: async () => [],
+      listTransactionSplitsForUser: async () => [],
+      listTransactionIdsWithAttachmentsForUser: async () => [],
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  const statementQuery = (period: string) =>
+    ListTransactionsQuerySchema.parse({ view: "accountStatement", period, accountIds: accountId });
+
+  const augustStatement = await service.listTransactions(userId, statementQuery("2026-08"));
+  const septemberStatement = await service.listTransactions(userId, statementQuery("2026-09"));
+  const augustTransactions = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-08" }),
+  );
+  const septemberTransactions = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09" }),
+  );
+
+  assert.equal(augustStatement.total, 1);
+  assert.equal(augustStatement.items[0]?.postingDate, "2026-08-28");
+  assert.equal(augustStatement.items[0]?.period, "2026-09");
+  assert.equal(septemberStatement.total, 0);
+  assert.equal(augustTransactions.total, 0);
+  assert.equal(septemberTransactions.total, 1);
+  assert.equal(
+    ListTransactionsQuerySchema.safeParse({ view: "accountStatement", period: "2026-08" }).success,
+    false,
+  );
+});
+
+test("account statement includes an early recurring boleto payment before the rule starts", async () => {
+  const rule: RecurringRuleWithRelations = {
+    id: recurringRuleId,
+    userId,
+    seriesId: "80000000-0000-4000-8000-000000000008",
+    personId: firstPersonId,
+    type: "expense",
+    paymentMethod: "boleto",
+    name: "Conta de energia",
+    amount: "-100.00",
+    anchorDate: new Date("2026-09-01T00:00:00.000Z"),
+    startDate: new Date("2026-09-01T00:00:00.000Z"),
+    endDate: null,
+    frequency: "monthly",
+    accountId: "50000000-0000-4000-8000-000000000005",
+    cardId: null,
+    categoryId: "60000000-0000-4000-8000-000000000006",
+    sourceAccountId: null,
+    destinationAccountId: null,
+    dueDate: new Date("2026-09-10T00:00:00.000Z"),
+    isSettled: false,
+    note: null,
+    status: "active",
+    createdAt: new Date("2026-09-01T00:00:00.000Z"),
+    updatedAt: new Date("2026-09-01T00:00:00.000Z"),
+    personName: "Pessoa 1",
+    personAvatarUrl: null,
+    accountName: "Conta principal",
+    accountLogo: null,
+    cardName: null,
+    cardLogo: null,
+    categoryName: "Moradia",
+    categoryIcon: null,
+    sourceAccountName: null,
+    sourceAccountLogo: null,
+    destinationAccountName: null,
+    destinationAccountLogo: null,
+    cardClosingDay: null,
+    cardClosingRuleType: null,
+    cardClosingOffsetDays: null,
+    cardClosingOffsetMode: null,
+    cardClosingDayPurchasesNextInvoice: null,
+    cardDueDay: null,
+  };
+  const occurrence = {
+    recurringRuleId,
+    recurringSeriesId: rule.seriesId,
+    purchaseDate: new Date("2026-09-01T00:00:00.000Z"),
+    isSettled: true,
+    accountId: null,
+    boletoPaymentDate: new Date("2026-08-28T00:00:00.000Z"),
+  };
+  const dependencies = new Proxy(
+    {
+      listAccountStatementTransactionsForUser: async () => [],
+      listTransactionsByPeriod: async () => [],
+      listRecurringRulesForPeriod: async (_userId: string, end: Date) =>
+        end.toISOString().startsWith("2026-09") ? [rule] : [],
+      listRecurringRulesByIdsForUser: async () => [rule],
+      listSettledRecurringBoletoOccurrencesByPaymentDateForUser: async (
+        _userId: string,
+        _accountId: string,
+        start: Date,
+      ) => (start.toISOString().startsWith("2026-08") ? [occurrence] : []),
+      listRecurringSplitsForUser: async () => [],
+      listRecurringOccurrencesForUser: async () => [occurrence],
+      listTransactionSplitsForUser: async () => [],
+      listTransactionIdsWithAttachmentsForUser: async () => [],
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  const statementQuery = (period: string) =>
+    ListTransactionsQuerySchema.parse({
+      view: "accountStatement",
+      period,
+      accountIds: rule.accountId,
+    });
+
+  const augustStatement = await service.listTransactions(userId, statementQuery("2026-08"));
+  const septemberStatement = await service.listTransactions(userId, statementQuery("2026-09"));
+  const septemberTransactions = await service.listTransactions(
+    userId,
+    ListTransactionsQuerySchema.parse({ period: "2026-09" }),
+  );
+
+  assert.equal(augustStatement.total, 1);
+  assert.equal(augustStatement.items[0]?.postingDate, "2026-08-28");
+  assert.equal(augustStatement.items[0]?.period, "2026-09");
+  assert.equal(septemberStatement.total, 0);
+  assert.equal(septemberTransactions.total, 1);
+  assert.equal(septemberTransactions.items[0]?.isSettled, true);
+  assert.equal(septemberTransactions.items[0]?.boletoPaymentDate, "2026-08-28");
+});
+
 test("editing a recurring boleto preserves the rule settlement state", async () => {
   const rule: RecurringRuleWithRelations = {
     id: recurringRuleId,
@@ -129,6 +397,7 @@ test("editing a recurring boleto preserves the rule settlement state", async () 
     cardClosingRuleType: null,
     cardClosingOffsetDays: null,
     cardClosingOffsetMode: null,
+    cardClosingDayPurchasesNextInvoice: null,
     cardDueDay: null,
   };
   let savedSettlement: boolean | null | undefined;

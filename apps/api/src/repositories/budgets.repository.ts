@@ -157,6 +157,7 @@ export const budgetsRepository = {
         cardClosingRuleType: cards.closingRuleType,
         cardClosingOffsetDays: cards.closingOffsetDays,
         cardClosingOffsetMode: cards.closingOffsetMode,
+        cardClosingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
         cardDueDay: cards.dueDay,
       })
       .from(recurringTransactionRules)
@@ -216,6 +217,7 @@ export const budgetsRepository = {
                 closingDay: row.cardClosingDay,
                 closingOffsetDays: row.cardClosingOffsetDays,
                 closingOffsetMode: row.cardClosingOffsetMode,
+                closingDayPurchasesNextInvoice: row.cardClosingDayPurchasesNextInvoice ?? false,
               }),
               dueDay: row.cardDueDay,
             }

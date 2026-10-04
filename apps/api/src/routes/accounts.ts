@@ -3,6 +3,7 @@ import { ok } from "@openmonetis/shared/api";
 import {
   AccountBalanceAdjustmentOutputSchema,
   AccountBalanceAdjustmentPreviewSchema,
+  AccountCashFlowOutputSchema,
   AccountOutputSchema,
   AccountParamsSchema,
   AccountPeriodQuerySchema,
@@ -17,6 +18,10 @@ import type { ApiVariables } from "../types/context";
 import { ErrorResponseSchema as ErrorSchema, validationHook } from "../utils/openapi";
 
 const AccountResponseSchema = z.object({ data: AccountOutputSchema, error: z.null() });
+const AccountCashFlowResponseSchema = z.object({
+  data: AccountCashFlowOutputSchema,
+  error: z.null(),
+});
 const AccountBalanceAdjustmentResponseSchema = z.object({
   data: AccountBalanceAdjustmentOutputSchema,
   error: z.null(),
@@ -124,6 +129,40 @@ export function createAccountsRoute(service: AccountsService) {
     async (context) =>
       context.json(
         ok(await service.list(context.get("userId"), context.req.valid("query").period)),
+        200,
+      ),
+  );
+
+  accountsRoute.openapi(
+    createRoute({
+      method: "get",
+      path: "/{id}/cash-flow",
+      tags: ["Accounts"],
+      request: { params: AccountParamsSchema, query: AccountPeriodQuerySchema },
+      responses: {
+        200: {
+          description: "Daily account flow and twelve-month history",
+          content: { "application/json": { schema: AccountCashFlowResponseSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        404: {
+          description: "Account not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.cashFlow(
+            context.req.valid("param").id,
+            context.get("userId"),
+            context.req.valid("query").period,
+          ),
+        ),
         200,
       ),
   );

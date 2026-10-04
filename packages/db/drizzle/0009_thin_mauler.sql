@@ -1,0 +1,2 @@
+CREATE TYPE "public"."mobile_shortcut_destination" AS ENUM('accounts', 'cards', 'budgets', 'goals', 'people', 'categories', 'notes', 'attachments', 'inbox');--> statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "mobile_shortcut" "mobile_shortcut_destination" DEFAULT 'accounts' NOT NULL;

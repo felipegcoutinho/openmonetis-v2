@@ -57,6 +57,7 @@ import {
 } from "./external-expenses.repository";
 
 const transactionAccounts = alias(financialAccounts, "transaction_accounts");
+const occurrenceAccounts = alias(financialAccounts, "occurrence_accounts");
 const sourceAccounts = alias(financialAccounts, "source_accounts");
 const destinationAccounts = alias(financialAccounts, "destination_accounts");
 const balanceSplitPeople = alias(people, "transfer_balance_split_people");
@@ -391,6 +392,7 @@ export type RecurringRuleWithRelations = RecurringTransactionRule & {
   cardClosingRuleType: Card["closingRuleType"] | null;
   cardClosingOffsetDays: number | null;
   cardClosingOffsetMode: Card["closingOffsetMode"] | null;
+  cardClosingDayPurchasesNextInvoice: boolean | null;
   cardDueDay: number | null;
 };
 
@@ -526,6 +528,7 @@ const recurringRuleColumns = {
   cardClosingRuleType: cards.closingRuleType,
   cardClosingOffsetDays: cards.closingOffsetDays,
   cardClosingOffsetMode: cards.closingOffsetMode,
+  cardClosingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
   cardDueDay: cards.dueDay,
 };
 
@@ -891,14 +894,75 @@ export async function listRecurringOccurrencesForUser(
       purchaseDate: recurringTransactionOccurrences.purchaseDate,
       isSettled: recurringTransactionOccurrences.isSettled,
       accountId: recurringTransactionOccurrences.accountId,
+      accountName: occurrenceAccounts.name,
+      accountLogo: occurrenceAccounts.logo,
       boletoPaymentDate: recurringTransactionOccurrences.boletoPaymentDate,
     })
     .from(recurringTransactionOccurrences)
+    .leftJoin(
+      occurrenceAccounts,
+      and(
+        eq(recurringTransactionOccurrences.accountId, occurrenceAccounts.id),
+        eq(occurrenceAccounts.userId, userId),
+      ),
+    )
     .where(
       and(
         eq(recurringTransactionOccurrences.userId, userId),
         inArray(recurringTransactionOccurrences.recurringSeriesId, seriesIds),
         sql`${recurringTransactionOccurrences.purchaseDate} between ${periodStart} and ${periodEnd}`,
+      ),
+    );
+}
+
+export async function listSettledRecurringBoletoOccurrencesByPaymentDateForUser(
+  userId: string,
+  accountId: string,
+  dateStart: Date,
+  dateEnd: Date,
+) {
+  return db
+    .select({
+      recurringRuleId: recurringTransactionOccurrences.recurringRuleId,
+      recurringSeriesId: recurringTransactionOccurrences.recurringSeriesId,
+      purchaseDate: recurringTransactionOccurrences.purchaseDate,
+      isSettled: recurringTransactionOccurrences.isSettled,
+      accountId: recurringTransactionOccurrences.accountId,
+      accountName: occurrenceAccounts.name,
+      accountLogo: occurrenceAccounts.logo,
+      boletoPaymentDate: recurringTransactionOccurrences.boletoPaymentDate,
+    })
+    .from(recurringTransactionOccurrences)
+    .innerJoin(
+      recurringTransactionRules,
+      and(
+        eq(recurringTransactionOccurrences.recurringRuleId, recurringTransactionRules.id),
+        eq(recurringTransactionRules.userId, userId),
+        eq(recurringTransactionRules.status, "active"),
+        eq(recurringTransactionRules.type, "expense"),
+        eq(recurringTransactionRules.paymentMethod, "boleto"),
+      ),
+    )
+    .leftJoin(
+      occurrenceAccounts,
+      and(
+        eq(recurringTransactionOccurrences.accountId, occurrenceAccounts.id),
+        eq(occurrenceAccounts.userId, userId),
+      ),
+    )
+    .where(
+      and(
+        eq(recurringTransactionOccurrences.userId, userId),
+        eq(recurringTransactionOccurrences.isSettled, true),
+        or(
+          eq(recurringTransactionOccurrences.accountId, accountId),
+          and(
+            isNull(recurringTransactionOccurrences.accountId),
+            eq(recurringTransactionRules.accountId, accountId),
+          ),
+        ),
+        gte(recurringTransactionOccurrences.boletoPaymentDate, dateStart),
+        lte(recurringTransactionOccurrences.boletoPaymentDate, dateEnd),
       ),
     );
 }
@@ -1052,6 +1116,38 @@ export async function listTransactionsByPeriod(
 ) {
   return listPersistedTransactions(userId, [
     eq(transactions.period, period),
+    ...buildPersistedTransactionFilters(userId, filters),
+  ]);
+}
+
+export async function listAccountStatementTransactionsForUser(
+  userId: string,
+  period: string,
+  dateStart: Date,
+  dateEnd: Date,
+  hasDateFilter: boolean,
+  filters: PersistedTransactionFilters,
+) {
+  const effectiveDate = sql<string>`case when ${transactions.paymentMethod} = 'boleto' then coalesce(${transactions.boletoPaymentDate}, ${transactions.dueDate}, ${transactions.purchaseDate}) else ${transactions.purchaseDate} end`;
+  const startDate = dateStart.toISOString().slice(0, 10);
+  const endDate = dateEnd.toISOString().slice(0, 10);
+  return listPersistedTransactions(userId, [
+    eq(transactions.isSettled, true),
+    ...(hasDateFilter
+      ? [gte(effectiveDate, startDate), lte(effectiveDate, endDate)]
+      : [
+          or(
+            and(
+              eq(transactions.paymentMethod, "boleto"),
+              gte(effectiveDate, startDate),
+              lte(effectiveDate, endDate),
+            ),
+            and(
+              or(isNull(transactions.paymentMethod), ne(transactions.paymentMethod, "boleto")),
+              eq(transactions.period, period),
+            ),
+          ) as SQL,
+        ]),
     ...buildPersistedTransactionFilters(userId, filters),
   ]);
 }
@@ -1233,7 +1329,7 @@ export async function listRecentEstablishmentNamesForUser(
     .limit(limit);
 }
 
-export async function listRecurringRulesForPeriod(userId: string, periodEnd: Date) {
+function selectRecurringRulesForUser(userId: string) {
   return db
     .select(recurringRuleColumns)
     .from(recurringTransactionRules)
@@ -1266,14 +1362,27 @@ export async function listRecurringRulesForPeriod(userId: string, periodEnd: Dat
         eq(recurringTransactionRules.destinationAccountId, destinationAccounts.id),
         eq(destinationAccounts.userId, userId),
       ),
-    )
-    .where(
-      and(
-        eq(recurringTransactionRules.userId, userId),
-        eq(recurringTransactionRules.status, "active"),
-        lte(recurringTransactionRules.startDate, periodEnd),
-      ),
     );
+}
+
+export async function listRecurringRulesForPeriod(userId: string, periodEnd: Date) {
+  return selectRecurringRulesForUser(userId).where(
+    and(
+      eq(recurringTransactionRules.userId, userId),
+      eq(recurringTransactionRules.status, "active"),
+      lte(recurringTransactionRules.startDate, periodEnd),
+    ),
+  );
+}
+
+export async function listRecurringRulesByIdsForUser(userId: string, ruleIds: string[]) {
+  if (!ruleIds.length) return [];
+  return selectRecurringRulesForUser(userId).where(
+    and(
+      eq(recurringTransactionRules.userId, userId),
+      inArray(recurringTransactionRules.id, ruleIds),
+    ),
+  );
 }
 
 export async function findTransactionByIdForUser(id: string, userId: string) {

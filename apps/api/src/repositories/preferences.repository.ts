@@ -13,6 +13,7 @@ export const preferencesRepository = {
         defaultCardId: cards.id,
         notificationDueSoonDays: userPreferences.notificationDueSoonDays,
         transactionsPageSize: userPreferences.transactionsPageSize,
+        mobileShortcut: userPreferences.mobileShortcut,
       })
       .from(userPreferences)
       .leftJoin(

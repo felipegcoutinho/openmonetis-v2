@@ -26,6 +26,8 @@ import {
   canDeleteTransactionOrigin,
   deriveImportedPeriod,
   deriveTransactionPeriod,
+  deriveTransactionPostingDate,
+  deriveTransactionPostingPeriod,
   getPeriodEndDate,
   getPeriodFromDate,
   InsufficientTransferBalanceError,
@@ -87,6 +89,7 @@ export type TransactionsServiceDependencies = Pick<
   | "listPaidInvoicePeriodsForUser"
   | "listRecentEstablishmentNamesForUser"
   | "listRecurringOccurrencesForUser"
+  | "listRecurringRulesByIdsForUser"
   | "listRecurringRulesForPeriod"
   | "listRecurringRulesBySeriesForUser"
   | "listRecurringSplitsForUser"
@@ -94,7 +97,9 @@ export type TransactionsServiceDependencies = Pick<
   | "listTransactionSeriesForUser"
   | "listTransactionSplitsForUser"
   | "listTransactionsByPeriod"
+  | "listAccountStatementTransactionsForUser"
   | "listTransactionsByPurchaseDateRange"
+  | "listSettledRecurringBoletoOccurrencesByPaymentDateForUser"
   | "settleRecurringOccurrenceForUser"
   | "settleTransactionsForUser"
   | "updateRecurringRuleStatusForUser"
@@ -127,6 +132,7 @@ type OwnershipContext = {
     closingRuleType: CardClosingRuleType;
     closingOffsetDays: number | null;
     closingOffsetMode: CardClosingOffsetMode | null;
+    closingDayPurchasesNextInvoice: boolean;
     dueDay: number;
     limit: string;
   } | null;
@@ -255,6 +261,7 @@ export function createTransactionsService(
     listPeopleByIdsForUser,
     listRecentEstablishmentNamesForUser,
     listRecurringOccurrencesForUser,
+    listRecurringRulesByIdsForUser,
     listRecurringRulesForPeriod,
     listRecurringRulesBySeriesForUser,
     listRecurringSplitsForUser,
@@ -262,7 +269,9 @@ export function createTransactionsService(
     listTransactionSeriesForUser,
     listTransactionSplitsForUser,
     listTransactionsByPeriod,
+    listAccountStatementTransactionsForUser,
     listTransactionsByPurchaseDateRange,
+    listSettledRecurringBoletoOccurrencesByPaymentDateForUser,
     settleRecurringOccurrenceForUser,
     settleTransactionsForUser,
     updateRecurringRuleStatusForUser,
@@ -311,6 +320,15 @@ export function createTransactionsService(
       displayAmount: toDisplayAmount(amount),
       allocation: null,
       purchaseDate: toDateString(transaction.purchaseDate),
+      postingDate: deriveTransactionPostingDate({
+        paymentMethod: transaction.paymentMethod,
+        purchaseDate: toDateString(transaction.purchaseDate),
+        dueDate: transaction.dueDate ? toDateString(transaction.dueDate) : null,
+        boletoPaymentDate: transaction.boletoPaymentDate
+          ? toDateString(transaction.boletoPaymentDate)
+          : null,
+        isSettled: transaction.isSettled,
+      }),
       period: transaction.period,
       personId: transaction.personId,
       personName: transaction.personName,
@@ -387,6 +405,12 @@ export function createTransactionsService(
       displayAmount: toDisplayAmount(amount),
       allocation: null,
       purchaseDate,
+      postingDate: deriveTransactionPostingDate({
+        paymentMethod: rule.paymentMethod,
+        purchaseDate,
+        dueDate,
+        isSettled: rule.isSettled,
+      }),
       period,
       personId: rule.personId,
       personName: rule.personName,
@@ -1117,6 +1141,7 @@ export function createTransactionsService(
   }
 
   async function listTransactions(userId: string, query: ListTransactionsQuery) {
+    const accountStatement = query.view === "accountStatement";
     const period = query.period ?? currentPeriod();
     const periodEnd = query.dateEnd ? toDate(query.dateEnd) : getPeriodEndDate(period);
     const periodStart = query.dateStart ? toDate(query.dateStart) : getPeriodStart(period);
@@ -1131,22 +1156,53 @@ export function createTransactionsService(
       hasAttachments: query.hasAttachments,
       isDivided: query.isDivided,
     };
-    const [transactions, recurringRules] = await Promise.all([
-      query.dateStart || query.dateEnd
-        ? listTransactionsByPurchaseDateRange(
+    const [transactions, scheduledRecurringRules, paidBoletoOccurrences] = await Promise.all([
+      accountStatement
+        ? listAccountStatementTransactionsForUser(
             userId,
-            query.dateStart ? toDate(query.dateStart) : undefined,
-            query.dateEnd ? toDate(query.dateEnd) : undefined,
+            period,
+            periodStart,
+            periodEnd,
+            Boolean(query.dateStart || query.dateEnd),
             persistedFilters,
           )
-        : listTransactionsByPeriod(userId, period, persistedFilters),
+        : query.dateStart || query.dateEnd
+          ? listTransactionsByPurchaseDateRange(
+              userId,
+              query.dateStart ? toDate(query.dateStart) : undefined,
+              query.dateEnd ? toDate(query.dateEnd) : undefined,
+              persistedFilters,
+            )
+          : listTransactionsByPeriod(userId, period, persistedFilters),
       listRecurringRulesForPeriod(userId, periodEnd),
+      accountStatement
+        ? listSettledRecurringBoletoOccurrencesByPaymentDateForUser(
+            userId,
+            query.accountIds[0] as string,
+            periodStart,
+            periodEnd,
+          )
+        : Promise.resolve([]),
     ]);
+    const scheduledRuleIds = new Set(scheduledRecurringRules.map((rule) => rule.id));
+    const additionalRuleIds = [
+      ...new Set(paidBoletoOccurrences.map((occurrence) => occurrence.recurringRuleId)),
+    ].filter((id) => !scheduledRuleIds.has(id));
+    const additionalRules = additionalRuleIds.length
+      ? await listRecurringRulesByIdsForUser(userId, additionalRuleIds)
+      : [];
+    const recurringRules = [...scheduledRecurringRules, ...additionalRules];
+    const rulesById = new Map(recurringRules.map((rule) => [rule.id, rule]));
     const occurrencePeriods =
       query.dateStart || query.dateEnd
-        ? listPeriodsBetween(getPeriodFromDate(periodStart), getPeriodFromDate(periodEnd))
+        ? listPeriodsBetween(
+            accountStatement
+              ? getEarlierPeriod(getPeriodFromDate(periodStart))
+              : getPeriodFromDate(periodStart),
+            getPeriodFromDate(periodEnd),
+          )
         : [getEarlierPeriod(period), getPreviousPeriod(period), period];
-    const recurringOccurrences = recurringRules.flatMap((rule) => {
+    const scheduledOccurrences = scheduledRecurringRules.flatMap((rule) => {
       const occurrenceDates = occurrencePeriods.flatMap((occurrencePeriod) =>
         listRecurrenceDatesInPeriod({
           anchorDate: toDateString(rule.anchorDate),
@@ -1176,6 +1232,8 @@ export function createTransactionsService(
                       closingDay: rule.cardClosingDay,
                       closingOffsetDays: rule.cardClosingOffsetDays,
                       closingOffsetMode: rule.cardClosingOffsetMode,
+                      closingDayPurchasesNextInvoice:
+                        rule.cardClosingDayPurchasesNextInvoice ?? false,
                     }),
                     dueDay: Number(rule.cardDueDay),
                   }
@@ -1185,12 +1243,44 @@ export function createTransactionsService(
           const isInDateRange =
             purchaseDate >= toDateString(periodStart) && purchaseDate <= toDateString(periodEnd);
 
-          return (query.dateStart || query.dateEnd ? isInDateRange : occurrencePeriod === period)
+          return (
+            query.dateStart || query.dateEnd
+              ? accountStatement || isInDateRange
+              : occurrencePeriod === period
+          )
             ? toRecurringOccurrenceOutput(rule, purchaseDate, occurrencePeriod, dueDate)
             : null;
         })
         .filter((transaction): transaction is TransactionOutput => Boolean(transaction));
     });
+    const paidBoletoOutputs = paidBoletoOccurrences.flatMap((occurrence) => {
+      const rule = rulesById.get(occurrence.recurringRuleId);
+      if (rule?.paymentMethod !== "boleto" || rule.status !== "active") return [];
+      const purchaseDate = toDateString(occurrence.purchaseDate);
+      const dueDate = getRecurringDueDate(
+        rule.dueDate ? toDateString(rule.dueDate) : null,
+        purchaseDate,
+      );
+      return [
+        toRecurringOccurrenceOutput(
+          rule,
+          purchaseDate,
+          deriveTransactionPeriod({ paymentMethod: "boleto", purchaseDate, dueDate }),
+          dueDate,
+        ),
+      ];
+    });
+    const seriesByRuleId = new Map(recurringRules.map((rule) => [rule.id, rule.seriesId]));
+    const recurringOccurrences = accountStatement
+      ? [
+          ...new Map(
+            [...scheduledOccurrences, ...paidBoletoOutputs].map((item) => [
+              `${seriesByRuleId.get(item.recurringRuleId ?? "")}:${item.purchaseDate}`,
+              item,
+            ]),
+          ).values(),
+        ]
+      : scheduledOccurrences;
     const transactionSplits = await listTransactionSplitsForUser(
       transactions.map((transaction) => transaction.id),
       userId,
@@ -1199,13 +1289,21 @@ export function createTransactionsService(
     const seriesIds = [...new Set(recurringRules.map((rule) => rule.seriesId))];
     const [recurringSplits, recurringOccurrenceStates] = await Promise.all([
       listRecurringSplitsForUser(ruleIds, userId),
-      listRecurringOccurrencesForUser(seriesIds, periodStart, periodEnd, userId),
+      listRecurringOccurrencesForUser(
+        seriesIds,
+        accountStatement
+          ? getPeriodStart(getEarlierPeriod(getPeriodFromDate(periodStart)))
+          : query.dateStart || query.dateEnd
+            ? periodStart
+            : getPeriodStart(getEarlierPeriod(period)),
+        periodEnd,
+        userId,
+      ),
     ]);
-    const seriesByRuleId = new Map(recurringRules.map((rule) => [rule.id, rule.seriesId]));
     const occurrenceStates = new Map(
-      recurringOccurrenceStates.map((occurrence) => [
+      [...recurringOccurrenceStates, ...paidBoletoOccurrences].map((occurrence) => [
         `${occurrence.recurringSeriesId}:${toDateString(occurrence.purchaseDate)}`,
-        occurrence.isSettled,
+        occurrence,
       ]),
     );
     const transactionSplitsById = new Map<string, typeof transactionSplits>();
@@ -1234,17 +1332,33 @@ export function createTransactionsService(
       ...transactions.map(toTransactionOutput),
       ...recurringOccurrences,
     ].map((item) => {
+      const occurrence =
+        item.isRecurring && item.recurringRuleId
+          ? occurrenceStates.get(`${seriesByRuleId.get(item.recurringRuleId)}:${item.purchaseDate}`)
+          : undefined;
+      const isSettled = occurrence?.isSettled ?? item.isSettled;
+      const boletoPaymentDate = occurrence?.boletoPaymentDate
+        ? toDateString(occurrence.boletoPaymentDate)
+        : item.boletoPaymentDate;
       const splits = item.recurringRuleId
         ? (recurringSplitsByRuleId.get(item.recurringRuleId) ?? [])
         : (transactionSplitsById.get(item.recordId ?? "") ?? []);
       return {
         ...item,
-        isSettled:
-          item.isRecurring && item.recurringRuleId
-            ? (occurrenceStates.get(
-                `${seriesByRuleId.get(item.recurringRuleId)}:${item.purchaseDate}`,
-              ) ?? item.isSettled)
-            : item.isSettled,
+        isSettled,
+        accountId: occurrence?.accountId ?? item.accountId,
+        accountName: occurrence?.accountName ?? item.accountName,
+        accountLogo: occurrence?.accountLogo ?? item.accountLogo,
+        boletoPaymentDate,
+        postingDate: item.isRecurring
+          ? deriveTransactionPostingDate({
+              paymentMethod: item.paymentMethod,
+              purchaseDate: item.purchaseDate,
+              dueDate: item.dueDate,
+              boletoPaymentDate,
+              isSettled,
+            })
+          : item.postingDate,
         splitShares: splits.map((split) => ({
           personId: split.personId,
           personName: split.personName,
@@ -1267,16 +1381,41 @@ export function createTransactionsService(
     );
 
     const filtered = output
-      .filter((item) => matchesTransactionFilters(item, query))
+      .filter((item) => {
+        if (!matchesTransactionFilters(item, query)) return false;
+        if (!accountStatement) return true;
+        if (item.isSettled !== true) return false;
+        if (query.dateStart || query.dateEnd) {
+          return (
+            item.postingDate !== null &&
+            item.postingDate >= toDateString(periodStart) &&
+            item.postingDate <= toDateString(periodEnd)
+          );
+        }
+        return (
+          deriveTransactionPostingPeriod({
+            period: item.period,
+            paymentMethod: item.paymentMethod,
+            boletoPaymentDate: item.boletoPaymentDate,
+          }) === period
+        );
+      })
       .sort(
         (a, b) =>
           (query.sort === "oldest"
-            ? a.purchaseDate.localeCompare(b.purchaseDate)
+            ? (accountStatement ? (a.postingDate ?? a.purchaseDate) : a.purchaseDate).localeCompare(
+                accountStatement ? (b.postingDate ?? b.purchaseDate) : b.purchaseDate,
+              )
             : query.sort === "dueDate"
               ? (a.dueDate ?? "9999-12-31").localeCompare(b.dueDate ?? "9999-12-31")
               : query.sort === "amount"
                 ? Math.abs(b.amount) - Math.abs(a.amount)
-                : b.purchaseDate.localeCompare(a.purchaseDate)) ||
+                : (accountStatement
+                    ? (b.postingDate ?? b.purchaseDate)
+                    : b.purchaseDate
+                  ).localeCompare(
+                    accountStatement ? (a.postingDate ?? a.purchaseDate) : a.purchaseDate,
+                  )) ||
           a.name.localeCompare(b.name) ||
           (a.allocation?.personName ?? a.personName).localeCompare(
             b.allocation?.personName ?? b.personName,

@@ -97,6 +97,31 @@ export const AccountPeriodSummarySchema = z
   })
   .openapi("AccountPeriodSummary");
 
+const AccountFlowEntrySchema = z.object({
+  income: z.number().nonnegative(),
+  expenses: z.number().nonnegative(),
+  balance: z.number(),
+});
+
+export const AccountCashFlowOutputSchema = z
+  .object({
+    period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    startDate: z.iso.date(),
+    endDate: z.iso.date(),
+    openingBalance: z.number(),
+    outsideMonthAmount: z.number(),
+    daily: z.array(AccountFlowEntrySchema.extend({ date: z.iso.date() })),
+    history: z.object({
+      endPeriod: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+      items: z.array(
+        AccountFlowEntrySchema.extend({
+          period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+        }),
+      ),
+    }),
+  })
+  .openapi("AccountCashFlowOutput");
+
 export const AccountOutputSchema = z
   .object({
     id: z.uuid(),
@@ -125,4 +150,5 @@ export type UpdateAccountInput = z.infer<typeof UpdateAccountInputSchema>;
 export type AdjustAccountBalanceInput = z.infer<typeof AdjustAccountBalanceInputSchema>;
 export type AddAccountYieldInput = z.infer<typeof AddAccountYieldInputSchema>;
 export type AccountOutput = z.infer<typeof AccountOutputSchema>;
+export type AccountCashFlowOutput = z.infer<typeof AccountCashFlowOutputSchema>;
 export type AccountBalanceAdjustmentOutput = z.infer<typeof AccountBalanceAdjustmentOutputSchema>;

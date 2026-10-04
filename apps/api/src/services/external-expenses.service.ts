@@ -108,6 +108,7 @@ export type RecurringExternalExpenseSourceRecord = RecurringAllocationRule & {
     closingRuleType: CardClosingRuleType;
     closingOffsetDays: number | null;
     closingOffsetMode: CardClosingOffsetMode | null;
+    closingDayPurchasesNextInvoice: boolean;
     dueDay: number;
   } | null;
 };

@@ -376,6 +376,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
         cardClosingRuleType: recurringCards.closingRuleType,
         cardClosingOffsetDays: recurringCards.closingOffsetDays,
         cardClosingOffsetMode: recurringCards.closingOffsetMode,
+        cardClosingDayPurchasesNextInvoice: recurringCards.closingDayPurchasesNextInvoice,
         cardDueDay: recurringCards.dueDay,
         splitPersonId: recurringTransactionSplits.personId,
         splitAmount: recurringTransactionSplits.amount,
@@ -460,6 +461,7 @@ export const externalExpensesRepository: ExternalExpensesRepository = {
                 closingRuleType: row.cardClosingRuleType,
                 closingOffsetDays: row.cardClosingOffsetDays,
                 closingOffsetMode: row.cardClosingOffsetMode,
+                closingDayPurchasesNextInvoice: row.cardClosingDayPurchasesNextInvoice ?? false,
                 dueDay: row.cardDueDay,
               }
             : null,

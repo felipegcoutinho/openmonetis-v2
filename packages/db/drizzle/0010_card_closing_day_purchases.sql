@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "closing_day_purchases_next_invoice" boolean DEFAULT false NOT NULL;

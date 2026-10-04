@@ -234,6 +234,7 @@ export const cardsRepository = {
         closingRuleType: cards.closingRuleType,
         closingOffsetDays: cards.closingOffsetDays,
         closingOffsetMode: cards.closingOffsetMode,
+        closingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
         dueDay: cards.dueDay,
       })
       .from(recurringTransactionRules)

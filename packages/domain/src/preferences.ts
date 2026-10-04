@@ -3,10 +3,22 @@ import { type PaymentMethod, paymentMethods } from "./transactions";
 export const applicationThemes = ["system", "light", "dark"] as const;
 export const notificationDueSoonDayOptions = [1, 3, 5, 7] as const;
 export const transactionPageSizeOptions = [20, 30, 50] as const;
+export const mobileShortcutDestinations = [
+  "accounts",
+  "cards",
+  "budgets",
+  "goals",
+  "people",
+  "categories",
+  "notes",
+  "attachments",
+  "inbox",
+] as const;
 
 export type ApplicationTheme = (typeof applicationThemes)[number];
 export type NotificationDueSoonDays = (typeof notificationDueSoonDayOptions)[number];
 export type TransactionPageSize = (typeof transactionPageSizeOptions)[number];
+export type MobileShortcutDestination = (typeof mobileShortcutDestinations)[number];
 
 export type UserPreferences = {
   theme: ApplicationTheme;
@@ -16,6 +28,7 @@ export type UserPreferences = {
   defaultCardId: string | null;
   notificationDueSoonDays: NotificationDueSoonDays;
   transactionsPageSize: TransactionPageSize;
+  mobileShortcut: MobileShortcutDestination;
 };
 
 export type UserPreferencesRecord = {
@@ -26,12 +39,14 @@ export type UserPreferencesRecord = {
   defaultCardId: string | null;
   notificationDueSoonDays: number;
   transactionsPageSize: number;
+  mobileShortcut: string;
 };
 
 const applicationThemeSet = new Set<string>(applicationThemes);
 const notificationDueSoonDaySet = new Set<number>(notificationDueSoonDayOptions);
 const paymentMethodSet = new Set<string>(paymentMethods);
 const transactionPageSizeSet = new Set<number>(transactionPageSizeOptions);
+const mobileShortcutDestinationSet = new Set<string>(mobileShortcutDestinations);
 
 export function createDefaultUserPreferences(): UserPreferences {
   return {
@@ -42,6 +57,7 @@ export function createDefaultUserPreferences(): UserPreferences {
     defaultCardId: null,
     notificationDueSoonDays: 5,
     transactionsPageSize: 30,
+    mobileShortcut: "accounts",
   };
 }
 
@@ -73,5 +89,8 @@ export function normalizeUserPreferences(
     transactionsPageSize: transactionPageSizeSet.has(preferences.transactionsPageSize ?? Number.NaN)
       ? (preferences.transactionsPageSize as TransactionPageSize)
       : defaults.transactionsPageSize,
+    mobileShortcut: mobileShortcutDestinationSet.has(preferences.mobileShortcut ?? "")
+      ? (preferences.mobileShortcut as MobileShortcutDestination)
+      : defaults.mobileShortcut,
   };
 }

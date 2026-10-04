@@ -483,6 +483,20 @@ export function deriveTransactionPostingPeriod(input: {
   return input.period;
 }
 
+export function deriveTransactionPostingDate(input: {
+  paymentMethod: PaymentMethod | null;
+  purchaseDate: string;
+  dueDate?: string | null;
+  boletoPaymentDate?: string | null;
+  isSettled: boolean | null;
+}) {
+  if (input.isSettled !== true) return null;
+  if (input.paymentMethod === "boleto") {
+    return input.boletoPaymentDate ?? input.dueDate ?? input.purchaseDate;
+  }
+  return input.purchaseDate;
+}
+
 export function deriveTransactionCompetencePeriod(input: {
   paymentMethod: PaymentMethod | null;
   period: string;
@@ -626,6 +640,31 @@ export function allocateInstallmentShares(
     remainingTotal -= installment;
     return allocations.map((allocation) => allocation / 100);
   });
+}
+
+export function rebalanceTwoAmountShares(
+  totalAmount: number,
+  editedAmount: number,
+): [number, number] {
+  if (
+    !Number.isFinite(totalAmount) ||
+    !Number.isFinite(editedAmount) ||
+    totalAmount < 0 ||
+    editedAmount < 0 ||
+    editedAmount > totalAmount
+  ) {
+    throw new RangeError("edited amount must be between zero and the total");
+  }
+  const totalCents = Math.round(totalAmount * 100);
+  const editedCents = Math.round(editedAmount * 100);
+  return [editedCents / 100, (totalCents - editedCents) / 100];
+}
+
+export function rebalanceTwoPercentageShares(editedPercentage: number): [number, number] {
+  if (!Number.isFinite(editedPercentage) || editedPercentage < 0 || editedPercentage > 100) {
+    throw new RangeError("percentage must be between zero and one hundred");
+  }
+  return [editedPercentage, 100 - editedPercentage];
 }
 
 export function rebalanceAmountShare(

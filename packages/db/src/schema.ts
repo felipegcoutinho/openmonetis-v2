@@ -29,6 +29,18 @@ export const accountType = pgEnum("account_type", [
 
 export const applicationTheme = pgEnum("application_theme", ["system", "light", "dark"]);
 
+export const mobileShortcutDestination = pgEnum("mobile_shortcut_destination", [
+  "accounts",
+  "cards",
+  "budgets",
+  "goals",
+  "people",
+  "categories",
+  "notes",
+  "attachments",
+  "inbox",
+]);
+
 export const cardBrand = pgEnum("card_brand", [
   "visa",
   "mastercard",
@@ -461,6 +473,9 @@ export const cards = pgTable(
       .references(() => financialAccounts.id, { onDelete: "restrict", onUpdate: "cascade" }),
     name: varchar("name", { length: 120 }).notNull(),
     brand: cardBrand("brand").notNull().default("other"),
+    closingDayPurchasesNextInvoice: boolean("closing_day_purchases_next_invoice")
+      .notNull()
+      .default(false),
     status: cardStatus("status").notNull().default("active"),
     closingDay: integer("closing_day"),
     closingRuleType: cardClosingRuleType("closing_rule_type").notNull().default("fixedDay"),
@@ -524,6 +539,7 @@ export const userPreferences = pgTable(
     }),
     notificationDueSoonDays: integer("notification_due_soon_days").notNull().default(5),
     transactionsPageSize: integer("transactions_page_size").notNull().default(30),
+    mobileShortcut: mobileShortcutDestination("mobile_shortcut").notNull().default("accounts"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()

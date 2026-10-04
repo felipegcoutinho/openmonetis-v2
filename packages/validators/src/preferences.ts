@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import {
   applicationThemes,
+  mobileShortcutDestinations,
   notificationDueSoonDayOptions,
   transactionPageSizeOptions,
 } from "@openmonetis/domain/preferences";
@@ -32,6 +33,7 @@ export const UserPreferencesOutputSchema = z
     defaultCardId: z.uuid().nullable(),
     notificationDueSoonDays: NotificationDueSoonDaysSchema,
     transactionsPageSize: TransactionsPageSizeSchema,
+    mobileShortcut: z.enum(mobileShortcutDestinations),
   })
   .openapi("UserPreferencesOutput");
 
