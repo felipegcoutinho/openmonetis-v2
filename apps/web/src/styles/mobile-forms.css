@@ -29,8 +29,8 @@
     max-width: none;
     height: var(--form-height, 100dvh);
     max-height: var(--form-height, 100dvh);
+    /* Keep this separate from transform: none so minification preserves the translate reset. */
     translate: none;
-    transform: none;
     display: flex;
     flex-direction: column;
     gap: 1rem;
