@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { KeyRound, LoaderCircle } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobilePageFormGuard } from "@/components/forms/mobile-page-form-guard";
 import { SettingsSection } from "@/components/settings-panel";
 import { SettingsQueryError } from "@/components/settings-query-error";
 import {
@@ -108,6 +109,7 @@ function ChangePasswordForm() {
 
   return (
     <form
+      data-mobile-page-form
       className="grid max-w-xl gap-4"
       noValidate
       onSubmit={(event) => {
@@ -115,6 +117,11 @@ function ChangePasswordForm() {
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobilePageFormGuard {...state} />}
+      </form.Subscribe>
       <p className="rounded-lg bg-muted/40 p-3 text-muted-foreground text-sm leading-relaxed">
         Ao salvar, as outras sessões da sua conta serão encerradas. Este acesso continuará ativo.
       </p>

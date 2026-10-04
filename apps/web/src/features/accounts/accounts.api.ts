@@ -1,6 +1,7 @@
 import type {
   AccountBalanceAdjustmentOutput,
   AccountBalanceAdjustmentPreview,
+  AccountCashFlowOutput,
   AccountOutput,
   AddAccountYieldInput,
   AdjustAccountBalanceInput,
@@ -30,6 +31,12 @@ export function getAccounts(period: string) {
 
 export function getAccount(id: string, period: string) {
   return request<AccountOutput>(`/accounts/${id}?period=${encodeURIComponent(period)}`);
+}
+
+export function getAccountCashFlow(id: string, period: string) {
+  return request<AccountCashFlowOutput>(
+    `/accounts/${id}/cash-flow?period=${encodeURIComponent(period)}`,
+  );
 }
 
 export function createAccount(input: CreateAccountInput) {

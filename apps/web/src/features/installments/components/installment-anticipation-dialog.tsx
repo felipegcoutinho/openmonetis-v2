@@ -8,18 +8,14 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarArrowDown, CalendarDays, Sparkles } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiClientError } from "@/lib/api-client";
@@ -115,7 +111,7 @@ export function InstallmentAnticipationDialog({
 
   return (
     <Dialog onOpenChange={(next) => !mutation.isPending && onOpenChange(next)} open={open}>
-      <DialogContent className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
+      <DialogContent guarded className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
         <DialogHeader>
           <span className="mb-1 grid size-10 place-items-center rounded-full bg-brand/10 text-brand-strong">
             <CalendarArrowDown aria-hidden="true" className="size-5" />
@@ -129,12 +125,21 @@ export function InstallmentAnticipationDialog({
         </DialogHeader>
 
         <form
+          data-mobile-page-form
           className="grid min-h-0 gap-5 overflow-y-auto pr-1"
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <section className="grid gap-2" aria-labelledby={`${id}-installments-title`}>
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -261,6 +266,7 @@ export function InstallmentAnticipationDialog({
 
           <DialogFooter>
             <Button
+              data-mobile-cancel
               disabled={mutation.isPending}
               onClick={() => onOpenChange(false)}
               type="button"

@@ -1,6 +1,12 @@
 import { LoaderCircle, Search } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
+import { Button } from "@/components/ui/button";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -8,7 +14,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 type EstablishmentInputProps = {
   value: string;
@@ -33,6 +39,7 @@ export function EstablishmentInput({
   onBlur,
   onChange,
 }: EstablishmentInputProps) {
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [contentWidth, setContentWidth] = useState<number>();
@@ -72,8 +79,8 @@ export function EstablishmentInput({
     >
       <div className="relative" ref={containerRef}>
         <Input
-          aria-autocomplete="list"
-          aria-expanded={open}
+          aria-autocomplete={mobile ? undefined : "list"}
+          aria-expanded={mobile ? undefined : open}
           aria-invalid={invalid}
           autoComplete="off"
           className={establishments.length || loading ? "pr-9 text-left" : "text-left"}
@@ -85,10 +92,10 @@ export function EstablishmentInput({
             onChange(nextValue);
             setQuery(nextValue);
           }}
-          onClick={openEstablishments}
+          onClick={mobile ? undefined : openEstablishments}
           placeholder={placeholder}
           required
-          role="combobox"
+          role={mobile ? undefined : "combobox"}
           value={value}
         />
         {loading ? (
@@ -96,6 +103,20 @@ export function EstablishmentInput({
             aria-label="Carregando estabelecimentos recentes"
             className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
           />
+        ) : establishments.length && mobile ? (
+          <PopoverTrigger
+            aria-label="Escolher uma descrição recente"
+            disabled={disabled}
+            render={
+              <Button
+                className="absolute top-1/2 right-0 size-11 -translate-y-1/2"
+                type="button"
+                variant="ghost"
+              />
+            }
+          >
+            <Search aria-hidden="true" className="size-4" />
+          </PopoverTrigger>
         ) : establishments.length ? (
           <PopoverTrigger
             render={
@@ -112,6 +133,7 @@ export function EstablishmentInput({
       </div>
 
       <PopoverContent
+        title="Descrições recentes"
         align="end"
         className="w-[var(--anchor-width)] gap-0 p-0"
         finalFocus={false}
@@ -123,6 +145,15 @@ export function EstablishmentInput({
         }}
         style={contentWidth ? { width: contentWidth } : undefined}
       >
+        {mobile ? (
+          <Input
+            aria-label="Buscar descrições recentes"
+            className="mb-3"
+            placeholder="Buscar descrição"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        ) : null}
         <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty>Nenhum estabelecimento encontrado.</CommandEmpty>

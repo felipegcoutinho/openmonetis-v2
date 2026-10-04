@@ -7,19 +7,15 @@ import { useForm } from "@tanstack/react-form";
 import { BadgeDollarSign, CreditCard, Landmark } from "lucide-react";
 import { useId } from "react";
 import { toast } from "sonner";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRefundTransactionMutation } from "../transactions.mutations";
@@ -78,7 +74,7 @@ export function TransactionRefundDialog({
 
   return (
     <Dialog onOpenChange={(next) => !mutation.isPending && onOpenChange(next)} open={open}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent guarded className="sm:max-w-lg">
         <DialogHeader>
           <span className="mb-1 grid size-10 place-items-center rounded-full bg-success/10 text-success">
             <BadgeDollarSign aria-hidden="true" className="size-5" />
@@ -92,12 +88,21 @@ export function TransactionRefundDialog({
         </DialogHeader>
 
         <form
+          data-mobile-page-form
           className="grid gap-4"
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <Card className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-4">
             <div>
               <p className="text-muted-foreground text-xs">Valor da despesa</p>
@@ -193,6 +198,7 @@ export function TransactionRefundDialog({
 
           <DialogFooter>
             <Button
+              data-mobile-cancel
               disabled={mutation.isPending}
               onClick={() => onOpenChange(false)}
               type="button"

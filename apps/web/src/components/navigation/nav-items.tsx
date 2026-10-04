@@ -156,5 +156,4 @@ export const navSections: NavSection[] = [
 export const dashboardNavItem = {
   href: "/dashboard",
   label: "Visão geral",
-  // icon: <ChartNoAxesCombined className="size-4" aria-hidden="true" />,
 };

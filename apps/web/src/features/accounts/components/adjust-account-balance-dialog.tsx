@@ -3,17 +3,13 @@ import type { AccountOutput, AdjustAccountBalanceInput } from "@openmonetis/vali
 import { AdjustAccountBalanceInputSchema } from "@openmonetis/validators/accounts";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { formatAccountPeriod, formatCurrency, parseCurrencyInput } from "../accounts.presentation";
 import { AccountBalanceAdjustmentPreview } from "./account-balance-adjustment-preview";
@@ -35,7 +31,7 @@ export function AdjustAccountBalanceDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent guarded mobileLayout="sheet" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Ajustar saldo</DialogTitle>
           <DialogDescription>
@@ -87,6 +83,7 @@ function AdjustAccountBalanceForm({
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -94,6 +91,11 @@ function AdjustAccountBalanceForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <div className="rounded-md border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{account.name}</p>
         <p className="text-muted-foreground text-xs">
@@ -147,7 +149,7 @@ function AdjustAccountBalanceForm({
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button data-mobile-cancel type="button" variant="outline" onClick={onCancel}>
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">

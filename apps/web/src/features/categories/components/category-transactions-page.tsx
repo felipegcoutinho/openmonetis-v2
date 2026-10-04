@@ -4,16 +4,12 @@ import { CalendarDays, ChartNoAxesCombined, Tags, Users } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EntityLoadError } from "@/components/entity-load-error";
 import { FinancialSummaryHeader } from "@/components/financial-summary-header";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTrendPercentage } from "@/features/category-trends/category-trends.presentation";
 import { categoryTrendsQueryOptions } from "@/features/category-trends/category-trends.queries";

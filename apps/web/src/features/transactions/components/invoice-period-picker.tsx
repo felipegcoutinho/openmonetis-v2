@@ -5,8 +5,12 @@ import {
 } from "@openmonetis/shared/date-time";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { MonthPicker } from "@/components/ui/month-picker";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cardInvoicePeriodQueryOptions } from "@/features/cards/cards.queries";
 
 function periodToDate(period: string) {
@@ -42,14 +46,18 @@ export function InvoicePeriodPicker({
         <span className="text-muted-foreground text-xs">{periodPrefix}</span>
       ) : null}
       <Popover onOpenChange={setOpen} open={open}>
-        <PopoverTrigger className="rounded-sm font-medium text-brand-strong text-xs lowercase underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <PopoverTrigger className="max-md:min-h-11 max-md:px-2 rounded-sm font-medium text-brand-strong text-xs lowercase underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {effectivePeriod
             ? `${displayPeriod(effectivePeriod)} · alterar`
             : quote.isLoading
               ? "Calculando fatura..."
               : "Selecione a data para calcular a fatura"}
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-auto bg-popover/80 p-0 backdrop-blur-sm">
+        <PopoverContent
+          title="Mês da fatura"
+          align="start"
+          className="w-auto bg-popover/80 p-0 backdrop-blur-sm"
+        >
           <MonthPicker
             onMonthSelect={(date) => {
               onChange(dateToPeriod(date));

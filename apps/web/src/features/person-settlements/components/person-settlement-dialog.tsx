@@ -5,17 +5,13 @@ import {
 } from "@openmonetis/validators/person-settlements";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { parseCurrencyInput } from "@/features/accounts/accounts.presentation";
@@ -37,7 +33,7 @@ export function PersonSettlementDialog({
 }: Props) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent guarded mobileLayout="sheet" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar repasse</DialogTitle>
           <DialogDescription>
@@ -91,6 +87,7 @@ function PersonSettlementForm({
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -98,6 +95,11 @@ function PersonSettlementForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <form.Field name="amount">
         {(field) => (
           <div className="grid gap-1.5">
@@ -143,7 +145,7 @@ function PersonSettlementForm({
         </p>
       ) : null}
       <DialogFooter>
-        <Button onClick={onCancel} type="button" variant="outline">
+        <Button data-mobile-cancel onClick={onCancel} type="button" variant="outline">
           Cancelar
         </Button>
         <form.Subscribe

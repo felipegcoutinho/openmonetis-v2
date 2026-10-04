@@ -22,6 +22,7 @@ import { getCardBrandAsset } from "../card-brand-assets";
 import {
   cardBrandLabels,
   cardInvoiceStatusLabels,
+  formatInvoiceDate,
   getCardClosingRuleDescription,
 } from "../cards.presentation";
 
@@ -40,7 +41,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
   const isInactive = card.status === "inactive";
 
   return (
-    <Card className={cn("min-h-72 gap-5", isInactive && "opacity-70")}>
+    <Card data-mobile-entity-card className={cn("min-h-72 gap-5", isInactive && "opacity-70")}>
       <CardHeader className="gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -108,7 +109,14 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-brand/5 p-3 text-sm">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <CalendarDays aria-hidden="true" className="size-4" />
-            {card.closingRuleType === "fixedDay" ? (
+            {card.closingDayPurchasesNextInvoice ? (
+              <>
+                Fecha{" "}
+                <strong className="font-medium text-foreground">
+                  {formatInvoiceDate(card.invoiceSummary.closingDate)}
+                </strong>
+              </>
+            ) : card.closingRuleType === "fixedDay" ? (
               <>
                 Fecha <strong className="font-medium text-foreground">dia {card.closingDay}</strong>
               </>

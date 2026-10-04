@@ -40,7 +40,7 @@ export function AccountCard({
   const hasAccountingNote = account.excludeFromBalance;
 
   return (
-    <Card className={cn("gap-5", isInactive && "opacity-70")}>
+    <Card data-mobile-entity-card className={cn("gap-5", isInactive && "opacity-70")}>
       <CardHeader className="gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -110,7 +110,7 @@ export function AccountCard({
       </CardHeader>
 
       <CardContent>
-        <div>
+        <div data-mobile-primary-value>
           <p className="text-muted-foreground text-xs">Saldo</p>
           <MoneyValue amount={account.summary.balance} className="mt-1 font-medium text-2xl" />
         </div>

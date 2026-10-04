@@ -1,13 +1,10 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import { CategoryIcon, categoryIconOptions } from "../category-icons";
 
@@ -20,6 +17,7 @@ export function CategoryIconPicker({
   onChange: (icon: string) => void;
   value: string;
 }) {
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selected = categoryIconOptions.find((option) => option.value === value);
@@ -54,7 +52,7 @@ export function CategoryIconPicker({
         }}
         open={open}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent guarded mobileLayout="sheet" className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Escolher ícone</DialogTitle>
             <DialogDescription>Selecione o ícone da categoria.</DialogDescription>
@@ -62,14 +60,17 @@ export function CategoryIconPicker({
           <div className="relative">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              autoFocus
+              autoFocus={!mobile}
               className="pl-9"
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Pesquisar ícone"
               value={search}
             />
           </div>
-          <div className="grid max-h-72 grid-cols-5 gap-2 overflow-y-auto sm:grid-cols-8">
+          <div
+            data-mobile-form-body
+            className="grid max-h-72 grid-cols-5 gap-2 overflow-y-auto sm:grid-cols-8"
+          >
             {visible.map((option) => (
               <button
                 aria-label={option.label}

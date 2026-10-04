@@ -1,27 +1,10 @@
-import type {
-  NotificationOutput,
-  NotificationsOutput,
-} from "@openmonetis/validators/notifications";
+import type { NotificationOutput } from "@openmonetis/validators/notifications";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Archive,
-  ArchiveRestore,
-  Bell,
-  Check,
-  ClipboardCheck,
-  CreditCard,
-  HandCoins,
-  Inbox as InboxIcon,
-  Mail,
-  MailOpen,
-  RefreshCw,
-  Target,
-} from "lucide-react";
+import { Bell } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { MoneyValue } from "@/components/money-value";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,23 +15,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
+
 import { cn } from "@/lib/utils";
 import {
   type UpdateNotificationVariables,
   useUpdateNotificationMutation,
 } from "../notifications.mutations";
-import {
-  getNotificationAmount,
-  getNotificationCopy,
-  getNotificationTarget,
-} from "../notifications.presentation";
+import { getNotificationTarget } from "../notifications.presentation";
 import { notificationsQueryOptions } from "../notifications.queries";
-
-type NotificationView = "active" | "archived";
+import type { NotificationView } from "./notification-panel.types";
+import { NotificationPanelBody } from "./notification-panel-body";
 
 export function NotificationPanel({
   badgeClassName,
@@ -110,7 +89,7 @@ export function NotificationPanel({
             />
           }
         >
-          <Bell aria-hidden="true" className="size-5" />
+          <Bell aria-hidden="true" className="size-5 md:size-4.5" />
           {unreadCount > 0 ? (
             <span
               className={cn(
@@ -191,311 +170,5 @@ export function NotificationPanel({
         </Tabs>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function NotificationPanelBody({
-  busyKey,
-  data,
-  isError,
-  isLoading,
-  onNavigate,
-  onRetry,
-  onStateChange,
-  view,
-}: {
-  busyKey: string | null;
-  data: NotificationsOutput | undefined;
-  isError: boolean;
-  isLoading: boolean;
-  onNavigate: (notification: NotificationOutput) => void;
-  onRetry: () => void;
-  onStateChange: (state: UpdateNotificationVariables) => void;
-  view: NotificationView;
-}) {
-  if (isLoading) return <NotificationPanelLoading />;
-  if (isError) return <NotificationPanelError onRetry={onRetry} />;
-  if (!data) return null;
-
-  const items = data.items.filter((item) =>
-    view === "archived" ? item.isArchived : !item.isArchived,
-  );
-  if (items.length === 0) return <NotificationPanelEmpty view={view} />;
-
-  return (
-    <NotificationList
-      busyKey={busyKey}
-      items={items}
-      onNavigate={onNavigate}
-      onStateChange={onStateChange}
-      view={view}
-    />
-  );
-}
-
-function NotificationList({
-  busyKey,
-  items,
-  onNavigate,
-  onStateChange,
-  view,
-}: {
-  busyKey: string | null;
-  items: NotificationOutput[];
-  onNavigate: (notification: NotificationOutput) => void;
-  onStateChange: (state: UpdateNotificationVariables) => void;
-  view: NotificationView;
-}) {
-  const urgent = items.filter((item) => item.severity === "critical");
-  const upcoming = items.filter((item) => item.severity !== "critical");
-  const sections =
-    view === "archived"
-      ? [{ label: "Arquivadas", items }]
-      : [
-          { label: "Precisa de atenção", items: urgent },
-          { label: "Próximos passos", items: upcoming },
-        ];
-
-  return (
-    <div className="grid gap-5 px-4 py-5">
-      {sections.map((section) =>
-        section.items.length > 0 ? (
-          <section className="grid gap-2" key={section.label}>
-            <h2 className="px-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-              {section.label}
-            </h2>
-            <ul className="grid gap-2">
-              {section.items.map((notification) => (
-                <NotificationRow
-                  busy={busyKey === notification.notificationKey}
-                  key={notification.notificationKey}
-                  notification={notification}
-                  onNavigate={onNavigate}
-                  onStateChange={onStateChange}
-                />
-              ))}
-            </ul>
-          </section>
-        ) : null,
-      )}
-    </div>
-  );
-}
-
-function NotificationRow({
-  busy,
-  notification,
-  onNavigate,
-  onStateChange,
-}: {
-  busy: boolean;
-  notification: NotificationOutput;
-  onNavigate: (notification: NotificationOutput) => void;
-  onStateChange: (state: UpdateNotificationVariables) => void;
-}) {
-  const copy = getNotificationCopy(notification);
-  const amount = getNotificationAmount(notification);
-  const stateInput = {
-    notificationKey: notification.notificationKey,
-    fingerprint: notification.fingerprint,
-  };
-
-  return (
-    <li
-      className={cn(
-        "group rounded-lg border bg-card transition-colors hover:border-brand-strong/30",
-        !notification.isRead && "border-brand-strong/20 bg-brand/3",
-        busy && "pointer-events-none opacity-60",
-      )}
-    >
-      <div className="flex items-start gap-3 p-3 pb-2">
-        <button
-          aria-label={`${copy.context}: ${copy.title}`}
-          className="flex min-w-0 flex-1 items-start gap-3 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          onClick={() => onNavigate(notification)}
-          type="button"
-        >
-          <NotificationIcon notification={notification} />
-          <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-2">
-              <span className="truncate font-medium text-sm">{copy.title}</span>
-              {!notification.isRead ? (
-                <>
-                  <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-brand" />
-                  <span className="sr-only">Não lida</span>
-                </>
-              ) : null}
-            </span>
-            <span
-              className={cn(
-                "mt-0.5 block text-xs",
-                notification.severity === "critical"
-                  ? "font-medium text-destructive"
-                  : "text-muted-foreground",
-              )}
-            >
-              {copy.context}
-            </span>
-            <span className="mt-1 block text-muted-foreground text-xs">{copy.detail}</span>
-          </span>
-          {amount !== null ? (
-            <MoneyValue amount={amount} className="shrink-0 font-medium text-sm" />
-          ) : null}
-        </button>
-      </div>
-      <div className="flex items-center justify-between border-t px-3 py-1.5">
-        <span className="text-muted-foreground text-[11px]">
-          {notification.isRead ? "Vista" : "Nova"}
-        </span>
-        <div className="flex items-center gap-1">
-          {!notification.isArchived ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label={notification.isRead ? "Marcar como não lida" : "Marcar como lida"}
-                    onClick={() =>
-                      onStateChange({
-                        ...stateInput,
-                        isRead: !notification.isRead,
-                      })
-                    }
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                  />
-                }
-              >
-                {notification.isRead ? (
-                  <Mail aria-hidden="true" />
-                ) : (
-                  <MailOpen aria-hidden="true" />
-                )}
-              </TooltipTrigger>
-              <TooltipContent>
-                {notification.isRead ? "Marcar como não lida" : "Marcar como lida"}
-              </TooltipContent>
-            </Tooltip>
-          ) : null}
-          {notification.canArchive ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label={notification.isArchived ? "Restaurar" : "Arquivar"}
-                    onClick={() =>
-                      onStateChange({
-                        ...stateInput,
-                        isArchived: !notification.isArchived,
-                      })
-                    }
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                  />
-                }
-              >
-                {notification.isArchived ? (
-                  <ArchiveRestore aria-hidden="true" />
-                ) : (
-                  <Archive aria-hidden="true" />
-                )}
-              </TooltipTrigger>
-              <TooltipContent>{notification.isArchived ? "Restaurar" : "Arquivar"}</TooltipContent>
-            </Tooltip>
-          ) : null}
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function NotificationIcon({ notification }: { notification: NotificationOutput }) {
-  if (notification.kind === "bill") {
-    return (
-      <EstablishmentLogo className="size-9" editable={false} name={notification.name} size={36} />
-    );
-  }
-
-  if (notification.kind === "invoice") {
-    return (
-      <Avatar className="size-9">
-        <AvatarImage
-          alt={`Logo do cartão ${notification.cardName}`}
-          className="object-contain"
-          src={notification.cardLogo ?? undefined}
-        />
-        <AvatarFallback>
-          <CreditCard aria-hidden="true" className="size-4" />
-        </AvatarFallback>
-      </Avatar>
-    );
-  }
-
-  const className = cn(
-    "grid size-9 shrink-0 place-items-center rounded-full",
-    notification.severity === "critical" && "bg-destructive/10 text-destructive",
-    notification.severity === "warning" && "bg-warning/10 text-warning",
-    notification.severity === "info" && "bg-info/10 text-info",
-  );
-
-  return (
-    <span className={className}>
-      {notification.kind === "budget" ? <Target aria-hidden="true" className="size-4" /> : null}
-      {notification.kind === "inbox" ? <InboxIcon aria-hidden="true" className="size-4" /> : null}
-      {notification.kind === "externalExpenses" ? (
-        <HandCoins aria-hidden="true" className="size-4" />
-      ) : null}
-      {notification.kind === "task" ? (
-        <ClipboardCheck aria-hidden="true" className="size-4" />
-      ) : null}
-    </span>
-  );
-}
-
-function NotificationPanelLoading() {
-  return (
-    <div aria-label="Carregando notificações" className="grid gap-3 p-4" role="status">
-      {["first", "second", "third"].map((key) => (
-        <Skeleton className="h-28" key={key} />
-      ))}
-    </div>
-  );
-}
-
-function NotificationPanelError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="grid min-h-80 place-items-center px-8 text-center">
-      <div>
-        <span className="mx-auto grid size-11 place-items-center rounded-full bg-destructive/10 text-destructive">
-          <Bell aria-hidden="true" className="size-5" />
-        </span>
-        <p className="mt-3 font-medium">Não foi possível carregar as notificações</p>
-        <p className="mt-1 text-muted-foreground text-sm">Tente novamente em instantes.</p>
-        <Button className="mt-4" onClick={onRetry} size="sm" type="button" variant="outline">
-          <RefreshCw aria-hidden="true" /> Tentar novamente
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function NotificationPanelEmpty({ view }: { view: NotificationView }) {
-  return (
-    <div className="grid min-h-80 place-items-center px-8 text-center">
-      <div>
-        <span className="mx-auto grid size-11 place-items-center rounded-full bg-success/10 text-success">
-          <Check aria-hidden="true" className="size-5" />
-        </span>
-        <p className="mt-3 font-medium">
-          {view === "archived" ? "Nenhuma notificação arquivada" : "Tudo em dia por aqui"}
-        </p>
-        <p className="mt-1 text-muted-foreground text-sm">
-          {view === "archived"
-            ? "As notificações arquivadas aparecerão neste espaço."
-            : "Novos vencimentos e alertas aparecerão quando precisarem de você."}
-        </p>
-      </div>
-    </div>
   );
 }

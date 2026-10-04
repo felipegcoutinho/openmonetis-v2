@@ -32,6 +32,7 @@ import {
 } from "../accounts.mutations";
 import { accountTypeLabels } from "../accounts.presentation";
 import { accountQueryOptions } from "../accounts.queries";
+import { AccountCashFlow } from "./account-cash-flow";
 import { AccountDialog } from "./account-dialog";
 import { AddAccountYieldDialog } from "./add-account-yield-dialog";
 import { AdjustAccountBalanceDialog } from "./adjust-account-balance-dialog";
@@ -104,6 +105,13 @@ export function AccountStatementPage({
                 () => setAdjustBalanceOpen(true),
                 () => setAddYieldOpen(true),
                 () => setEditOpen(true),
+                (period) =>
+                  onSearchChange({
+                    period,
+                    dateStart: undefined,
+                    dateEnd: undefined,
+                    page: undefined,
+                  }),
               )}
               search={search}
             />
@@ -140,6 +148,7 @@ function getAccountStatementScope(
   onAdjustBalance: () => void,
   onAddYield: () => void,
   onEdit: () => void,
+  onPeriodChange: (period: string) => void,
 ) {
   const periodLabel = formatPeriod(period);
 
@@ -170,7 +179,11 @@ function getAccountStatementScope(
       ),
     },
     adminSettledOnly: true,
+    view: "accountStatement" as const,
     hiddenFilters: ["accountCard", "person", "settlement"] as const,
+    contentNavigation: (
+      <AccountCashFlow accountId={account.id} onPeriodChange={onPeriodChange} period={period} />
+    ),
     periodNavigationPlacement: "afterPageHeader" as const,
   };
 }

@@ -1,14 +1,10 @@
 import type { PaginatedAttachmentsOutput } from "@openmonetis/validators/attachments";
 import { FileImage, FileText, Paperclip, UserRound, X } from "lucide-react";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AttachmentsSearch } from "../attachments.presentation";
 
 type AttachmentLibraryFiltersProps = {

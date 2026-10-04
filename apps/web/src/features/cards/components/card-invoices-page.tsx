@@ -21,6 +21,8 @@ import {
   FinancialSummaryHeader,
   FinancialSummaryTitleAction,
 } from "@/components/financial-summary-header";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
 import {
@@ -34,13 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardQueryOptions } from "@/features/cards/cards.queries";
 import { AdjustInvoiceDialog } from "@/features/invoices/components/adjust-invoice-dialog";

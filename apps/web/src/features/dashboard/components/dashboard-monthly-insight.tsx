@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChartPie, RefreshCw } from "lucide-react";
+import { ArrowRight, ChartPie, ChevronRight, RefreshCw } from "lucide-react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -53,23 +53,38 @@ export function DashboardMonthlyInsight({ period }: { period: string }) {
           <ol className="divide-y">
             {expenses.map((expense) => (
               <DashboardWidgetRow key={expense.categoryId}>
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-                  <CategoryIcon className="size-4" name={expense.categoryIcon} />
-                </span>
-                <div className="grid min-w-0 flex-1 gap-2">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="min-w-0 flex-1 truncate font-medium text-sm">
-                      {expense.categoryName}
-                    </span>
-                    <MoneyValue amount={expense.amount} className="shrink-0 font-medium text-sm" />
+                <Link
+                  aria-label={`Ver categoria ${expense.categoryName}`}
+                  className="-mx-2 flex h-full min-w-0 flex-1 items-center gap-3 rounded-md px-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  params={{ categoryId: expense.categoryId }}
+                  search={{ period }}
+                  to="/categories/$categoryId"
+                >
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+                    <CategoryIcon className="size-4" name={expense.categoryIcon} />
+                  </span>
+                  <div className="grid min-w-0 flex-1 gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="min-w-0 flex-1 truncate font-medium text-sm">
+                        {expense.categoryName}
+                      </span>
+                      <MoneyValue
+                        amount={expense.amount}
+                        className="shrink-0 font-medium text-sm"
+                      />
+                    </div>
+                    <Progress
+                      aria-label={`${expense.categoryName}: ${expense.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% das despesas`}
+                      indicatorClassName="bg-primary/75"
+                      trackClassName="h-1"
+                      value={Math.max(0, Math.min(100, expense.percentage))}
+                    />
                   </div>
-                  <Progress
-                    aria-label={`${expense.categoryName}: ${expense.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% das despesas`}
-                    indicatorClassName="bg-primary/75"
-                    trackClassName="h-1"
-                    value={Math.max(0, Math.min(100, expense.percentage))}
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-4 shrink-0 text-muted-foreground"
                   />
-                </div>
+                </Link>
               </DashboardWidgetRow>
             ))}
           </ol>

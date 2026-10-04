@@ -7,16 +7,13 @@ import { CreatePersonInputSchema, ReplacePersonInputSchema } from "@openmonetis/
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showInvalidFormToast } from "@/lib/form-feedback";
 import { avatarOptions } from "../avatar-catalog";
@@ -71,6 +68,7 @@ export function PersonForm({
   });
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -78,6 +76,11 @@ export function PersonForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <div className="grid gap-3 sm:grid-cols-2">
         <form.Field
           name="name"
@@ -184,8 +187,9 @@ export function PersonForm({
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div className="grid w-full grid-cols-2 gap-2 *:w-full">
+          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 *:w-full">
             <Button
+              data-mobile-cancel
               disabled={submitting || processingAvatar}
               onClick={onCancel}
               type="button"

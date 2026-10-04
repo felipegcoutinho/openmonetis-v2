@@ -9,6 +9,7 @@ import { useTheme } from "./theme-provider";
 export function ThemeToggle({ card = false, className }: { card?: boolean; className?: string }) {
   const { setTheme, theme } = useTheme();
   const updatePreferences = useUpdateUserPreferencesMutation();
+  const iconSizeClassName = card ? "size-5" : "size-4.5";
 
   function toggleTheme() {
     const isDark = document.documentElement.classList.contains("dark");
@@ -38,7 +39,7 @@ export function ThemeToggle({ card = false, className }: { card?: boolean; class
               className,
             )}
             disabled={updatePreferences.isPending}
-            size={card ? "default" : "icon"}
+            size={card ? "default" : "icon-sm"}
             type="button"
             variant={card ? "outline" : "ghost"}
           />
@@ -46,18 +47,22 @@ export function ThemeToggle({ card = false, className }: { card?: boolean; class
         onClick={toggleTheme}
       >
         <span
-          className={cn("relative grid size-5 place-items-center", card && "text-brand-strong")}
+          className={cn(
+            "relative grid place-items-center",
+            iconSizeClassName,
+            card && "text-brand-strong",
+          )}
         >
           <Sun
             className={cn(
               "absolute scale-100 rotate-0 transition-transform dark:scale-0 dark:-rotate-90",
-              card ? "size-5" : "size-4",
+              iconSizeClassName,
             )}
           />
           <Moon
             className={cn(
               "absolute scale-0 rotate-90 transition-transform dark:scale-100 dark:rotate-0",
-              card ? "size-5" : "size-4",
+              iconSizeClassName,
             )}
           />
         </span>

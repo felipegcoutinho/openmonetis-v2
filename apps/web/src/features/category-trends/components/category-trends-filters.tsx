@@ -4,11 +4,15 @@ import type {
 } from "@openmonetis/validators/category-trends";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { PeriodPicker } from "@/components/period-picker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { getCategoryTrendsPeriodRange, getCurrentPeriod } from "../category-trends.presentation";
 
@@ -135,7 +139,11 @@ export function CategoryTrendsFilters({
             <span className="truncate">{categoryLabel}</span>
             <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] p-0">
+          <PopoverContent
+            title="Filtrar categorias"
+            align="start"
+            className="w-[min(22rem,calc(100vw-2rem))] p-0"
+          >
             <div className="border-b p-3">
               <div className="relative">
                 <Search

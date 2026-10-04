@@ -10,25 +10,18 @@ import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { Landmark, PencilLine } from "lucide-react";
 import { useId, useState } from "react";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showInvalidFormToast } from "@/lib/form-feedback";
 import { GoalAccountLogo } from "./goal-account-logo";
 
@@ -101,7 +94,7 @@ export function GoalDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent guarded>
         <DialogHeader>
           <DialogTitle>{goal ? "Editar meta" : "Nova meta"}</DialogTitle>
           <DialogDescription>
@@ -111,6 +104,7 @@ export function GoalDialog({
           </DialogDescription>
         </DialogHeader>
         <form
+          data-mobile-page-form
           className="grid gap-4"
           noValidate
           onSubmit={(event) => {
@@ -118,6 +112,14 @@ export function GoalDialog({
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <form.Field
             name="name"
             validators={{
@@ -377,8 +379,9 @@ export function GoalDialog({
           ) : null}
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(submitting) => (
-              <div className="grid grid-cols-2 gap-2">
+              <div data-mobile-form-actions className="grid grid-cols-2 gap-2">
                 <Button
+                  data-mobile-cancel
                   disabled={submitting}
                   onClick={() => onOpenChange(false)}
                   type="button"

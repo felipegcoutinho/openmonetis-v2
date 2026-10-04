@@ -3,17 +3,13 @@ import type { AccountOutput, AddAccountYieldInput } from "@openmonetis/validator
 import { AddAccountYieldInputSchema } from "@openmonetis/validators/accounts";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountsApiError } from "../accounts.api";
@@ -30,7 +26,7 @@ type Props = {
 export function AddAccountYieldDialog({ account, open, onOpenChange, onSubmit, period }: Props) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent guarded mobileLayout="sheet" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Adicionar rendimento</DialogTitle>
           <DialogDescription>
@@ -90,6 +86,7 @@ function AddAccountYieldForm({
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -97,6 +94,11 @@ function AddAccountYieldForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <div className="rounded-md border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{account.name}</p>
         <p className="text-muted-foreground text-xs">
@@ -183,7 +185,7 @@ function AddAccountYieldForm({
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
           <DialogFooter>
-            <Button onClick={onCancel} type="button" variant="outline">
+            <Button data-mobile-cancel onClick={onCancel} type="button" variant="outline">
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">

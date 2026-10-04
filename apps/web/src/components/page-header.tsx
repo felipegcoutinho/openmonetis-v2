@@ -37,7 +37,7 @@ export function PageHeader({
   const hasContent = Boolean(title || description || actions || (!hasBreadcrumbs && eyebrow));
 
   return (
-    <header className={cn("grid gap-3", className)}>
+    <header data-mobile-page-header className={cn("grid gap-3", className)}>
       {hasBreadcrumbs ? (
         <Breadcrumb>
           <BreadcrumbList>

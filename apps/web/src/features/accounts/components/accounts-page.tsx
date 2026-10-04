@@ -9,6 +9,7 @@ import { Landmark, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -130,7 +131,7 @@ export function AccountsPage() {
             </Card>
           ) : null}
           {accountsQuery.isLoading ? (
-            <p className="text-muted-foreground text-sm">Carregando contas...</p>
+            <MobileCollectionLoading message="Carregando contas..." />
           ) : null}
           {accountsQuery.isError ? (
             <p className="text-destructive text-sm" role="alert">

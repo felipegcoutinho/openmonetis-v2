@@ -1,5 +1,6 @@
 import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
 import { useRef, useState } from "react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,13 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NoteForm, type NoteFormHandle } from "./note-form";
 
 type NoteDialogProps = {

@@ -109,6 +109,7 @@ export function LoginForm() {
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {

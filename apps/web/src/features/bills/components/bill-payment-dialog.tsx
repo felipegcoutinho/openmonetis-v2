@@ -8,25 +8,17 @@ import { useForm } from "@tanstack/react-form";
 import { Image } from "@unpic/react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { PaymentSuccess } from "@/components/payment-success";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { usePayBillMutation } from "../bills.mutations";
 import { billDueLabel } from "../bills.presentation";
@@ -83,7 +75,7 @@ export function BillPaymentDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="gap-4">
+      <DialogContent guarded mobileLayout="sheet" className="gap-4">
         {paymentCompleted ? (
           <PaymentSuccess
             celebrate
@@ -123,12 +115,21 @@ export function BillPaymentDialog({
             ) : null}
 
             <form
+              data-mobile-page-form
               className="grid gap-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 void form.handleSubmit();
               }}
             >
+              <form.Subscribe
+                selector={(state) => ({
+                  isDirty: !state.isDefaultValue,
+                  isSubmitting: state.isSubmitting,
+                })}
+              >
+                {(state) => <MobileFormState {...state} />}
+              </form.Subscribe>
               <form.Field name="accountId">
                 {(field) => (
                   <div className="grid gap-2">
@@ -189,6 +190,7 @@ export function BillPaymentDialog({
 
               <DialogFooter>
                 <Button
+                  data-mobile-cancel
                   disabled={payment.isPending}
                   onClick={() => onOpenChange(false)}
                   type="button"

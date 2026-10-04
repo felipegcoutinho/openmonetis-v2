@@ -3,13 +3,9 @@ import type {
   PersonOutput,
   ReplacePersonInput,
 } from "@openmonetis/validators/people";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PersonForm } from "./person-form";
 export function PersonDialog({
   person,
@@ -24,7 +20,7 @@ export function PersonDialog({
 }) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
+      <DialogContent guarded className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{person ? "Atualizar pessoa" : "Nova pessoa"}</DialogTitle>
           <DialogDescription>

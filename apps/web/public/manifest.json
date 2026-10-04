@@ -1,6 +1,8 @@
 {
   "short_name": "OpenMonetis",
   "name": "OpenMonetis",
+  "id": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon-192.png",

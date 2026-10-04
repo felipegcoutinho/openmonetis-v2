@@ -6,6 +6,7 @@ import type { TransactionInput, TransactionOutput } from "@openmonetis/validator
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,15 +17,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getTransactionPreferenceDefaults } from "@/features/preferences/preferences.presentation";
 import { userPreferencesQueryOptions } from "@/features/preferences/preferences.queries";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { recentEstablishmentsQueryOptions } from "../transactions.queries";
 import { TransactionForm, type TransactionFormHandle } from "./transaction-form";
 import type { TransactionCreateDefaults } from "./transaction-form.validation";
@@ -72,6 +68,7 @@ export function TransactionDialog({
   onCreated,
   onOpenChange,
 }: TransactionDialogProps) {
+  const mobile = useIsMobile();
   const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const formRef = useRef<TransactionFormHandle>(null);
@@ -107,6 +104,8 @@ export function TransactionDialog({
       onOpenChange(true);
       return;
     }
+
+    if (mobile && formRef.current?.isSubmitting()) return;
 
     if (attachmentBusy) {
       toast.info("Aguarde a atualização dos anexos terminar.");

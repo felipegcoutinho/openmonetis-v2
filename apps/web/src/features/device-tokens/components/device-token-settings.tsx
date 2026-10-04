@@ -7,6 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Clipboard, KeyRound, Plus, Smartphone, Unplug } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { SettingsSection } from "@/components/settings-panel";
 import { SettingsQueryError } from "@/components/settings-query-error";
 import {
@@ -21,14 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -170,7 +166,7 @@ export function DeviceTokenSettings() {
       ) : null}
 
       <Dialog onOpenChange={changeCreateOpen} open={createOpen}>
-        <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto">
+        <DialogContent guarded className="max-h-[calc(100svh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {createdToken ? "Conclua a conexão no Android" : "Conectar aparelho"}
@@ -208,12 +204,21 @@ export function DeviceTokenSettings() {
             </div>
           ) : (
             <form
+              data-mobile-page-form
               className="grid gap-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 void form.handleSubmit();
               }}
             >
+              <form.Subscribe
+                selector={(state) => ({
+                  isDirty: !state.isDefaultValue,
+                  isSubmitting: state.isSubmitting,
+                })}
+              >
+                {(state) => <MobileFormState {...state} />}
+              </form.Subscribe>
               <form.Field name="name">
                 {(field) => (
                   <div className="grid gap-2">
@@ -242,6 +247,7 @@ export function DeviceTokenSettings() {
               </form.Field>
               <DialogFooter>
                 <Button
+                  data-mobile-cancel
                   disabled={createMutation.isPending}
                   onClick={() => changeCreateOpen(false)}
                   type="button"

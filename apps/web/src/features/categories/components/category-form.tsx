@@ -10,16 +10,13 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showInvalidFormToast } from "@/lib/form-feedback";
 import { categoryTypeLabels } from "../categories.presentation";
 import { CategoryIconPicker } from "./category-icon-picker";
@@ -65,6 +62,7 @@ export function CategoryForm({
   });
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -72,6 +70,11 @@ export function CategoryForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <form.Field
         name="name"
         validators={{
@@ -142,8 +145,14 @@ export function CategoryForm({
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
-            <Button disabled={submitting} onClick={onCancel} type="button" variant="outline">
+          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
+            <Button
+              data-mobile-cancel
+              disabled={submitting}
+              onClick={onCancel}
+              type="button"
+              variant="outline"
+            >
               Cancelar
             </Button>
             <Button disabled={submitting} type="submit">

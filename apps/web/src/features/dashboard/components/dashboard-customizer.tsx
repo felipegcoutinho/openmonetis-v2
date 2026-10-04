@@ -32,6 +32,10 @@ import {
   dashboardWidgetRegistry,
 } from "./dashboard-widget-registry";
 
+const moveHighlightDurationMs = 3000;
+const moveHighlightHoldOffset = 0.2;
+const moveHighlightBackground = "color-mix(in srgb, var(--primary) 18%, var(--card))";
+
 export function DashboardCustomizer() {
   const defaults = createDefaultDashboardWidgetPreferences();
   const preferencesQuery = useQuery({
@@ -217,13 +221,17 @@ function DashboardWidgetEditorItem({
     const animation = item.animate(
       [
         {
-          backgroundColor: "color-mix(in srgb, var(--primary) 18%, var(--card))",
+          backgroundColor: moveHighlightBackground,
+        },
+        {
+          backgroundColor: moveHighlightBackground,
+          offset: moveHighlightHoldOffset,
         },
         { backgroundColor: naturalBackground },
       ],
       {
-        duration: 1800,
-        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        duration: moveHighlightDurationMs,
+        easing: "ease-in-out",
       },
     );
 

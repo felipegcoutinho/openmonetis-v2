@@ -4,10 +4,10 @@ import type {
 } from "@openmonetis/validators/transactions";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -66,7 +66,7 @@ export function InstallmentActionDialog({
       }}
       open={open}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent mobileLayout="sheet" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {action === "edit" ? "Editar parcelamento" : "Remover parcelamento"}

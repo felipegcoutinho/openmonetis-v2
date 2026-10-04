@@ -4,26 +4,18 @@ import { AdjustInvoiceInputSchema } from "@openmonetis/validators/invoices";
 import type { PersonOutput } from "@openmonetis/validators/people";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, parseCurrencyInput } from "@/features/accounts/accounts.presentation";
 import { InvoicesApiError } from "../invoices.api";
 
@@ -48,7 +40,7 @@ export function AdjustInvoiceDialog({
 }: Props) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent guarded mobileLayout="sheet" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Ajustar fatura</DialogTitle>
           <DialogDescription>
@@ -117,6 +109,7 @@ function AdjustInvoiceForm({
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -124,6 +117,11 @@ function AdjustInvoiceForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <div className="rounded-md border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{cardName}</p>
         <p className="text-muted-foreground text-xs">
@@ -191,7 +189,7 @@ function AdjustInvoiceForm({
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
           <DialogFooter>
-            <Button onClick={onCancel} type="button" variant="outline">
+            <Button data-mobile-cancel onClick={onCancel} type="button" variant="outline">
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">

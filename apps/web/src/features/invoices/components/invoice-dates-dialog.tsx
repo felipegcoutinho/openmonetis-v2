@@ -2,16 +2,12 @@ import { UpdateInvoiceDatesInputSchema } from "@openmonetis/validators/invoices"
 import { useForm } from "@tanstack/react-form";
 import { useId } from "react";
 import { toast } from "sonner";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useUpdateInvoiceDatesMutation } from "../invoices.mutations";
 
@@ -56,7 +52,11 @@ export function InvoiceDatesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !mutation.isPending && onOpenChange(next)}>
-      <DialogContent key={`${cardId}-${period}-${closingDate}-${dueDate}`}>
+      <DialogContent
+        guarded
+        mobileLayout="sheet"
+        key={`${cardId}-${period}-${closingDate}-${dueDate}`}
+      >
         <DialogHeader>
           <DialogTitle>Ajustar datas da fatura</DialogTitle>
           <DialogDescription>
@@ -64,12 +64,21 @@ export function InvoiceDatesDialog({
           </DialogDescription>
         </DialogHeader>
         <form
+          data-mobile-page-form
           className="grid w-full gap-4"
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <form.Field name="closingDate">
             {(field) => (
               <div className="grid w-full gap-2">
@@ -96,6 +105,7 @@ export function InvoiceDatesDialog({
           </form.Field>
           <DialogFooter>
             <Button
+              data-mobile-cancel
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}

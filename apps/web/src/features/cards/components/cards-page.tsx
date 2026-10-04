@@ -4,6 +4,7 @@ import { CreditCard, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export function CardsPage() {
             icon={<CreditCard aria-hidden="true" className="size-5" />}
             title="Cartões"
           />
-          {loading ? <p className="text-muted-foreground text-sm">Carregando cartões...</p> : null}
+          {loading ? <MobileCollectionLoading message="Carregando cartões..." /> : null}
           {failed ? (
             <p className="text-destructive text-sm" role="alert">
               Não foi possível carregar.

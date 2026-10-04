@@ -1,12 +1,18 @@
 import type { AdjustAccountBalanceInput } from "@openmonetis/validators/accounts";
 import { queryOptions } from "@tanstack/react-query";
-import { getAccount, getAccounts, previewAccountBalanceAdjustment } from "./accounts.api";
+import {
+  getAccount,
+  getAccountCashFlow,
+  getAccounts,
+  previewAccountBalanceAdjustment,
+} from "./accounts.api";
 import { getCurrentAccountPeriod } from "./accounts.presentation";
 
 const accountKeys = {
   all: ["accounts"] as const,
   list: (period: string) => ["accounts", "list", period] as const,
   detail: (id: string, period: string) => ["accounts", "detail", id, period] as const,
+  cashFlow: (id: string, period: string) => ["accounts", "cash-flow", id, period] as const,
 };
 
 export function accountsQueryOptions(period = getCurrentAccountPeriod()) {
@@ -20,6 +26,13 @@ export function accountQueryOptions(id: string, period = getCurrentAccountPeriod
   return queryOptions({
     queryKey: accountKeys.detail(id, period),
     queryFn: () => getAccount(id, period),
+  });
+}
+
+export function accountCashFlowQueryOptions(id: string, period: string) {
+  return queryOptions({
+    queryKey: accountKeys.cashFlow(id, period),
+    queryFn: () => getAccountCashFlow(id, period),
   });
 }
 

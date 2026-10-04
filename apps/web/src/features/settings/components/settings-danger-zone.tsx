@@ -7,6 +7,7 @@ import { useForm } from "@tanstack/react-form";
 import { Trash2, TriangleAlert } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { SettingsPanel, SettingsSection } from "@/components/settings-panel";
 import {
   AlertDialog,
@@ -217,6 +218,7 @@ function DangerousActionDialog({
         </AlertDialogHeader>
 
         <form
+          data-mobile-page-form
           className="grid gap-5"
           noValidate
           onSubmit={(event) => {
@@ -224,6 +226,14 @@ function DangerousActionDialog({
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <form.Field name="confirmation">
             {(field) => {
               const isInvalid =

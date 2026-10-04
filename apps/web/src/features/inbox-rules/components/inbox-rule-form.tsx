@@ -18,17 +18,14 @@ import { useForm } from "@tanstack/react-form";
 import { CircleOff, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { showInvalidFormToast } from "@/lib/form-feedback";
@@ -120,6 +117,7 @@ export function InboxRuleForm({
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-5"
       noValidate
       onSubmit={(event) => {
@@ -127,6 +125,11 @@ export function InboxRuleForm({
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_7rem]">
         <form.Field name="name">
           {(field) => (
@@ -398,8 +401,14 @@ export function InboxRuleForm({
 
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div className="grid grid-cols-2 gap-2 [&>*]:w-full">
-            <Button disabled={submitting} onClick={onCancel} type="button" variant="outline">
+          <div data-mobile-form-actions className="grid grid-cols-2 gap-2 [&>*]:w-full">
+            <Button
+              data-mobile-cancel
+              disabled={submitting}
+              onClick={onCancel}
+              type="button"
+              variant="outline"
+            >
               Cancelar
             </Button>
             <Button disabled={submitting} type="submit">

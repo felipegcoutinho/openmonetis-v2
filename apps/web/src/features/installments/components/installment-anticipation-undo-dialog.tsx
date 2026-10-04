@@ -3,17 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, RotateCcw } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -72,7 +68,8 @@ export function InstallmentAnticipationUndoDialog({
 
   return (
     <Dialog onOpenChange={(next) => !mutation.isPending && onOpenChange(next)} open={open}>
-      <DialogContent className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
+      <DialogContent guarded className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
+        <MobileFormState isDirty={selectedIds.size > 0} isSubmitting={mutation.isPending} />
         <DialogHeader>
           <span className="mb-1 grid size-10 place-items-center rounded-full bg-brand/10 text-brand-strong">
             <RotateCcw aria-hidden="true" className="size-5" />
@@ -176,6 +173,7 @@ export function InstallmentAnticipationUndoDialog({
         <DialogFooter>
           <Button
             disabled={mutation.isPending}
+            data-mobile-cancel
             onClick={() => onOpenChange(false)}
             type="button"
             variant="outline"

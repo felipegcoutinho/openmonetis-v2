@@ -9,15 +9,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Pencil, Plus, RefreshCw, Trash2, Workflow } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -106,7 +102,10 @@ export function InboxRulesDialog({
       }}
       open={open}
     >
-      <DialogContent className="flex max-h-[min(90vh,52rem)] min-w-0 flex-col overflow-hidden sm:max-w-xl">
+      <DialogContent
+        guarded
+        className="flex max-h-[min(90vh,52rem)] min-w-0 flex-col overflow-hidden sm:max-w-xl"
+      >
         <DialogHeader>
           <div className="flex items-start gap-2">
             {view.kind === "form" ? (
@@ -137,7 +136,7 @@ export function InboxRulesDialog({
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div data-mobile-form-body className="min-h-0 flex-1 overflow-y-auto pr-1">
           {view.kind === "form" ? (
             <InboxRuleForm
               categories={categories}
@@ -246,6 +245,7 @@ export function InboxRulesDialog({
                           <p className="text-sm">Excluir esta regra?</p>
                           <div className="flex gap-2">
                             <Button
+                              data-mobile-cancel
                               onClick={() => setConfirmDeleteId(null)}
                               size="sm"
                               variant="outline"

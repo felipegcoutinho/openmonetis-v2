@@ -1,4 +1,5 @@
 import {
+  dateOnlyToSafeInstant,
   formatDateInBrazil,
   getCurrentPeriodInBrazil,
   periodToSafeInstant,
@@ -31,4 +32,20 @@ export function getCurrentAccountPeriod() {
 
 export function formatAccountPeriod(period: string) {
   return formatDateInBrazil(periodToSafeInstant(period), { month: "long", year: "numeric" });
+}
+
+export function formatAccountChartDate(date: string, short = false) {
+  const formatted = formatDateInBrazil(dateOnlyToSafeInstant(date), {
+    day: "2-digit",
+    month: short ? "short" : "long",
+    ...(short ? {} : { year: "numeric" as const }),
+  });
+  return short ? formatted.replace(" de ", " ") : formatted;
+}
+
+export function formatAccountHistoryPeriod(period: string, short = false) {
+  return formatDateInBrazil(periodToSafeInstant(period), {
+    month: short ? "short" : "long",
+    year: short ? "2-digit" : "numeric",
+  });
 }

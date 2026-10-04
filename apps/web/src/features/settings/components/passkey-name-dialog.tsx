@@ -1,14 +1,10 @@
 import { useForm } from "@tanstack/react-form";
 import { useId } from "react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showInvalidFormToast } from "@/lib/form-feedback";
@@ -43,7 +39,7 @@ export function PasskeyNameDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent guarded mobileLayout="sheet">
         <DialogHeader>
           <DialogTitle>
             {isAdding ? "Cadastrar chave de acesso" : "Renomear chave de acesso"}
@@ -56,6 +52,7 @@ export function PasskeyNameDialog({
         </DialogHeader>
 
         <form
+          data-mobile-page-form
           className="grid gap-5"
           noValidate
           onSubmit={(event) => {
@@ -63,6 +60,14 @@ export function PasskeyNameDialog({
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <form.Field
             name="name"
             validators={{
@@ -106,6 +111,7 @@ export function PasskeyNameDialog({
             {(isSubmitting) => (
               <DialogFooter>
                 <Button
+                  data-mobile-cancel
                   disabled={isSubmitting}
                   onClick={() => onOpenChange(false)}
                   type="button"

@@ -46,6 +46,7 @@ export function FinancialSummaryHeader({
 
   return (
     <Card
+      data-mobile-financial-summary
       className={cn(
         "overflow-hidden border-current/20 py-0 transition-colors duration-300",
         variant === "solid"
@@ -88,7 +89,7 @@ export function FinancialSummaryHeader({
           </div>
 
           {hasPrimaryValue ? (
-            <div className="mt-8">
+            <div data-mobile-primary-value className="mt-8">
               <p className="text-current/70 text-xs uppercase tracking-tight">{primaryLabel}</p>
               <div className="mt-2 font-heading text-4xl font-normal leading-none tracking-tight sm:text-5xl">
                 {primaryValue}

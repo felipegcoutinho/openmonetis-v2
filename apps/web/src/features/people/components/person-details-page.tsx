@@ -6,11 +6,15 @@ import { type ReactNode, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { EntityLoadError } from "@/components/entity-load-error";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { Navbar } from "@/components/navigation/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalExpensesSection } from "@/features/external-expenses/components/external-expenses-section";
 import { PersonConnectionPanel } from "@/features/person-connections/components/person-connection-panel";
@@ -256,7 +260,7 @@ function PersonDetailsPopover({ person }: { person: PersonOutput }) {
         <UserRound aria-hidden="true" />
         Detalhes
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
+      <PopoverContent title="Dados da pessoa" align="end" className="w-80">
         <div>
           <p className="font-medium">Dados da pessoa</p>
           <p className="mt-1 text-muted-foreground text-xs">

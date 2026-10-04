@@ -36,8 +36,9 @@ export function TransactionImportContainer() {
       categories={categories.data ?? []}
       isLoadingOptions={[accounts, cards, categories, people].some((query) => query.isLoading)}
       isDownloadingTemplate={templateMutation.isPending}
-      onImport={async (input: ImportTransactionsInput) => {
+      onImport={async (input: ImportTransactionsInput, onImported) => {
         const result = await importMutation.mutateAsync(input);
+        onImported();
         await navigate({ to: "/transactions" });
         toast.success(
           result.skipped

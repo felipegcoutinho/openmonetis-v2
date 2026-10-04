@@ -8,6 +8,7 @@ import { Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -80,9 +81,7 @@ export function PeoplePage() {
             icon={<Users aria-hidden="true" className="size-5" />}
             title="Pessoas"
           />
-          {query.isLoading ? (
-            <p className="text-muted-foreground text-sm">Carregando pessoas...</p>
-          ) : null}
+          {query.isLoading ? <MobileCollectionLoading message="Carregando pessoas..." /> : null}
           {query.isError ? (
             <p className="text-destructive text-sm">Não foi possível carregar.</p>
           ) : null}

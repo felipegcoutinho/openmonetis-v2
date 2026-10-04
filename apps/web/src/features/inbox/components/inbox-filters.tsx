@@ -1,13 +1,9 @@
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type { CardOutput } from "@openmonetis/validators/cards";
 import type { InboxRuleOutput } from "@openmonetis/validators/inbox-rules";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatInboxFilterDate, getInboxSourceMatch } from "../inbox.presentation";
 import { InboxSourceLogo } from "./inbox-source-logo";
 

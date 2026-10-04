@@ -6,9 +6,13 @@ import {
 } from "@openmonetis/shared/date-time";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { useState } from "react";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 function periodToDate(period: string) {
@@ -95,6 +99,7 @@ export function MonthNavigation({
         <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent
+        title="Selecionar mês"
         align={compact ? "end" : "center"}
         className="w-auto bg-popover/80 p-0 backdrop-blur-sm"
       >
@@ -113,6 +118,7 @@ export function MonthNavigation({
 
   return (
     <nav
+      data-mobile-month-navigation
       aria-label="Navegação por mês"
       className={cn(
         "relative flex w-full items-center justify-center rounded-lg border bg-card/80 px-3 py-3 shadow-xs backdrop-blur-sm md:justify-between md:gap-2",

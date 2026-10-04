@@ -3,13 +3,9 @@ import type {
   CreateAccountInput,
   ReplaceAccountInput,
 } from "@openmonetis/validators/accounts";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AccountForm } from "./account-form";
 
 type AccountDialogProps = {
@@ -24,7 +20,7 @@ export function AccountDialog({ account, open, onOpenChange, onSubmit }: Account
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-xl">
+      <DialogContent guarded className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Atualizar conta" : "Nova conta"}</DialogTitle>
           <DialogDescription>

@@ -1,19 +1,19 @@
+import type { MobileShortcutDestination } from "@openmonetis/domain/preferences";
 import {
+  mobileShortcutDestinations,
   notificationDueSoonDayOptions,
   transactionPageSizeOptions,
 } from "@openmonetis/domain/preferences";
 import type { UserPreferencesOutput } from "@openmonetis/validators/preferences";
 import { ListFilter } from "lucide-react";
 import { useId } from "react";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { SettingsSection } from "@/components/settings-panel";
 import { SettingsRow } from "@/components/settings-row";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { mobileShortcutLabels } from "../preferences.presentation";
 import type { PreferencesFormApi } from "../usePreferencesForm";
 
 export function PreferencesBrowsingSection({
@@ -25,6 +25,8 @@ export function PreferencesBrowsingSection({
 }) {
   const dueSoonDaysId = useId();
   const pageSizeId = useId();
+  const mobileShortcutId = useId();
+  const mobile = useIsMobile();
   return (
     <SettingsSection
       description="Ajuste como você acompanha vencimentos e navega pelos seus dados."
@@ -96,6 +98,43 @@ export function PreferencesBrowsingSection({
                   {transactionPageSizeOptions.map((size) => (
                     <SelectItem key={size} value={String(size)}>
                       {size} lançamentos
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </SettingsRow>
+          )}
+        </form.Field>
+
+        <form.Field name="mobileShortcut">
+          {(field) => (
+            <SettingsRow
+              description={
+                mobile
+                  ? "Página exibida no botão de atalho. Na barra inferior, pressione e segure para trocar."
+                  : "Página exibida no terceiro botão. Na barra inferior, pressione e segure para trocar."
+              }
+              id={mobileShortcutId}
+              label="Atalho da barra inferior"
+            >
+              <Select
+                disabled={isMutating}
+                onValueChange={(value) =>
+                  value && field.handleChange(value as MobileShortcutDestination)
+                }
+                value={field.state.value}
+              >
+                <SelectTrigger
+                  aria-describedby={`${mobileShortcutId}-description`}
+                  className="w-full"
+                  id={mobileShortcutId}
+                >
+                  <SelectValue>{mobileShortcutLabels[field.state.value]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {mobileShortcutDestinations.map((destination) => (
+                    <SelectItem key={destination} value={destination}>
+                      {mobileShortcutLabels[destination]}
                     </SelectItem>
                   ))}
                 </SelectContent>

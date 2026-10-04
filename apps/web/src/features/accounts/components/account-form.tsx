@@ -10,18 +10,15 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { LogoPicker } from "@/components/logo-picker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showInvalidFormToast } from "@/lib/form-feedback";
 import { logoCatalog } from "@/lib/logo-catalog";
@@ -112,6 +109,7 @@ export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
 
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
@@ -120,6 +118,11 @@ export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
         void form.handleSubmit();
       }}
     >
+      <form.Subscribe
+        selector={(state) => ({ isDirty: !state.isDefaultValue, isSubmitting: state.isSubmitting })}
+      >
+        {(state) => <MobileFormState {...state} />}
+      </form.Subscribe>
       <form.Field name="logo">
         {(field) => (
           <LogoPicker
@@ -284,8 +287,14 @@ export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
 
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
-          <div className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
-            <Button disabled={isSubmitting} onClick={onCancel} type="button" variant="outline">
+          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
+            <Button
+              data-mobile-cancel
+              disabled={isSubmitting}
+              onClick={onCancel}
+              type="button"
+              variant="outline"
+            >
               Cancelar
             </Button>
             <Button aria-disabled={!canSubmit} disabled={isSubmitting} type="submit">

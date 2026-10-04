@@ -1,6 +1,7 @@
 import { useStore } from "@tanstack/react-form";
 import { useBlocker } from "@tanstack/react-router";
 import { LoaderCircle, RotateCcw } from "lucide-react";
+import { getTopmostMobileSurface } from "@/components/forms/mobile-surface";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -11,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { PreferencesFormApi } from "../usePreferencesForm";
 
 export function PreferencesActions({
@@ -23,10 +25,17 @@ export function PreferencesActions({
   onRestoreDefaults: () => Promise<void>;
 }) {
   const hasChanges = useStore(form.store, (state) => !state.isDefaultValue);
+  const mobile = useIsMobile();
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
   const isBusy = isSubmitting || isRestoring;
   const blocker = useBlocker({
-    shouldBlockFn: () => hasChanges || isBusy,
+    shouldBlockFn: ({ action }) => {
+      const surface = mobile ? getTopmostMobileSurface() : undefined;
+      if (action === "BACK" && surface && surface.getAttribute("role") !== "alertdialog") {
+        return false;
+      }
+      return hasChanges || isBusy;
+    },
     enableBeforeUnload: hasChanges || isBusy,
     withResolver: true,
   });

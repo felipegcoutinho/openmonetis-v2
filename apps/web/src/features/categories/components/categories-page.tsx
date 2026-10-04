@@ -8,6 +8,7 @@ import { Plus, Tags } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -79,9 +80,7 @@ export function CategoriesPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          {query.isLoading ? (
-            <p className="text-muted-foreground text-sm">Carregando categorias...</p>
-          ) : null}
+          {query.isLoading ? <MobileCollectionLoading message="Carregando categorias..." /> : null}
           {query.isError ? (
             <p className="text-destructive text-sm">Não foi possível carregar.</p>
           ) : null}

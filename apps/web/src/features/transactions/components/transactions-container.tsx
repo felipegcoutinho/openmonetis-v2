@@ -52,6 +52,7 @@ type TransactionsScope = {
   createTypes?: readonly TransactionCreateType[];
   adminPersonOnly?: boolean;
   adminSettledOnly?: boolean;
+  view?: "accountStatement";
   periodNavigationPlacement?: "afterPageHeader" | "afterSummary";
   contentNavigation?: ReactNode;
   contentOverride?: ReactNode;
@@ -88,6 +89,7 @@ export function TransactionsContainer({
           : []
         : resolveFilterIds(search.people, peopleSlugMap.slugToId)),
     settlement: scope?.adminSettledOnly ? ("paid" as const) : search.settlement,
+    view: scope?.view,
     categoryIds:
       scope?.categoryIds ?? resolveFilterIds(search.categories, categoriesSlugMap.slugToId),
     accountIds: scope?.accountIds ?? resolveFilterIds(search.accounts, accountsSlugMap.slugToId),
@@ -134,6 +136,7 @@ export function TransactionsContainer({
 
   return (
     <TransactionsScreen
+      accountStatement={scope?.view === "accountStatement"}
       onRetry={() => {
         void transactionsQuery.refetch();
         void accountsQuery.refetch();

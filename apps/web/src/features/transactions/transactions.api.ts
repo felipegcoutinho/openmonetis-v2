@@ -18,6 +18,7 @@ export type TransactionsApiSearch = Omit<
   TransactionsSearch,
   "people" | "categories" | "accounts" | "cards" | "edit"
 > & {
+  view?: "accountStatement";
   personIds?: string[];
   categoryIds?: string[];
   accountIds?: string[];
@@ -47,6 +48,7 @@ export function getTransactions(search: TransactionsApiSearch) {
     condition: search.condition,
     paymentMethod: search.paymentMethod,
     settlement: search.settlement,
+    view: search.view,
     sort: search.sort,
     minAmount: search.minAmount,
     maxAmount: search.maxAmount,

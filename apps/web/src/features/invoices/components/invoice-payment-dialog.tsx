@@ -8,27 +8,19 @@ import { useForm } from "@tanstack/react-form";
 import { Image } from "@unpic/react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { PaymentSuccess } from "@/components/payment-success";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { parseCurrencyInput } from "@/features/accounts/accounts.presentation";
 import { usePayInvoiceMutation } from "../invoices.mutations";
@@ -128,7 +120,7 @@ export function InvoicePaymentDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="gap-4 overflow-x-hidden" key={invoice?.cardId}>
+      <DialogContent guarded className="gap-4 overflow-x-hidden" key={invoice?.cardId}>
         {paymentResult ? (
           <PaymentSuccess
             celebrate={paymentResult.status === "paid"}
@@ -170,12 +162,21 @@ export function InvoicePaymentDialog({
               </DialogDescription>
             </DialogHeader>
             <form
+              data-mobile-page-form
               className="grid w-full gap-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 void form.handleSubmit();
               }}
             >
+              <form.Subscribe
+                selector={(state) => ({
+                  isDirty: !state.isDefaultValue,
+                  isSubmitting: state.isSubmitting,
+                })}
+              >
+                {(state) => <MobileFormState {...state} />}
+              </form.Subscribe>
               <form.Field name="mode">
                 {(field) => (
                   <Tabs
@@ -324,6 +325,7 @@ export function InvoicePaymentDialog({
               </form.Field>
               <DialogFooter>
                 <Button
+                  data-mobile-cancel
                   disabled={mutation.isPending}
                   onClick={() => onOpenChange(false)}
                   type="button"

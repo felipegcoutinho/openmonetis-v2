@@ -7,24 +7,17 @@ import { CreateBudgetInputSchema, UpdateBudgetInputSchema } from "@openmonetis/v
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { PeriodPicker } from "@/components/period-picker";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { showInvalidFormToast } from "@/lib/form-feedback";
 
@@ -88,7 +81,7 @@ export function BudgetDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent guarded>
         <DialogHeader>
           <DialogTitle>{editing ? "Atualizar orçamento" : "Novo orçamento"}</DialogTitle>
           <DialogDescription>
@@ -99,6 +92,7 @@ export function BudgetDialog({
         </DialogHeader>
 
         <form
+          data-mobile-page-form
           className="grid gap-4"
           noValidate
           onSubmit={(event) => {
@@ -106,6 +100,14 @@ export function BudgetDialog({
             void form.handleSubmit();
           }}
         >
+          <form.Subscribe
+            selector={(state) => ({
+              isDirty: !state.isDefaultValue,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {(state) => <MobileFormState {...state} />}
+          </form.Subscribe>
           <form.Field name="categoryId">
             {(field) => (
               <div className="grid gap-1.5">
@@ -205,8 +207,9 @@ export function BudgetDialog({
 
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(submitting) => (
-              <div className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
+              <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
                 <Button
+                  data-mobile-cancel
                   disabled={submitting}
                   onClick={() => onOpenChange(false)}
                   type="button"

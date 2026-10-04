@@ -1,10 +1,10 @@
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarArrowDown, CircleAlert } from "lucide-react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -41,7 +41,7 @@ export function InstallmentAnticipationLauncher({
   if (reportQuery.isLoading) {
     return (
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent>
+        <DialogContent mobileLayout="sheet">
           <DialogHeader>
             <DialogTitle>Preparando antecipação</DialogTitle>
             <DialogDescription>Buscando as parcelas futuras desta compra.</DialogDescription>
@@ -60,7 +60,7 @@ export function InstallmentAnticipationLauncher({
     const unavailable = Boolean(reportQuery.data && group && eligibleInstallments.length === 0);
     return (
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent>
+        <DialogContent mobileLayout="sheet">
           <DialogHeader>
             <span className="mb-1 grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
               {unavailable ? (

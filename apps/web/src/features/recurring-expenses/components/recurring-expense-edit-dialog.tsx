@@ -7,6 +7,9 @@ import { useForm } from "@tanstack/react-form";
 import { CalendarRange } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -22,14 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUpdateRecurringExpenseMutation } from "../recurring-expenses.mutations";
@@ -109,7 +105,7 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
   return (
     <>
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent className="max-h-[90svh] overflow-y-auto">
+        <DialogContent guarded className="max-h-[90svh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Alterar despesa recorrente</DialogTitle>
             <DialogDescription>
@@ -119,12 +115,21 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
             </DialogDescription>
           </DialogHeader>
           <form
+            data-mobile-page-form
             className="grid gap-4"
             onSubmit={(event) => {
               event.preventDefault();
               void form.handleSubmit();
             }}
           >
+            <form.Subscribe
+              selector={(state) => ({
+                isDirty: !state.isDefaultValue,
+                isSubmitting: state.isSubmitting,
+              })}
+            >
+              {(state) => <MobileFormState {...state} />}
+            </form.Subscribe>
             <form.Field name="name">
               {(field) => (
                 <div className="grid gap-2">
@@ -217,7 +222,12 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
               </form.Field>
             )}
             <DialogFooter>
-              <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+              <Button
+                data-mobile-cancel
+                onClick={() => onOpenChange(false)}
+                type="button"
+                variant="outline"
+              >
                 Cancelar
               </Button>
               <Button type="submit">Continuar</Button>

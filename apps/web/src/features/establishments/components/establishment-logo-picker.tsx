@@ -4,8 +4,12 @@ import { LoaderCircle } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
   useRemoveEstablishmentLogoMutation,
@@ -63,7 +67,12 @@ export function EstablishmentLogoPicker({
       open={open}
     >
       <PopoverTrigger render={children as ReactElement} />
-      <PopoverContent align="start" className="w-80 gap-3 p-3" initialFocus={false}>
+      <PopoverContent
+        title="Logo do estabelecimento"
+        align="start"
+        className="w-80 gap-3 p-3"
+        initialFocus={false}
+      >
         <div>
           <p className="font-medium text-sm">Logo do estabelecimento</p>
           <p className="truncate text-muted-foreground text-xs">{name}</p>

@@ -1,9 +1,11 @@
 import { Image } from "@unpic/react";
 import { Check, ImageOff, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { LogoCatalogItem } from "@/lib/logo-catalog";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,7 @@ export function LogoPicker({
   emptyOptionLabel = "Sem instituição",
   onChange,
 }: LogoPickerProps) {
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectedLabel = options.find((option) => option.src === value)?.label ?? "";
@@ -87,7 +90,7 @@ export function LogoPicker({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent mobileLayout="sheet" className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
@@ -97,7 +100,7 @@ export function LogoPicker({
               className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             />
             <Input
-              autoFocus
+              autoFocus={!mobile}
               aria-label={searchPlaceholder}
               className="pl-9"
               onChange={(event) => setSearch(event.target.value)}
@@ -105,7 +108,7 @@ export function LogoPicker({
               value={search}
             />
           </div>
-          <div className="grid max-h-80 gap-5 overflow-y-auto pr-1">
+          <div data-mobile-form-body className="grid max-h-80 gap-5 overflow-y-auto pr-1">
             {(featuredVisibleOptions.length > 0 || allowEmpty) && !search.trim() ? (
               <LogoGrid
                 allowEmpty={allowEmpty}

@@ -24,10 +24,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { cn } from "@/lib/utils";
+import { formatCompactDate } from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
 import { TransactionSelectionSummary } from "./transaction-selection-summary";
 
 type TransactionsMobileListProps = {
+  accountStatement?: boolean;
   allowImport?: boolean;
   transactions: TransactionOutput[];
   currentPage: number;
@@ -42,10 +44,10 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
   const selection = useTransactionSelection(props.transactions);
   const groups = new Map<string, TransactionOutput[]>();
   for (const transaction of props.transactions) {
-    groups.set(transaction.purchaseDate, [
-      ...(groups.get(transaction.purchaseDate) ?? []),
-      transaction,
-    ]);
+    const date = props.accountStatement
+      ? (transaction.postingDate ?? transaction.purchaseDate)
+      : transaction.purchaseDate;
+    groups.set(date, [...(groups.get(date) ?? []), transaction]);
   }
 
   if (!props.transactions.length) {
@@ -169,6 +171,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
 }
 
 function MobileTransactionRow({
+  accountStatement,
   transaction,
   onView,
   selectionMode,
@@ -295,6 +298,14 @@ function MobileTransactionRow({
             ) : null}
             <span className="truncate">{transaction.categoryName ?? "Sem categoria"}</span>
           </span>
+          {transaction.paymentMethod === "boleto" && transaction.boletoPaymentDate ? (
+            <span className="mt-1 block text-muted-foreground text-xs">
+              Venc. {formatCompactDate(transaction.dueDate ?? transaction.purchaseDate)}
+              {accountStatement
+                ? null
+                : ` · Pago ${formatCompactDate(transaction.boletoPaymentDate)}`}
+            </span>
+          ) : null}
         </span>
         <span className="shrink-0 text-right">
           <MoneyValue

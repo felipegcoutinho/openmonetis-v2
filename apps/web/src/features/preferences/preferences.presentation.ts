@@ -1,8 +1,21 @@
+import type { MobileShortcutDestination } from "@openmonetis/domain/preferences";
 import type { UserPreferencesOutput } from "@openmonetis/validators/preferences";
 import type { TransactionCreateDefaults } from "@/features/transactions/components/transaction-form.validation";
 import { PreferencesApiError } from "./preferences.api";
 
 export const automaticPreferenceValue = "automatic";
+
+export const mobileShortcutLabels: Record<MobileShortcutDestination, string> = {
+  accounts: "Contas",
+  cards: "Cartões",
+  budgets: "Orçamentos",
+  goals: "Metas",
+  people: "Pessoas",
+  categories: "Categorias",
+  notes: "Anotações",
+  attachments: "Anexos",
+  inbox: "Capturas",
+};
 
 export function getTransactionPreferenceDefaults(
   preferences?: UserPreferencesOutput,

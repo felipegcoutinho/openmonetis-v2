@@ -1,4 +1,5 @@
 @import "./fonts.css";
+@import "./mobile-forms.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -316,48 +317,21 @@
   right: 0;
   left: 0;
   height: min(46rem, 70svh);
-  background:
-    radial-gradient(
-      ellipse 52% 60% at -4% 20%,
-      color-mix(in srgb, var(--brand) 13%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 48% 58% at 78% 6%,
-      color-mix(in srgb, var(--palette-blue) 8%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 42% 50% at 52% 34%,
-      color-mix(in srgb, var(--chart-4) 9%, transparent),
-      transparent 74%
-    ),
-    radial-gradient(
-      ellipse 34% 42% at 98% 58%,
-      color-mix(in srgb, var(--brand) 4%, transparent),
-      transparent 76%
-    );
+  background: radial-gradient(
+    ellipse 52% 60% at 50% 20%,
+    color-mix(in srgb, var(--primary) 9%, transparent),
+    transparent 72%
+  );
   mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 100%);
   pointer-events: none;
 }
 
 .dark .dashboard-atmosphere {
-  background:
-    radial-gradient(
-      ellipse 52% 60% at -4% 20%,
-      color-mix(in srgb, var(--brand) 8%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 48% 58% at 78% 6%,
-      color-mix(in srgb, var(--info) 7%, transparent),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 42% 50% at 52% 34%,
-      color-mix(in srgb, var(--chart-4) 5%, transparent),
-      transparent 74%
-    );
+  background: radial-gradient(
+    ellipse 52% 60% at 50% 20%,
+    color-mix(in srgb, var(--primary) 8%, transparent),
+    transparent 72%
+  );
 }
 
 .dashboard-mobile-summary {

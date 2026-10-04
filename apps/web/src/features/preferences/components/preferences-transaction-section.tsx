@@ -4,16 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import { Banknote, Barcode, CreditCard, Landmark, QrCode, ReceiptText, Ticket } from "lucide-react";
 import { useId } from "react";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { SettingsSection } from "@/components/settings-panel";
 import { SettingsQueryError } from "@/components/settings-query-error";
 import { SettingsRow } from "@/components/settings-row";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { paymentMethodLabels } from "@/features/transactions/transactions.presentation";

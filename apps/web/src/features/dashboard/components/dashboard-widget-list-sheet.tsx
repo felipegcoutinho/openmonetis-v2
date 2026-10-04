@@ -1,9 +1,9 @@
 import { List } from "lucide-react";
 import type { ReactNode } from "react";
+import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,

@@ -1,75 +1,36 @@
-import type {
-  ExternalExpenseOutput,
-  ListExternalExpensesQuery,
-} from "@openmonetis/validators/external-expenses";
+import type { ExternalExpenseOutput } from "@openmonetis/validators/external-expenses";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Banknote,
-  Barcode,
-  CalendarClock,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
-  HandCoins,
-  Landmark,
-  RefreshCw,
-  Search,
-  Split,
-  X,
-} from "lucide-react";
+import { RefreshCw, Search, X } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
-import { FinancialSummaryHeader } from "@/components/financial-summary-header";
-import { MoneyValue } from "@/components/money-value";
+
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
-import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
+
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
-import {
-  formatCompactDate,
-  formatPaymentMethodTable,
-  transactionConditionLabels,
-} from "@/features/transactions/transactions.presentation";
+
 import {
   useImportExternalExpenseMutation,
   useReviewExternalExpenseMutation,
 } from "../external-expenses.mutations";
 import { externalExpensesQueryOptions } from "../external-expenses.queries";
-import { ExternalCounterpartAvatar } from "./external-counterpart-avatar";
-import { ExternalExpenseSource } from "./external-expense-source";
-
-type ExternalExpenseSort = NonNullable<ListExternalExpensesQuery["sort"]>;
-
-const externalExpenseSortLabels: Record<ExternalExpenseSort, string> = {
-  recent: "Mais recentes",
-  oldest: "Mais antigos",
-  amountDesc: "Maior valor",
-  amountAsc: "Menor valor",
-  name: "Estabelecimento (A–Z)",
-};
+import { createDefaultsFor } from "./external-expense-defaults";
+import { ExternalExpensesEmpty } from "./external-expenses-empty";
+import { ExternalExpensesLoading } from "./external-expenses-loading";
+import type { ExternalExpenseSort } from "./external-expenses-section.types";
+import { externalExpenseSortLabels } from "./external-expenses-section-options";
+import { ExternalExpensesSummary } from "./external-expenses-summary";
+import { ExternalExpensesTable } from "./external-expenses-table";
 
 export function ExternalExpensesSection({ period }: { period: string }) {
   const [importing, setImporting] = useState<ExternalExpenseOutput | null>(null);
@@ -254,305 +215,5 @@ export function ExternalExpensesSection({ period }: { period: string }) {
         transaction={null}
       />
     </div>
-  );
-}
-
-function ExternalExpensesSummary({
-  isError,
-  isLoading,
-  total,
-  totalAmount,
-}: {
-  isError: boolean;
-  isLoading: boolean;
-  total: number | undefined;
-  totalAmount: number | undefined;
-}) {
-  return (
-    <FinancialSummaryHeader
-      eyebrow="Lançamentos externos"
-      identity={
-        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
-          <HandCoins aria-hidden="true" className="size-6" />
-        </span>
-      }
-      metrics={[]}
-      primaryLabel="Total aguardando importação"
-      primaryValue={
-        isLoading ? (
-          <Skeleton className="h-12 w-52 bg-current/15 before:via-current/20" />
-        ) : isError ? (
-          <span className="text-xl">Indisponível</span>
-        ) : (
-          <MoneyValue amount={totalAmount ?? 0} />
-        )
-      }
-      subtitle={
-        isLoading
-          ? "Calculando os lançamentos recebidos"
-          : `${total ?? 0} ${
-              total === 1 ? "lançamento aguardando importação" : "lançamentos aguardando importação"
-            }`
-      }
-      title="Pendências recebidas"
-      variant="soft"
-    />
-  );
-}
-
-function ExternalExpensesTable({
-  importPending,
-  items,
-  onImport,
-  onReview,
-  onPageChange,
-  page,
-  total,
-  totalPages,
-}: {
-  importPending: boolean;
-  items: ExternalExpenseOutput[];
-  onImport: (item: ExternalExpenseOutput) => void;
-  onReview: (item: ExternalExpenseOutput) => void;
-  onPageChange: (page: number) => void;
-  page: number;
-  total: number;
-  totalPages: number;
-}) {
-  return (
-    <Card className="py-2">
-      <CardContent className="px-2 sm:px-4">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Estabelecimento</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Condição</TableHead>
-                <TableHead>Forma de pagamento</TableHead>
-                <TableHead>Pessoa</TableHead>
-                <TableHead>Conta/Cartão</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item) => (
-                <ExternalExpenseRow
-                  importPending={importPending}
-                  item={item}
-                  key={item.id}
-                  onImport={() => onImport(item)}
-                  onReview={() => onReview(item)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t px-1 pt-3 text-muted-foreground text-sm">
-          <span>
-            {total} {total === 1 ? "lançamento" : "lançamentos"}
-          </span>
-          {totalPages > 1 ? (
-            <div className="flex items-center gap-2">
-              <Button
-                aria-label="Página anterior"
-                disabled={page <= 1}
-                onClick={() => onPageChange(page - 1)}
-                size="icon-sm"
-                variant="outline"
-              >
-                <ChevronLeft aria-hidden="true" />
-              </Button>
-              <span>
-                Página {page} de {totalPages}
-              </span>
-              <Button
-                aria-label="Próxima página"
-                disabled={page >= totalPages}
-                onClick={() => onPageChange(page + 1)}
-                size="icon-sm"
-                variant="outline"
-              >
-                <ChevronRight aria-hidden="true" />
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ExternalExpenseRow({
-  importPending,
-  item,
-  onImport,
-  onReview,
-}: {
-  importPending: boolean;
-  item: ExternalExpenseOutput;
-  onImport: () => void;
-  onReview: () => void;
-}) {
-  const PaymentIcon =
-    item.snapshot.paymentMethod === "credit_card" || item.snapshot.paymentMethod === "debit_card"
-      ? CreditCard
-      : item.snapshot.paymentMethod === "boleto"
-        ? Barcode
-        : item.snapshot.paymentMethod === "cash"
-          ? Banknote
-          : Landmark;
-  const recurringDateLabel =
-    item.sourceKind !== "recurringOccurrence"
-      ? null
-      : item.snapshot.paymentMethod === "boleto"
-        ? "Vence em "
-        : "Ocorrência em ";
-  const displayedDate =
-    item.sourceKind === "recurringOccurrence" && item.snapshot.paymentMethod === "boleto"
-      ? (item.snapshot.dueDate ?? item.snapshot.purchaseDate)
-      : item.snapshot.purchaseDate;
-
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex min-w-56 items-center gap-2.5">
-          <EstablishmentLogo
-            fallbackLogoUrl={item.establishmentLogoUrl}
-            name={item.snapshot.name}
-            size={36}
-          />
-          <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="flex min-w-0 items-center gap-1.5">
-              <span className="max-w-56 truncate font-medium">{item.snapshot.name}</span>
-              {item.isDivided ? (
-                <Tooltip>
-                  <TooltipTrigger
-                    aria-label="Lançamento dividido"
-                    className="inline-flex shrink-0 rounded-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Split aria-hidden="true" className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>Lançamento dividido</TooltipContent>
-                </Tooltip>
-              ) : null}
-            </span>
-            <span className="whitespace-nowrap text-muted-foreground text-xs">
-              {recurringDateLabel}
-              {formatCompactDate(displayedDate)}
-            </span>
-          </span>
-        </div>
-      </TableCell>
-      <TableCell className="whitespace-nowrap">
-        <MoneyValue amount={-item.snapshot.amount} className="font-medium" />
-      </TableCell>
-      <TableCell>
-        <span className="inline-flex items-center gap-2 whitespace-nowrap text-muted-foreground">
-          {item.snapshot.condition === "installment" ? (
-            <CalendarClock aria-hidden="true" size={14} />
-          ) : item.snapshot.condition === "recurring" ? (
-            <RefreshCw aria-hidden="true" size={14} />
-          ) : (
-            <Check aria-hidden="true" size={14} />
-          )}
-          {transactionConditionLabels[item.snapshot.condition]}
-          {item.snapshot.installmentCount ? ` · ${item.snapshot.installmentCount}x` : ""}
-        </span>
-      </TableCell>
-      <TableCell className="whitespace-nowrap text-muted-foreground">
-        <PaymentIcon className="mr-2 inline size-4" />
-        {formatPaymentMethodTable(item.snapshot.paymentMethod)}
-      </TableCell>
-      <TableCell>
-        <span className="inline-flex min-w-40 items-center gap-2">
-          <ExternalCounterpartAvatar
-            avatarUrl={item.counterpartAvatarUrl}
-            className="size-7"
-            name={item.counterpartName}
-          />
-          <span className="grid">
-            <span className="text-muted-foreground text-xs">Compartilhado por</span>
-            <span className="font-medium text-sm">{item.counterpartName}</span>
-          </span>
-        </span>
-      </TableCell>
-      <TableCell>
-        <span className="whitespace-nowrap text-muted-foreground">
-          <ExternalExpenseSource
-            sourceCardBrand={item.sourceCardBrand}
-            sourceLabel={item.snapshot.sourceLabel}
-            sourceLogoUrl={item.sourceLogoUrl}
-          />
-          {!item.snapshot.sourceLabel ? "—" : null}
-        </span>
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex justify-end gap-2">
-          <Button disabled={importPending} onClick={onReview} size="sm" variant="ghost">
-            {item.status === "ignored" ? "Restaurar" : "Ignorar"}
-          </Button>
-          {item.status === "pending" ? (
-            <Button disabled={importPending} onClick={onImport} size="sm">
-              Importar para minha conta
-            </Button>
-          ) : null}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function ExternalExpensesEmpty({ searched, ignored }: { searched: boolean; ignored: boolean }) {
-  return (
-    <Card className="border-dashed shadow-none">
-      <CardContent className="grid place-items-center py-14 text-center">
-        <span className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
-          <Check aria-hidden="true" className="size-5" />
-        </span>
-        <p className="mt-3 font-medium">
-          {searched
-            ? "Nenhum lançamento encontrado"
-            : ignored
-              ? "Nenhum lançamento ignorado"
-              : "Nenhum lançamento pendente"}
-        </p>
-        <p className="mt-1 max-w-md text-muted-foreground text-sm">
-          {searched
-            ? "Tente buscar por outro estabelecimento, pessoa ou conta/cartão."
-            : ignored
-              ? "Os lançamentos ignorados neste mês aparecerão aqui e poderão ser restaurados."
-              : "Novos lançamentos externos aparecerão aqui para importação."}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function createDefaultsFor(item: ExternalExpenseOutput) {
-  const snapshot = item.snapshot;
-  return {
-    amount: String(snapshot.amount),
-    condition: item.sourceKind === "recurringOccurrence" ? "single" : snapshot.condition,
-    dueDate: snapshot.dueDate ?? "",
-    installmentCount: String(snapshot.installmentCount ?? 2),
-    invoicePeriod: snapshot.period,
-    isSettled: snapshot.paymentMethod === "credit_card" ? "true" : "false",
-    name: snapshot.name,
-    paymentMethod: snapshot.paymentMethod,
-    purchaseDate: snapshot.purchaseDate,
-    startInstallment: String(snapshot.currentInstallment ?? 1),
-  } as const;
-}
-
-function ExternalExpensesLoading() {
-  return (
-    <Card className="py-2">
-      <CardContent className="grid gap-3 px-4 py-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-14 w-full" />
-        <Skeleton className="h-14 w-full" />
-      </CardContent>
-    </Card>
   );
 }

@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ListFilter, RefreshCw, Tags } from "lucide-react";
 import { useState } from "react";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectLabel,

@@ -3,13 +3,9 @@ import type {
   CreateCategoryInput,
   ReplaceCategoryInput,
 } from "@openmonetis/validators/categories";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CategoryForm } from "./category-form";
 export function CategoryDialog({
   category,
@@ -26,7 +22,7 @@ export function CategoryDialog({
 }) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent guarded>
         <DialogHeader>
           <DialogTitle>{category ? "Atualizar categoria" : "Nova categoria"}</DialogTitle>
           <DialogDescription>

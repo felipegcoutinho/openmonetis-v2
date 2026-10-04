@@ -3,18 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Copy, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
+import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
+import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
@@ -48,7 +44,7 @@ export function CopyBudgetsDialog({
 
   return (
     <Dialog onOpenChange={changeOpen} open={open}>
-      <DialogContent className="sm:max-w-xl" showCloseButton={!copyMutation.isPending}>
+      <DialogContent guarded className="sm:max-w-xl" showCloseButton={!copyMutation.isPending}>
         <DialogHeader>
           <DialogTitle>Copiar limites do mês anterior</DialogTitle>
           <DialogDescription>
@@ -94,7 +90,12 @@ export function CopyBudgetsDialog({
 
         {previousQuery.isLoading || previousQuery.isError ? (
           <DialogFooter>
-            <Button onClick={() => changeOpen(false)} type="button" variant="outline">
+            <Button
+              data-mobile-cancel
+              onClick={() => changeOpen(false)}
+              type="button"
+              variant="outline"
+            >
               Cancelar
             </Button>
           </DialogFooter>
@@ -137,8 +138,12 @@ function CopyBudgetSelection({
 
   return (
     <>
+      <MobileFormState
+        isDirty={selectedIds.length !== availableBudgets.length}
+        isSubmitting={pending}
+      />
       {budgets.length > 0 ? (
-        <div className="grid gap-3">
+        <div data-mobile-form-body className="grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-muted-foreground text-xs">
               {selectedIds.length} de {availableBudgets.length} selecionados
@@ -226,7 +231,13 @@ function CopyBudgetSelection({
       )}
 
       <DialogFooter>
-        <Button disabled={pending} onClick={onCancel} type="button" variant="outline">
+        <Button
+          data-mobile-cancel
+          disabled={pending}
+          onClick={onCancel}
+          type="button"
+          variant="outline"
+        >
           Cancelar
         </Button>
         <Button

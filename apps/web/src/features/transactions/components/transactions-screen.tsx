@@ -1,159 +1,37 @@
-import type { AccountOutput } from "@openmonetis/validators/accounts";
-import type { CardOutput } from "@openmonetis/validators/cards";
-import type { CategoryOutput } from "@openmonetis/validators/categories";
-import type { PersonOutput } from "@openmonetis/validators/people";
-import type {
-  TransactionActionScope,
-  TransactionInput,
-  TransactionOutput,
-} from "@openmonetis/validators/transactions";
 import { Link } from "@tanstack/react-router";
-import { Image } from "@unpic/react";
-import {
-  ArrowLeftRight,
-  ArrowUpDown,
-  Banknote,
-  CalendarClock,
-  ChevronDown,
-  Circle,
-  CircleCheck,
-  CreditCard,
-  FileUp,
-  Filter,
-  Landmark,
-  type LucideIcon,
-  Paperclip,
-  Plus,
-  Search,
-  Users,
-  X,
-} from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
-import { MonthNavigation } from "@/components/month-navigation";
-import { type PageBreadcrumb, PageHeader } from "@/components/page-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowLeftRight, FileUp } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CategoryIcon } from "@/features/categories/category-icons";
-import { InstallmentAnticipationLauncher } from "@/features/installments/components/installment-anticipation-launcher";
-import { InstallmentAnticipationUndoDialog } from "@/features/installments/components/installment-anticipation-undo-dialog";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import {
   buildFilterSlugMap,
-  formatTransactionFilterAmount,
-  formatTransactionFilterDate,
   parseFilterSlugs,
-  paymentMethodIcons,
-  paymentMethodLabels,
   serializeFilterSlugs,
   type TransactionsSearch,
-  transactionConditionIcons,
-  transactionConditionLabels,
-  transactionTypeLabels,
 } from "../transactions.presentation";
-import { TransactionDetailsSheet } from "./transaction-details-sheet";
-import { TransactionDialog } from "./transaction-dialog";
-import type { TransactionCreateDefaults } from "./transaction-form.validation";
-import { TransactionRefundDialog } from "./transaction-refund-dialog";
+import { useTransactionsDialogs } from "../useTransactionsDialogs";
 import { transactionTypeIcons } from "./transaction-type-badge";
+import { TransactionsActiveFilters } from "./transactions-active-filters";
+import { TransactionsCreateActions } from "./transactions-create-actions";
+import { TransactionsDialogs } from "./transactions-dialogs";
+import { TransactionsFilters } from "./transactions-filters";
+import { TransactionsLoading } from "./transactions-loading";
 import { TransactionsMobileList } from "./transactions-mobile-list";
+import { TransactionsPeriodNavigation } from "./transactions-period-navigation";
+import type { TransactionsScreenProps } from "./transactions-screen.types";
+import { createTransactionLabels, defaultCreateTypes } from "./transactions-screen-options";
+import { TransactionsSearchControls } from "./transactions-search-controls";
 import { TransactionsTable } from "./transactions-table";
 
-type TransactionsScreenProps = {
-  transactions: TransactionOutput[];
-  accounts: AccountOutput[];
-  cards: CardOutput[];
-  categories: CategoryOutput[];
-  people: PersonOutput[];
-  period: string;
-  isLoading: boolean;
-  hasLoadError: boolean;
-  pendingTransactionId: string | null;
-  pendingSettlementKey: string | null;
-  pageCount: number;
-  totalItems: number;
-  onRetry: () => void;
-  isUpdating?: boolean;
-  onPeriodChange?: (period: string) => void;
-  periodNavigationPlacement?: "afterPageHeader" | "afterSummary";
-  search: TransactionsSearch;
-  onSearchChange: (search: Partial<TransactionsSearch>) => void;
-  onDeleteTransaction: (
-    transaction: TransactionOutput,
-    scope?: TransactionActionScope,
-  ) => Promise<void> | void;
-  onSettleTransactions: (
-    ids: string[],
-    isSettled: boolean,
-    settledDate?: string,
-  ) => Promise<void> | void;
-  onSettleRecurringOccurrence: (
-    recurringRuleId: string,
-    purchaseDate: string,
-    isSettled: boolean,
-    settledDate?: string,
-  ) => Promise<void> | void;
-  onRecurringStatus: (
-    id: string,
-    status: "active" | "paused" | "cancelled",
-  ) => Promise<void> | void;
-  header?: TransactionsScreenHeader;
-  hiddenFilters?: readonly TransactionsFilterKey[];
-  allowCreate?: boolean;
-  allowImport?: boolean;
-  createDefaults?: TransactionCreateDefaults;
-  createTypes?: readonly TransactionCreateType[];
-  defaultPageSize?: number;
-  contentNavigation?: ReactNode;
-  contentOverride?: ReactNode;
-};
-
-export type TransactionCreateType = TransactionInput["type"];
-export type TransactionsFilterKey =
-  | "type"
-  | "paymentMethod"
-  | "accountCard"
-  | "category"
-  | "person"
-  | "settlement";
-
-export type TransactionsScreenHeader = {
-  breadcrumbs: PageBreadcrumb[];
-  description?: string;
-  icon?: ReactNode;
-  summary?: ReactNode;
-  title?: string;
-};
+export type {
+  TransactionCreateType,
+  TransactionsFilterKey,
+  TransactionsScreenHeader,
+} from "./transactions-screen.types";
 
 export function TransactionsScreen({
+  accountStatement = false,
   transactions,
   accounts,
   cards,
@@ -188,16 +66,27 @@ export function TransactionsScreen({
 }: TransactionsScreenProps) {
   const isMobile = useIsMobile();
   const adminPersonId = people.find((person) => person.role === "admin")?.id ?? null;
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<TransactionOutput | null>(null);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit" | "copy">("create");
-  const [createType, setCreateType] = useState<TransactionInput["type"]>("expense");
-  const [anticipatingTransaction, setAnticipatingTransaction] = useState<TransactionOutput | null>(
-    null,
-  );
-  const [undoingAnticipation, setUndoingAnticipation] = useState<TransactionOutput | null>(null);
-  const [refundingTransaction, setRefundingTransaction] = useState<TransactionOutput | null>(null);
-  const [viewingTransaction, setViewingTransaction] = useState<TransactionOutput | null>(null);
+  const {
+    isDialogOpen,
+    setIsDialogOpen,
+    editingTransaction,
+    setEditingTransaction,
+    dialogMode,
+    setDialogMode,
+    createType,
+    anticipatingTransaction,
+    setAnticipatingTransaction,
+    undoingAnticipation,
+    setUndoingAnticipation,
+    refundingTransaction,
+    setRefundingTransaction,
+    viewingTransaction,
+    setViewingTransaction,
+    openCreateDialog,
+    openEditDialog,
+    openCopyDialog,
+  } = useTransactionsDialogs();
+
   const search = urlSearch.q ?? "";
   const typeFilter = urlSearch.type;
   const conditionFilter = urlSearch.condition;
@@ -239,35 +128,14 @@ export function TransactionsScreen({
     Boolean(urlSearch.hasAttachments),
     Boolean(urlSearch.isDivided),
   ].filter(Boolean).length;
-  const periodNavigation =
-    urlSearch.dateStart || urlSearch.dateEnd ? (
-      <div className="sticky top-20 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-3">
-        <p className="text-sm font-medium">
-          Intervalo:{" "}
-          {urlSearch.dateStart
-            ? formatTransactionFilterDate(urlSearch.dateStart)
-            : "desde o início"}{" "}
-          até {urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "a última data"}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
-          }
-        >
-          Voltar ao mês selecionado
-        </Button>
-      </div>
-    ) : (
-      <MonthNavigation
-        className="sticky top-20 z-20"
-        onPeriodChange={(nextPeriod) => {
-          onPeriodChange?.(nextPeriod);
-        }}
-        period={period}
-      />
-    );
+  const periodNavigation = (
+    <TransactionsPeriodNavigation
+      urlSearch={urlSearch}
+      onSearchChange={onSearchChange}
+      onPeriodChange={onPeriodChange}
+      period={period}
+    />
+  );
   const summarySection =
     periodNavigationPlacement === "afterSummary" ? (
       pageHeader.summary ? (
@@ -334,27 +202,6 @@ export function TransactionsScreen({
     onSearchChange({ page: next > 1 ? next : undefined });
   }
 
-  function openCreateDialog(type: TransactionInput["type"]) {
-    setCreateType(type);
-    setDialogMode("create");
-    setEditingTransaction(null);
-    setIsDialogOpen(true);
-  }
-
-  function openEditDialog(transaction: TransactionOutput) {
-    setEditingTransaction(transaction);
-    setCreateType(transaction.type);
-    setDialogMode("edit");
-    setIsDialogOpen(true);
-  }
-
-  function openCopyDialog(transaction: TransactionOutput) {
-    setEditingTransaction(transaction);
-    setCreateType(transaction.type);
-    setDialogMode("copy");
-    setIsDialogOpen(true);
-  }
-
   function clearFilters() {
     onSearchChange({
       q: undefined,
@@ -397,46 +244,11 @@ export function TransactionsScreen({
       <PageHeader
         actions={
           showHeaderCreateMenu ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                closeDelay={150}
-                delay={0}
-                openOnHover
-                render={
-                  <Button
-                    aria-label="Criar novo lançamento"
-                    className="w-full gap-0 overflow-hidden p-0 sm:w-auto"
-                    type="button"
-                  />
-                }
-              >
-                <span aria-hidden="true" className="w-9 shrink-0 sm:hidden" />
-                <span className="flex h-full flex-1 items-center justify-center gap-1.5 px-3">
-                  <Plus aria-hidden="true" />
-                  Novo lançamento
-                </span>
-                <span className="grid h-full w-9 shrink-0 place-items-center border-primary-foreground/25 border-l">
-                  <ChevronDown
-                    aria-hidden="true"
-                    className="transition-transform group-data-popup-open/button:rotate-180"
-                  />
-                </span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                {createTypes.map((type) => {
-                  const Icon = transactionTypeIcons[type];
-
-                  return (
-                    <DropdownMenuItem key={type} onClick={() => openCreateDialog(type)}>
-                      <Icon aria-hidden="true" />
-                      {type === "income" && createDefaults?.paymentMethod === "credit_card"
-                        ? "Novo crédito na fatura"
-                        : createTransactionLabels[type]}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TransactionsCreateActions
+              createTypes={createTypes}
+              createDefaults={createDefaults}
+              openCreateDialog={openCreateDialog}
+            />
           ) : null
         }
         breadcrumbs={pageHeader.breadcrumbs}
@@ -448,11 +260,8 @@ export function TransactionsScreen({
         icon={pageHeader.icon}
         title={pageHeader.title}
       />
-
       {periodNavigationPlacement === "afterPageHeader" ? periodNavigation : null}
-
       {contextNavigationSection}
-
       <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 md:flex md:flex-wrap">
         {showInlineCreateButtons || allowImport ? (
           <div
@@ -491,526 +300,79 @@ export function TransactionsScreen({
         ) : null}
 
         <div className="contents">
-          <div className="order-2 flex shrink-0 items-center gap-2 text-muted-foreground text-sm md:order-3 md:ml-auto">
-            <span className="hidden md:inline">Ordenar por</span>
-            <Select
-              value={urlSearch.sort ?? "recent"}
-              onValueChange={(value) =>
-                onSearchChange({ sort: value as TransactionsSearch["sort"], page: undefined })
-              }
-            >
-              <SelectTrigger
-                aria-label="Ordenar lançamentos"
-                className="w-10 justify-center px-2 [&_[data-slot=select-value]]:hidden [&_svg:last-child]:hidden md:w-40 md:justify-between md:px-2.5 md:[&_[data-slot=select-value]]:flex md:[&_svg:last-child]:block"
-              >
-                <ArrowUpDown aria-hidden="true" className="md:hidden" />
-                <SelectValue>{transactionSortLabels[urlSearch.sort ?? "recent"]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Mais recentes</SelectItem>
-                <SelectItem value="oldest">Mais antigos</SelectItem>
-                <SelectItem value="dueDate">Vencimento</SelectItem>
-                <SelectItem value="amount">Maior valor</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="relative order-1 w-full md:order-4 md:w-64">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              aria-label="Buscar lançamentos"
-              className="pr-9 pl-9 placeholder:text-muted-foreground"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={isMobile === true ? "Buscar" : "Buscar descrição, pessoa ou categoria"}
-              value={search}
-            />
-            {search ? (
-              <button
-                aria-label="Limpar busca"
-                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => setSearch("")}
-                type="button"
-              >
-                <X aria-hidden="true" className="size-4" />
-              </button>
-            ) : null}
-          </div>
-
-          <div className="order-3 md:order-2">
-            <Sheet>
-              <SheetTrigger
-                aria-label="Abrir filtros"
-                render={<Button className="relative bg-transparent" variant="outline" />}
-              >
-                <Filter aria-hidden="true" />
-                <span className="hidden md:inline">Filtros</span>
-                {activeFilterCount ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -top-1 -right-1 size-3 rounded-full bg-brand"
-                  />
-                ) : null}
-              </SheetTrigger>
-              <SheetContent className="w-full gap-0 sm:max-w-lg!">
-                <SheetHeader className="border-b">
-                  <SheetTitle>Filtros</SheetTitle>
-                  <SheetDescription>
-                    Os filtros são aplicados automaticamente. Um intervalo de datas substitui o mês
-                    selecionado.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-4 py-4">
-                  <div className="grid content-start gap-6">
-                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                      {!hiddenFilterSet.has("type") ? (
-                        <FilterSelect
-                          label="Tipo de lançamento"
-                          onChange={setTypeFilter}
-                          options={[
-                            { value: "all", label: "Todos" },
-                            {
-                              value: "income",
-                              label: "Receitas",
-                              icon: transactionTypeIcons.income,
-                            },
-                            {
-                              value: "expense",
-                              label: "Despesas",
-                              icon: transactionTypeIcons.expense,
-                            },
-                            {
-                              value: "transfer",
-                              label: "Transferências",
-                              icon: transactionTypeIcons.transfer,
-                            },
-                          ]}
-                          value={typeFilter ?? "all"}
-                        />
-                      ) : null}
-                      <FilterSelect
-                        label="Condição"
-                        onChange={setConditionFilter}
-                        options={[
-                          { value: "all", label: "Todos" },
-                          {
-                            value: "single",
-                            label: transactionConditionLabels.single,
-                            icon: transactionConditionIcons.single,
-                          },
-                          {
-                            value: "installment",
-                            label: "Parcelada",
-                            icon: transactionConditionIcons.installment,
-                          },
-                          {
-                            value: "recurring",
-                            label: "Recorrente",
-                            icon: transactionConditionIcons.recurring,
-                          },
-                        ]}
-                        value={conditionFilter ?? "all"}
-                      />
-                      {!hiddenFilterSet.has("paymentMethod") ? (
-                        <FilterSelect
-                          label="Forma de pagamento"
-                          onChange={setPaymentMethodFilter}
-                          options={[
-                            { value: "all", label: "Todas" },
-                            ...Object.entries(paymentMethodLabels).map(([value, label]) => ({
-                              value,
-                              label,
-                              icon: paymentMethodIcons[value as keyof typeof paymentMethodLabels],
-                            })),
-                          ]}
-                          value={paymentMethodFilter ?? "all"}
-                        />
-                      ) : null}
-                      {!hiddenFilterSet.has("settlement") ? (
-                        <FilterSelect
-                          label="Situação"
-                          onChange={setSettlementFilter}
-                          options={[
-                            { value: "all", label: "Todos" },
-                            { value: "paid", label: "Pagos / recebidos", icon: CircleCheck },
-                            { value: "unpaid", label: "Em aberto", icon: Circle },
-                            { value: "invoice", label: "Pagamento pela fatura", icon: CreditCard },
-                          ]}
-                          value={settlementFilter ?? "all"}
-                        />
-                      ) : null}
-                      {!hiddenFilterSet.has("person") ? (
-                        <MultiFilterSelect
-                          label="Pessoa"
-                          onChange={(values) => setMultipleFilter("people", values)}
-                          options={people.flatMap((person) => {
-                            const value = peopleSlugMap.idToSlug.get(person.id);
-                            return value
-                              ? [{ value, label: person.name, avatarUrl: person.avatarUrl }]
-                              : [];
-                          })}
-                          selected={personSlugs}
-                        />
-                      ) : null}
-                      {!hiddenFilterSet.has("category") ? (
-                        <MultiFilterSelect
-                          label="Categoria"
-                          onChange={(values) => setMultipleFilter("categories", values)}
-                          options={categories.flatMap((category) => {
-                            const value = categoriesSlugMap.idToSlug.get(category.id);
-                            return value
-                              ? [
-                                  {
-                                    value,
-                                    label: category.name,
-                                    group: category.type === "income" ? "Receitas" : "Despesas",
-                                    categoryIcon: category.icon,
-                                  },
-                                ]
-                              : [];
-                          })}
-                          selected={categorySlugs}
-                        />
-                      ) : null}
-                      {!hiddenFilterSet.has("accountCard") ? (
-                        <MultiFilterSelect
-                          className="sm:col-span-2"
-                          label="Conta/Cartão"
-                          onChange={(values) => {
-                            const nextAccountSlugs = values
-                              .filter((value) => value.startsWith("account-"))
-                              .map((value) => value.slice("account-".length));
-                            const nextCardSlugs = values
-                              .filter((value) => value.startsWith("card-"))
-                              .map((value) => value.slice("card-".length));
-                            onSearchChange({
-                              accounts: serializeFilterSlugs(nextAccountSlugs),
-                              cards: serializeFilterSlugs(nextCardSlugs),
-                              page: undefined,
-                            });
-                          }}
-                          options={[
-                            ...accounts.flatMap((account) => {
-                              const slug = accountsSlugMap.idToSlug.get(account.id);
-                              return slug
-                                ? [
-                                    {
-                                      value: `account-${slug}`,
-                                      label: account.name,
-                                      group: "Contas",
-                                      logoUrl: account.logo,
-                                    },
-                                  ]
-                                : [];
-                            }),
-                            ...cards.flatMap((card) => {
-                              const slug = cardsSlugMap.idToSlug.get(card.id);
-                              return slug
-                                ? [
-                                    {
-                                      value: `card-${slug}`,
-                                      label: card.name,
-                                      group: "Cartões",
-                                      logoUrl: card.logo,
-                                    },
-                                  ]
-                                : [];
-                            }),
-                          ]}
-                          selected={[
-                            ...accountSlugs.map((slug) => `account-${slug}`),
-                            ...cardSlugs.map((slug) => `card-${slug}`),
-                          ]}
-                        />
-                      ) : null}
-                    </div>
-                    <div className="grid gap-2">
-                      <span className="font-medium text-muted-foreground text-xs">
-                        Intervalo de datas
-                      </span>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <DatePicker
-                          onChange={(value) =>
-                            onSearchChange({
-                              dateStart: value || undefined,
-                              dateEnd: value ? (urlSearch.dateEnd ?? value) : undefined,
-                              page: undefined,
-                            })
-                          }
-                          placeholder="Data inicial"
-                          value={urlSearch.dateStart ?? ""}
-                        />
-                        <DatePicker
-                          onChange={(value) =>
-                            onSearchChange({
-                              dateStart: value ? (urlSearch.dateStart ?? value) : undefined,
-                              dateEnd: value || undefined,
-                              page: undefined,
-                            })
-                          }
-                          placeholder="Data final"
-                          value={urlSearch.dateEnd ?? ""}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <span className="font-medium text-muted-foreground text-xs">
-                        Faixa de valor
-                      </span>
-                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                        <Input
-                          inputMode="decimal"
-                          className="placeholder:text-muted-foreground"
-                          min="0"
-                          onChange={(event) =>
-                            onSearchChange({
-                              minAmount: numberValue(event.target.value),
-                              page: undefined,
-                            })
-                          }
-                          placeholder="Mínimo"
-                          type="number"
-                          value={urlSearch.minAmount ?? ""}
-                        />
-                        <span className="text-muted-foreground text-xs">até</span>
-                        <Input
-                          inputMode="decimal"
-                          className="placeholder:text-muted-foreground"
-                          min="0"
-                          onChange={(event) =>
-                            onSearchChange({
-                              maxAmount: numberValue(event.target.value),
-                              page: undefined,
-                            })
-                          }
-                          placeholder="Máximo"
-                          type="number"
-                          value={urlSearch.maxAmount ?? ""}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-3 rounded-md border border-dashed p-3">
-                      <FilterToggle
-                        checked={Boolean(urlSearch.hasAttachments)}
-                        label="Com anexo"
-                        onChange={(checked) =>
-                          onSearchChange({
-                            hasAttachments: checked ? true : undefined,
-                            page: undefined,
-                          })
-                        }
-                      />
-                      <FilterToggle
-                        checked={Boolean(urlSearch.isDivided)}
-                        label="Somente divididos"
-                        onChange={(checked) =>
-                          onSearchChange({ isDivided: checked ? true : undefined, page: undefined })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-                <SheetFooter className="border-t bg-popover/95">
-                  <div className="flex items-center justify-between rounded-md border border-dashed px-3 py-2">
-                    <span className="text-muted-foreground text-xs">
-                      {activeFilterCount
-                        ? `${activeFilterCount} ${activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}`
-                        : "Nenhum filtro ativo"}
-                    </span>
-                    <Button
-                      disabled={!activeFilterCount}
-                      onClick={clearFilters}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      Limpar
-                    </Button>
-                  </div>
-                  <SheetClose render={<Button />}>Ver resultados</SheetClose>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <TransactionsSearchControls
+            urlSearch={urlSearch}
+            onSearchChange={onSearchChange}
+            isMobile={isMobile}
+            search={search}
+            setSearch={setSearch}
+          />{" "}
+          <TransactionsFilters
+            accounts={accounts}
+            cards={cards}
+            categories={categories}
+            people={people}
+            onSearchChange={onSearchChange}
+            urlSearch={urlSearch}
+            typeFilter={typeFilter}
+            conditionFilter={conditionFilter}
+            paymentMethodFilter={paymentMethodFilter}
+            settlementFilter={settlementFilter}
+            peopleSlugMap={peopleSlugMap}
+            categoriesSlugMap={categoriesSlugMap}
+            accountsSlugMap={accountsSlugMap}
+            cardsSlugMap={cardsSlugMap}
+            personSlugs={personSlugs}
+            categorySlugs={categorySlugs}
+            accountSlugs={accountSlugs}
+            cardSlugs={cardSlugs}
+            activeFilterCount={activeFilterCount}
+            hiddenFilterSet={hiddenFilterSet}
+            setTypeFilter={setTypeFilter}
+            setConditionFilter={setConditionFilter}
+            setPaymentMethodFilter={setPaymentMethodFilter}
+            setSettlementFilter={setSettlementFilter}
+            clearFilters={clearFilters}
+            setMultipleFilter={setMultipleFilter}
+          />
         </div>
       </div>
-
-      {activeFilterCount ? (
-        <fieldset
-          aria-label="Filtros ativos"
-          className="grid min-w-0 gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-3 py-2.5"
-        >
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Filter aria-hidden="true" className="size-3.5 shrink-0" />
-              Filtros ativos
-            </span>
-            <Button
-              className="shrink-0 text-xs font-normal text-muted-foreground hover:bg-background hover:text-foreground"
-              onClick={clearFilters}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              Limpar filtros
-            </Button>
-          </div>
-          <div className="flex min-w-0 flex-wrap gap-2">
-            {search ? (
-              <FilterChip icon={Search} label={`Busca: ${search}`} onRemove={() => setSearch("")} />
-            ) : null}
-            {!hiddenFilterSet.has("type") && typeFilter ? (
-              <FilterChip
-                icon={transactionTypeIcons[typeFilter]}
-                label={`Tipo: ${transactionTypeLabels[typeFilter]}`}
-                onRemove={() => setTypeFilter("all")}
-              />
-            ) : null}
-            {conditionFilter ? (
-              <FilterChip
-                icon={transactionConditionIcons[conditionFilter]}
-                label={`Condição: ${transactionConditionLabels[conditionFilter]}`}
-                onRemove={() => setConditionFilter("all")}
-              />
-            ) : null}
-            {!hiddenFilterSet.has("paymentMethod") && paymentMethodFilter ? (
-              <FilterChip
-                icon={paymentMethodIcons[paymentMethodFilter]}
-                label={`Pagamento: ${paymentMethodLabels[paymentMethodFilter]}`}
-                onRemove={() => setPaymentMethodFilter("all")}
-              />
-            ) : null}
-            {!hiddenFilterSet.has("settlement") && settlementFilter ? (
-              <FilterChip
-                icon={
-                  settlementFilter === "paid"
-                    ? CircleCheck
-                    : settlementFilter === "invoice"
-                      ? CreditCard
-                      : Circle
-                }
-                label={`Status: ${settlementFilter === "invoice" ? "Pagamento pela fatura" : settlementFilter === "paid" ? "Pagos / recebidos" : "Em aberto"}`}
-                onRemove={() => setSettlementFilter("all")}
-              />
-            ) : null}
-            {!hiddenFilterSet.has("person") &&
-              personSlugs.map((slug) => (
-                <FilterChip
-                  key={`person-${slug}`}
-                  imageSrc={
-                    people.find((item) => peopleSlugMap.idToSlug.get(item.id) === slug)
-                      ?.avatarUrl ?? null
-                  }
-                  icon={Users}
-                  label={`Pessoa: ${people.find((person) => peopleSlugMap.idToSlug.get(person.id) === slug)?.name ?? "Pessoa"}`}
-                  onRemove={() =>
-                    setMultipleFilter(
-                      "people",
-                      personSlugs.filter((value) => value !== slug),
-                    )
-                  }
-                />
-              ))}
-            {!hiddenFilterSet.has("category") &&
-              categorySlugs.map((slug) => (
-                <FilterChip
-                  key={`category-${slug}`}
-                  visual={
-                    <CategoryIcon
-                      className="size-4"
-                      name={
-                        categories.find((item) => categoriesSlugMap.idToSlug.get(item.id) === slug)
-                          ?.icon ?? null
-                      }
-                    />
-                  }
-                  label={`Categoria: ${categories.find((category) => categoriesSlugMap.idToSlug.get(category.id) === slug)?.name ?? "Categoria"}`}
-                  onRemove={() =>
-                    setMultipleFilter(
-                      "categories",
-                      categorySlugs.filter((value) => value !== slug),
-                    )
-                  }
-                />
-              ))}
-            {!hiddenFilterSet.has("accountCard") &&
-              accountSlugs.map((slug) => (
-                <FilterChip
-                  key={`account-${slug}`}
-                  imageSrc={
-                    accounts.find((item) => accountsSlugMap.idToSlug.get(item.id) === slug)?.logo ??
-                    null
-                  }
-                  icon={Landmark}
-                  label={`Conta: ${accounts.find((account) => accountsSlugMap.idToSlug.get(account.id) === slug)?.name ?? "Conta"}`}
-                  onRemove={() =>
-                    setMultipleFilter(
-                      "accounts",
-                      accountSlugs.filter((value) => value !== slug),
-                    )
-                  }
-                />
-              ))}
-            {!hiddenFilterSet.has("accountCard") &&
-              cardSlugs.map((slug) => (
-                <FilterChip
-                  key={`card-${slug}`}
-                  imageSrc={
-                    cards.find((item) => cardsSlugMap.idToSlug.get(item.id) === slug)?.logo ?? null
-                  }
-                  icon={CreditCard}
-                  label={`Cartão: ${cards.find((card) => cardsSlugMap.idToSlug.get(card.id) === slug)?.name ?? "Cartão"}`}
-                  onRemove={() =>
-                    setMultipleFilter(
-                      "cards",
-                      cardSlugs.filter((value) => value !== slug),
-                    )
-                  }
-                />
-              ))}
-            {urlSearch.minAmount !== undefined || urlSearch.maxAmount !== undefined ? (
-              <FilterChip
-                icon={Banknote}
-                label={`Valor: ${formatTransactionFilterAmount(urlSearch.minAmount ?? 0)} até ${urlSearch.maxAmount !== undefined ? formatTransactionFilterAmount(urlSearch.maxAmount) : "sem limite"}`}
-                onRemove={() =>
-                  onSearchChange({ minAmount: undefined, maxAmount: undefined, page: undefined })
-                }
-              />
-            ) : null}
-            {urlSearch.dateStart || urlSearch.dateEnd ? (
-              <FilterChip
-                icon={CalendarClock}
-                label={`Datas: ${urlSearch.dateStart ? formatTransactionFilterDate(urlSearch.dateStart) : "início"} até ${urlSearch.dateEnd ? formatTransactionFilterDate(urlSearch.dateEnd) : "fim"}`}
-                onRemove={() =>
-                  onSearchChange({ dateStart: undefined, dateEnd: undefined, page: undefined })
-                }
-              />
-            ) : null}
-            {urlSearch.hasAttachments ? (
-              <FilterChip
-                icon={Paperclip}
-                label="Com anexo"
-                onRemove={() => onSearchChange({ hasAttachments: undefined, page: undefined })}
-              />
-            ) : null}
-            {urlSearch.isDivided ? (
-              <FilterChip
-                icon={Users}
-                label="Somente divididos"
-                onRemove={() => onSearchChange({ isDivided: undefined, page: undefined })}
-              />
-            ) : null}
-          </div>
-        </fieldset>
-      ) : null}
-
+      <TransactionsActiveFilters
+        accounts={accounts}
+        cards={cards}
+        categories={categories}
+        people={people}
+        onSearchChange={onSearchChange}
+        urlSearch={urlSearch}
+        search={search}
+        typeFilter={typeFilter}
+        conditionFilter={conditionFilter}
+        paymentMethodFilter={paymentMethodFilter}
+        settlementFilter={settlementFilter}
+        peopleSlugMap={peopleSlugMap}
+        categoriesSlugMap={categoriesSlugMap}
+        accountsSlugMap={accountsSlugMap}
+        cardsSlugMap={cardsSlugMap}
+        personSlugs={personSlugs}
+        categorySlugs={categorySlugs}
+        accountSlugs={accountSlugs}
+        cardSlugs={cardSlugs}
+        activeFilterCount={activeFilterCount}
+        hiddenFilterSet={hiddenFilterSet}
+        setSearch={setSearch}
+        setTypeFilter={setTypeFilter}
+        setConditionFilter={setConditionFilter}
+        setPaymentMethodFilter={setPaymentMethodFilter}
+        setSettlementFilter={setSettlementFilter}
+        clearFilters={clearFilters}
+        setMultipleFilter={setMultipleFilter}
+      />
       {isUpdating ? (
         <span role="status" className="text-muted-foreground text-xs">
           Atualizando resultados…
         </span>
       ) : null}
       {isLoading ? <TransactionsLoading /> : null}
-
       {hasLoadError ? (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-10 text-center">
           <p className="font-medium text-destructive">Não foi possível carregar os lançamentos.</p>
@@ -1022,9 +384,9 @@ export function TransactionsScreen({
           </Button>
         </div>
       ) : null}
-
       {!isLoading && !hasLoadError && isMobile === true ? (
         <TransactionsMobileList
+          accountStatement={accountStatement}
           key={`mobile:${selectionScopeKey}`}
           allowImport={allowImport}
           currentPage={Math.min(page, pageCount)}
@@ -1037,6 +399,7 @@ export function TransactionsScreen({
       ) : null}
       {!isLoading && !hasLoadError && isMobile === false ? (
         <TransactionsTable
+          accountStatement={accountStatement}
           key={`desktop:${selectionScopeKey}`}
           adminPersonId={adminPersonId}
           currentPage={Math.min(page, pageCount)}
@@ -1067,424 +430,38 @@ export function TransactionsScreen({
           transactions={transactions}
         />
       ) : null}
-
-      <TransactionDialog
+      <TransactionsDialogs
         accounts={accounts}
         cards={cards}
         categories={categories}
-        createDefaults={createDefaults}
-        createTitle={
-          createType === "income" && createDefaults?.paymentMethod === "credit_card"
-            ? "Novo crédito na fatura"
-            : undefined
-        }
-        createDescription={
-          createType === "income" && createDefaults?.paymentMethod === "credit_card"
-            ? "Registre um crédito recebido no cartão. Para reembolsar uma despesa específica, use a ação de reembolso desse lançamento."
-            : undefined
-        }
-        defaultType={createType}
-        defaultPeriod={period}
-        onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) setEditingTransaction(null);
-          if (!open) setDialogMode("create");
-        }}
-        open={isDialogOpen}
         people={people}
-        mode={dialogMode}
-        transaction={editingTransaction}
-      />
-      <TransactionDetailsSheet
-        key={`details-${viewingTransaction?.id ?? "closed"}`}
-        mobileActions={
-          isMobile === true
-            ? {
-                onAnticipate: setAnticipatingTransaction,
-                onCopy: openCopyDialog,
-                onDelete: onDeleteTransaction,
-                onRecurringStatus,
-                onRefund: setRefundingTransaction,
-                onSettle: onSettleTransactions,
-                onSettleRecurringOccurrence,
-                onUndoAnticipation: setUndoingAnticipation,
-                pendingSettlementKey,
-                pendingTransactionId,
-              }
-            : undefined
-        }
-        onEdit={openEditDialog}
-        onOpenChange={(open) => {
-          if (!open) setViewingTransaction(null);
-        }}
-        open={Boolean(viewingTransaction)}
-        transaction={viewingTransaction}
-      />
-      <TransactionRefundDialog
-        defaultPeriod={period}
-        key={`refund-${refundingTransaction?.recordId ?? "closed"}`}
-        onOpenChange={(open) => {
-          if (!open) setRefundingTransaction(null);
-        }}
-        open={Boolean(refundingTransaction)}
-        transaction={refundingTransaction}
-      />
-      <InstallmentAnticipationLauncher
-        key={`anticipation-${anticipatingTransaction?.seriesId ?? "closed"}`}
-        onOpenChange={(open) => {
-          if (!open) setAnticipatingTransaction(null);
-        }}
-        open={Boolean(anticipatingTransaction)}
-        targetPeriod={period}
-        transaction={anticipatingTransaction}
-      />
-      <InstallmentAnticipationUndoDialog
-        key={`undo-anticipation-${undoingAnticipation?.anticipationId ?? "closed"}`}
-        onOpenChange={(open) => {
-          if (!open) setUndoingAnticipation(null);
-        }}
-        open={Boolean(undoingAnticipation)}
-        transaction={undoingAnticipation}
-      />
+        period={period}
+        pendingTransactionId={pendingTransactionId}
+        pendingSettlementKey={pendingSettlementKey}
+        onDeleteTransaction={onDeleteTransaction}
+        onSettleTransactions={onSettleTransactions}
+        onSettleRecurringOccurrence={onSettleRecurringOccurrence}
+        onRecurringStatus={onRecurringStatus}
+        createDefaults={createDefaults}
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        editingTransaction={editingTransaction}
+        setEditingTransaction={setEditingTransaction}
+        dialogMode={dialogMode}
+        setDialogMode={setDialogMode}
+        createType={createType}
+        anticipatingTransaction={anticipatingTransaction}
+        setAnticipatingTransaction={setAnticipatingTransaction}
+        undoingAnticipation={undoingAnticipation}
+        setUndoingAnticipation={setUndoingAnticipation}
+        refundingTransaction={refundingTransaction}
+        setRefundingTransaction={setRefundingTransaction}
+        viewingTransaction={viewingTransaction}
+        setViewingTransaction={setViewingTransaction}
+        openEditDialog={openEditDialog}
+        openCopyDialog={openCopyDialog}
+        isMobile={isMobile}
+      />{" "}
     </section>
   );
 }
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: Array<{
-    value: string;
-    label: string;
-    icon?: LucideIcon;
-    dotClassName?: string;
-  }>;
-}) {
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <div className="grid min-w-0 gap-2">
-      <span className="font-medium text-muted-foreground text-xs">{label}</span>
-      <Select onValueChange={(next) => next && onChange(next)} value={value}>
-        <SelectTrigger className="w-full min-w-0 overflow-hidden">
-          <SelectValue
-            className={cn("min-w-0", value === "all" ? "text-muted-foreground" : "text-foreground")}
-          >
-            {selectedOption ? <FilterSelectOption option={selectedOption} /> : null}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent align="start" alignItemWithTrigger={false} className="min-w-56">
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              <FilterSelectOption option={option} />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function FilterSelectOption({
-  option,
-}: {
-  option: { label: string; icon?: LucideIcon; dotClassName?: string };
-}) {
-  const Icon = option.icon;
-
-  return (
-    <span className="flex min-w-0 items-center gap-2">
-      {option.dotClassName ? (
-        <span
-          aria-hidden="true"
-          className={cn("size-2 shrink-0 rounded-full", option.dotClassName)}
-        />
-      ) : null}
-      {Icon ? <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" /> : null}
-      <span className="truncate">{option.label}</span>
-    </span>
-  );
-}
-
-function FilterChip({
-  label,
-  onRemove,
-  icon: Icon,
-  imageSrc,
-  visual,
-}: {
-  label: string;
-  onRemove: () => void;
-  icon?: LucideIcon;
-  imageSrc?: string | null;
-  visual?: ReactNode;
-}) {
-  const separatorIndex = label.indexOf(": ");
-  const filterName = separatorIndex >= 0 ? label.slice(0, separatorIndex) : null;
-  const filterValue = separatorIndex >= 0 ? label.slice(separatorIndex + 2) : label;
-
-  return (
-    <span className="inline-flex min-h-10 max-w-full shrink-0 items-center gap-2 rounded-lg border border-border/60 bg-background py-1 pl-2.5 pr-1">
-      {imageSrc !== undefined ? (
-        <Avatar className="size-5 shrink-0" size="sm" aria-hidden="true">
-          <AvatarImage alt="" src={imageSrc ?? undefined} />
-          <AvatarFallback>{Icon ? <Icon className="size-3.5" /> : null}</AvatarFallback>
-        </Avatar>
-      ) : visual ? (
-        <span aria-hidden="true" className="flex shrink-0 items-center text-muted-foreground">
-          {visual}
-        </span>
-      ) : Icon ? (
-        <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
-      ) : null}
-      <span className="min-w-0 text-left leading-tight">
-        {filterName ? (
-          <span className="block text-[10px] text-muted-foreground">{filterName}</span>
-        ) : null}
-        <span className="block truncate text-xs font-medium" title={filterValue}>
-          {filterValue}
-        </span>
-      </span>
-      <Button
-        aria-label={`Remover filtro ${label}`}
-        className="ml-1 shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-        onClick={onRemove}
-        size="icon-sm"
-        title={`Remover filtro ${label}`}
-        type="button"
-        variant="ghost"
-      >
-        <X aria-hidden="true" className="size-3.5" />
-      </Button>
-    </span>
-  );
-}
-
-function TransactionsLoading() {
-  return (
-    <div className="rounded-xl border bg-card p-4 shadow-xs">
-      <div className="grid gap-3">
-        {["first", "second", "third", "fourth", "fifth", "sixth"].map((item) => (
-          <div className="flex items-center gap-3" key={item}>
-            <Skeleton className="size-9 rounded-full" />
-            <div className="grid flex-1 gap-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-            <Skeleton className="h-4 w-24" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MultiFilterSelect({
-  className,
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  className?: string;
-  label: string;
-  options: Array<{
-    value: string;
-    label: string;
-    group?: string;
-    avatarUrl?: string | null;
-    logoUrl?: string | null;
-    categoryIcon?: string | null;
-  }>;
-  selected: string[];
-  onChange: (values: string[]) => void;
-}) {
-  const id = useId();
-  const [query, setQuery] = useState("");
-  const selectedSet = new Set(selected);
-  const selectedOptions = options.filter((option) => selectedSet.has(option.value));
-  const visibleOptions = options.filter((option) =>
-    option.label.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")),
-  );
-  const groups = [...new Set(visibleOptions.map((option) => option.group ?? ""))];
-
-  return (
-    <div className={cn("grid min-w-0 gap-2", className)}>
-      <span className="font-medium text-muted-foreground text-xs">{label}</span>
-      <Popover>
-        <PopoverTrigger
-          render={
-            <Button
-              className="w-full min-w-0 justify-between overflow-hidden bg-transparent font-normal"
-              type="button"
-              variant="outline"
-            />
-          }
-        >
-          <span
-            className={cn(
-              "flex min-w-0 flex-1 items-center overflow-hidden text-left",
-              selected.length ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {selectedOptions.length === 1 ? (
-              <FilterOptionContent option={selectedOptions[0]} />
-            ) : selected.length ? (
-              `${selected.length} selecionado${selected.length > 1 ? "s" : ""}`
-            ) : (
-              "Todas"
-            )}
-          </span>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-[var(--anchor-width)] min-w-64 gap-2 p-2">
-          <Input
-            aria-label={`Buscar ${label.toLocaleLowerCase("pt-BR")}`}
-            onChange={(event) => setQuery(event.target.value)}
-            className="placeholder:text-muted-foreground"
-            placeholder={`Buscar ${label.toLocaleLowerCase("pt-BR")}...`}
-            value={query}
-          />
-          <div className="max-h-56 overflow-y-auto">
-            {groups.map((group) => (
-              <div className="grid gap-1 py-1" key={group || "all"}>
-                {group ? (
-                  <span className="px-2 pt-1 font-medium text-muted-foreground text-xs">
-                    {group}
-                  </span>
-                ) : null}
-                {visibleOptions
-                  .filter((option) => (option.group ?? "") === group)
-                  .map((option) => {
-                    const checked = selectedSet.has(option.value);
-                    return (
-                      <label
-                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
-                        htmlFor={`${id}-${option.value}`}
-                        key={option.value}
-                      >
-                        <Checkbox
-                          id={`${id}-${option.value}`}
-                          aria-label={option.label}
-                          checked={checked}
-                          onCheckedChange={(next) =>
-                            onChange(
-                              next
-                                ? [...selected, option.value]
-                                : selected.filter((value) => value !== option.value),
-                            )
-                          }
-                        />
-                        <FilterOptionContent option={option} />
-                      </label>
-                    );
-                  })}
-              </div>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-}
-
-function FilterOptionContent({
-  option,
-}: {
-  option: {
-    label: string;
-    avatarUrl?: string | null;
-    logoUrl?: string | null;
-    categoryIcon?: string | null;
-  };
-}) {
-  if (option.avatarUrl !== undefined) {
-    return (
-      <span className="flex min-w-0 items-center gap-2">
-        <Avatar size="sm">
-          <AvatarImage alt="" src={option.avatarUrl ?? undefined} />
-          <AvatarFallback>{option.label.slice(0, 2).toLocaleUpperCase("pt-BR")}</AvatarFallback>
-        </Avatar>
-        <span className="truncate text-sm">{option.label}</span>
-      </span>
-    );
-  }
-
-  if (option.logoUrl !== undefined) {
-    return (
-      <span className="flex min-w-0 items-center gap-2">
-        {option.logoUrl ? (
-          <Image
-            alt=""
-            className="size-6 shrink-0 rounded-full object-contain"
-            height={24}
-            layout="fixed"
-            src={option.logoUrl}
-            width={24}
-          />
-        ) : (
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted font-medium text-[10px] text-muted-foreground">
-            {option.label.slice(0, 2).toLocaleUpperCase("pt-BR")}
-          </span>
-        )}
-        <span className="truncate text-sm">{option.label}</span>
-      </span>
-    );
-  }
-
-  if (option.categoryIcon !== undefined) {
-    return (
-      <span className="flex min-w-0 items-center gap-2">
-        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-          <CategoryIcon className="size-3.5" name={option.categoryIcon} />
-        </span>
-        <span className="truncate text-sm">{option.label}</span>
-      </span>
-    );
-  }
-
-  return <span className="truncate text-sm">{option.label}</span>;
-}
-
-function FilterToggle({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm font-medium">
-      {label}
-      <Checkbox aria-label={label} checked={checked} onCheckedChange={onChange} />
-    </div>
-  );
-}
-
-function numberValue(value: string) {
-  if (!value) return undefined;
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 ? number : undefined;
-}
-
-const createTransactionLabels: Record<TransactionCreateType, string> = {
-  income: "Nova receita",
-  expense: "Nova despesa",
-  transfer: "Nova transferência",
-};
-
-const defaultCreateTypes: readonly TransactionCreateType[] = ["income", "expense", "transfer"];
-
-const transactionSortLabels = {
-  recent: "Mais recentes",
-  oldest: "Mais antigos",
-  dueDate: "Vencimento",
-  amount: "Maior valor",
-} as const;

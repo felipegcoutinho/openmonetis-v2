@@ -5,9 +5,13 @@ import {
 } from "@openmonetis/shared/date-time";
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import {
+  MobilePicker as Popover,
+  MobilePickerContent as PopoverContent,
+  MobilePickerTrigger as PopoverTrigger,
+} from "@/components/forms/mobile-picker";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 type PeriodPickerProps = {
@@ -50,7 +54,11 @@ export function PeriodPicker({
         </span>
         <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto bg-popover/80 p-0 backdrop-blur-sm">
+      <PopoverContent
+        title="Selecionar mês"
+        align="start"
+        className="w-auto bg-popover/80 p-0 backdrop-blur-sm"
+      >
         <MonthPicker
           key={value}
           onMonthSelect={(date) => {

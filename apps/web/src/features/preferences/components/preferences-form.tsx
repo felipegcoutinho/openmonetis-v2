@@ -35,6 +35,7 @@ function PreferencesEditor({ preferences }: { preferences: UserPreferencesOutput
   const { form, isRestoring, restoreDefaults } = usePreferencesForm(preferences);
   return (
     <form
+      data-mobile-page-form
       className="grid gap-4"
       noValidate
       onSubmit={(event) => {
