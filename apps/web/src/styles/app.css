@@ -188,8 +188,8 @@
   }
 
   ::selection {
-    background-color: var(--palette-charcoal);
-    color: var(--primary);
+    background-color: var(--primary);
+    color: var(--palette-charcoal);
     text-shadow: none;
   }
 
