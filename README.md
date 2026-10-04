@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-Sustainable%20Use%201.0-f97316" alt="Licença Sustainable Use 1.0" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.10.1-f97316" alt="Versão 0.10.1" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.10.2-f97316" alt="Versão 0.10.2" /></a>
   <img src="https://img.shields.io/badge/Docker-self--hosted-2496ED?logo=docker&logoColor=white" alt="Aplicação self-hosted com Docker" />
 </p>
 

@@ -7,6 +7,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-10-04
+
+Corrige o vazamento de layout dos breadcrumbs e padroniza o fundo dos modais mobile,
+com atualização da imagem do dashboard e das cores de seleção de texto.
+
+### Alterado
+
+- Seleção de texto usa fundo na cor primária e texto na cor de carvão.
+- Imagem do dashboard usada na apresentação do projeto atualizada.
+
+### Corrigido
+
+- Breadcrumbs longos em telas pequenas mantêm a rolagem dentro do cabeçalho, sem ampliar ou deslocar o layout das páginas de detalhes.
+- Modais mobile mantêm o fundo escurecido também ao abrir seletores, calendários e outros painéis dentro de um formulário.
+
 ## [0.10.1] - 2026-10-03
 
 Corrige o posicionamento dos modais de formulários no mobile após o build de produção.
@@ -438,7 +453,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...v0.9.0
