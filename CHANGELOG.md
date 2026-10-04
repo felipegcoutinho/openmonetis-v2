@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-03
+
+Corrige o posicionamento dos modais de formulários no mobile após o build de produção.
+
+### Corrigido
+
+- Modais de formulários no mobile mantêm o conteúdo dentro da tela após o build de produção, tanto em páginas completas quanto em painéis inferiores.
+
 ## [0.10.0] - 2026-10-03
 
 Amplia os extratos com fluxo diário e histórico de saldo, permite configurar compras no dia do
@@ -430,7 +438,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.8.0...v0.8.1
