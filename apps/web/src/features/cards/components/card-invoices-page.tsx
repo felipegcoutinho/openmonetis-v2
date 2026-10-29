@@ -12,6 +12,7 @@ import {
   Pencil,
   RotateCcw,
   Scale,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ import { cardQueryOptions } from "@/features/cards/cards.queries";
 import { DueDateIndicator } from "@/features/due-date-rules/components/due-date-indicator";
 import { AdjustInvoiceDialog } from "@/features/invoices/components/adjust-invoice-dialog";
 import { InvoiceDatesDialog } from "@/features/invoices/components/invoice-dates-dialog";
+import { InvoicePaymentDialog } from "@/features/invoices/components/invoice-payment-dialog";
 import {
   useAdjustInvoiceMutation,
   useReopenInvoiceMutation,
@@ -56,6 +58,7 @@ import {
   formatPeriod,
   type TransactionsSearch,
 } from "@/features/transactions/transactions.presentation";
+import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
 import { useReplaceCardMutation } from "../cards.mutations";
 import { cardBrandLabels, cardInvoiceStatusLabels, formatInvoiceDate } from "../cards.presentation";
@@ -76,6 +79,7 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
   const accountsQuery = useQuery(accountsQueryOptions());
   const replaceMutation = useReplaceCardMutation();
   const [editOpen, setEditOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const invoice = invoicesQuery.data?.items.find((item) => item.cardId === cardId);
   const activePeople = peopleQuery.data?.filter((person) => person.status === "active") ?? [];
 
@@ -115,6 +119,7 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
                   page: undefined,
                 }),
               invoice,
+              () => setPaymentOpen(true),
             )}
             search={search}
           />
@@ -130,6 +135,13 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
             open={editOpen}
           />
         ) : null}
+        <InvoicePaymentDialog
+          key={paymentOpen ? (invoice?.cardId ?? "closed") : "closed"}
+          invoice={paymentOpen ? (invoice ?? null) : null}
+          accounts={invoicesQuery.data?.accounts ?? []}
+          open={paymentOpen && Boolean(invoice)}
+          onOpenChange={setPaymentOpen}
+        />
       </main>
     </ProtectedRoute>
   );
@@ -142,6 +154,7 @@ function getCardInvoiceScope(
   onEdit: () => void,
   onPeriodChange: (period: string) => void,
   invoice?: DashboardInvoice,
+  onPay?: () => void,
 ) {
   const periodLabel = formatPeriod(period);
 
@@ -170,6 +183,7 @@ function getCardInvoiceScope(
           period={period}
           periodLabel={periodLabel}
           onEdit={onEdit}
+          onPay={onPay}
         />
       ),
     },
@@ -193,6 +207,7 @@ function CardInvoiceSummary({
   period,
   periodLabel,
   onEdit,
+  onPay,
 }: {
   card: CardOutput;
   invoice?: DashboardInvoice;
@@ -200,6 +215,7 @@ function CardInvoiceSummary({
   period: string;
   periodLabel: string;
   onEdit?: () => void;
+  onPay?: () => void;
 }) {
   const brandAsset = getCardBrandAsset(card.brand);
   const undoMutation = useUndoInvoicePaymentMutation();
@@ -231,6 +247,16 @@ function CardInvoiceSummary({
         accentImage={card.logo}
         actions={
           <>
+            {onPay && card.status === "active" && invoice && invoice.remainingAmount > 0 ? (
+              <FinancialSummaryAction
+                className="border-current/40 bg-current/15 hover:bg-current/25 dark:hover:bg-current/25"
+                onClick={onPay}
+                type="button"
+              >
+                <Wallet aria-hidden="true" className="size-4" />
+                Registrar pagamento
+              </FinancialSummaryAction>
+            ) : null}
             {card.status === "active" && period <= getCurrentPeriodInBrazil() ? (
               <FinancialSummaryAction
                 disabled={people.length === 0}
@@ -373,7 +399,16 @@ function CardInvoiceSummary({
           {
             icon: <CircleCheck aria-hidden="true" className="size-3.5" />,
             label: "Status",
-            value: cardInvoiceStatusLabels[card.invoiceSummary.status],
+            value: (
+              <span
+                className={cn(
+                  card.invoiceSummary.status === "overdue" && "font-medium text-destructive",
+                  card.invoiceSummary.status === "paid" && "text-success",
+                )}
+              >
+                {cardInvoiceStatusLabels[card.invoiceSummary.status]}
+              </span>
+            ),
           },
           {
             icon: <CalendarDays aria-hidden="true" className="size-3.5" />,

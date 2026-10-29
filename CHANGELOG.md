@@ -9,6 +9,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Botão Registrar pagamento no topo da fatura do cartão sempre que houver saldo em aberto,
+  abrindo o mesmo fluxo de pagamento do painel.
 - Medidor de faixas no índice de comprometimento de Compromissos futuros, com a situação do mês
   (saudável, atenção ou crítico) ao lado do valor.
 
