@@ -1,9 +1,14 @@
-import type { DashboardWidgetId, DashboardWidgetPreferences } from "@openmonetis/domain/dashboard";
+import type {
+  DashboardAttentionKind,
+  DashboardWidgetId,
+  DashboardWidgetPreferences,
+} from "@openmonetis/domain/dashboard";
 import {
   formatDateInBrazil,
   getCurrentHourInBrazil,
   periodToSafeInstant,
 } from "@openmonetis/shared/date-time";
+import type { DashboardAttentionItemOutput } from "@openmonetis/validators/dashboard";
 
 export type MetricTrend = "down" | "flat" | "up";
 
@@ -131,3 +136,57 @@ export function areDashboardWidgetPreferencesEqual(
     left.hidden.every((widgetId) => right.hidden.includes(widgetId))
   );
 }
+
+const attentionKindLabels: Record<DashboardAttentionKind, string> = {
+  invoice: "Fatura",
+  bill: "Conta a pagar",
+  budget: "Orçamento",
+  inbox: "Caixa de entrada",
+};
+
+const budgetStatusLabels = {
+  warning: "Orçamento perto do limite",
+  reached: "Orçamento no limite",
+  exceeded: "Orçamento estourado",
+} as const;
+
+export function getAttentionKindLabel(item: DashboardAttentionItemOutput) {
+  if (item.kind === "invoice" && item.daysUntilDue !== null && item.daysUntilDue < 0) {
+    return "Fatura vencida";
+  }
+  if (item.kind === "bill" && item.daysUntilDue !== null && item.daysUntilDue < 0) {
+    return "Conta vencida";
+  }
+  if (item.kind === "budget" && item.budgetStatus) return budgetStatusLabels[item.budgetStatus];
+  return attentionKindLabels[item.kind];
+}
+
+export function getAttentionTitle(item: DashboardAttentionItemOutput) {
+  if (item.kind === "inbox") {
+    return item.count === 1 ? "1 captura" : `${item.count ?? 0} capturas`;
+  }
+  return item.title ?? attentionKindLabels[item.kind];
+}
+
+export function formatAttentionDetail(item: DashboardAttentionItemOutput) {
+  if (item.kind === "budget") {
+    return item.usagePercentage === null
+      ? "Acima do limite"
+      : `${item.usagePercentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% do limite`;
+  }
+  if (item.kind === "inbox") return "Aguardando revisão";
+  const days = item.daysUntilDue;
+  if (days === null) return "";
+  if (days < -1) return `Venceu há ${Math.abs(days)} dias`;
+  if (days === -1) return "Venceu ontem";
+  if (days === 0) return "Vence hoje";
+  if (days === 1) return "Vence amanhã";
+  return `Vence em ${days} dias`;
+}
+
+export const attentionActionLabels: Record<DashboardAttentionKind, string> = {
+  invoice: "Abrir fatura",
+  bill: "Ver contas",
+  budget: "Ver orçamento",
+  inbox: "Revisar",
+};

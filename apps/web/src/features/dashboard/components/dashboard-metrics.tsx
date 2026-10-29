@@ -41,8 +41,8 @@ const cards: Array<{
   {
     key: "income",
     label: "Suas receitas",
-    description: "Sua parte nas entradas do mês",
-    help: "Soma das receitas atribuídas a você em contas consideradas no saldo.",
+    description: "Sua parte nas entradas do mês, com previstas",
+    help: "Soma das receitas atribuídas a você em contas consideradas no saldo, incluindo recorrências previstas do mês.",
     icon: ArrowDownLeft,
     iconClassName: "text-success",
     invertTrend: false,
@@ -51,8 +51,8 @@ const cards: Array<{
   {
     key: "expenses",
     label: "Suas despesas",
-    description: "Sua parte nas despesas do mês",
-    help: "Soma das despesas atribuídas a você em contas consideradas no saldo.",
+    description: "Sua parte nas despesas do mês, com previstas",
+    help: "Soma das despesas atribuídas a você em contas consideradas no saldo, incluindo recorrências previstas do mês.",
     icon: ArrowUpRight,
     iconClassName: "text-destructive",
     invertTrend: true,
@@ -61,8 +61,8 @@ const cards: Array<{
   {
     key: "balance",
     label: "Resultado do mês",
-    description: "Suas receitas menos suas despesas",
-    help: "Receitas menos despesas atribuídas a você no mês selecionado.",
+    description: "Receitas menos despesas, com previstas",
+    help: "Receitas menos despesas atribuídas a você no mês selecionado, incluindo recorrências previstas. Em Distribuição financeira, use Com previsões para ver o mesmo valor.",
     icon: Scale,
     iconClassName: "text-warning",
     invertTrend: false,

@@ -67,6 +67,7 @@ export function InboxWidget() {
       {snapshot && !query.isError ? (
         snapshot.pendingCount === 0 ? (
           <DashboardWidgetEmptyState
+            collapseWidget
             description="Novas capturas aparecerão aqui."
             icon={<Inbox aria-hidden="true" />}
             title="Nenhuma captura pendente"

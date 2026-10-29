@@ -1,5 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getDashboardSnapshot, getDashboardWidgetPreferences } from "./dashboard.api";
+import {
+  getDashboardAttention,
+  getDashboardSnapshot,
+  getDashboardWidgetPreferences,
+} from "./dashboard.api";
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
@@ -13,7 +17,15 @@ export const dashboardKeys = {
     [...dashboardKeys.all, "category-breakdown", period] as const,
   peopleExpenses: (period: string) => [...dashboardKeys.all, "people-expenses", period] as const,
   preferences: () => [...dashboardKeys.all, "preferences"] as const,
+  attention: (period: string) => [...dashboardKeys.all, "attention", period] as const,
 };
+
+export function dashboardAttentionQueryOptions(period: string) {
+  return queryOptions({
+    queryKey: dashboardKeys.attention(period),
+    queryFn: () => getDashboardAttention(period),
+  });
+}
 
 export function dashboardMetricsQueryOptions(period: string) {
   return queryOptions({

@@ -1,5 +1,6 @@
 import type { DashboardWidgetId } from "@openmonetis/domain/dashboard";
 import {
+  BellRing,
   BookOpenText,
   CalendarClock,
   ChartNoAxesCombined,
@@ -33,6 +34,7 @@ import { PersonSettlementsWidget } from "@/features/person-settlements/component
 import { RecurringExpensesWidget } from "@/features/recurring-expenses/components/recurring-expenses-widget";
 import { CategoryBreakdownWidget } from "./category-breakdown-widget";
 import { CategoryTransactionsWidget } from "./category-transactions-widget";
+import { DashboardAttentionWidget } from "./dashboard-attention-widget";
 import { IncomeExpenseBalanceWidget } from "./income-expense-balance-widget";
 import { MyAccountsWidget } from "./my-accounts-widget";
 import { PaymentConditionsWidget } from "./payment-conditions-widget";
@@ -49,6 +51,13 @@ export type DashboardWidgetDefinition = {
 };
 
 export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
+  {
+    id: "attention",
+    title: "Precisa de atenção",
+    description: "Faturas, contas, orçamentos e capturas que pedem ação",
+    icon: BellRing,
+    render: (period) => <DashboardAttentionWidget period={period} variant="band" />,
+  },
   {
     id: "accounts",
     title: "Minhas contas",

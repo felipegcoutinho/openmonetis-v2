@@ -219,8 +219,16 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
               aria-busy={reportQuery.isFetching}
             >
               <FinancialSummaryHeader
-                title="Resultado do mês"
-                subtitle="Receitas, despesas e resultado do período. Não representa o saldo das contas."
+                title={
+                  filters.mode === "forecast"
+                    ? "Resultado do mês com previsões"
+                    : "Resultado do mês lançado"
+                }
+                subtitle={
+                  filters.mode === "forecast"
+                    ? "Inclui recorrências previstas, como na Visão geral. Não representa o saldo das contas."
+                    : "Só o que já foi lançado; a Visão geral inclui também as previsões. Não representa o saldo das contas."
+                }
                 variant="soft"
                 identity={
                   <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">

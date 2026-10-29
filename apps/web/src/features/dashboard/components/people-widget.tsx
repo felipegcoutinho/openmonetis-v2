@@ -103,7 +103,7 @@ function PeopleList({ people }: { people: PersonExpense[] }) {
                   </Link>
                   {person.personRole === "admin" ? <CurrentUserBadge /> : null}
                   {person.personStatus === "inactive" ? (
-                    <span className="shrink-0 text-muted-foreground text-[0.65rem]">Inativa</span>
+                    <span className="shrink-0 text-muted-foreground text-2xs">Inativa</span>
                   ) : null}
                 </div>
                 <p className="mt-0.5 truncate text-muted-foreground text-xs">

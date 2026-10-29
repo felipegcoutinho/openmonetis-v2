@@ -11,6 +11,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Botão Registrar pagamento no topo da fatura do cartão sempre que houver saldo em aberto,
   abrindo o mesmo fluxo de pagamento do painel.
+- Faixa Precisa de atenção na Visão geral, logo abaixo dos indicadores, com faturas e contas
+  vencidas ou que vencem em até 7 dias, orçamentos perto do limite, no limite ou estourados e
+  capturas pendentes, ordenados por urgência e com atalho para a ação. No celular, substitui o
+  resumo anterior de pendências. A API expõe a lista em `GET /dashboard/attention`, informando as
+  fontes que não puderam ser lidas sem perder as demais. A faixa pode ser ocultada ou exibida em
+  Personalizar dashboard.
 - Seleção de várias capturas na Caixa de entrada para descartá-las de uma vez, com validação de
   todas antes de alterar qualquer uma (`POST /inbox/discard`), e atalhos de teclado J/K para
   navegar, Enter para revisar, D para descartar e X para selecionar.
@@ -35,6 +41,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   e os filtros mostram a quantidade ativa no título com o botão Limpar filtros no rodapé.
 - Resumo dos detalhes do lançamento mostra tipo e condição acima do valor, com a parcela atual ou
   a frequência da recorrência, e a situação com a data de baixa ou de vencimento logo abaixo.
+- Visão geral informa que receitas, despesas e resultado incluem previstas, e Distribuição
+  financeira identifica se o resultado é só lançado ou com previsões.
+- Widgets de metas, anotações, caixa de entrada, parcelas e acertos ficam ocultos na Visão geral
+  enquanto não têm dados.
 - Etiquetas sem cadastro e anexos sem arquivos no mês deixam de mostrar busca e filtros, e os
   acertos de uma pessoa mostram uma mensagem quando não há repasses no período.
 - Extrato da conta, fatura do cartão e demais resumos financeiros usam fundo neutro, com a cor

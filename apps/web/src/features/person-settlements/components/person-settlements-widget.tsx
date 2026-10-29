@@ -71,6 +71,7 @@ export function PersonSettlementsWidget({ period }: { period: string }) {
           </div>
         ) : (
           <DashboardWidgetEmptyState
+            collapseWidget
             description="Nenhum valor foi atribuído a outras pessoas neste mês."
             icon={<HandCoins aria-hidden="true" />}
             title="Nada para acertar"
@@ -134,7 +135,7 @@ function PersonSettlementItem({
               <DashboardItemLinkArrow />
             </Link>
             {item.personStatus === "inactive" ? (
-              <span className="shrink-0 text-muted-foreground text-[0.65rem]">Inativa</span>
+              <span className="shrink-0 text-muted-foreground text-2xs">Inativa</span>
             ) : null}
           </div>
           <p className="mt-0.5 text-muted-foreground text-xs">

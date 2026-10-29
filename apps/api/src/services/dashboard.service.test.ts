@@ -434,6 +434,7 @@ test("dashboard upgrades only the old default order without hiding widgets", () 
     id === "external-expenses" ? "person-settlements" : id,
   );
   expectedCustom.splice(expectedCustom.indexOf("budgets") + 1, 0, "goals");
+  expectedCustom.unshift("attention");
   assert.deepEqual(
     normalizeDashboardWidgetPreferences({ order: custom, hidden: ["external-expenses"] }),
     {
@@ -519,13 +520,13 @@ test("payment status counts admin recurring shares and preserves occurrence paym
 
 test("dashboard migrates the recent default order and retains hidden widgets", () => {
   const defaults = createDefaultDashboardWidgetPreferences();
-  assert.deepEqual(defaults.order.slice(0, 4), ["accounts", "invoices", "bills", "payment-status"]);
+  assert.deepEqual(defaults.order.slice(1, 5), ["accounts", "invoices", "bills", "payment-status"]);
   const recent = [
     "accounts",
     "payment-status",
     "invoices",
     "bills",
-    ...dashboardWidgetIds.slice(4),
+    ...dashboardWidgetIds.slice(5),
   ];
   assert.deepEqual(normalizeDashboardWidgetPreferences({ order: recent, hidden: ["notes"] }), {
     order: defaults.order,
@@ -545,7 +546,11 @@ test("dashboard restores the initial accounts, invoices and bills order without 
     normalizeDashboardWidgetPreferences({ order: previousUxOrder, hidden: [] }).order,
     [...dashboardWidgetIds],
   );
-  const custom = ["notes", ...dashboardWidgetIds.filter((id) => id !== "notes")];
+  const custom = [
+    "attention",
+    "notes",
+    ...dashboardWidgetIds.filter((id) => id !== "notes" && id !== "attention"),
+  ];
   assert.deepEqual(
     normalizeDashboardWidgetPreferences({ order: custom, hidden: [] }).order,
     custom,
@@ -564,4 +569,73 @@ test("dashboard places the new goals widget after budgets in existing custom lay
     createDefaultDashboardWidgetPreferences().order.indexOf("goals"),
     dashboardWidgetIds.indexOf("budgets") + 1,
   );
+});
+
+test("dashboard attention combines sources and reports the ones that failed", async () => {
+  const service = createDashboardService(
+    scenarioRepository(),
+    { list: async () => [] },
+    {
+      invoices: {
+        get: async () => ({
+          items: [
+            {
+              cardId,
+              cardName: "Nubank",
+              period: "2026-03",
+              dueDate: "2000-01-05",
+              remainingAmount: 120,
+              status: "overdue" as const,
+            },
+          ],
+        }),
+      },
+      bills: {
+        get: async () => {
+          throw new Error("bills unavailable");
+        },
+      },
+      budgets: { list: async () => ({ items: [] }) },
+      inbox: { snapshot: async () => ({ pendingCount: 2 }) },
+    },
+  );
+
+  const attention = await service.getAttention("2026-03", userId);
+
+  assert.deepEqual(
+    attention.items.map((item) => [item.kind, item.severity]),
+    [
+      ["invoice", "critical"],
+      ["inbox", "info"],
+    ],
+  );
+  assert.deepEqual(attention.unavailableSources, ["bill"]);
+});
+
+test("dashboard attention fails when no source can be read", async () => {
+  const unavailable = async () => {
+    throw new Error("unavailable");
+  };
+  const service = createDashboardService(
+    scenarioRepository(),
+    { list: async () => [] },
+    {
+      invoices: { get: unavailable },
+      bills: { get: unavailable },
+      budgets: { list: unavailable },
+      inbox: { snapshot: unavailable },
+    },
+  );
+
+  await assert.rejects(service.getAttention("2026-03", userId), /unavailable/);
+});
+
+test("dashboard keeps the attention band first and lets it be hidden", () => {
+  const normalized = normalizeDashboardWidgetPreferences({
+    order: ["notes", "attention", "accounts"],
+    hidden: ["attention"],
+  });
+  assert.equal(normalized.order[0], "attention");
+  assert.equal(normalized.order.filter((id) => id === "attention").length, 1);
+  assert.deepEqual(normalized.hidden, ["attention"]);
 });

@@ -240,9 +240,7 @@ const releasesRoute = createReleasesRoute(createReleasesService(releasesReposito
 const establishmentsRoute = createEstablishmentsRoute(
   createEstablishmentsService(establishmentsRepository, logoDevGateway),
 );
-const dashboardRoute = createDashboardRoute(
-  createDashboardService(dashboardRepository, accountsService),
-);
+
 const settingsRoute = createSettingsRoute(
   createSettingsService(settingsRepository, attachmentStorage),
 );
@@ -304,6 +302,14 @@ const inboxService = createInboxService(inboxRepository, {
   rulesRepository: inboxRulesRepository,
 });
 const inboxRoute = createInboxRoute(inboxService);
+const dashboardRoute = createDashboardRoute(
+  createDashboardService(dashboardRepository, accountsService, {
+    bills: billsService,
+    budgets: budgetsService,
+    inbox: inboxService,
+    invoices: invoicesService,
+  }),
+);
 const inboxRulesRoute = createInboxRulesRoute(createInboxRulesService(inboxRulesRepository));
 const companionInboxRoute = createCompanionInboxRoute(inboxService);
 const notificationsRoute = createNotificationsRoute(

@@ -30,7 +30,7 @@ export function DashboardAccountsCardsStrip({ period }: { period: string }) {
           </h2>
           <p className="text-muted-foreground text-xs">Seus saldos e faturas em um só lugar</p>
         </div>
-        <Link className="shrink-0 font-medium text-primary text-xs" to="/accounts">
+        <Link className="shrink-0 font-medium text-brand-strong text-xs" to="/accounts">
           Ver tudo
         </Link>
       </div>
@@ -73,16 +73,14 @@ export function DashboardAccountsCardsStrip({ period }: { period: string }) {
                       width={32}
                     />
                   ) : (
-                    <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-primary">
+                    <span className="grid size-8 place-items-center rounded-full bg-primary/10 text-brand-strong">
                       <Landmark aria-hidden="true" className="size-4" />
                     </span>
                   )}
                   <span className="truncate font-medium text-sm">{account.name}</span>
                 </span>
                 <span>
-                  <span className="block text-muted-foreground text-[0.7rem]">
-                    Saldo disponível
-                  </span>
+                  <span className="block text-muted-foreground text-2xs">Saldo disponível</span>
                   <MoneyValue amount={account.balance} className="font-medium text-lg" />
                 </span>
               </Link>
@@ -111,12 +109,12 @@ export function DashboardAccountsCardsStrip({ period }: { period: string }) {
                     </span>
                   )}
                   <span className="min-w-0 flex-1 truncate font-medium text-sm">{card.name}</span>
-                  <span className="text-muted-foreground text-[0.65rem]">
+                  <span className="text-muted-foreground text-2xs">
                     {cardInvoiceStatusLabels[card.invoiceSummary.status]}
                   </span>
                 </span>
                 <span>
-                  <span className="block text-muted-foreground text-[0.7rem]">Fatura atual</span>
+                  <span className="block text-muted-foreground text-2xs">Fatura atual</span>
                   <MoneyValue amount={card.invoiceSummary.amount} className="font-medium text-lg" />
                 </span>
               </Link>
@@ -125,7 +123,7 @@ export function DashboardAccountsCardsStrip({ period }: { period: string }) {
         ) : (
           <div className="rounded-xl border border-dashed bg-card/60 p-5 text-center">
             <p className="font-medium text-sm">Nenhuma conta ou cartão cadastrado</p>
-            <Link className="mt-1 inline-block text-primary text-xs" to="/accounts">
+            <Link className="mt-1 inline-block text-brand-strong text-xs" to="/accounts">
               Cadastrar agora
             </Link>
           </div>

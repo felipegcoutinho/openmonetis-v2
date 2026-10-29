@@ -69,6 +69,7 @@ export function GoalsWidget() {
       {query.data && !query.isError ? (
         activeGoals.length === 0 ? (
           <DashboardWidgetEmptyState
+            collapseWidget
             description="Crie uma meta para acompanhar seu progresso aqui."
             icon={<Goal aria-hidden="true" />}
             title="Nenhuma meta ativa"

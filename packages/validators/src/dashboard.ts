@@ -1,6 +1,10 @@
 import { z } from "@hono/zod-openapi";
 import { accountTypes } from "@openmonetis/domain/accounts";
-import { dashboardWidgetIds } from "@openmonetis/domain/dashboard";
+import {
+  dashboardAttentionKinds,
+  dashboardAttentionSeverities,
+  dashboardWidgetIds,
+} from "@openmonetis/domain/dashboard";
 import { paymentMethods, transactionConditions } from "@openmonetis/domain/transactions";
 
 const periodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
@@ -174,6 +178,32 @@ export const DashboardSnapshotOutputSchema = z
   })
   .openapi("DashboardSnapshot");
 
+export const DashboardAttentionItemOutputSchema = z
+  .object({
+    id: z.string(),
+    kind: z.enum(dashboardAttentionKinds),
+    severity: z.enum(dashboardAttentionSeverities),
+    title: z.string().nullable(),
+    amount: z.number().nonnegative().nullable(),
+    dueDate: z.iso.date().nullable(),
+    daysUntilDue: z.number().int().nullable(),
+    count: z.number().int().positive().nullable(),
+    usagePercentage: z.number().nonnegative().nullable(),
+    budgetStatus: z.enum(["warning", "reached", "exceeded"]).nullable(),
+    referenceId: z.string().nullable(),
+    period: periodSchema.nullable(),
+  })
+  .openapi("DashboardAttentionItem");
+
+export const DashboardAttentionOutputSchema = z
+  .object({
+    period: periodSchema,
+    items: z.array(DashboardAttentionItemOutputSchema),
+    /** Sources that could not be read; the remaining items are still returned. */
+    unavailableSources: z.array(z.enum(dashboardAttentionKinds)),
+  })
+  .openapi("DashboardAttention");
+
 export type DashboardWidgetPreferencesInput = z.infer<typeof DashboardWidgetPreferencesInputSchema>;
 export type DashboardWidgetPreferencesOutput = z.infer<
   typeof DashboardWidgetPreferencesOutputSchema
@@ -190,3 +220,5 @@ export type DashboardPeopleExpensesOutput = z.infer<typeof DashboardPeopleExpens
 export type DashboardAccountOutput = z.infer<typeof DashboardAccountOutputSchema>;
 export type DashboardAccountsOutput = z.infer<typeof DashboardAccountsOutputSchema>;
 export type DashboardSnapshotOutput = z.infer<typeof DashboardSnapshotOutputSchema>;
+export type DashboardAttentionItemOutput = z.infer<typeof DashboardAttentionItemOutputSchema>;
+export type DashboardAttentionOutput = z.infer<typeof DashboardAttentionOutputSchema>;

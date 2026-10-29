@@ -9,6 +9,7 @@ import {
 } from "./transactions";
 
 export const dashboardWidgetIds = [
+  "attention",
   "accounts",
   "invoices",
   "bills",
@@ -58,6 +59,8 @@ export type DashboardWidgetPreferences = {
   order: DashboardWidgetId[];
 };
 
+/** Widgets that take part in the sortable grid layout; "attention" is a band fixed above it. */
+const layoutWidgetIds = dashboardWidgetIds.filter((id) => id !== "attention");
 const dashboardWidgetIdSet = new Set<string>(dashboardWidgetIds);
 const legacyDashboardWidgetIds: Readonly<Record<string, DashboardWidgetId>> = {
   "external-expenses": "person-settlements",
@@ -72,14 +75,15 @@ export function normalizeDashboardWidgetPreferences(
 ): DashboardWidgetPreferences {
   if (!preferences) return createDefaultDashboardWidgetPreferences();
 
+  const savedOrder = preferences.order.filter((widgetId) => widgetId !== "attention");
   const recentDefaultOrder = [
     "accounts",
     "payment-status",
     "invoices",
     "bills",
-    ...dashboardWidgetIds.slice(4),
+    ...layoutWidgetIds.slice(4),
   ];
-  const previousWidgetIds = dashboardWidgetIds.filter((id) => id !== "goals");
+  const previousWidgetIds = layoutWidgetIds.filter((id) => id !== "goals");
   const previousRecentDefaultOrder = [
     "accounts",
     "payment-status",
@@ -87,27 +91,27 @@ export function normalizeDashboardWidgetPreferences(
     "bills",
     ...previousWidgetIds.slice(4),
   ];
-  const migratedPreferenceOrder = preferences.order.map(
+  const migratedPreferenceOrder = savedOrder.map(
     (widgetId) => legacyDashboardWidgetIds[widgetId] ?? widgetId,
   );
   const wasPreviousDefaultOrder =
-    preferences.order.length === previousDefaultDashboardWidgetOrder.length &&
-    preferences.order.every((id, index) => id === previousDefaultDashboardWidgetOrder[index]);
+    savedOrder.length === previousDefaultDashboardWidgetOrder.length &&
+    savedOrder.every((id, index) => id === previousDefaultDashboardWidgetOrder[index]);
   const wasRecentDefaultOrder =
     matchesWidgetOrder(migratedPreferenceOrder, recentDefaultOrder) ||
     matchesWidgetOrder(migratedPreferenceOrder, previousRecentDefaultOrder);
   const wasCanonicalDefaultOrder =
-    matchesWidgetOrder(preferences.order, dashboardWidgetIds) ||
-    matchesWidgetOrder(preferences.order, previousWidgetIds);
+    matchesWidgetOrder(savedOrder, layoutWidgetIds) ||
+    matchesWidgetOrder(savedOrder, previousWidgetIds);
   const uxFirst = ["payment-status", "inbox", "bills", "invoices"];
-  const uxDefaultOrder = [...uxFirst, ...dashboardWidgetIds.filter((id) => !uxFirst.includes(id))];
+  const uxDefaultOrder = [...uxFirst, ...layoutWidgetIds.filter((id) => !uxFirst.includes(id))];
   const previousUxDefaultOrder = [
     ...uxFirst,
     ...previousWidgetIds.filter((id) => !uxFirst.includes(id)),
   ];
   const wasUxDefaultOrder =
-    matchesWidgetOrder(preferences.order, uxDefaultOrder) ||
-    matchesWidgetOrder(preferences.order, previousUxDefaultOrder);
+    matchesWidgetOrder(savedOrder, uxDefaultOrder) ||
+    matchesWidgetOrder(savedOrder, previousUxDefaultOrder);
   const wasDefaultOrder =
     wasPreviousDefaultOrder ||
     wasRecentDefaultOrder ||
@@ -115,14 +119,15 @@ export function normalizeDashboardWidgetPreferences(
     wasUxDefaultOrder;
   const order = wasDefaultOrder
     ? createDefaultDashboardWidgetPreferences().order
-    : uniqueDashboardWidgetIds(preferences.order);
+    : uniqueDashboardWidgetIds(savedOrder);
   if (!order.includes("goals")) {
     const budgetsIndex = order.indexOf("budgets");
     order.splice(budgetsIndex < 0 ? order.length : budgetsIndex + 1, 0, "goals");
   }
-  for (const widgetId of dashboardWidgetIds) {
+  for (const widgetId of layoutWidgetIds) {
     if (!order.includes(widgetId)) order.push(widgetId);
   }
+  if (!order.includes("attention")) order.unshift("attention");
 
   return {
     order,
@@ -762,4 +767,181 @@ function groupExpenseDistribution<
       (left, right) =>
         right.amount - left.amount || right.count - left.count || left.key.localeCompare(right.key),
     );
+}
+
+export const dashboardAttentionKinds = ["invoice", "bill", "budget", "inbox"] as const;
+export type DashboardAttentionKind = (typeof dashboardAttentionKinds)[number];
+
+export const dashboardAttentionSeverities = ["critical", "warning", "info"] as const;
+export type DashboardAttentionSeverity = (typeof dashboardAttentionSeverities)[number];
+
+/** Number of days ahead in which an open bill or invoice is considered due soon. */
+export const dashboardAttentionDueSoonDays = 7;
+
+export type DashboardAttentionInvoiceCandidate = {
+  cardId: string;
+  cardName: string;
+  period: string;
+  dueDate: string;
+  remainingAmount: number;
+  status: "open" | "closed" | "overdue" | "paid";
+};
+
+export type DashboardAttentionBillCandidate = {
+  id: string;
+  name: string;
+  dueDate: string;
+  amount: number;
+  isSettled: boolean;
+  status: "paid" | "due" | "overdue";
+};
+
+export type DashboardAttentionBudgetCandidate = {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  usagePercentage: number;
+  exceededAmount: number;
+  status: "onTrack" | "warning" | "reached" | "exceeded";
+};
+
+export type DashboardAttentionBudgetStatus = Exclude<
+  DashboardAttentionBudgetCandidate["status"],
+  "onTrack"
+>;
+
+export type DashboardAttentionItem = {
+  id: string;
+  kind: DashboardAttentionKind;
+  severity: DashboardAttentionSeverity;
+  title: string | null;
+  amount: number | null;
+  dueDate: string | null;
+  daysUntilDue: number | null;
+  count: number | null;
+  usagePercentage: number | null;
+  budgetStatus: DashboardAttentionBudgetStatus | null;
+  referenceId: string | null;
+  period: string | null;
+};
+
+const severityRank: Record<DashboardAttentionSeverity, number> = {
+  critical: 0,
+  warning: 1,
+  info: 2,
+};
+
+function daysBetween(from: string, to: string) {
+  const millisecondsPerDay = 86_400_000;
+  return Math.round(
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / millisecondsPerDay,
+  );
+}
+
+function resolveDueSeverity(
+  daysUntilDue: number,
+  overdue: boolean,
+): DashboardAttentionSeverity | null {
+  if (overdue || daysUntilDue < 0) return "critical";
+  if (daysUntilDue <= dashboardAttentionDueSoonDays) return "warning";
+  return null;
+}
+
+/**
+ * Collects what needs the user's action on the dashboard: overdue or soon-due invoices and bills,
+ * budgets near, at or over their limit and pending inbox captures, ordered from the most to the least urgent.
+ */
+export function buildDashboardAttentionItems(input: {
+  today: string;
+  invoices: readonly DashboardAttentionInvoiceCandidate[];
+  bills: readonly DashboardAttentionBillCandidate[];
+  budgets: readonly DashboardAttentionBudgetCandidate[];
+  pendingInboxCount: number;
+}): DashboardAttentionItem[] {
+  const items: DashboardAttentionItem[] = [];
+
+  for (const invoice of input.invoices) {
+    if (invoice.status === "paid" || toCents(invoice.remainingAmount) <= 0) continue;
+    const daysUntilDue = daysBetween(input.today, invoice.dueDate);
+    const severity = resolveDueSeverity(daysUntilDue, invoice.status === "overdue");
+    if (!severity) continue;
+    items.push({
+      id: `invoice:${invoice.cardId}:${invoice.period}`,
+      kind: "invoice",
+      severity,
+      title: invoice.cardName,
+      amount: invoice.remainingAmount,
+      dueDate: invoice.dueDate,
+      daysUntilDue,
+      count: null,
+      usagePercentage: null,
+      budgetStatus: null,
+      referenceId: invoice.cardId,
+      period: invoice.period,
+    });
+  }
+
+  for (const bill of input.bills) {
+    if (bill.isSettled || bill.status === "paid") continue;
+    const daysUntilDue = daysBetween(input.today, bill.dueDate);
+    const severity = resolveDueSeverity(daysUntilDue, bill.status === "overdue");
+    if (!severity) continue;
+    items.push({
+      id: `bill:${bill.id}`,
+      kind: "bill",
+      severity,
+      title: bill.name,
+      amount: bill.amount,
+      dueDate: bill.dueDate,
+      daysUntilDue,
+      count: null,
+      usagePercentage: null,
+      budgetStatus: null,
+      referenceId: bill.id,
+      period: null,
+    });
+  }
+
+  for (const budget of input.budgets) {
+    if (budget.status === "onTrack") continue;
+    items.push({
+      id: `budget:${budget.id}`,
+      kind: "budget",
+      severity: budget.status === "exceeded" ? "warning" : "info",
+      title: budget.categoryName,
+      amount: budget.status === "exceeded" ? budget.exceededAmount : null,
+      dueDate: null,
+      daysUntilDue: null,
+      count: null,
+      usagePercentage: budget.usagePercentage,
+      budgetStatus: budget.status,
+      referenceId: budget.categoryId,
+      period: null,
+    });
+  }
+
+  if (input.pendingInboxCount > 0) {
+    items.push({
+      id: "inbox:pending",
+      kind: "inbox",
+      severity: "info",
+      title: null,
+      amount: null,
+      dueDate: null,
+      daysUntilDue: null,
+      count: input.pendingInboxCount,
+      usagePercentage: null,
+      budgetStatus: null,
+      referenceId: null,
+      period: null,
+    });
+  }
+
+  return items.sort(
+    (left, right) =>
+      severityRank[left.severity] - severityRank[right.severity] ||
+      (left.daysUntilDue ?? Number.POSITIVE_INFINITY) -
+        (right.daysUntilDue ?? Number.POSITIVE_INFINITY) ||
+      (right.amount ?? 0) - (left.amount ?? 0),
+  );
 }

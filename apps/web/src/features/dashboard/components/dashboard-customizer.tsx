@@ -7,11 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Check, LoaderCircle, PanelsTopLeft, RotateCcw } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
+import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
-  SheetContent,
+  SheetBody,
   SheetDescription,
   SheetFooter,
   SheetHeader,
@@ -35,6 +36,8 @@ import {
 const moveHighlightDurationMs = 3000;
 const moveHighlightHoldOffset = 0.2;
 const moveHighlightBackground = "color-mix(in srgb, var(--primary) 18%, var(--card))";
+
+const attentionWidget: DashboardWidgetId = "attention";
 
 export function DashboardCustomizer() {
   const defaults = createDefaultDashboardWidgetPreferences();
@@ -73,8 +76,8 @@ export function DashboardCustomizer() {
         </TooltipTrigger>
         <TooltipContent>Personalizar dashboard</TooltipContent>
       </Tooltip>
-      <SheetContent className="min-w-0 gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
-        <SheetHeader className="shrink-0 border-b pr-14">
+      <SheetContent mobileLayout="page">
+        <SheetHeader>
           <SheetTitle>Personalizar dashboard</SheetTitle>
           <SheetDescription>
             Escolha o que aparece e organize os widgets na ordem mais útil para você.
@@ -112,6 +115,7 @@ function DashboardCustomizationEditor({
   } | null>(null);
   const isDirty = !areDashboardWidgetPreferencesEqual(draft, savedPreferences);
   const visibleCount = dashboardWidgetRegistry.length - draft.hidden.length;
+  const sortableWidgetIds = draft.order.filter((widgetId) => widgetId !== attentionWidget);
 
   function handleMove(widgetId: DashboardWidgetId, direction: -1 | 1) {
     onChange(moveDashboardWidget(draft, widgetId, direction));
@@ -133,7 +137,7 @@ function DashboardCustomizationEditor({
 
   return (
     <>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+      <SheetBody className="p-0">
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 border-b bg-popover/95 px-4 py-3 backdrop-blur">
           <p className="text-muted-foreground text-sm">
             <span className="font-medium text-foreground">{visibleCount}</span> visíveis
@@ -151,25 +155,26 @@ function DashboardCustomizationEditor({
         </div>
 
         <ol className="grid min-w-0 grid-cols-1 gap-2 p-4">
-          {draft.order.map((widgetId, index) => {
+          {[attentionWidget, ...sortableWidgetIds].map((widgetId, index) => {
             const widget = dashboardWidgetById.get(widgetId);
+            const isFixed = widgetId === "attention";
             return widget ? (
               <DashboardWidgetEditorItem
-                index={index}
+                index={isFixed ? 0 : index - 1}
                 isVisible={!draft.hidden.includes(widgetId)}
                 key={widgetId}
                 moveRevision={lastMove?.widgetId === widgetId ? lastMove.revision : 0}
                 onMove={(direction) => handleMove(widgetId, direction)}
                 onToggle={() => onChange(toggleDashboardWidget(draft, widgetId))}
-                total={draft.order.length}
+                total={isFixed ? 1 : sortableWidgetIds.length}
                 widget={widget}
               />
             ) : null;
           })}
         </ol>
-      </div>
+      </SheetBody>
 
-      <SheetFooter className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] border-t bg-popover pb-[max(1rem,env(safe-area-inset-bottom))] sm:grid-cols-[auto_auto] sm:justify-end">
+      <SheetFooter>
         <Button disabled={saveMutation.isPending} onClick={onClose} variant="outline">
           Cancelar
         </Button>

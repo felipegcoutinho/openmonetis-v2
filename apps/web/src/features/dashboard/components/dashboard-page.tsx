@@ -9,6 +9,7 @@ import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { authClient } from "@/lib/auth-client";
 import { dashboardMetricsQueryOptions } from "../dashboard.queries";
+import { DashboardAttentionWidget } from "./dashboard-attention-widget";
 import { DashboardCustomizer } from "./dashboard-customizer";
 import {
   DashboardMetrics,
@@ -97,6 +98,7 @@ export function DashboardPage({
           ) : null}
 
           {isMobile === true ? <DashboardMobileOverview period={period} /> : null}
+          {isMobile === false ? <DashboardAttentionWidget period={period} variant="band" /> : null}
           {isMobile === false ? <DashboardWidgetGrid period={period} /> : null}
         </div>
       </main>

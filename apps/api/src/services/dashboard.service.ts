@@ -1,6 +1,7 @@
 import type { CardClosingRule } from "@openmonetis/domain/cards";
 import {
   applyInvoicePaymentsToDashboardForecast,
+  buildDashboardAttentionItems,
   calculateDashboardCategoryBreakdown,
   calculateDashboardExpenseDistribution,
   calculateDashboardHistory,
@@ -8,12 +9,16 @@ import {
   calculateDashboardPaymentStatus,
   calculateDashboardPeopleExpenses,
   createDefaultDashboardWidgetPreferences,
+  type DashboardAttentionBillCandidate,
+  type DashboardAttentionBudgetCandidate,
+  type DashboardAttentionInvoiceCandidate,
   type DashboardCategoryBreakdownEntry,
   type DashboardExpenseDistributionEntry,
   type DashboardMetricEntry,
   type DashboardPaymentStatusEntry,
   type DashboardPersonExpenseEntry,
   type DashboardTransactionOrigin,
+  dashboardAttentionKinds,
   normalizeDashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
 import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
@@ -32,9 +37,11 @@ import {
   type RecurrenceFrequency,
   type TransactionType,
 } from "@openmonetis/domain/transactions";
+import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type {
   DashboardAccountsOutput,
+  DashboardAttentionOutput,
   DashboardCategoryBreakdownOutput,
   DashboardExpenseDistributionOutput,
   DashboardMetricsOutput,
@@ -172,6 +179,30 @@ type DashboardRecurringPersonSplitRecord = DashboardPersonSplitRecord & {
 
 type DashboardAccountsReader = {
   list(userId: string, period: string): Promise<AccountOutput[]>;
+};
+
+export type DashboardAttentionSources = {
+  invoices: {
+    get(
+      period: string,
+      userId: string,
+    ): Promise<{ items: readonly DashboardAttentionInvoiceCandidate[] }>;
+  };
+  bills: {
+    get(
+      period: string,
+      userId: string,
+    ): Promise<{ items: readonly DashboardAttentionBillCandidate[] }>;
+  };
+  budgets: {
+    list(
+      userId: string,
+      query: { period: string },
+    ): Promise<{ items: readonly DashboardAttentionBudgetCandidate[] }>;
+  };
+  inbox: {
+    snapshot(userId: string, limit: number): Promise<{ pendingCount: number }>;
+  };
 };
 
 function expandRecurringRules(
@@ -499,8 +530,35 @@ function totalAccountBalance(accounts: AccountOutput[]) {
 export function createDashboardService(
   repository: DashboardRepository,
   accountsReader: DashboardAccountsReader,
+  attentionSources?: DashboardAttentionSources,
 ) {
   return {
+    async getAttention(period: string, userId: string): Promise<DashboardAttentionOutput> {
+      if (!attentionSources) throw new Error("Dashboard attention sources are not configured");
+      const [invoices, bills, budgets, inbox] = await Promise.allSettled([
+        attentionSources.invoices.get(period, userId),
+        attentionSources.bills.get(period, userId),
+        attentionSources.budgets.list(userId, { period }),
+        attentionSources.inbox.snapshot(userId, 1),
+      ]);
+      const results = { invoice: invoices, bill: bills, budget: budgets, inbox };
+      const failures = Object.values(results).filter((result) => result.status === "rejected");
+      if (failures.length === Object.keys(results).length) throw failures[0]?.reason;
+
+      return {
+        period,
+        items: buildDashboardAttentionItems({
+          today: getCurrentDateInBrazil(),
+          invoices: invoices.status === "fulfilled" ? invoices.value.items : [],
+          bills: bills.status === "fulfilled" ? bills.value.items : [],
+          budgets: budgets.status === "fulfilled" ? budgets.value.items : [],
+          pendingInboxCount: inbox.status === "fulfilled" ? inbox.value.pendingCount : 0,
+        }),
+        unavailableSources: dashboardAttentionKinds.filter(
+          (kind) => results[kind].status === "rejected",
+        ),
+      };
+    },
     async getWidgetPreferences(userId: string): Promise<DashboardWidgetPreferencesOutput> {
       return normalizeDashboardWidgetPreferences(await repository.findWidgetPreferences(userId));
     },

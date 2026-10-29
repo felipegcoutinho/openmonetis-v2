@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
   DashboardAccountsOutputSchema,
+  DashboardAttentionOutputSchema,
   DashboardCategoryBreakdownOutputSchema,
   DashboardExpenseDistributionOutputSchema,
   DashboardMetricsOutputSchema,
@@ -43,6 +44,34 @@ export function createDashboardRoute(service: DashboardService) {
     async (context) =>
       context.json(
         ok(await service.getSnapshot(context.req.valid("query").period, context.get("userId"))),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "get",
+      path: "/attention",
+      tags: ["Dashboard"],
+      request: { query: DashboardQuerySchema },
+      responses: {
+        200: {
+          description: "Items that need the user's action, ordered by urgency",
+          content: {
+            "application/json": {
+              schema: z.object({ data: DashboardAttentionOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: errorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.getAttention(context.req.valid("query").period, context.get("userId"))),
         200,
       ),
   );

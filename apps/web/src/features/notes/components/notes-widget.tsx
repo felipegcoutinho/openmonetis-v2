@@ -136,6 +136,7 @@ export function NotesWidget() {
         {query.data && !query.isError ? (
           notes.length === 0 ? (
             <DashboardWidgetEmptyState
+              collapseWidget
               description="As anotações ativas aparecerão aqui."
               icon={<NotebookPen aria-hidden="true" />}
               title="Nenhuma anotação ativa"

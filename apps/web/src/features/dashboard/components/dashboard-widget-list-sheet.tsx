@@ -4,6 +4,7 @@ import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sh
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
+  SheetBody,
   SheetDescription,
   SheetHeader,
   SheetTitle,
@@ -39,12 +40,12 @@ export function DashboardWidgetListSheet({
         <List aria-hidden="true" className="size-4" />
         {triggerLabel}
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader className="border-b pr-12">
+      <SheetContent>
+        <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
+        <SheetBody>{children}</SheetBody>
       </SheetContent>
     </Sheet>
   );

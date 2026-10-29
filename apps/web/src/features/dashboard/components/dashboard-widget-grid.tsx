@@ -20,7 +20,7 @@ export function DashboardWidgetGrid({
   const defaults = createDefaultDashboardWidgetPreferences();
   const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
   const preferences = preferencesQuery.data ?? defaults;
-  const excludedWidgets = new Set(excludedWidgetIds);
+  const excludedWidgets = new Set<DashboardWidgetId>([...excludedWidgetIds, "attention"]);
   const visibleWidgets = preferences.order.flatMap((widgetId) => {
     const widget = dashboardWidgetById.get(widgetId);
     return widget && !preferences.hidden.includes(widgetId) && !excludedWidgets.has(widgetId)
@@ -61,7 +61,7 @@ export function DashboardWidgetGrid({
           className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
         >
           {visibleWidgets.map((widget) => (
-            <div className="min-w-0" key={widget.id}>
+            <div className="min-w-0 has-[[data-dashboard-widget-collapse]]:hidden" key={widget.id}>
               {widget.render(period)}
             </div>
           ))}

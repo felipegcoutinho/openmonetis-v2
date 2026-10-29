@@ -172,7 +172,7 @@ function AccountRow({
             {accountTypeLabels[account.type]}
           </span>
           {account.excludeFromBalance ? (
-            <Badge className="h-4 px-1.5 text-[10px]" variant="secondary">
+            <Badge className="h-5 px-1.5 text-2xs" variant="secondary">
               Fora do saldo
             </Badge>
           ) : null}

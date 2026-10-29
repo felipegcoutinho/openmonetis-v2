@@ -78,6 +78,7 @@ export function InstallmentExpensesWidget({ period }: { period: string }) {
       {query.data && !query.isError ? (
         items.length === 0 ? (
           <DashboardWidgetEmptyState
+            collapseWidget
             description="As parcelas do mês aparecerão aqui."
             icon={<ListOrdered aria-hidden="true" />}
             title="Nenhuma parcela neste mês"

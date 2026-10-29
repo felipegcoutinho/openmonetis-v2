@@ -1,4 +1,5 @@
 import type {
+  DashboardAttentionOutput,
   DashboardSnapshotOutput,
   DashboardWidgetPreferencesInput,
   DashboardWidgetPreferencesOutput,
@@ -7,6 +8,10 @@ import { requestApi } from "@/lib/api-client";
 
 export async function getDashboardSnapshot(period: string) {
   return request<DashboardSnapshotOutput>("/dashboard/snapshot", period);
+}
+
+export function getDashboardAttention(period: string) {
+  return request<DashboardAttentionOutput>("/dashboard/attention", period);
 }
 
 export function getDashboardWidgetPreferences() {

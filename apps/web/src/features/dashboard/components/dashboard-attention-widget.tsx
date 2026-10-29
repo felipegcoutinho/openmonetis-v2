@@ -1,156 +1,242 @@
+import type { DashboardAttentionSeverity } from "@openmonetis/domain/dashboard";
+import type { DashboardAttentionItemOutput } from "@openmonetis/validators/dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, ChevronRight, Inbox, ReceiptText, RefreshCw } from "lucide-react";
+import { CheckCircle2, ChevronRight, RefreshCw } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { billsQueryOptions } from "@/features/bills/bills.queries";
-import { inboxSnapshotQueryOptions } from "@/features/inbox/inbox.queries";
-import { DashboardWidget } from "./dashboard-widget";
-import { DashboardWidgetRow } from "./dashboard-widget-row";
+import { cn } from "@/lib/utils";
+import {
+  attentionActionLabels,
+  formatAttentionDetail,
+  getAttentionKindLabel,
+  getAttentionTitle,
+} from "../dashboard.presentation";
+import {
+  dashboardAttentionQueryOptions,
+  dashboardWidgetPreferencesQueryOptions,
+} from "../dashboard.queries";
 
-export function DashboardAttentionWidget({ period }: { period: string }) {
-  const billsQuery = useQuery(billsQueryOptions(period));
-  const inboxQuery = useQuery(inboxSnapshotQueryOptions(1));
-  const openBillsCount = billsQuery.data?.items.filter((bill) => !bill.isSettled).length ?? 0;
-  const pendingInboxCount = inboxQuery.data?.pendingCount ?? 0;
-  const attentionCount = openBillsCount + pendingInboxCount;
-  const isPending = billsQuery.isPending || inboxQuery.isPending;
-  const hasNoAvailableData = billsQuery.isError && inboxQuery.isError;
-  const hasPartialError = !hasNoAvailableData && (billsQuery.isError || inboxQuery.isError);
+const collapsedItemCount = 4;
 
-  function retry() {
-    void Promise.all([billsQuery.refetch(), inboxQuery.refetch()]);
-  }
+const severityDotClassNames: Record<DashboardAttentionSeverity, string> = {
+  critical: "bg-destructive",
+  warning: "bg-warning",
+  info: "bg-info",
+};
+
+const severityLabels: Record<DashboardAttentionSeverity, string> = {
+  critical: "Urgente",
+  warning: "Atenção",
+  info: "Informativo",
+};
+
+export function DashboardAttentionWidget({
+  period,
+  variant = "list",
+}: {
+  period: string;
+  variant?: "band" | "list";
+}) {
+  const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
+  const query = useQuery({
+    ...dashboardAttentionQueryOptions(period),
+    enabled: !preferencesQuery.data?.hidden.includes("attention"),
+  });
+  const [expanded, setExpanded] = useState(false);
+  const items = query.data?.items ?? [];
+  const visibleItems = expanded ? items : items.slice(0, collapsedItemCount);
+  const hiddenCount = items.length - visibleItems.length;
+  const hasPartialError = Boolean(query.data?.unavailableSources.length);
+
+  if (preferencesQuery.data?.hidden.includes("attention")) return null;
 
   return (
-    <DashboardWidget
-      action={attentionCount > 0 ? <Badge variant="secondary">{attentionCount}</Badge> : null}
-      className="h-auto min-h-0"
-      description="Pendências que podem exigir uma ação"
-      icon={<CheckCircle2 aria-hidden="true" />}
-      title="Precisa da sua atenção"
-    >
-      {isPending ? <AttentionLoading /> : null}
-      {hasNoAvailableData ? (
-        <div className="grid min-h-36 place-items-center py-6 text-center">
-          <div>
-            <p className="font-medium text-sm">Não foi possível verificar suas pendências</p>
-            <Button className="mt-3" onClick={retry} size="sm" type="button" variant="outline">
-              <RefreshCw aria-hidden="true" />
-              Tentar novamente
-            </Button>
-          </div>
+    <Card aria-labelledby={`attention-${variant}-title`} className="gap-3 border p-4" role="region">
+      <div className="flex items-center gap-2">
+        <h2 className="font-medium text-sm" id={`attention-${variant}-title`}>
+          Precisa de atenção
+        </h2>
+        {items.length > 0 ? <Badge variant="secondary">{items.length}</Badge> : null}
+        {variant === "band" && items.length > 0 ? (
+          <span className="ml-auto text-muted-foreground text-xs">Ordenado por urgência</span>
+        ) : null}
+      </div>
+
+      {query.isPending ? (
+        <div aria-label="Carregando pendências" className="grid gap-2" role="status">
+          <Skeleton className="h-20 w-full" />
         </div>
       ) : null}
-      {!isPending && !hasNoAvailableData ? (
-        attentionCount > 0 ? (
-          <ul className="divide-y">
-            {openBillsCount > 0 && billsQuery.data ? (
-              <DashboardWidgetRow>
-                <Link
-                  className="group flex min-w-0 flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  search={{ payables: true, period, settlement: "unpaid", sort: "dueDate" }}
-                  to="/transactions"
-                >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-warning/10 text-warning">
-                    <ReceiptText aria-hidden="true" className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-sm">
-                      {openBillsCount}{" "}
-                      {openBillsCount === 1 ? "conta em aberto" : "contas em aberto"}
-                    </span>
-                    <span className="block truncate text-muted-foreground text-xs">
-                      {billsQuery.data.overdueCount > 0
-                        ? `${billsQuery.data.overdueCount} ${billsQuery.data.overdueCount === 1 ? "vencida" : "vencidas"}`
-                        : "Com vencimento no período"}
-                    </span>
-                  </span>
-                  <MoneyValue
-                    amount={billsQuery.data.totalOpen}
-                    className="shrink-0 font-medium text-sm"
-                  />
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                  />
-                </Link>
-              </DashboardWidgetRow>
-            ) : null}
-            {pendingInboxCount > 0 ? (
-              <DashboardWidgetRow>
-                <Link
-                  className="group flex min-w-0 flex-1 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  search={{
-                    app: undefined,
-                    date: undefined,
-                    page: undefined,
-                    rule: undefined,
-                    status: undefined,
-                  }}
-                  to="/inbox"
-                >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-info/10 text-info">
-                    <Inbox aria-hidden="true" className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-sm">
-                      {pendingInboxCount}{" "}
-                      {pendingInboxCount === 1 ? "captura para revisar" : "capturas para revisar"}
-                    </span>
-                    <span className="block truncate text-muted-foreground text-xs">
-                      Caixa de entrada
-                    </span>
-                  </span>
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                  />
-                </Link>
-              </DashboardWidgetRow>
-            ) : null}
-          </ul>
-        ) : hasPartialError ? (
-          <div className="grid min-h-32 place-items-center py-6 text-center">
-            <div>
-              <RefreshCw aria-hidden="true" className="mx-auto size-5 text-muted-foreground" />
-              <p className="mt-3 font-medium text-sm">Não foi possível verificar tudo</p>
-              <Button className="mt-2" onClick={retry} size="xs" type="button" variant="ghost">
-                Tentar novamente
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid min-h-32 place-items-center py-6 text-center">
-            <div>
-              <span className="mx-auto grid size-10 place-items-center rounded-full bg-success/10 text-success">
-                <CheckCircle2 aria-hidden="true" className="size-5" />
-              </span>
-              <p className="mt-3 font-medium text-sm">Tudo em dia</p>
-              <p className="mt-1 text-muted-foreground text-xs">Nenhuma pendência para revisar.</p>
-            </div>
-          </div>
-        )
-      ) : null}
-      {hasPartialError && attentionCount > 0 ? (
-        <div className="flex items-center justify-between gap-3 border-t py-2 text-muted-foreground text-xs">
-          <span>Parte das pendências não foi carregada.</span>
-          <Button className="h-7" onClick={retry} size="xs" type="button" variant="ghost">
+
+      {query.isError ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <p className="text-muted-foreground">Não foi possível verificar suas pendências.</p>
+          <Button onClick={() => void query.refetch()} size="sm" type="button" variant="outline">
+            <RefreshCw aria-hidden="true" />
             Tentar novamente
           </Button>
         </div>
       ) : null}
-    </DashboardWidget>
+
+      {query.data && items.length === 0 ? (
+        <p className="flex items-center gap-2 text-muted-foreground text-sm">
+          <CheckCircle2 aria-hidden="true" className="size-4 text-success" />
+          Tudo em dia. Nenhuma pendência neste mês.
+        </p>
+      ) : null}
+
+      {visibleItems.length > 0 ? (
+        <ul className={cn("grid gap-2", variant === "band" && "sm:grid-cols-2 xl:grid-cols-4")}>
+          {visibleItems.map((item) => (
+            <li className="min-w-0" key={item.id}>
+              <AttentionItem item={item} period={period} variant={variant} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {hiddenCount > 0 || expanded ? (
+        <Button
+          className="w-fit"
+          onClick={() => setExpanded((value) => !value)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {expanded ? "Mostrar menos" : `Ver mais ${hiddenCount}`}
+        </Button>
+      ) : null}
+
+      {hasPartialError ? (
+        <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+          <span>Parte das pendências não foi carregada.</span>
+          <Button onClick={() => void query.refetch()} size="xs" type="button" variant="ghost">
+            Tentar novamente
+          </Button>
+        </div>
+      ) : null}
+    </Card>
   );
 }
 
-function AttentionLoading() {
+function AttentionItem({
+  item,
+  period,
+  variant,
+}: {
+  item: DashboardAttentionItemOutput;
+  period: string;
+  variant: "band" | "list";
+}) {
+  const content = (
+    <>
+      <span className="flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
+        <span
+          aria-hidden="true"
+          className={cn("size-2 shrink-0 rounded-full", severityDotClassNames[item.severity])}
+        />
+        <span className="sr-only">{severityLabels[item.severity]}:</span>
+        <span className="truncate">{getAttentionKindLabel(item)}</span>
+      </span>
+      <span className="flex min-w-0 items-baseline justify-between gap-2">
+        <span className="truncate font-medium text-sm">{getAttentionTitle(item)}</span>
+        {item.amount !== null ? (
+          <MoneyValue amount={item.amount} className="shrink-0 font-medium text-sm" />
+        ) : null}
+      </span>
+      <span className="flex items-center justify-between gap-2 text-xs">
+        <span
+          className={cn(
+            "truncate",
+            item.severity === "critical" ? "text-destructive" : "text-muted-foreground",
+          )}
+        >
+          {formatAttentionDetail(item)}
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-0.5 font-medium text-brand-strong">
+          {attentionActionLabels[item.kind]}
+          <ChevronRight
+            aria-hidden="true"
+            className="size-3.5 transition-transform group-hover:translate-x-0.5"
+          />
+        </span>
+      </span>
+    </>
+  );
+
   return (
-    <div aria-label="Carregando pendências" className="grid gap-2 py-2" role="status">
-      <Skeleton className="h-16 w-full" />
-      <Skeleton className="h-16 w-full" />
-    </div>
+    <AttentionLink
+      className={cn(
+        "group grid min-h-11 gap-1 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        variant === "band" && "h-full",
+      )}
+      item={item}
+      period={period}
+    >
+      {content}
+    </AttentionLink>
+  );
+}
+
+function AttentionLink({
+  children,
+  className,
+  item,
+  period,
+}: {
+  children: ReactNode;
+  className: string;
+  item: DashboardAttentionItemOutput;
+  period: string;
+}) {
+  if (item.kind === "invoice" && item.referenceId) {
+    return (
+      <Link
+        className={className}
+        params={{ cardId: item.referenceId }}
+        search={{ period: item.period ?? period }}
+        to="/cards/$cardId"
+      >
+        {children}
+      </Link>
+    );
+  }
+  if (item.kind === "bill") {
+    return (
+      <Link
+        className={className}
+        search={{ payables: true, period, settlement: "unpaid", sort: "dueDate" }}
+        to="/transactions"
+      >
+        {children}
+      </Link>
+    );
+  }
+  if (item.kind === "budget") {
+    return (
+      <Link className={className} search={{ period }} to="/budgets">
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <Link
+      className={className}
+      search={{
+        app: undefined,
+        date: undefined,
+        page: undefined,
+        rule: undefined,
+        status: undefined,
+      }}
+      to="/inbox"
+    >
+      {children}
+    </Link>
   );
 }
