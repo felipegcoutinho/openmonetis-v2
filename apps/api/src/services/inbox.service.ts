@@ -11,6 +11,7 @@ import {
 import { resolveInboxRules } from "@openmonetis/domain/inbox-rules";
 import type {
   CompanionInboxItemInput,
+  DiscardInboxItemsOutput,
   InboxItemOutput,
   InboxItemSummaryOutput,
   InboxPageOutput,
@@ -255,6 +256,14 @@ export function createInboxService(
 
     async discard(id: string, userId: string) {
       return transition(id, userId, "discarded");
+    },
+
+    async discardMany(ids: readonly string[], userId: string): Promise<DiscardInboxItemsOutput> {
+      const uniqueIds = [...new Set(ids)];
+      const items = await Promise.all(uniqueIds.map((id) => findItem(id, userId, repository)));
+      for (const item of items) assertAllowedTransition(item.status, "discarded");
+      for (const id of uniqueIds) await transition(id, userId, "discarded");
+      return { discardedCount: uniqueIds.length };
     },
 
     async restore(id: string, userId: string) {

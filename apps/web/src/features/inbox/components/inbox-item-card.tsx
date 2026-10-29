@@ -7,8 +7,10 @@ import { Workflow } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { inboxRuleSuggestionQueryOptions } from "@/features/inbox-rules/inbox-rules.queries";
 import { getInitials } from "@/lib/name-presentation";
+import { cn } from "@/lib/utils";
 
 import {
   formatInboxAmount,
@@ -28,6 +30,7 @@ export function InboxItemCard({
   onProcess,
   onRestore,
   processing,
+  selection,
   sourceMatch,
 }: {
   item: InboxItemSummaryOutput;
@@ -38,6 +41,7 @@ export function InboxItemCard({
   onProcess: () => void;
   onRestore: () => void;
   processing: boolean;
+  selection?: { checked: boolean; onCheckedChange: (checked: boolean) => void };
   sourceMatch: InboxSourceMatch | null;
 }) {
   const amount = formatInboxAmount(item.parsedAmount);
@@ -65,11 +69,28 @@ export function InboxItemCard({
     );
   }
 
+  const selectionCheckbox = selection ? (
+    <Checkbox
+      aria-label={`Selecionar ${getInboxItemTitle(item)}`}
+      checked={selection.checked}
+      className="mt-0.5 shrink-0"
+      onCheckedChange={(checked) => selection.onCheckedChange(checked === true)}
+    />
+  ) : null;
+
   return (
-    <Card className="min-w-0 gap-0 py-0">
+    <Card
+      className={cn(
+        "min-w-0 gap-0 py-0 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        selection?.checked && "border-brand/50 bg-brand/5",
+      )}
+      data-inbox-item-id={item.id}
+      tabIndex={selection ? 0 : -1}
+    >
       <CardContent className="min-w-0 p-0 md:hidden">
         <div className="grid min-w-0 gap-3 p-4">
           <div className="flex min-w-0 items-center gap-3">
+            {selectionCheckbox}
             <InboxSourceLogo className="size-10" match={sourceMatch} size={40} />
             <div className="min-w-0 flex-1">
               <p className="line-clamp-2 font-medium text-base leading-snug">
@@ -115,6 +136,7 @@ export function InboxItemCard({
         </div>
       </CardContent>
       <CardContent className="hidden min-w-0 gap-4 p-4 md:flex md:items-start">
+        {selectionCheckbox ? <div className="pt-3">{selectionCheckbox}</div> : null}
         <InboxSourceLogo className="size-11" match={sourceMatch} size={44} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

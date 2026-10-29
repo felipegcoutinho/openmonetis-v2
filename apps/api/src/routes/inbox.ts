@@ -9,6 +9,8 @@ import {
   CompanionInboxBatchOutputSchema,
   CompanionInboxErrorSchema,
   CompanionInboxItemInputSchema,
+  DiscardInboxItemsInputSchema,
+  DiscardInboxItemsOutputSchema,
   InboxItemOutputSchema,
   InboxItemParamsSchema,
   InboxItemSummaryOutputSchema,
@@ -117,6 +119,36 @@ export function createInboxRoute(service: InboxService) {
     async (context) =>
       context.json(
         ok(await service.get(context.req.valid("param").id, context.get("userId"))),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/discard",
+      tags: ["Inbox"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: DiscardInboxItemsInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Discard several pending inbox items at once",
+          content: {
+            "application/json": {
+              schema: z.object({ data: DiscardInboxItemsOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        ...errorResponses,
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.discardMany(context.req.valid("json").ids, context.get("userId"))),
         200,
       ),
   );

@@ -11,6 +11,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Botão Registrar pagamento no topo da fatura do cartão sempre que houver saldo em aberto,
   abrindo o mesmo fluxo de pagamento do painel.
+- Seleção de várias capturas na Caixa de entrada para descartá-las de uma vez, com validação de
+  todas antes de alterar qualquer uma (`POST /inbox/discard`), e atalhos de teclado J/K para
+  navegar, Enter para revisar, D para descartar e X para selecionar.
 - Medidor de faixas no índice de comprometimento de Compromissos futuros, com a situação do mês
   (saudável, atenção ou crítico) ao lado do valor.
 

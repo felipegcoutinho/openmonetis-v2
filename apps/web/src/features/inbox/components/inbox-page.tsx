@@ -11,12 +11,13 @@ import {
   Trash2,
   Workflow,
 } from "lucide-react";
-import { useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
@@ -34,6 +35,7 @@ import {
   useConfirmInboxItemMutation,
   useDeleteInboxItemMutation,
   useDiscardInboxItemMutation,
+  useDiscardInboxItemsMutation,
   useRestoreInboxItemMutation,
 } from "../inbox.mutations";
 import {
@@ -90,6 +92,14 @@ export function InboxPage({
     }),
   );
   const discardMutation = useDiscardInboxItemMutation();
+  const discardManyMutation = useDiscardInboxItemsMutation();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectableItems = status === "pending" ? (query.data?.items ?? []) : [];
+  const selectedItemIds = selectedIds.filter((id) =>
+    selectableItems.some((item) => item.id === id),
+  );
+  const allSelected =
+    selectableItems.length > 0 && selectedItemIds.length === selectableItems.length;
   const restoreMutation = useRestoreInboxItemMutation();
   const confirmMutation = useConfirmInboxItemMutation();
   const deleteMutation = useDeleteInboxItemMutation();
@@ -112,6 +122,56 @@ export function InboxPage({
       toast.success("Captura descartada");
     } catch {
       toast.error("Não foi possível descartar o item.");
+    }
+  }
+
+  function toggleSelected(id: string, checked: boolean) {
+    setSelectedIds((ids) =>
+      checked ? [...new Set([...ids, id])] : ids.filter((selectedId) => selectedId !== id),
+    );
+  }
+
+  async function discardSelected() {
+    try {
+      const result = await discardManyMutation.mutateAsync(selectedItemIds);
+      setSelectedIds([]);
+      toast.success(
+        result.discardedCount === 1
+          ? "1 captura descartada"
+          : `${result.discardedCount} capturas descartadas`,
+      );
+    } catch {
+      toast.error("Não foi possível descartar as capturas selecionadas.");
+    }
+  }
+
+  function handleListKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (status !== "pending" || event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("input, textarea, select, [contenteditable='true']")) return;
+    const cards = [...event.currentTarget.querySelectorAll<HTMLElement>("[data-inbox-item-id]")];
+    const card = target.closest<HTMLElement>("[data-inbox-item-id]");
+    const index = card ? cards.indexOf(card) : -1;
+    const key = event.key.toLowerCase();
+
+    if (key === "j" || key === "k") {
+      event.preventDefault();
+      const next = key === "j" ? Math.min(index + 1, cards.length - 1) : Math.max(index - 1, 0);
+      cards[next]?.focus();
+      return;
+    }
+    if (!card || target !== card) return;
+    const item = selectableItems.find((candidate) => candidate.id === card.dataset.inboxItemId);
+    if (!item) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void startProcessing(item);
+    } else if (key === "d") {
+      event.preventDefault();
+      void discard(item.id);
+    } else if (key === "x") {
+      event.preventDefault();
+      toggleSelected(item.id, !selectedItemIds.includes(item.id));
     }
   }
 
@@ -175,7 +235,11 @@ export function InboxPage({
   return (
     <section className="app-page project-container min-w-0">
       <PageHeader
-        breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Caixa de entrada" }]}
+        breadcrumbs={[
+          { label: "Visão geral", href: "/dashboard" },
+          { label: "Lançamentos" },
+          { label: "Caixa de entrada" },
+        ]}
         description="Revise as capturas do Companion antes de transformá-las em lançamentos."
         icon={<Inbox aria-hidden="true" className="size-5" />}
         title="Caixa de entrada"
@@ -263,7 +327,42 @@ export function InboxPage({
       ) : null}
       {query.data && !query.isError ? (
         query.data.items.length ? (
-          <div className="grid gap-7">
+          // biome-ignore lint/a11y/noStaticElementInteractions: keyboard shortcuts delegate to the focused capture card.
+          <div className="grid gap-7" onKeyDown={handleListKeyDown}>
+            {status === "pending" ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card px-4 py-2.5">
+                <div className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    aria-label="Selecionar todas as capturas desta página"
+                    checked={allSelected}
+                    onCheckedChange={(checked) =>
+                      setSelectedIds(checked === true ? selectableItems.map((item) => item.id) : [])
+                    }
+                  />
+                  {selectedItemIds.length
+                    ? `${selectedItemIds.length} ${selectedItemIds.length === 1 ? "selecionada" : "selecionadas"}`
+                    : "Selecionar página"}
+                </div>
+                {selectedItemIds.length ? (
+                  <Button
+                    disabled={discardManyMutation.isPending}
+                    onClick={() => void discardSelected()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <Trash2 aria-hidden="true" />
+                    {discardManyMutation.isPending ? "Descartando…" : "Descartar selecionadas"}
+                  </Button>
+                ) : null}
+                <p className="ml-auto hidden text-muted-foreground text-xs lg:block">
+                  Atalhos: <kbd className="font-mono">J</kbd>/<kbd className="font-mono">K</kbd>{" "}
+                  navegam, <kbd className="font-mono">Enter</kbd> revisa,{" "}
+                  <kbd className="font-mono">D</kbd> descarta, <kbd className="font-mono">X</kbd>{" "}
+                  seleciona
+                </p>
+              </div>
+            ) : null}
             {groupInboxItemsByDate(query.data.items).map((group) => (
               <section aria-labelledby={`inbox-date-${group.dateKey}`} key={group.dateKey}>
                 <div className="mb-2 flex items-center gap-2 text-muted-foreground">
@@ -292,7 +391,16 @@ export function InboxPage({
                         onDiscard={() => void discard(item.id)}
                         onProcess={() => void startProcessing(item)}
                         onRestore={() => void restore(item.id)}
+                        selection={
+                          status === "pending"
+                            ? {
+                                checked: selectedItemIds.includes(item.id),
+                                onCheckedChange: (checked) => toggleSelected(item.id, checked),
+                              }
+                            : undefined
+                        }
                         processing={
+                          (discardManyMutation.isPending && selectedItemIds.includes(item.id)) ||
                           (discardMutation.isPending && discardMutation.variables === item.id) ||
                           (restoreMutation.isPending && restoreMutation.variables === item.id) ||
                           resolvingItemId === item.id

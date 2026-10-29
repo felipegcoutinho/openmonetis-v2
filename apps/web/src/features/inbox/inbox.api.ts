@@ -1,6 +1,7 @@
 import type { InboxClearableStatus } from "@openmonetis/domain/inbox";
 import type {
   ClearInboxItemsOutput,
+  DiscardInboxItemsOutput,
   InboxItemOutput,
   InboxItemSummaryOutput,
   InboxPageOutput,
@@ -42,6 +43,13 @@ export function getInboxItem(id: string) {
 
 export function discardInboxItem(id: string) {
   return request<InboxItemSummaryOutput>(`/inbox/${id}/discard`, { method: "POST" });
+}
+
+export function discardInboxItems(ids: string[]) {
+  return request<DiscardInboxItemsOutput>("/inbox/discard", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
 }
 
 export function restoreInboxItem(id: string) {

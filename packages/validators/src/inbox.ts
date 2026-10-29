@@ -89,6 +89,18 @@ export const InboxItemParamsSchema = z
   .object({ id: z.uuid().openapi({ param: { name: "id", in: "path" } }) })
   .openapi("InboxItemParams");
 
+export const DiscardInboxItemsInputSchema = z
+  .object({
+    ids: z.array(z.uuid()).min(1).max(100),
+  })
+  .openapi("DiscardInboxItemsInput");
+
+export const DiscardInboxItemsOutputSchema = z
+  .object({
+    discardedCount: z.number().int().nonnegative(),
+  })
+  .openapi("DiscardInboxItemsOutput");
+
 export const ClearInboxItemsQuerySchema = z
   .object({ status: z.enum(inboxClearableStatuses) })
   .openapi("ClearInboxItemsQuery");
@@ -190,3 +202,5 @@ export type InboxItemOutput = z.infer<typeof InboxItemOutputSchema>;
 export type InboxItemSummaryOutput = z.infer<typeof InboxItemSummaryOutputSchema>;
 export type InboxPageOutput = z.infer<typeof InboxPageOutputSchema>;
 export type InboxSnapshotOutput = z.infer<typeof InboxSnapshotOutputSchema>;
+export type DiscardInboxItemsInput = z.infer<typeof DiscardInboxItemsInputSchema>;
+export type DiscardInboxItemsOutput = z.infer<typeof DiscardInboxItemsOutputSchema>;

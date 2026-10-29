@@ -481,3 +481,31 @@ test("ingestion rejects future notification timestamps before persistence", asyn
   );
   assert.equal(writes, 0);
 });
+
+test("discarding several items validates all of them before changing any", async () => {
+  const otherId = "00000000-0000-4000-8000-000000000005";
+  const transitioned: string[] = [];
+  const records = new Map([
+    [inboxId, createRecord()],
+    [otherId, createRecord({ id: otherId, status: "processed" })],
+  ]);
+  const service = createInboxService(
+    createRepository({
+      findByIdForUser: async (id, ownerId) =>
+        ownerId === userId ? (records.get(id) ?? null) : null,
+      transitionForUser: async (transition) => {
+        transitioned.push(transition.id);
+        return createRecord({ id: transition.id, status: transition.targetStatus });
+      },
+    }),
+    { now: () => now },
+  );
+
+  await assert.rejects(service.discardMany([inboxId, otherId], userId));
+  assert.deepEqual(transitioned, []);
+
+  records.set(otherId, createRecord({ id: otherId }));
+  const result = await service.discardMany([inboxId, otherId, inboxId], userId);
+  assert.equal(result.discardedCount, 2);
+  assert.deepEqual(transitioned, [inboxId, otherId]);
+});
