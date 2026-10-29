@@ -8,16 +8,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { refreshFinancialQueries } from "@/lib/financial-query-invalidation";
 import {
   applyRecurringRuleAction,
+  categorizeTransactions,
   createTransaction,
   deleteTransaction,
+  deleteTransactions,
   exportTransactions,
   getTransactionImportTemplate,
   importTransactions,
   previewTransactionImport,
   refundTransaction,
+  renameTransactions,
   settleRecurringOccurrence,
   settleTransactions,
   type TransactionsApiSearch,
+  tagTransactions,
   undoTransactionImport,
   updateRecurringRule,
   updateTransaction,
@@ -128,6 +132,34 @@ export function useSettleTransactionsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: settleTransactions,
+    onSuccess: () => refreshFinancialQueries(queryClient),
+  });
+}
+export function useCategorizeTransactionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: categorizeTransactions,
+    onSuccess: () => refreshFinancialQueries(queryClient),
+  });
+}
+export function useRenameTransactionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: renameTransactions,
+    onSuccess: () => refreshFinancialQueries(queryClient),
+  });
+}
+export function useTagTransactionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: tagTransactions,
+    onSuccess: () => refreshFinancialQueries(queryClient),
+  });
+}
+export function useDeleteTransactionsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTransactions,
     onSuccess: () => refreshFinancialQueries(queryClient),
   });
 }

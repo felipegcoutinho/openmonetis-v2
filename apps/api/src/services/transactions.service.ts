@@ -23,7 +23,7 @@ import {
   RecurringTransitionError,
 } from "@openmonetis/domain/recurring-transactions";
 import { getOccurrenceAmount, SettlementError } from "@openmonetis/domain/settlements";
-import { matchesTransactionTags } from "@openmonetis/domain/tags";
+import { canAddTransactionTags, matchesTransactionTags } from "@openmonetis/domain/tags";
 import type { ImportedStatement, ImportedTransaction } from "@openmonetis/domain/transactions";
 import {
   addMonthsToDate,
@@ -35,6 +35,8 @@ import {
   buildTransferPostings,
   calculateInstallmentEndPeriod,
   calculateRefund,
+  canApplyBulkTransactionAction,
+  canAssignBulkCategory,
   canDeleteTransactionOrigin,
   deriveImportedPeriod,
   deriveTransactionPeriod,
@@ -57,6 +59,10 @@ import {
 } from "@openmonetis/domain/transactions";
 import { getCurrentDateInBrazil, getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type {
+  BulkCategorizeTransactionsInput,
+  BulkDeleteTransactionsInput,
+  BulkRenameTransactionsInput,
+  BulkTagTransactionsInput,
   CreateTransactionRefundInput,
   ExportTransactionsQuery,
   ImportTransactionsInput,
@@ -87,7 +93,9 @@ type TransactionsRepositoryModule = typeof import("../repositories/transactions.
 
 export type TransactionsServiceDependencies = Pick<
   TransactionsRepositoryModule,
+  | "addTransactionsTagsForUser"
   | "copyTransactionAttachmentLinksForUser"
+  | "deleteTransactionsForUser"
   | "deleteTransactionForUser"
   | "deleteTransactionImportBatchForUser"
   | "deleteTransactionSeriesForUser"
@@ -114,8 +122,11 @@ export type TransactionsServiceDependencies = Pick<
   | "listRecurringSplitsForUser"
   | "listTransactionIdsWithAttachmentsForUser"
   | "listTransactionSeriesForUser"
+  | "listBulkTransactionTargetsForUser"
   | "listTransactionSplitsForUser"
   | "listTransactionsByPeriod"
+  | "removeTransactionsTagsForUser"
+  | "renameTransactionsForUser"
   | "listTransactionsByDueDateRange"
   | "listAccountStatementTransactionsForUser"
   | "listTransactionsByPurchaseDateRange"
@@ -123,6 +134,7 @@ export type TransactionsServiceDependencies = Pick<
   | "settleRecurringOccurrenceForUser"
   | "settleTransactionsForUser"
   | "updateRecurringRuleWithSplitsForUser"
+  | "updateTransactionsCategoryForUser"
   | "updateTransactionSeriesRangeWithSplitsForUser"
   | "updateTransactionWithSplitsForUser"
   | "updateTransferPairForUser"
@@ -261,8 +273,10 @@ export function createTransactionsService(
     ? dependencies.dueDateRules
     : emptyDueDateRulesReader;
   const {
+    addTransactionsTagsForUser,
     copyTransactionAttachmentLinksForUser,
     deleteTransactionForUser,
+    deleteTransactionsForUser,
     deleteTransactionImportBatchForUser,
     deleteTransactionSeriesForUser,
     deleteTransactionSeriesRangeForUser,
@@ -298,8 +312,11 @@ export function createTransactionsService(
     listRecurringSplitsForUser,
     listTransactionIdsWithAttachmentsForUser,
     listTransactionSeriesForUser,
+    listBulkTransactionTargetsForUser,
     listTransactionSplitsForUser,
     listTransactionsByPeriod,
+    removeTransactionsTagsForUser,
+    renameTransactionsForUser,
     listTransactionsByDueDateRange,
     listAccountStatementTransactionsForUser,
     listTransactionsByPurchaseDateRange,
@@ -307,6 +324,7 @@ export function createTransactionsService(
     settleRecurringOccurrenceForUser,
     settleTransactionsForUser,
     updateRecurringRuleWithSplitsForUser,
+    updateTransactionsCategoryForUser,
     updateTransactionSeriesRangeWithSplitsForUser,
     updateTransactionWithSplitsForUser,
     updateTransferPairForUser,
@@ -2336,6 +2354,69 @@ export function createTransactionsService(
     }
   }
 
+  async function listBulkTargets(ids: string[], userId: string) {
+    const uniqueIds = [...new Set(ids)];
+    const targets = await listBulkTransactionTargetsForUser(uniqueIds, userId);
+    if (targets.length !== uniqueIds.length)
+      throw notFound("One or more transactions were not found", "TRANSACTION_NOT_FOUND");
+    return targets.map((target) => ({ ...target, refundedAmount: Number(target.refundedAmount) }));
+  }
+
+  async function categorizeTransactions(input: BulkCategorizeTransactionsInput, userId: string) {
+    const [category] = await listCategoriesByIdsForUser([input.categoryId], userId);
+    if (!category) throw notFound("Category not found", "CATEGORY_NOT_FOUND");
+    const targets = await listBulkTargets(input.ids, userId);
+    if (!targets.every((target) => canAssignBulkCategory(target, category)))
+      throw badRequest(
+        "Category is not compatible with every transaction",
+        "BULK_CATEGORY_INCOMPATIBLE",
+      );
+    return {
+      ids: await updateTransactionsCategoryForUser(
+        targets.map((target) => target.id),
+        userId,
+        category.id,
+      ),
+    };
+  }
+
+  async function renameTransactions(input: BulkRenameTransactionsInput, userId: string) {
+    const targets = await listBulkTargets(
+      input.items.map((item) => item.id),
+      userId,
+    );
+    if (!targets.every((target) => canApplyBulkTransactionAction(target, "rename")))
+      throw badRequest("Bulk action is not supported", "BULK_ACTION_UNSUPPORTED");
+    return { ids: await renameTransactionsForUser(input.items, userId) };
+  }
+
+  async function tagTransactions(input: BulkTagTransactionsInput, userId: string) {
+    const ownedTags = await dependencies.listTagsByIdsForUser?.(input.tagIds, userId);
+    if (!ownedTags || ownedTags.length !== input.tagIds.length)
+      throw notFound("Tag not found", "tag_not_found");
+    const targets = await listBulkTargets(input.ids, userId);
+    if (!targets.every((target) => canApplyBulkTransactionAction(target, "tag")))
+      throw badRequest("Bulk action is not supported", "BULK_ACTION_UNSUPPORTED");
+    const ids = targets.map((target) => target.id);
+    if (input.operation === "remove")
+      return { ids: await removeTransactionsTagsForUser(ids, userId, input.tagIds) };
+    if (!targets.every((target) => canAddTransactionTags(target.tagIds, input.tagIds)))
+      throw badRequest("Transaction tag limit exceeded", "TAG_LIMIT_EXCEEDED");
+    return { ids: await addTransactionsTagsForUser(ids, userId, input.tagIds) };
+  }
+
+  async function deleteTransactions(input: BulkDeleteTransactionsInput, userId: string) {
+    const targets = await listBulkTargets(input.ids, userId);
+    if (!targets.every((target) => canApplyBulkTransactionAction(target, "delete")))
+      throw badRequest("Bulk action is not supported", "BULK_ACTION_UNSUPPORTED");
+    const ids = await deleteTransactionsForUser(
+      targets.map((target) => target.id),
+      userId,
+    );
+    await cleanupOrphanedAttachments(userId);
+    return { ids };
+  }
+
   async function settleTransactions(
     ids: string[],
     userId: string,
@@ -2784,6 +2865,7 @@ export function createTransactionsService(
       options: previewInstallmentOptions(input.amount),
     }),
     applyRecurringRuleAction,
+    categorizeTransactions,
     copyRecurringRule,
     copyTransaction,
     createTransaction,
@@ -2817,6 +2899,7 @@ export function createTransactionsService(
       ),
     createTransactionRefund,
     deleteTransaction,
+    deleteTransactions,
     exportTransactions,
     generateTransactionImportTemplate,
     getTransactionById,
@@ -2825,8 +2908,10 @@ export function createTransactionsService(
     listRecentEstablishments,
     listTransactions,
     previewTransactionImport,
+    renameTransactions,
     settleRecurringOccurrence,
     settleTransactions,
+    tagTransactions,
     undoTransactionImport,
     updateRecurringRule,
     updateTransaction,

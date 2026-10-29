@@ -65,5 +65,5 @@ export type TransactionRowProps = {
     purchaseDate: string,
     isSettled: boolean,
   ) => void;
-  onSelectionChange: (selected: boolean) => void;
+  onSelectionChange: (selected: boolean, extendRange: boolean) => void;
 };

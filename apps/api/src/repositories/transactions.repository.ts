@@ -1772,6 +1772,138 @@ export async function deleteTransferPairForUser(transferId: string, userId: stri
     .returning({ id: transactions.id });
 }
 
+export function listBulkTransactionTargetsForUser(ids: string[], userId: string) {
+  if (!ids.length) return Promise.resolve([]);
+  return db
+    .select({
+      id: transactions.id,
+      origin: transactions.origin,
+      type: transactions.type,
+      paymentMethod: transactions.paymentMethod,
+      cardId: transactions.cardId,
+      isSettled: transactions.isSettled,
+      refundedAmount: transactionColumns.refundedAmount,
+      tagIds: transactionColumns.tagIds,
+    })
+    .from(transactions)
+    .where(and(eq(transactions.userId, userId), inArray(transactions.id, ids)));
+}
+
+export async function updateTransactionsCategoryForUser(
+  ids: string[],
+  userId: string,
+  categoryId: string,
+) {
+  return db.transaction(async (transaction) => {
+    const beforeAssignments = await findExternalExpenseAssignmentKeys(transaction, userId, ids);
+    const updated = await transaction
+      .update(transactions)
+      .set({ categoryId, updatedAt: new Date() })
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          inArray(transactions.id, ids),
+          eq(transactions.origin, "regular"),
+        ),
+      )
+      .returning({ id: transactions.id });
+    const updatedIds = updated.map((item) => item.id);
+    const afterAssignments = await findExternalExpenseAssignmentKeys(
+      transaction,
+      userId,
+      updatedIds,
+    );
+    await synchronizePendingExternalExpensesForTransactions(
+      transaction,
+      userId,
+      updatedIds,
+      selectNewExternalExpenseAssignmentKeys(beforeAssignments, afterAssignments),
+    );
+    return updatedIds;
+  });
+}
+
+export async function renameTransactionsForUser(
+  items: Array<{ id: string; name: string }>,
+  userId: string,
+) {
+  return db.transaction(async (transaction) => {
+    const renamed: string[] = [];
+    for (const item of items) {
+      const [row] = await transaction
+        .update(transactions)
+        .set({ name: item.name, updatedAt: new Date() })
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            eq(transactions.id, item.id),
+            eq(transactions.origin, "regular"),
+          ),
+        )
+        .returning({ id: transactions.id });
+      if (row) renamed.push(row.id);
+    }
+    return renamed;
+  });
+}
+
+export async function addTransactionsTagsForUser(ids: string[], userId: string, tagIds: string[]) {
+  await db
+    .insert(transactionTags)
+    .values(
+      ids.flatMap((transactionId) => tagIds.map((tagId) => ({ transactionId, userId, tagId }))),
+    )
+    .onConflictDoNothing();
+  return ids;
+}
+
+export async function removeTransactionsTagsForUser(
+  ids: string[],
+  userId: string,
+  tagIds: string[],
+) {
+  await db
+    .delete(transactionTags)
+    .where(
+      and(
+        eq(transactionTags.userId, userId),
+        inArray(transactionTags.transactionId, ids),
+        inArray(transactionTags.tagId, tagIds),
+      ),
+    );
+  return ids;
+}
+
+export async function deleteTransactionsForUser(ids: string[], userId: string) {
+  return db.transaction(async (transaction) => {
+    const targets = await transaction
+      .select({ seriesId: transactions.seriesId })
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), inArray(transactions.id, ids)));
+    await deletePendingExternalExpensesForTransactions(transaction, userId, ids);
+    const deleted = await transaction
+      .delete(transactions)
+      .where(and(eq(transactions.userId, userId), inArray(transactions.id, ids)))
+      .returning({ id: transactions.id });
+    const seriesIds = [
+      ...new Set(targets.flatMap((target) => (target.seriesId ? [target.seriesId] : []))),
+    ];
+    if (seriesIds.length) {
+      const remaining = await transaction
+        .select({ id: transactions.id })
+        .from(transactions)
+        .where(and(eq(transactions.userId, userId), inArray(transactions.seriesId, seriesIds)));
+      await synchronizePendingExternalExpensesForTransactions(
+        transaction,
+        userId,
+        remaining.map((item) => item.id),
+        new Set(),
+      );
+    }
+    return deleted.map((item) => item.id);
+  });
+}
+
 export function listTransactionSeriesForUser(seriesId: string, userId: string) {
   return db
     .select({

@@ -1,4 +1,9 @@
 import type {
+  BulkCategorizeTransactionsInput,
+  BulkDeleteTransactionsInput,
+  BulkRenameTransactionsInput,
+  BulkTagTransactionsInput,
+  BulkTransactionsOutput,
   CreateTransactionRefundInput,
   ExportTransactionsQuery,
   ImportTransactionsInput,
@@ -206,6 +211,26 @@ export const settleTransactions = (input: {
 }) =>
   request<{ ids: string[]; isSettled: boolean }>("/transactions/settlement", {
     method: "PATCH",
+    body: JSON.stringify(input),
+  });
+export const categorizeTransactions = (input: BulkCategorizeTransactionsInput) =>
+  request<BulkTransactionsOutput>("/transactions/bulk/category", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+export const renameTransactions = (input: BulkRenameTransactionsInput) =>
+  request<BulkTransactionsOutput>("/transactions/bulk/names", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+export const tagTransactions = (input: BulkTagTransactionsInput) =>
+  request<BulkTransactionsOutput>("/transactions/bulk/tags", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+export const deleteTransactions = (input: BulkDeleteTransactionsInput) =>
+  request<BulkTransactionsOutput>("/transactions/bulk/delete", {
+    method: "POST",
     body: JSON.stringify(input),
   });
 export const settleRecurringOccurrence = (input: {

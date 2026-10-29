@@ -131,6 +131,56 @@ export function canDeleteTransactionOrigin(origin: TransactionOrigin) {
   return origin === "regular" || origin === "refund" || origin === "accountBalanceAdjustment";
 }
 
+export const bulkTransactionActions = ["rename", "tag", "delete", "settle", "unsettle"] as const;
+export type BulkTransactionAction = (typeof bulkTransactionActions)[number];
+
+export type BulkTransactionTarget = {
+  origin: TransactionOrigin;
+  type: TransactionType;
+  paymentMethod: PaymentMethod | null;
+  cardId: string | null;
+  isSettled: boolean | null;
+  refundedAmount: number;
+};
+
+export type BulkCategoryCandidate = {
+  type: "income" | "expense";
+  isSystem: boolean;
+};
+
+function isUserEditableBulkTarget(target: BulkTransactionTarget) {
+  return target.origin === "regular" && target.paymentMethod !== null && target.type !== "transfer";
+}
+
+export function canApplyBulkTransactionAction(
+  target: BulkTransactionTarget,
+  action: BulkTransactionAction,
+) {
+  switch (action) {
+    case "rename":
+    case "tag":
+      return isUserEditableBulkTarget(target);
+    case "delete":
+      return (
+        canDeleteTransactionOrigin(target.origin) &&
+        target.type !== "transfer" &&
+        target.refundedAmount === 0
+      );
+    case "settle":
+      return isUserEditableBulkTarget(target) && !target.cardId && target.isSettled !== true;
+    case "unsettle":
+      return isUserEditableBulkTarget(target) && !target.cardId && target.isSettled === true;
+  }
+}
+
+// System categories belong to generated workflows (invoices, transfers, settlements).
+export function canAssignBulkCategory(
+  target: BulkTransactionTarget,
+  category: BulkCategoryCandidate,
+) {
+  return isUserEditableBulkTarget(target) && !category.isSystem && category.type === target.type;
+}
+
 export function isExpenseReduction(input: {
   amount: number | string;
   origin: TransactionOrigin;

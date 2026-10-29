@@ -2926,3 +2926,237 @@ for (const missingSeries of [false, true]) {
     assert.deepEqual(f.links, []);
   });
 }
+
+function createBulkService(overrides: Record<string, unknown>) {
+  const cleanups: string[] = [];
+  const dependencies = new Proxy(overrides, {
+    get(target, property) {
+      if (property in target) return target[property as keyof typeof target];
+      return async () => {
+        throw new Error(`Unexpected dependency call: ${String(property)}`);
+      };
+    },
+  }) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans(owner: string) {
+      cleanups.push(owner);
+      return { deletedCount: 0 };
+    },
+  });
+  return { service, cleanups };
+}
+
+function bulkTarget(id: string, patch: Record<string, unknown> = {}) {
+  return {
+    id,
+    origin: "regular",
+    type: "expense",
+    paymentMethod: "pix",
+    cardId: null,
+    isSettled: false,
+    refundedAmount: "0",
+    tagIds: [],
+    ...patch,
+  };
+}
+
+const secondTransactionId = "20000000-0000-4000-8000-000000000003";
+const bulkCategoryId = "60000000-0000-4000-8000-000000000006";
+const bulkTagId = "80000000-0000-4000-8000-000000000008";
+
+test("bulk categorization updates only owned transactions compatible with the category", async () => {
+  const updates: unknown[] = [];
+  const { service } = createBulkService({
+    listCategoriesByIdsForUser: async () => [
+      { id: bulkCategoryId, name: "Lazer", type: "expense", isSystem: false },
+    ],
+    listBulkTransactionTargetsForUser: async (ids: string[]) => ids.map((id) => bulkTarget(id)),
+    updateTransactionsCategoryForUser: async (ids: string[], owner: string, categoryId: string) => {
+      updates.push({ ids, owner, categoryId });
+      return ids;
+    },
+  });
+
+  const result = await service.categorizeTransactions(
+    { ids: [transactionId, secondTransactionId, transactionId], categoryId: bulkCategoryId },
+    userId,
+  );
+
+  assert.deepEqual(result, { ids: [transactionId, secondTransactionId] });
+  assert.deepEqual(updates, [
+    { ids: [transactionId, secondTransactionId], owner: userId, categoryId: bulkCategoryId },
+  ]);
+});
+
+test("bulk categorization rejects mismatched types and foreign transactions", async () => {
+  const { service: incompatible } = createBulkService({
+    listCategoriesByIdsForUser: async () => [
+      { id: bulkCategoryId, name: "Salário", type: "income", isSystem: false },
+    ],
+    listBulkTransactionTargetsForUser: async (ids: string[]) => ids.map((id) => bulkTarget(id)),
+  });
+  await assert.rejects(
+    incompatible.categorizeTransactions(
+      { ids: [transactionId], categoryId: bulkCategoryId },
+      userId,
+    ),
+    { code: "BULK_CATEGORY_INCOMPATIBLE" },
+  );
+
+  const { service: foreign } = createBulkService({
+    listCategoriesByIdsForUser: async () => [
+      { id: bulkCategoryId, name: "Lazer", type: "expense", isSystem: false },
+    ],
+    listBulkTransactionTargetsForUser: async () => [bulkTarget(transactionId)],
+  });
+  await assert.rejects(
+    foreign.categorizeTransactions(
+      { ids: [transactionId, secondTransactionId], categoryId: bulkCategoryId },
+      userId,
+    ),
+    { code: "TRANSACTION_NOT_FOUND" },
+  );
+});
+
+test("bulk tagging adds within the limit and removes owned tags", async () => {
+  const calls: unknown[] = [];
+  const { service } = createBulkService({
+    listTagsByIdsForUser: async (ids: string[]) => ids.map((id) => ({ id })),
+    listBulkTransactionTargetsForUser: async (ids: string[]) => ids.map((id) => bulkTarget(id)),
+    addTransactionsTagsForUser: async (ids: string[], _owner: string, tagIds: string[]) => {
+      calls.push({ operation: "add", ids, tagIds });
+      return ids;
+    },
+    removeTransactionsTagsForUser: async (ids: string[], _owner: string, tagIds: string[]) => {
+      calls.push({ operation: "remove", ids, tagIds });
+      return ids;
+    },
+  });
+
+  await service.tagTransactions(
+    { ids: [transactionId], operation: "add", tagIds: [bulkTagId] },
+    userId,
+  );
+  await service.tagTransactions(
+    { ids: [transactionId], operation: "remove", tagIds: [bulkTagId] },
+    userId,
+  );
+  assert.deepEqual(calls, [
+    { operation: "add", ids: [transactionId], tagIds: [bulkTagId] },
+    { operation: "remove", ids: [transactionId], tagIds: [bulkTagId] },
+  ]);
+
+  const { service: full } = createBulkService({
+    listTagsByIdsForUser: async (ids: string[]) => ids.map((id) => ({ id })),
+    listBulkTransactionTargetsForUser: async (ids: string[]) =>
+      ids.map((id) =>
+        bulkTarget(id, {
+          tagIds: Array.from({ length: 20 }, (_, index) => `existing-${index}`),
+        }),
+      ),
+  });
+  await assert.rejects(
+    full.tagTransactions({ ids: [transactionId], operation: "add", tagIds: [bulkTagId] }, userId),
+    { code: "TAG_LIMIT_EXCEEDED" },
+  );
+});
+
+test("bulk deletion is all-or-nothing for generated or refunded transactions", async () => {
+  const deleted: string[][] = [];
+  const { service, cleanups } = createBulkService({
+    listBulkTransactionTargetsForUser: async (ids: string[]) => ids.map((id) => bulkTarget(id)),
+    deleteTransactionsForUser: async (ids: string[]) => {
+      deleted.push(ids);
+      return ids;
+    },
+  });
+  assert.deepEqual(await service.deleteTransactions({ ids: [transactionId] }, userId), {
+    ids: [transactionId],
+  });
+  assert.deepEqual(deleted, [[transactionId]]);
+  assert.deepEqual(cleanups, [userId]);
+
+  const { service: refunded } = createBulkService({
+    listBulkTransactionTargetsForUser: async () => [
+      bulkTarget(transactionId),
+      bulkTarget(secondTransactionId, { refundedAmount: "10.00" }),
+    ],
+  });
+  await assert.rejects(
+    refunded.deleteTransactions({ ids: [transactionId, secondTransactionId] }, userId),
+    { code: "BULK_ACTION_UNSUPPORTED" },
+  );
+});
+
+test("bulk renaming applies individual names only to editable transactions", async () => {
+  const renamed: unknown[] = [];
+  const { service } = createBulkService({
+    listBulkTransactionTargetsForUser: async (ids: string[]) => ids.map((id) => bulkTarget(id)),
+    renameTransactionsForUser: async (items: Array<{ id: string; name: string }>) => {
+      renamed.push(items);
+      return items.map((item) => item.id);
+    },
+  });
+  const items = [
+    { id: transactionId, name: "Mercado" },
+    { id: secondTransactionId, name: "Farmácia" },
+  ];
+
+  assert.deepEqual(await service.renameTransactions({ items }, userId), {
+    ids: [transactionId, secondTransactionId],
+  });
+  assert.deepEqual(renamed, [items]);
+
+  const { service: generated } = createBulkService({
+    listBulkTransactionTargetsForUser: async () => [
+      bulkTarget(transactionId, { origin: "invoicePayment" }),
+    ],
+  });
+  await assert.rejects(
+    generated.renameTransactions({ items: [{ id: transactionId, name: "Fatura" }] }, userId),
+    { code: "BULK_ACTION_UNSUPPORTED" },
+  );
+});
+
+test("bulk HTTP contract validates operation-specific payloads", async () => {
+  const { service } = createBulkService({});
+  const route = createTransactionsRoute(service);
+  const send = (path: string, method: string, body: unknown) =>
+    route.request(path, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  assert.equal((await send("/bulk/category", "PATCH", { ids: [] })).status, 400);
+  assert.equal(
+    (
+      await send("/bulk/tags", "PATCH", {
+        ids: [transactionId],
+        operation: "rename",
+        tagIds: [bulkTagId],
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await send("/bulk/names", "PATCH", {
+        items: [
+          { id: transactionId, name: "A" },
+          { id: transactionId, name: "B" },
+        ],
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (await send("/bulk/names", "PATCH", { items: [{ id: transactionId, name: "   " }] })).status,
+    400,
+  );
+  assert.equal(
+    (await send("/bulk/delete", "POST", { ids: [transactionId], categoryId: bulkCategoryId }))
+      .status,
+    400,
+  );
+});

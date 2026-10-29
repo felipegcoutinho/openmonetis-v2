@@ -3,7 +3,7 @@ import {
   summarizeTransactionSelection,
 } from "@openmonetis/domain/transactions";
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function visibleAmount(transaction: TransactionOutput) {
   return transaction.allocation?.amount ?? transaction.amount;
@@ -11,6 +11,23 @@ function visibleAmount(transaction: TransactionOutput) {
 
 export function useTransactionSelection(transactions: readonly TransactionOutput[]) {
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const anchorId = useRef<string | null>(null);
+  const hasSelection = selectedIds.size > 0;
+
+  useEffect(() => {
+    if (!hasSelection) return;
+    function clearOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const target = event.target instanceof Element ? event.target : null;
+      // Escape belongs to open overlays and text fields before it clears the selection.
+      if (target?.closest("input, textarea, [contenteditable='true']")) return;
+      if (document.querySelector("[role='dialog'], [role='menu'], [role='listbox']")) return;
+      anchorId.current = null;
+      setSelectedIds(new Set());
+    }
+    document.addEventListener("keydown", clearOnEscape);
+    return () => document.removeEventListener("keydown", clearOnEscape);
+  }, [hasSelection]);
   const selectedTransactions = transactions.filter(
     (transaction) =>
       isTransactionSelectionItemSelectable(transaction) && selectedIds.has(transaction.id),
@@ -27,14 +44,25 @@ export function useTransactionSelection(transactions: readonly TransactionOutput
     })),
   );
 
-  function setSelected(id: string, selected: boolean) {
+  /** With `extendRange`, applies the same state to every selectable row since the last click. */
+  function setSelected(id: string, selected: boolean, extendRange = false) {
+    const anchorIndex = anchorId.current
+      ? transactions.findIndex((item) => item.id === anchorId.current)
+      : -1;
+    const targetIndex = transactions.findIndex((item) => item.id === id);
+    const range =
+      extendRange && anchorIndex >= 0 && targetIndex >= 0
+        ? transactions.slice(
+            Math.min(anchorIndex, targetIndex),
+            Math.max(anchorIndex, targetIndex) + 1,
+          )
+        : transactions.filter((item) => item.id === id);
+    anchorId.current = id;
     setSelectedIds((current) => {
       const next = new Set(current);
-      const transaction = transactions.find((item) => item.id === id);
-      if (selected && transaction && isTransactionSelectionItemSelectable(transaction)) {
-        next.add(id);
-      } else {
-        next.delete(id);
+      for (const transaction of range) {
+        if (selected && isTransactionSelectionItemSelectable(transaction)) next.add(transaction.id);
+        else next.delete(transaction.id);
       }
       return next;
     });
@@ -50,9 +78,13 @@ export function useTransactionSelection(transactions: readonly TransactionOutput
 
   return {
     allSelectableSelected,
-    clear: () => setSelectedIds(new Set()),
+    clear: () => {
+      anchorId.current = null;
+      setSelectedIds(new Set());
+    },
     selectableCount: selectableTransactions.length,
     isSelected: (id: string) => selectedIds.has(id),
+    selectedTransactions,
     isSelectable: (transaction: TransactionOutput) =>
       isTransactionSelectionItemSelectable(transaction),
     setAllSelectableSelected,

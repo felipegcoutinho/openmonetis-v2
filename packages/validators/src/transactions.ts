@@ -63,12 +63,14 @@ const csvUuidSchema = z
     return [...new Set(values)];
   });
 
+const TransactionNameSchema = z.string().trim().min(1).max(160);
+
 const TransactionFieldsSchema = z.object({
   tagIds: TagIdsSchema.optional(),
   type: z.enum(transactionTypes).openapi({ example: "expense" }),
   condition: z.enum(transactionConditions).default("single").openapi({ example: "single" }),
   paymentMethod: z.enum(paymentMethods).openapi({ example: "pix" }),
-  name: z.string().trim().min(1).max(160).openapi({ example: "Aluguel" }),
+  name: TransactionNameSchema.openapi({ example: "Aluguel" }),
   amount: z.number().positive().max(999_999_999.99).openapi({ example: 2500 }),
   purchaseDate: dateSchema.openapi({ example: "2026-07-07" }),
   invoicePeriod: periodSchema.nullable().optional().openapi({ example: "2026-08" }),
@@ -499,6 +501,42 @@ export const UpdateRecurringRuleQuerySchema = z
   })
   .openapi("UpdateRecurringRuleQuery");
 export const BulkTransactionsInputSchema = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
+export const BulkCategorizeTransactionsInputSchema = BulkTransactionsInputSchema.extend({
+  categoryId: z.uuid(),
+})
+  .strict()
+  .openapi("BulkCategorizeTransactionsInput");
+export type BulkCategorizeTransactionsInput = z.infer<typeof BulkCategorizeTransactionsInputSchema>;
+export const bulkTagOperations = ["add", "remove"] as const;
+export const BulkTagTransactionsInputSchema = BulkTransactionsInputSchema.extend({
+  operation: z.enum(bulkTagOperations),
+  tagIds: TagIdsSchema.min(1),
+})
+  .strict()
+  .openapi("BulkTagTransactionsInput");
+export type BulkTagTransactionsInput = z.infer<typeof BulkTagTransactionsInputSchema>;
+export const BulkRenameTransactionsInputSchema = z
+  .object({
+    items: z
+      .array(z.object({ id: z.uuid(), name: TransactionNameSchema }).strict())
+      .min(1)
+      .max(500)
+      .refine(
+        (items) => new Set(items.map((item) => item.id)).size === items.length,
+        "Duplicate transactions are not allowed",
+      ),
+  })
+  .strict()
+  .openapi("BulkRenameTransactionsInput");
+export type BulkRenameTransactionsInput = z.infer<typeof BulkRenameTransactionsInputSchema>;
+export const BulkDeleteTransactionsInputSchema = BulkTransactionsInputSchema.strict().openapi(
+  "BulkDeleteTransactionsInput",
+);
+export type BulkDeleteTransactionsInput = z.infer<typeof BulkDeleteTransactionsInputSchema>;
+export const BulkTransactionsOutputSchema = z
+  .object({ ids: z.array(z.uuid()) })
+  .openapi("BulkTransactionsOutput");
+export type BulkTransactionsOutput = z.infer<typeof BulkTransactionsOutputSchema>;
 export const SettleTransactionsInputSchema = BulkTransactionsInputSchema.extend({
   isSettled: z.boolean(),
   settledDate: dateSchema.optional(),

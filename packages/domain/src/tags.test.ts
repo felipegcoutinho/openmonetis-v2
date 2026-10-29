@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canAddTransactionTags,
   getTagNameKey,
   matchesTransactionTags,
+  maximumTransactionTags,
   summarizeTags,
   type TaggedFinancialEntry,
 } from "./tags";
@@ -101,4 +103,11 @@ test("tag totals sum monetary cents exactly", () => {
     }),
   );
   assert.equal(summarizeTags(["a"], entries)[0].expenses, 0.3);
+});
+
+test("adding tags counts only new associations against the limit", () => {
+  const current = Array.from({ length: maximumTransactionTags - 1 }, (_, index) => `tag-${index}`);
+
+  assert.equal(canAddTransactionTags(current, ["tag-0", "new"]), true);
+  assert.equal(canAddTransactionTags(current, ["new", "another"]), false);
 });

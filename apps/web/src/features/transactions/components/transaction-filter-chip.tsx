@@ -37,7 +37,7 @@ export function FilterChip({
       ) : null}
       <span className="min-w-0 text-left leading-tight">
         {filterName ? (
-          <span className="block text-[10px] text-muted-foreground">{filterName}</span>
+          <span className="block text-2xs text-muted-foreground">{filterName}</span>
         ) : null}
         <span className="block truncate text-xs font-medium" title={filterValue}>
           {filterValue}

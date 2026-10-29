@@ -4,9 +4,12 @@ import {
   allocateInstallmentShares,
   allocateRefundByResponsibility,
   assertTransferWithinAvailableBalance,
+  type BulkTransactionTarget,
   buildTrackedInstallmentSchedule,
   buildTransferPostings,
   calculateRefund,
+  canApplyBulkTransactionAction,
+  canAssignBulkCategory,
   deriveTransactionPostingDate,
   getPeriodEndDate,
   InsufficientTransferBalanceError,
@@ -462,5 +465,60 @@ test("tracking a purchase from a later installment preserves numbering, month-en
         paymentMethod: "pix",
       }),
     RangeError,
+  );
+});
+
+test("bulk actions only reach user-editable movements", () => {
+  const regular = {
+    origin: "regular",
+    type: "expense",
+    paymentMethod: "pix",
+    cardId: null,
+    isSettled: false,
+    refundedAmount: 0,
+  } satisfies BulkTransactionTarget;
+  const generated = { ...regular, origin: "personSettlement" } satisfies BulkTransactionTarget;
+  const onCard = {
+    ...regular,
+    paymentMethod: "credit_card",
+    cardId: "card",
+  } satisfies BulkTransactionTarget;
+  const settled = { ...regular, isSettled: true } satisfies BulkTransactionTarget;
+  const refunded = { ...regular, refundedAmount: 10 } satisfies BulkTransactionTarget;
+  const refund = { ...regular, origin: "refund", type: "income" } satisfies BulkTransactionTarget;
+
+  assert.equal(canApplyBulkTransactionAction(regular, "rename"), true);
+  assert.equal(canApplyBulkTransactionAction(generated, "rename"), false);
+  assert.equal(canApplyBulkTransactionAction(regular, "tag"), true);
+  assert.equal(canApplyBulkTransactionAction(generated, "tag"), false);
+  assert.equal(canApplyBulkTransactionAction(regular, "settle"), true);
+  assert.equal(canApplyBulkTransactionAction(settled, "settle"), false);
+  assert.equal(canApplyBulkTransactionAction(settled, "unsettle"), true);
+  assert.equal(canApplyBulkTransactionAction(onCard, "settle"), false);
+  assert.equal(canApplyBulkTransactionAction(regular, "delete"), true);
+  assert.equal(canApplyBulkTransactionAction(refund, "delete"), true);
+  assert.equal(canApplyBulkTransactionAction(refunded, "delete"), false);
+  assert.equal(canApplyBulkTransactionAction(generated, "delete"), false);
+});
+
+test("bulk categorization requires a matching user category", () => {
+  const expense = {
+    origin: "regular",
+    type: "expense",
+    paymentMethod: "pix",
+    cardId: null,
+    isSettled: true,
+    refundedAmount: 0,
+  } satisfies BulkTransactionTarget;
+
+  assert.equal(canAssignBulkCategory(expense, { type: "expense", isSystem: false }), true);
+  assert.equal(canAssignBulkCategory(expense, { type: "income", isSystem: false }), false);
+  assert.equal(canAssignBulkCategory(expense, { type: "expense", isSystem: true }), false);
+  assert.equal(
+    canAssignBulkCategory(
+      { ...expense, origin: "invoicePayment" },
+      { type: "expense", isSystem: false },
+    ),
+    false,
   );
 });

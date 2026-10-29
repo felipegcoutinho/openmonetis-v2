@@ -113,7 +113,7 @@ export function TransactionsScreen({
   const showHeaderCreateMenu = !header && allowCreate && createTypes.length > 0;
   const showInlineCreateButtons = allowCreate && createTypes.length > 0 && !showHeaderCreateMenu;
   const pageHeader = header ?? {
-    breadcrumbs: [{ label: "Visão geral", href: "/dashboard" }, { label: "Finanças" }],
+    breadcrumbs: [{ label: "Visão geral", href: "/dashboard" }, { label: "Lançamentos" }],
     description: "Acompanhe receitas, despesas e transações previstas no período selecionado.",
     icon: <ArrowLeftRight aria-hidden="true" className="size-5" />,
     summary: undefined,
@@ -255,7 +255,7 @@ export function TransactionsScreen({
     <section className="app-page project-container">
       <PageHeader
         actions={
-          showHeaderCreateMenu ? (
+          showHeaderCreateMenu && isMobile !== true ? (
             <TransactionsCreateActions
               createTypes={createTypes}
               createDefaults={createDefaults}
@@ -279,7 +279,7 @@ export function TransactionsScreen({
           <div
             className={cn(
               "order-4 col-span-3 flex-wrap items-center gap-2 md:order-1 md:col-span-1 md:flex",
-              showInlineCreateButtons || onExport ? "flex" : "hidden",
+              showInlineCreateButtons || (onExport && isMobile !== true) ? "flex" : "hidden",
             )}
           >
             {showInlineCreateButtons
@@ -300,7 +300,7 @@ export function TransactionsScreen({
                   );
                 })
               : null}
-            {allowImport ? (
+            {allowImport && isMobile !== true ? (
               <Button asChild className="!normal-case" variant="outline">
                 <Link to="/transactions/import">
                   <FileUp aria-hidden="true" />
@@ -308,7 +308,7 @@ export function TransactionsScreen({
                 </Link>
               </Button>
             ) : null}
-            {onExport ? (
+            {onExport && isMobile !== true ? (
               <TransactionsExportMenu
                 onExport={onExport}
                 pending={isExporting}
@@ -408,6 +408,15 @@ export function TransactionsScreen({
           accountStatement={accountStatement}
           key={`mobile:${selectionScopeKey}`}
           allowImport={allowImport}
+          exportOptions={
+            onExport
+              ? {
+                  onExport,
+                  pending: isExporting,
+                  disabled: isUpdating === true || totalItems === 0,
+                }
+              : undefined
+          }
           currentPage={Math.min(page, pageCount)}
           onPageChange={setPage}
           onView={setViewingTransaction}

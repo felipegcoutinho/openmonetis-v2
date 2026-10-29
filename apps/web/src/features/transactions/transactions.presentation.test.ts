@@ -1,13 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  describeBulkTransactionAction,
+  formatBulkTransactionResult,
+  formatDate,
   formatInstallmentOption,
   formatPaymentMethod,
   formatPaymentMethodTable,
+  formatTransactionConditionSummary,
+  formatTransactionSettlementSummary,
   getTransactionDateLabel,
   getTransactionSettlementAction,
   getTransactionSettlementLabel,
   groupTransactionRows,
+  selectBulkTransactionIds,
   validateTransactionsSearch,
 } from "./transactions.presentation";
 
@@ -124,4 +130,109 @@ test("untagged URL filters normalize booleans and clear conflicting tag selectio
   assert.equal(validateTransactionsSearch({ withoutTags: true }).withoutTags, true);
   assert.equal(validateTransactionsSearch({ withoutTags: "false", tags: id }).tags, id);
   assert.equal(validateTransactionsSearch({ withoutTags: "false" }).withoutTags, undefined);
+});
+
+test("details summary describes settlement date and condition progress", () => {
+  assert.equal(
+    formatTransactionSettlementSummary({
+      type: "income",
+      isSettled: true,
+      paymentMethod: "pix",
+      settledDate: "2026-10-12",
+      dueDate: null,
+    }),
+    `Recebido em ${formatDate("2026-10-12")}`,
+  );
+  assert.equal(
+    formatTransactionSettlementSummary({
+      type: "expense",
+      isSettled: false,
+      paymentMethod: "boleto",
+      settledDate: null,
+      dueDate: "2026-11-05",
+    }),
+    `Em aberto · vence em ${formatDate("2026-11-05")}`,
+  );
+  assert.equal(
+    formatTransactionSettlementSummary({
+      type: "expense",
+      isSettled: true,
+      paymentMethod: "credit_card",
+      settledDate: "2026-10-12",
+      dueDate: null,
+    }),
+    "Pagamento pela fatura",
+  );
+  assert.equal(
+    formatTransactionConditionSummary({
+      condition: "installment",
+      currentInstallment: 3,
+      installmentCount: 10,
+      recurrenceFrequency: null,
+    }),
+    "Parcela 3 de 10",
+  );
+  assert.equal(
+    formatTransactionConditionSummary({
+      condition: "recurring",
+      currentInstallment: null,
+      installmentCount: null,
+      recurrenceFrequency: "monthly",
+    }),
+    "Recorrente · Mensal",
+  );
+  assert.equal(
+    formatTransactionConditionSummary({
+      condition: "single",
+      currentInstallment: null,
+      installmentCount: null,
+      recurrenceFrequency: null,
+    }),
+    "Única",
+  );
+});
+
+test("bulk selection collapses split shares and skips recurring occurrences", () => {
+  const row = (id: string, recordId: string | null, patch: Record<string, unknown> = {}) =>
+    ({
+      id,
+      recordId,
+      origin: "regular",
+      type: "expense",
+      paymentMethod: "pix",
+      cardId: null,
+      isSettled: false,
+      refundedAmount: 0,
+      ...patch,
+    }) as unknown as Parameters<typeof selectBulkTransactionIds>[0][number];
+  const selection = selectBulkTransactionIds(
+    [
+      row("a:1", "a"),
+      row("a:2", "a"),
+      row("rule:2026-10-01", null),
+      row("b", "b", { origin: "personSettlement" }),
+    ],
+    (target) => target.origin === "regular",
+  );
+
+  assert.deepEqual(selection.ids, ["a"]);
+  assert.equal(selection.skippedCount, 2);
+  assert.deepEqual(formatBulkTransactionResult("deleted", selection), {
+    title: "1 lançamento removido",
+    description: "2 ignorados: recorrentes, gerados pelo sistema ou incompatíveis com a ação.",
+  });
+});
+
+test("bulk action hints show partial reach and why an action is unavailable", () => {
+  assert.equal(
+    describeBulkTransactionAction("settle", { count: 5, total: 5 }).hint,
+    "Marcar como pago",
+  );
+  assert.equal(
+    describeBulkTransactionAction("settle", { count: 3, total: 5 }).hint,
+    "Marcar como pago · 3 de 5",
+  );
+  const unavailable = describeBulkTransactionAction("unsettle", { count: 0, total: 2 });
+  assert.equal(unavailable.available, false);
+  assert.equal(unavailable.hint, "Marcar em aberto · nenhum selecionado está pago");
 });

@@ -1,3 +1,4 @@
+import type { BulkTransactionTarget } from "@openmonetis/domain/transactions";
 import {
   dateOnlyToSafeInstant,
   formatDateInBrazil,
@@ -348,6 +349,10 @@ const transactionMutationErrorMessages: Record<string, string> = {
     "Desfaça a baixa antes de alterar os dados financeiros deste lançamento.",
   SETTLEMENT_ALREADY_CONFIRMED: "Este lançamento já foi confirmado. Atualize a lista.",
   SETTLEMENT_UNSUPPORTED: "Use o fluxo de pagamento correspondente a este lançamento.",
+  BULK_CATEGORY_INCOMPATIBLE: "A categoria não combina com todos os lançamentos. Atualize a lista.",
+  BULK_ACTION_UNSUPPORTED: "Alguns lançamentos não aceitam esta ação. Atualize a lista.",
+  TAG_LIMIT_EXCEEDED: "Algum lançamento já atingiu o limite de etiquetas.",
+  tag_not_found: "Etiqueta não encontrada. Atualize a lista.",
   SETTLEMENT_ACCOUNT_NOT_FOUND: "Escolha uma conta ativa para registrar a baixa.",
   INVALID_SETTLEMENT_AMOUNT: "Informe um valor maior que zero, com até duas casas decimais.",
   RECURRING_NO_FUTURE_OCCURRENCE: "Não há próximas ocorrências dentro da data final configurada.",
@@ -439,6 +444,36 @@ export function getTransactionSettlementLabel(
       : "Pago";
 }
 
+export function formatTransactionSettlementSummary(
+  transaction: Pick<
+    TransactionOutput,
+    "type" | "isSettled" | "paymentMethod" | "settledDate" | "dueDate"
+  >,
+) {
+  const label = getTransactionSettlementLabel(transaction);
+  if (transaction.paymentMethod === "credit_card" || transaction.isSettled === null) return label;
+  if (transaction.isSettled)
+    return transaction.settledDate ? `${label} em ${formatDate(transaction.settledDate)}` : label;
+  return transaction.dueDate ? `${label} · vence em ${formatDate(transaction.dueDate)}` : label;
+}
+
+export function formatTransactionConditionSummary(
+  transaction: Pick<
+    TransactionOutput,
+    "condition" | "currentInstallment" | "installmentCount" | "recurrenceFrequency"
+  >,
+) {
+  if (
+    transaction.condition === "installment" &&
+    transaction.currentInstallment !== null &&
+    transaction.installmentCount !== null
+  )
+    return `Parcela ${transaction.currentInstallment} de ${transaction.installmentCount}`;
+  if (transaction.condition === "recurring" && transaction.recurrenceFrequency)
+    return `${transactionConditionLabels.recurring} · ${recurrenceFrequencyLabels[transaction.recurrenceFrequency]}`;
+  return transactionConditionLabels[transaction.condition];
+}
+
 export function getTransactionSettlementAction(
   transaction: Pick<TransactionOutput, "type" | "isSettled">,
 ) {
@@ -461,4 +496,111 @@ export function formatTransactionFilterDate(value: string) {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+export type BulkTransactionSelection = {
+  ids: string[];
+  transactions: TransactionOutput[];
+  skippedCount: number;
+};
+
+/**
+ * Resolves the persisted records an action can reach. Recurring occurrences have no record yet
+ * and split shares repeat their record, so both are collapsed before counting what was skipped.
+ */
+export function selectBulkTransactionIds(
+  transactions: readonly TransactionOutput[],
+  accepts: (target: BulkTransactionTarget) => boolean,
+): BulkTransactionSelection {
+  const records = new Map<string, TransactionOutput | null>();
+  for (const transaction of transactions) {
+    records.set(
+      transaction.recordId ?? `occurrence:${transaction.id}`,
+      transaction.recordId ? transaction : null,
+    );
+  }
+  const ids: string[] = [];
+  const accepted: TransactionOutput[] = [];
+  for (const [recordId, transaction] of records) {
+    if (
+      transaction &&
+      accepts({
+        origin: transaction.origin,
+        type: transaction.type,
+        paymentMethod: transaction.paymentMethod,
+        cardId: transaction.cardId,
+        isSettled: transaction.isSettled,
+        refundedAmount: transaction.refundedAmount,
+      })
+    ) {
+      ids.push(recordId);
+      accepted.push(transaction);
+    }
+  }
+  return { ids, transactions: accepted, skippedCount: records.size - ids.length };
+}
+
+export function formatBulkTransactionResult(
+  action: "categorized" | "renamed" | "tagged" | "untagged" | "deleted" | "settled" | "unsettled",
+  selection: BulkTransactionSelection,
+) {
+  const count = selection.ids.length;
+  const plural = count === 1 ? "" : "s";
+  const subject = `${count} lançamento${plural}`;
+  const title = {
+    categorized: `${subject} categorizado${plural}`,
+    renamed: `${subject} renomeado${plural}`,
+    tagged: `Etiqueta adicionada a ${subject}`,
+    untagged: `Etiqueta removida de ${subject}`,
+    deleted: `${subject} removido${plural}`,
+    settled: `${subject} marcado${plural} como pago${plural}`,
+    unsettled: `${subject} marcado${plural} em aberto`,
+  }[action];
+  if (!selection.skippedCount) return { title };
+  return {
+    title,
+    description: `${selection.skippedCount} ignorado${selection.skippedCount === 1 ? "" : "s"}: recorrentes, gerados pelo sistema ou incompatíveis com a ação.`,
+  };
+}
+
+export type BulkTransactionActionKey =
+  | "settle"
+  | "unsettle"
+  | "categorize"
+  | "tag"
+  | "rename"
+  | "delete";
+
+const bulkTransactionActionCopy: Record<
+  BulkTransactionActionKey,
+  { label: string; unavailable: string }
+> = {
+  settle: {
+    label: "Marcar como pago",
+    unavailable: "Nenhum selecionado está em aberto fora de cartão",
+  },
+  unsettle: { label: "Marcar em aberto", unavailable: "Nenhum selecionado está pago" },
+  categorize: { label: "Categoria", unavailable: "Nenhum selecionado aceita outra categoria" },
+  tag: { label: "Etiquetas", unavailable: "Nenhum selecionado aceita etiquetas" },
+  rename: { label: "Descrição", unavailable: "Nenhum selecionado aceita outra descrição" },
+  delete: { label: "Excluir", unavailable: "Nenhum selecionado pode ser excluído" },
+};
+
+/** Explains how far a bulk action reaches before the user commits to it. */
+export function describeBulkTransactionAction(
+  action: BulkTransactionActionKey,
+  availability: { count: number; total: number },
+) {
+  const copy = bulkTransactionActionCopy[action];
+  const available = availability.count > 0;
+  return {
+    available,
+    label: copy.label,
+    unavailableReason: copy.unavailable,
+    hint: !available
+      ? `${copy.label} · ${copy.unavailable.toLocaleLowerCase("pt-BR")}`
+      : availability.count < availability.total
+        ? `${copy.label} · ${availability.count} de ${availability.total}`
+        : copy.label,
+  };
 }

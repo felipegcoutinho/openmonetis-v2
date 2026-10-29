@@ -7,15 +7,7 @@ import { dateOnlyToSafeInstant, formatDateInBrazil } from "@openmonetis/shared/d
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Circle,
-  CreditCard,
-  FileUp,
-  Landmark,
-  ListChecks,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Circle, CreditCard, FileUp, Landmark } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
@@ -26,12 +18,17 @@ import { TransactionTags } from "@/features/tags/components/transaction-tags";
 import { cn } from "@/lib/utils";
 import { formatCompactDate } from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
+import { TransactionBulkActionDock } from "./transaction-bulk-action-dock";
 import { TransactionDueDate } from "./transaction-due-date";
-import { TransactionSelectionSummary } from "./transaction-selection-summary";
+import {
+  TransactionsMobileActionsMenu,
+  type TransactionsMobileExport,
+} from "./transactions-mobile-actions-menu";
 
 type TransactionsMobileListProps = {
   accountStatement?: boolean;
   allowImport?: boolean;
+  exportOptions?: TransactionsMobileExport;
   transactions: TransactionOutput[];
   currentPage: number;
   pageCount: number;
@@ -55,7 +52,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
     return (
       <Card className="grid min-h-52 place-items-center border-dashed p-8 text-center">
         <div>
-          <span className="mx-auto grid size-11 place-items-center rounded-full bg-primary/10 text-primary">
+          <span className="mx-auto grid size-11 place-items-center rounded-full bg-primary/10 text-brand-strong">
             <Circle aria-hidden="true" className="size-5" />
           </span>
           <h2 className="mt-4 font-semibold">Nenhum lançamento encontrado</h2>
@@ -99,22 +96,17 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
           </>
         ) : (
           <>
-            {props.allowImport ? (
-              <Button asChild size="sm" variant="outline">
-                <Link to="/transactions/import">
-                  <FileUp aria-hidden="true" /> Importar extrato
-                </Link>
-              </Button>
-            ) : (
-              <span />
-            )}
-            <Button onClick={() => setSelectionMode(true)} size="sm" variant="outline">
-              <ListChecks aria-hidden="true" /> Selecionar
-            </Button>
+            <p className="text-muted-foreground text-sm">
+              {props.totalItems === 1 ? "1 lançamento" : `${props.totalItems} lançamentos`}
+            </p>
+            <TransactionsMobileActionsMenu
+              allowImport={Boolean(props.allowImport)}
+              exportOptions={props.exportOptions}
+              onSelect={() => setSelectionMode(true)}
+            />
           </>
         )}
       </div>
-      <TransactionSelectionSummary onClear={selection.clear} summary={selection.summary} />
       {[...groups.entries()].map(([date, transactions]) => (
         <section aria-labelledby={`transactions-${date}`} className="grid gap-2" key={date}>
           <h2
@@ -140,6 +132,11 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
           </Card>
         </section>
       ))}
+      <TransactionBulkActionDock
+        onClear={selection.clear}
+        summary={selection.summary}
+        transactions={selection.selectedTransactions}
+      />
 
       <footer className="flex items-center justify-between gap-3 border-t pt-3 text-sm">
         <span className="text-muted-foreground">{props.totalItems} lançamentos</span>
@@ -274,7 +271,7 @@ function MobileTransactionRow({
             <span className="flex min-w-0 items-center gap-1">
               <span className="truncate font-medium text-sm">{transaction.name}</span>
               {transaction.currentInstallment && transaction.installmentCount ? (
-                <span className="shrink-0 text-muted-foreground text-[0.65rem]">
+                <span className="shrink-0 text-muted-foreground text-2xs">
                   {transaction.currentInstallment}/{transaction.installmentCount}
                 </span>
               ) : null}

@@ -760,6 +760,134 @@ test("assembled API protects financial endpoints and persists transfers and refu
       },
     );
 
+    await t.test(
+      "bulk actions categorize, rename, tag and delete only owned eligible records",
+      async () => {
+        const f = await fixture(owner, 0);
+        const create = async (name: string) =>
+          data<TransactionOutput>(
+            await request("/transactions", owner, "POST", {
+              ...f.expense,
+              name,
+              isSettled: false,
+              settledDate: undefined,
+            }),
+            201,
+          );
+        const first = await create("Bulk first");
+        const second = await create("Bulk second");
+        const ids = [first.recordId, second.recordId] as string[];
+        const tag = await data<{ id: string }>(
+          await request("/tags", owner, "POST", { name: `Bulk ${randomUUID()}` }),
+          201,
+        );
+        const [leisure] = await db
+          .select()
+          .from(schema.categories)
+          .where(and(eq(schema.categories.userId, owner.id), eq(schema.categories.name, "Viagem")));
+        assert.ok(leisure);
+
+        await error(
+          await request("/transactions/bulk/category", stranger, "PATCH", {
+            ids,
+            categoryId: stranger.expenseCategoryId,
+          }),
+          404,
+          "TRANSACTION_NOT_FOUND",
+        );
+        await error(
+          await request("/transactions/bulk/category", owner, "PATCH", {
+            ids,
+            categoryId: owner.incomeCategoryId,
+          }),
+          400,
+          "BULK_CATEGORY_INCOMPATIBLE",
+        );
+        assert.deepEqual(
+          await data(
+            await request("/transactions/bulk/category", owner, "PATCH", {
+              ids,
+              categoryId: leisure.id,
+            }),
+          ),
+          { ids },
+        );
+        await data(
+          await request("/transactions/bulk/tags", owner, "PATCH", {
+            ids,
+            operation: "add",
+            tagIds: [tag.id],
+          }),
+        );
+        await data(
+          await request("/transactions/bulk/tags", owner, "PATCH", {
+            ids,
+            operation: "add",
+            tagIds: [tag.id],
+          }),
+        );
+        for (const id of ids) {
+          const detail = await data<TransactionOutput>(await request(`/transactions/${id}`, owner));
+          assert.equal(detail.categoryId, leisure.id);
+          assert.deepEqual(detail.tagIds, [tag.id]);
+        }
+        await data(
+          await request("/transactions/bulk/tags", owner, "PATCH", {
+            ids: [first.recordId],
+            operation: "remove",
+            tagIds: [tag.id],
+          }),
+        );
+        const untagged = await data<TransactionOutput>(
+          await request(`/transactions/${first.recordId}`, owner),
+        );
+        assert.deepEqual(untagged.tagIds, []);
+
+        await error(
+          await request("/transactions/bulk/names", stranger, "PATCH", {
+            items: [{ id: ids[0], name: "Stolen" }],
+          }),
+          404,
+          "TRANSACTION_NOT_FOUND",
+        );
+        await data(
+          await request("/transactions/bulk/names", owner, "PATCH", {
+            items: [
+              { id: ids[0], name: "  Mercado  " },
+              { id: ids[1], name: "Farmácia" },
+            ],
+          }),
+        );
+        const names = await Promise.all(
+          ids.map(
+            async (id) =>
+              (await data<TransactionOutput>(await request(`/transactions/${id}`, owner))).name,
+          ),
+        );
+        assert.deepEqual(names, ["Mercado", "Farmácia"]);
+
+        await error(
+          await request("/transactions/bulk/delete", stranger, "POST", { ids }),
+          404,
+          "TRANSACTION_NOT_FOUND",
+        );
+        assert.deepEqual(
+          await data(await request("/transactions/bulk/delete", owner, "POST", { ids })),
+          { ids },
+        );
+        const remaining = await db
+          .select()
+          .from(schema.transactions)
+          .where(
+            and(
+              eq(schema.transactions.userId, owner.id),
+              eq(schema.transactions.id, ids[0] as string),
+            ),
+          );
+        assert.deepEqual(remaining, []);
+      },
+    );
+
     await t.test("a forged session cookie cannot authenticate a financial request", async () => {
       await error(
         await request("/accounts", {

@@ -1,6 +1,11 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
+  BulkCategorizeTransactionsInputSchema,
+  BulkDeleteTransactionsInputSchema,
+  BulkRenameTransactionsInputSchema,
+  BulkTagTransactionsInputSchema,
+  BulkTransactionsOutputSchema,
   CreateTransactionRefundInputSchema,
   ExportTransactionsQuerySchema,
   ImportTransactionsInputSchema,
@@ -60,6 +65,28 @@ const deleteTransactionResponseSchema = z
   })
   .openapi("DeleteTransactionResponse");
 
+const bulkTransactionsResponseSchema = z
+  .object({
+    data: BulkTransactionsOutputSchema,
+    error: z.null(),
+  })
+  .openapi("BulkTransactionsResponse");
+
+const bulkTransactionsErrorResponses = {
+  400: {
+    description: "Action is not supported for every selected transaction",
+    content: { "application/json": { schema: errorSchema } },
+  },
+  401: {
+    description: "Authentication required",
+    content: { "application/json": { schema: errorSchema } },
+  },
+  404: {
+    description: "Transaction, category or tag not found",
+    content: { "application/json": { schema: errorSchema } },
+  },
+} as const;
+
 const importPreviewResponseSchema = z.object({
   data: TransactionImportPreviewOutputSchema,
   error: z.null(),
@@ -73,11 +100,13 @@ export function createTransactionsRoute(service: TransactionsService) {
   const {
     changeRecurringRuleStatus,
     applyRecurringRuleAction,
+    categorizeTransactions,
     copyRecurringRule,
     copyTransaction,
     createTransaction,
     createTransactionRefund,
     deleteTransaction,
+    deleteTransactions,
     generateTransactionImportTemplate,
     getTransactionById,
     getRecurringRuleOccurrence,
@@ -85,8 +114,10 @@ export function createTransactionsRoute(service: TransactionsService) {
     listRecentEstablishments,
     listTransactions,
     previewTransactionImport,
+    renameTransactions,
     settleRecurringOccurrence,
     settleTransactions,
+    tagTransactions,
     undoTransactionImport,
     updateRecurringRule,
     updateTransaction,
@@ -607,6 +638,95 @@ export function createTransactionsRoute(service: TransactionsService) {
         200,
       );
     },
+  );
+
+  transactionsRoute.openapi(
+    createRoute({
+      method: "patch",
+      path: "/bulk/category",
+      tags: ["Transactions"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: BulkCategorizeTransactionsInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Categorized transactions",
+          content: { "application/json": { schema: bulkTransactionsResponseSchema } },
+        },
+        ...bulkTransactionsErrorResponses,
+      },
+    }),
+    async (c) =>
+      c.json(ok(await categorizeTransactions(c.req.valid("json"), c.get("userId"))), 200),
+  );
+
+  transactionsRoute.openapi(
+    createRoute({
+      method: "patch",
+      path: "/bulk/names",
+      tags: ["Transactions"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: BulkRenameTransactionsInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Renamed transactions",
+          content: { "application/json": { schema: bulkTransactionsResponseSchema } },
+        },
+        ...bulkTransactionsErrorResponses,
+      },
+    }),
+    async (c) => c.json(ok(await renameTransactions(c.req.valid("json"), c.get("userId"))), 200),
+  );
+
+  transactionsRoute.openapi(
+    createRoute({
+      method: "patch",
+      path: "/bulk/tags",
+      tags: ["Transactions"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: BulkTagTransactionsInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Tagged transactions",
+          content: { "application/json": { schema: bulkTransactionsResponseSchema } },
+        },
+        ...bulkTransactionsErrorResponses,
+      },
+    }),
+    async (c) => c.json(ok(await tagTransactions(c.req.valid("json"), c.get("userId"))), 200),
+  );
+
+  transactionsRoute.openapi(
+    createRoute({
+      method: "post",
+      path: "/bulk/delete",
+      tags: ["Transactions"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: BulkDeleteTransactionsInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Deleted transactions",
+          content: { "application/json": { schema: bulkTransactionsResponseSchema } },
+        },
+        ...bulkTransactionsErrorResponses,
+      },
+    }),
+    async (c) => c.json(ok(await deleteTransactions(c.req.valid("json"), c.get("userId"))), 200),
   );
 
   transactionsRoute.openapi(

@@ -19,6 +19,12 @@ export function matchesTransactionTags(
   if (withoutTags) return tagIds.length === 0;
   return selected.length === 0 || selected.some((id) => tagIds.includes(id));
 }
+export function canAddTransactionTags(
+  currentTagIds: readonly string[],
+  addedTagIds: readonly string[],
+) {
+  return new Set([...currentTagIds, ...addedTagIds]).size <= maximumTransactionTags;
+}
 export type TaggedFinancialEntry = {
   id: string;
   tagIds?: string[];

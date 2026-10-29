@@ -5,8 +5,8 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { groupTransactionRows } from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
+import { TransactionBulkActionDock } from "./transaction-bulk-action-dock";
 import { TransactionRow } from "./transaction-row";
-import { TransactionSelectionSummary } from "./transaction-selection-summary";
 import { TransactionsPagination } from "./transactions-pagination";
 import type { TransactionsTableProps } from "./transactions-table.types";
 
@@ -34,12 +34,13 @@ export function TransactionsTable({
   onPageChange,
   onPageSizeChange,
 }: TransactionsTableProps) {
-  const selection = useTransactionSelection(transactions);
+  const rows = groupTransactionRows(transactions);
+  // Selection follows the rendered order so Shift+click ranges match what the user sees.
+  const selection = useTransactionSelection(rows.map((row) => row.transaction));
 
   return (
     <TooltipProvider>
       <div className="grid gap-3">
-        <TransactionSelectionSummary onClear={selection.clear} summary={selection.summary} />
         <Card className="py-2">
           <CardContent className="px-2 sm:px-4">
             {transactions.length ? (
@@ -65,7 +66,7 @@ export function TransactionsTable({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {groupTransactionRows(transactions).map(({ transaction, splitConnector }) => (
+                      {rows.map(({ transaction, splitConnector }) => (
                         <TransactionRow
                           accountStatement={accountStatement}
                           adminPersonId={adminPersonId}
@@ -83,8 +84,8 @@ export function TransactionsTable({
                           onRecurringAction={onRecurringAction}
                           onSettle={onSettle}
                           onSettleRecurringOccurrence={onSettleRecurringOccurrence}
-                          onSelectionChange={(selected) =>
-                            selection.setSelected(transaction.id, selected)
+                          onSelectionChange={(selected, extendRange) =>
+                            selection.setSelected(transaction.id, selected, extendRange)
                           }
                           pending={
                             pendingTransactionId !== null &&
@@ -126,6 +127,11 @@ export function TransactionsTable({
             )}
           </CardContent>
         </Card>
+        <TransactionBulkActionDock
+          onClear={selection.clear}
+          summary={selection.summary}
+          transactions={selection.selectedTransactions}
+        />
       </div>
     </TooltipProvider>
   );

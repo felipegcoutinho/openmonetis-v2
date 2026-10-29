@@ -22,6 +22,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   navegar, Enter para revisar, D para descartar e X para selecionar.
 - Medidor de faixas no índice de comprometimento de Compromissos futuros, com a situação do mês
   (saudável, atenção ou crítico) ao lado do valor.
+- Barra de ações em lote nos Lançamentos: ao selecionar lançamentos, uma barra escura e compacta
+  fixa no rodapé mostra a quantidade, o saldo, as entradas e as despesas da seleção e permite
+  marcar como pago ou em aberto, trocar a categoria, adicionar ou remover uma etiqueta, atualizar a
+  descrição (uma única para todos ou ajustada lançamento a lançamento) e excluir. Cada ação mostra
+  no tooltip quantos lançamentos alcança ou por que não se aplica, exibe carregamento no próprio
+  ícone enquanto roda, e a seleção pode ser limpa com Esc ou estendida com Shift+clique. Recorrências, lançamentos gerados pelo
+  sistema e itens incompatíveis com a ação são ignorados e informados no aviso final. A API expõe
+  `PATCH /transactions/bulk/category`, `PATCH /transactions/bulk/names`,
+  `PATCH /transactions/bulk/tags` e
+  `POST /transactions/bulk/delete`, que validam posse e elegibilidade de todos os lançamentos antes
+  de alterar qualquer um.
 
 ### Alterado
 
@@ -29,6 +40,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   largas.
 - Breadcrumbs terminam sempre na página atual e seguem as seções do menu; a aba do relatório de
   parcelamentos passa a se chamar Despesas parceladas.
+- Lançamentos no celular reúne Selecionar, Importar extrato e Exportar em um menu de ações, mostra
+  a quantidade de lançamentos e deixa a criação para o botão Novo da navegação inferior.
 - Ações de inativar, excluir e remover de contas, cartões, orçamentos, pessoas, anotações e
   categorias ficam em um menu de mais ações; editar e adicionar subcategoria de categorias também.
 - Filtros de status de contas, cartões, pessoas, anotações e metas usam o mesmo controle
@@ -59,6 +72,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- Botão Importar extrato aparecia duplicado na lista de lançamentos no celular.
 - Barra fixa de navegação por mês deixava o conteúdo aparecer por trás do texto ao rolar.
 - Textos de destaque e de aviso no tema claro passam a atender o contraste mínimo de leitura.
 

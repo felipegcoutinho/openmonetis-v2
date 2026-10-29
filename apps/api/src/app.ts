@@ -429,6 +429,14 @@ app.use("/transactions", privateCache);
 app.use("/transactions/*", privateCache);
 app.use("/transactions", requireAuth);
 app.use("/transactions/*", requireAuth);
+app.use(
+  "/transactions/bulk/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 30,
+    key: (context) => `transactions-bulk:${context.get("userId")}`,
+  }),
+);
 app.use("/dashboard", privateCache);
 app.use("/dashboard/*", privateCache);
 app.use("/dashboard", requireAuth);

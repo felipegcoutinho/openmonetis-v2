@@ -140,7 +140,16 @@ export function TransactionRow({
           checked={selected}
           className={cn(!selectable && "opacity-40!")}
           disabled={!selectable}
-          onCheckedChange={onSelectionChange}
+          // Shift extends the row range; keep the browser from extending a text selection too.
+          onMouseDown={(event) => {
+            if (event.shiftKey) event.preventDefault();
+          }}
+          onCheckedChange={(checked, details) =>
+            onSelectionChange(
+              checked,
+              details.event instanceof MouseEvent && details.event.shiftKey,
+            )
+          }
         />
       </TableCell>
       <TransactionRowDescription
