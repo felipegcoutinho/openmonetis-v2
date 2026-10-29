@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { Archive, CalendarDays, FileText, Info, Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -15,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatPeriod } from "@/features/transactions/transactions.presentation";
@@ -151,7 +153,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             </p>
             <span
               className={cn(
-                "rounded-full bg-muted px-2 py-0.5 font-medium text-[10px]",
+                "rounded-full bg-muted px-2 py-0.5 font-medium text-2xs",
                 card.invoiceSummary.status === "paid" && "bg-success/10 text-success",
                 card.invoiceSummary.status === "overdue" && "bg-destructive/10 text-destructive",
               )}
@@ -208,27 +210,20 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>
-        {onArchive ? (
-          <button
-            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-muted-foreground text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-            disabled={pending}
-            onClick={() => setArchiveOpen(true)}
-            type="button"
-          >
-            <Archive aria-hidden="true" className="size-3.5" />
-            Inativar
-          </button>
-        ) : null}
-        {onDelete ? (
-          <button
-            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-            disabled={pending}
-            onClick={() => setDeleteOpen(true)}
-            type="button"
-          >
-            <Trash2 aria-hidden="true" className="size-3.5" />
-            Excluir
-          </button>
+        {onArchive || onDelete ? (
+          <CardActionsMenu disabled={pending} label={`Mais ações para ${card.name}`}>
+            {onArchive ? (
+              <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
+                <Archive aria-hidden="true" /> Inativar cartão
+              </DropdownMenuItem>
+            ) : null}
+            {onArchive && onDelete ? <DropdownMenuSeparator /> : null}
+            {onDelete ? (
+              <DropdownMenuItem onClick={() => setDeleteOpen(true)} variant="destructive">
+                <Trash2 aria-hidden="true" /> Excluir cartão
+              </DropdownMenuItem>
+            ) : null}
+          </CardActionsMenu>
         ) : null}
       </CardFooter>
 

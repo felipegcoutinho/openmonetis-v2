@@ -9,8 +9,10 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
@@ -226,15 +228,11 @@ export function NoteCard({
           )}
           {note.isArchived ? "Restaurar" : "Arquivar"}
         </button>
-        <button
-          className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          disabled={pendingAction}
-          onClick={() => onRemove(note)}
-          type="button"
-        >
-          <Trash2 aria-hidden="true" className="size-3.5" />
-          Excluir
-        </button>
+        <CardActionsMenu disabled={pendingAction} label={`Mais ações para ${note.title}`}>
+          <DropdownMenuItem onClick={() => onRemove(note)} variant="destructive">
+            <Trash2 aria-hidden="true" /> Excluir anotação
+          </DropdownMenuItem>
+        </CardActionsMenu>
       </CardFooter>
     </Card>
   );

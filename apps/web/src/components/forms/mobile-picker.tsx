@@ -53,10 +53,10 @@ export function MobilePickerContent({
 
   return (
     <MobileSheetContent aria-describedby={undefined}>
-      <SheetHeader className="border-b pr-16">
+      <SheetHeader className="pr-16">
         <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
-      <div className="mobile-picker-body min-h-0 overflow-y-auto px-4 pb-4">{children}</div>
+      <div className="mobile-picker-body min-h-0 overflow-y-auto p-4">{children}</div>
     </MobileSheetContent>
   );
 }

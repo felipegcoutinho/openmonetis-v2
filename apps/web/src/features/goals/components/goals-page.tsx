@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import {
   useCreateGoalMutation,
@@ -148,21 +149,21 @@ export function GoalsPage() {
                   </Card>
                 </div>
               ) : null}
-              <fieldset className="flex flex-wrap gap-2 border-0 p-0">
-                <legend className="sr-only">Filtrar metas</legend>
-                {filters.map((item) => (
-                  <Button
-                    aria-pressed={filter === item.value}
-                    key={item.value}
-                    onClick={() => setFilter(item.value)}
-                    size="sm"
-                    type="button"
-                    variant={filter === item.value ? "default" : "outline"}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </fieldset>
+              <Tabs
+                onValueChange={(value) => {
+                  const next = filters.find((item) => item.value === value);
+                  if (next) setFilter(next.value);
+                }}
+                value={filter}
+              >
+                <TabsList aria-label="Filtrar metas" className="max-w-full overflow-x-auto">
+                  {filters.map((item) => (
+                    <TabsTrigger key={item.value} value={item.value}>
+                      {item.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
               {filtered.length > 0 ? (
                 <section
                   aria-label="Lista de metas"

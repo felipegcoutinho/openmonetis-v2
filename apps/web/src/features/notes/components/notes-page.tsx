@@ -173,7 +173,11 @@ export function NotesPage() {
                 Nova anotação
               </Button>
             }
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Organização" },
+              { label: "Anotações" },
+            ]}
             description="Notas, listas e tarefas com lembretes para acompanhar o que você precisa fazer."
             eyebrow="Organização"
             icon={<NotebookPen aria-hidden="true" className="size-5" />}
@@ -188,7 +192,7 @@ export function NotesPage() {
             value={status}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:border-border lg:border-b">
-              <TabsList className="lg:border-b-0" variant="line">
+              <TabsList aria-label="Filtrar por status">
                 <TabsTrigger value="active">Ativas</TabsTrigger>
                 <TabsTrigger value="archived">Arquivadas</TabsTrigger>
               </TabsList>

@@ -64,7 +64,11 @@ export function CategoriesPage() {
                 Nova categoria
               </Button>
             }
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Organização" },
+              { label: "Categorias" },
+            ]}
             description="Organize receitas e despesas em categorias e subcategorias."
             eyebrow="Organização"
             icon={<Tags aria-hidden="true" className="size-5" />}

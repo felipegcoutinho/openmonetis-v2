@@ -85,7 +85,7 @@ export function NotificationRow({
         </button>
       </div>
       <div className="flex items-center justify-between border-t px-3 py-1.5">
-        <span className="text-muted-foreground text-[11px]">
+        <span className="text-muted-foreground text-2xs">
           {notification.isRead ? "Vista" : "Nova"}
         </span>
         <div className="flex items-center gap-1">

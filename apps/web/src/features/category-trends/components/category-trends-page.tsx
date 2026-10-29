@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useExportCategoryTrendsMutation } from "../category-trends.mutations";
 import { categoryTrendsQueryOptions } from "../category-trends.queries";
 import { CategoryTrendsChart } from "./category-trends-chart";
@@ -24,6 +25,8 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
   const reportQuery = useQuery(categoryTrendsQueryOptions(filters));
   const exportMutation = useExportCategoryTrendsMutation();
   const report = reportQuery.data;
+  const isMobile = useIsMobile();
+  const defaultView = isMobile === true ? "chart" : "table";
 
   return (
     <ProtectedRoute>
@@ -90,7 +93,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
             report.categories.length ? (
               <div className="grid gap-6" aria-busy={reportQuery.isFetching}>
                 <CategoryTrendsSummary report={report} />
-                <Tabs className="gap-0" defaultValue="table">
+                <Tabs className="gap-0" defaultValue={defaultView} key={defaultView}>
                   <TabsList variant="line">
                     <TabsTrigger value="table">
                       <Table2 aria-hidden="true" />

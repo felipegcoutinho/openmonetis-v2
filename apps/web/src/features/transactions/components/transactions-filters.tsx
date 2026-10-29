@@ -1,10 +1,12 @@
 import { Circle, CircleCheck, CreditCard, Filter } from "lucide-react";
 import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
 import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
+  SheetBody,
   SheetClose,
   SheetDescription,
   SheetFooter,
@@ -108,15 +110,22 @@ export function TransactionsFilters({
             />
           ) : null}
         </SheetTrigger>
-        <SheetContent className="w-full gap-0 md:max-w-lg!">
-          <SheetHeader className="border-b">
-            <SheetTitle>Filtros</SheetTitle>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              Filtros
+              {activeFilterCount ? (
+                <Badge variant="secondary">
+                  {activeFilterCount} {activeFilterCount === 1 ? "ativo" : "ativos"}
+                </Badge>
+              ) : null}
+            </SheetTitle>
             <SheetDescription>
               Os filtros são aplicados automaticamente. Um intervalo de datas substitui o mês
               selecionado.
             </SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <SheetBody>
             <div className="grid content-start gap-6">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                 {!hiddenFilterSet.has("type") ? (
@@ -371,23 +380,11 @@ export function TransactionsFilters({
                 />
               </div>
             </div>
-          </div>
-          <SheetFooter className="border-t bg-popover/95">
-            <div className="flex items-center justify-between rounded-md border border-dashed px-3 py-2">
-              <span className="text-muted-foreground text-xs">
-                {activeFilterCount
-                  ? `${activeFilterCount} ${activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}`
-                  : "Nenhum filtro ativo"}
-              </span>
-              <Button
-                disabled={!activeFilterCount}
-                onClick={clearFilters}
-                size="sm"
-                variant="ghost"
-              >
-                Limpar
-              </Button>
-            </div>
+          </SheetBody>
+          <SheetFooter>
+            <Button disabled={!activeFilterCount} onClick={clearFilters} variant="outline">
+              Limpar filtros
+            </Button>
             <SheetClose render={<Button />}>Ver resultados</SheetClose>
           </SheetFooter>
         </SheetContent>

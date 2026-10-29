@@ -6,13 +6,13 @@ import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sh
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
+  SheetBody,
   SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
-import { cn } from "@/lib/utils";
 import { formatDate } from "../transactions.presentation";
 import { transactionDetailQueryOptions } from "../transactions.queries";
 import { TransactionDetailsActionDialogs } from "./transaction-details-action-dialogs";
@@ -58,11 +58,7 @@ export function TransactionDetailsSheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent
-        mobileLayout="page"
-        className="gap-0 data-[side=right]:w-full! sm:data-[side=right]:w-3/4! md:max-w-xl!"
-        showCloseButton={false}
-      >
+      <SheetContent mobileLayout="page" showCloseButton={false}>
         <Button
           data-mobile-back
           aria-label="Fechar detalhes"
@@ -74,14 +70,14 @@ export function TransactionDetailsSheet({
         >
           <X aria-hidden="true" />
         </Button>
-        <SheetHeader className="shrink-0 px-14 pt-8 pb-0 sm:border-b sm:p-4 sm:pr-14">
+        <SheetHeader className="border-b-0 px-14 pt-8 pb-0 sm:border-b sm:p-4 sm:pr-14">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
             <EstablishmentLogo
               categoryIcon={detail?.categoryIcon ?? null}
               name={detail?.name ?? "Lançamento"}
             />
             <div className="min-w-0 w-full text-center sm:flex-1 sm:text-left">
-              <SheetTitle className="break-words text-base">
+              <SheetTitle className="break-words">
                 {detail?.name ?? "Detalhes do lançamento"}
               </SheetTitle>
               <SheetDescription className="sr-only sm:not-sr-only">
@@ -91,7 +87,7 @@ export function TransactionDetailsSheet({
           </div>
         </SheetHeader>
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+        <SheetBody className="p-0">
           {!detail ? (
             <TransactionDetailsSkeleton />
           ) : (
@@ -106,30 +102,18 @@ export function TransactionDetailsSheet({
               setRecurringAction={setRecurringAction}
             />
           )}
-        </div>
+        </SheetBody>
 
-        <SheetFooter className="shrink-0 border-t pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between">
-          <div
-            className={cn(
-              "grid w-full gap-2 sm:ml-auto sm:flex sm:w-auto",
-              canEdit ? "grid-cols-2" : "grid-cols-1",
-            )}
-          >
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => onOpenChange(false)}
-              type="button"
-              variant="outline"
-            >
-              Fechar
+        <SheetFooter>
+          <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+            Fechar
+          </Button>
+          {canEdit ? (
+            <Button onClick={() => edit(detail)} type="button">
+              <Pencil aria-hidden="true" />
+              Editar lançamento
             </Button>
-            {canEdit ? (
-              <Button className="w-full sm:w-auto" onClick={() => edit(detail)} type="button">
-                <Pencil aria-hidden="true" />
-                Editar lançamento
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
         </SheetFooter>
         <TransactionDetailsActionDialogs
           detail={detail}

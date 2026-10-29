@@ -106,6 +106,11 @@ export function PersonSettlementsCard({
               />
             </div>
           ) : null}
+          {snapshot && !snapshot.settlements.length ? (
+            <p className="rounded-md border border-dashed px-3 py-4 text-center text-muted-foreground text-sm">
+              Nenhum repasse de {person.name} neste período. Registre aqui os valores que receber.
+            </p>
+          ) : null}
           {snapshot?.settlements.length ? (
             <div className="grid gap-2">
               <p className="font-medium text-sm">Repasses no período</p>

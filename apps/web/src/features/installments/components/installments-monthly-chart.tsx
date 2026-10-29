@@ -1,6 +1,6 @@
 import type { InstallmentsReportOutput } from "@openmonetis/validators/installments";
 import { ChartColumn, Info } from "lucide-react";
-import { Bar, CartesianGrid, Cell, ComposedChart, Line, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
@@ -51,7 +51,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-heading font-medium text-lg">Parcelas e compras em andamento</h2>
+            <h2 className="font-heading font-medium text-lg">Parcelas por mês</h2>
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -65,8 +65,8 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
                 <Info aria-hidden="true" className="size-4" />
               </TooltipTrigger>
               <TooltipContent className="max-w-72">
-                Barras: soma das parcelas pagas e pendentes. Linha: compras com parcela registrada
-                no mês.
+                Barras: soma das parcelas pagas e pendentes do mês. Passe o mouse ou toque em uma
+                barra para ver quantas compras tinham parcela no mês.
               </TooltipContent>
             </Tooltip>
           </div>
@@ -86,7 +86,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
             )}
             config={chartConfig}
           >
-            <ComposedChart
+            <BarChart
               accessibilityLayer
               data={report.monthlyHistory}
               margin={{ left: 0, right: 0, top: 14 }}
@@ -101,42 +101,38 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
                 tickMargin={8}
               />
               <YAxis
-                yAxisId="amount"
                 axisLine={false}
                 tickFormatter={(value) => formatAxisAmount(Number(value))}
                 tickLine={false}
                 width={68}
               />
-              <YAxis
-                yAxisId="count"
-                allowDecimals={false}
-                axisLine={false}
-                domain={[0, "dataMax + 1"]}
-                orientation="right"
-                tickLine={false}
-                width={28}
-              />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
                     labelFormatter={(value) => formatInstallmentPeriod(String(value))}
-                    formatter={(value, name) => (
-                      <div className="flex min-w-36 items-center justify-between gap-4">
-                        <span className="text-muted-foreground">
-                          {chartConfig[String(name) as keyof typeof chartConfig]?.label}
-                        </span>
-                        {name === "activePurchaseCount" ? (
-                          <span className="font-medium tabular-nums">{Number(value)}</span>
-                        ) : (
+                    formatter={(value, name, item) => (
+                      <div className="grid min-w-40 gap-1">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {chartConfig[String(name) as keyof typeof chartConfig]?.label}
+                          </span>
                           <MoneyValue amount={Number(value)} className="font-medium" />
-                        )}
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {chartConfig.activePurchaseCount.label}
+                          </span>
+                          <span className="font-medium tabular-nums">
+                            {Number(item.payload?.activePurchaseCount ?? 0)}
+                          </span>
+                        </div>
                       </div>
                     )}
                   />
                 }
                 cursor={{ fill: "var(--muted)", opacity: 0.4 }}
               />
-              <Bar dataKey="totalAmount" maxBarSize={46} radius={[4, 4, 0, 0]} yAxisId="amount">
+              <Bar dataKey="totalAmount" maxBarSize={46} radius={[4, 4, 0, 0]}>
                 {report.monthlyHistory.map((item) => (
                   <Cell
                     fill="var(--brand)"
@@ -145,16 +141,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
                   />
                 ))}
               </Bar>
-              <Line
-                activeDot={{ r: 4 }}
-                dataKey="activePurchaseCount"
-                dot={{ r: 2.5 }}
-                stroke="var(--color-activePurchaseCount)"
-                strokeWidth={2}
-                type="linear"
-                yAxisId="count"
-              />
-            </ComposedChart>
+            </BarChart>
           </ChartContainer>
         ) : (
           <div className="grid h-48 place-items-center text-center text-muted-foreground text-sm">
@@ -172,10 +159,6 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
             <span className="flex items-center gap-1.5">
               <ChartLegendMarker className="text-brand" />
               Valor das parcelas
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-0.5 w-4 bg-foreground" />
-              Compras em andamento
             </span>
           </div>
         ) : null}

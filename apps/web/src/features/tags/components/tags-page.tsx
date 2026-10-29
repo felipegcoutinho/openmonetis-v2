@@ -62,7 +62,11 @@ export function TagsPage({
             title="Etiquetas"
             eyebrow="Organização"
             icon={<Tag className="size-5" aria-hidden="true" />}
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Organização" },
+              { label: "Etiquetas" },
+            ]}
             description="Cruze seus lançamentos por assuntos, projetos ou atividades."
             actions={
               <Button
@@ -76,22 +80,26 @@ export function TagsPage({
               </Button>
             }
           />
-          <MonthNavigation onPeriodChange={onPeriodChange} period={period} />
-          <div className="flex flex-wrap gap-3">
-            <Input
-              className="min-w-0 flex-1"
-              aria-label="Buscar etiquetas"
-              placeholder="Buscar etiqueta"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-          <p className="text-muted-foreground text-sm">
-            Resultado é a diferença entre receitas e despesas do mês, incluindo pendências.
-            Transferências mostram o valor movimentado entre contas, contado uma vez por
-            transferência, sem afetar o resultado. Um lançamento pode aparecer em mais de uma
-            etiqueta; os totais das etiquetas não devem ser somados.
-          </p>
+          {tags.length ? (
+            <>
+              <MonthNavigation onPeriodChange={onPeriodChange} period={period} />
+              <div className="flex flex-wrap gap-3">
+                <Input
+                  className="min-w-0 flex-1"
+                  aria-label="Buscar etiquetas"
+                  placeholder="Buscar etiqueta"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Resultado é a diferença entre receitas e despesas do mês, incluindo pendências.
+                Transferências mostram o valor movimentado entre contas, contado uma vez por
+                transferência, sem afetar o resultado. Um lançamento pode aparecer em mais de uma
+                etiqueta; os totais das etiquetas não devem ser somados.
+              </p>
+            </>
+          ) : null}
           {query.isLoading ? <p role="status">Carregando etiquetas...</p> : null}
           {query.isError ? (
             <p role="alert" className="text-destructive">

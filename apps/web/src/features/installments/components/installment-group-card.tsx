@@ -1,6 +1,6 @@
 import type { InstallmentGroupOutput } from "@openmonetis/validators/installments";
 import { Image } from "@unpic/react";
-import { AlertTriangle, ChevronRight, Info } from "lucide-react";
+import { AlertTriangle, ChevronRight, MessageSquareMore } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Badge } from "@/components/ui/badge";
@@ -72,10 +72,10 @@ export function InstallmentGroupCard({
               {group.note ? (
                 <Tooltip>
                   <TooltipTrigger
-                    aria-label={`Anotação de ${group.name}`}
+                    aria-label="Ver observação"
                     render={<button className="text-muted-foreground" type="button" />}
                   >
-                    <Info aria-hidden="true" className="size-3.5" />
+                    <MessageSquareMore aria-hidden="true" className="size-3.5" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs whitespace-pre-wrap wrap-break-word">
                     {group.note}

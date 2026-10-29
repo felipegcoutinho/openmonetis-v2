@@ -5,11 +5,11 @@ import { Bell } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
@@ -104,13 +104,13 @@ export function NotificationPanel({
         <TooltipContent>Central de atenção</TooltipContent>
       </Tooltip>
 
-      <SheetContent className="w-[min(30rem,100vw)]! gap-0 sm:max-w-[30rem]!" side="right">
-        <SheetHeader className="border-b pr-14">
-          <div className="flex items-center gap-2">
-            <span className="grid size-9 place-items-center rounded-full bg-brand/10 text-brand-strong">
+      <SheetContent mobileLayout="page">
+        <SheetHeader>
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-strong">
               <Bell aria-hidden="true" className="size-4" />
             </span>
-            <div>
+            <div className="grid min-w-0 gap-0.5">
               <SheetTitle>Central de atenção</SheetTitle>
               <SheetDescription>O que merece sua atenção agora.</SheetDescription>
             </div>

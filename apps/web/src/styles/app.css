@@ -11,6 +11,7 @@
   --font-sans: var(--font-app-sans);
   --font-mono: var(--font-app-mono);
   --font-heading: var(--font-app-heading);
+  --text-2xs: 0.75rem;
   --text-xs: var(--app-text-xs);
   --text-sm: var(--app-text-sm);
   --color-background: var(--background);
@@ -71,7 +72,7 @@
   --destructive: color-mix(in srgb, var(--palette-red) 90%, var(--palette-charcoal));
   --info: color-mix(in srgb, var(--palette-blue) 70%, var(--palette-charcoal));
   --success: var(--palette-green);
-  --warning: color-mix(in srgb, var(--palette-coral) 70%, var(--palette-charcoal));
+  --warning: color-mix(in srgb, var(--palette-coral) 42%, var(--palette-charcoal));
   --brand: var(--palette-coral);
   --brand-strong: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-charcoal));
   --brand-foreground: var(--palette-charcoal);

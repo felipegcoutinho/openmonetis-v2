@@ -15,12 +15,12 @@ export function MobileTransactionButton() {
       <Button
         aria-label="Novo lançamento"
         aria-haspopup="dialog"
-        className="h-auto min-h-14 min-w-0 flex-col gap-1 rounded-md px-1 text-[0.68rem]"
+        className="h-auto min-h-14 min-w-0 flex-col gap-1 rounded-md px-1 text-2xs"
         onClick={() => setOpen(true)}
         type="button"
         variant="ghost"
       >
-        <Plus aria-hidden="true" className="size-5 text-primary" />
+        <Plus aria-hidden="true" className="size-5 text-brand-strong" />
         <span>Novo</span>
       </Button>
       {open ? (

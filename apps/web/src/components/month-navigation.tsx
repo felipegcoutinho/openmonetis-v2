@@ -104,7 +104,7 @@ export function MonthNavigation({
       data-mobile-month-navigation
       aria-label="Navegação por mês"
       className={cn(
-        "relative flex w-full items-center justify-center rounded-lg border bg-card/80 px-3 py-3 shadow-xs backdrop-blur-sm md:justify-between md:gap-2",
+        "relative flex w-full items-center justify-center rounded-lg border bg-card px-3 py-3 md:justify-between md:gap-2",
         className,
       )}
     >

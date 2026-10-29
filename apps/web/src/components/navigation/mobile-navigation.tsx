@@ -33,8 +33,8 @@ export function MobileNavigation({
     >
       <NavLink
         className={cn(
-          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
-          location.pathname === "/dashboard" && "text-primary",
+          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-2xs",
+          location.pathname === "/dashboard" && "text-brand-strong",
         )}
         href="/dashboard"
         preservePeriod
@@ -44,8 +44,8 @@ export function MobileNavigation({
       </NavLink>
       <NavLink
         className={cn(
-          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
-          isPathActive(location.pathname, "/transactions") && "text-primary",
+          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-2xs",
+          isPathActive(location.pathname, "/transactions") && "text-brand-strong",
         )}
         href="/transactions"
         preservePeriod
@@ -58,8 +58,8 @@ export function MobileNavigation({
       <button
         aria-label="Abrir menu"
         className={cn(
-          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem]",
-          mobileNavigationOpen && "text-primary",
+          "flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-2xs",
+          mobileNavigationOpen && "text-brand-strong",
         )}
         onClick={() => setMobileNavigationOpen(true)}
         type="button"

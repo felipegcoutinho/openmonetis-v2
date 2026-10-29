@@ -1,13 +1,13 @@
 import type { RecurringTransactionsSearch } from "@openmonetis/validators/recurring-transactions";
 import { useQuery } from "@tanstack/react-query";
-import { Pause, Play, Plus, RefreshCw, Repeat2, SearchX, Square } from "lucide-react";
+import { Plus, RefreshCw, Repeat2, SearchX } from "lucide-react";
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
 import { MonthNavigation } from "@/components/month-navigation";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
+import { SummaryStrip } from "@/components/summary-strip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -126,37 +126,22 @@ export function RecurringTransactionsReportPage({
           ) : null}
           {report && !reportQuery.isError ? (
             <div className="grid gap-6" aria-busy={reportQuery.isFetching}>
-              <FinancialSummaryHeader
-                eyebrow={`Previsão de ${formatDashboardPeriod(period, true)}`}
-                identity={
-                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
-                    <Repeat2 aria-hidden="true" className="size-6" />
-                  </span>
-                }
-                title={income ? "Receitas recorrentes" : "Despesas recorrentes"}
-                subtitle="Sua parte nas ocorrências do mês, conforme a frequência e o prazo."
-                primaryLabel={
-                  income ? "Recebimentos previstos no mês" : "Despesas previstas no mês"
-                }
-                primaryValue={<MoneyValue amount={report.summary.projectedTotal} />}
-                variant="soft"
-                metrics={[
+              <SummaryStrip
+                items={[
                   {
-                    label: "Ativas",
-                    value: report.summary.activeCount,
-                    icon: <Play aria-hidden="true" className="size-3.5" />,
+                    label: income
+                      ? `Recebimentos previstos em ${formatDashboardPeriod(period, true)}`
+                      : `Despesas previstas em ${formatDashboardPeriod(period, true)}`,
+                    value: <MoneyValue amount={report.summary.projectedTotal} />,
+                    emphasized: true,
                   },
-                  {
-                    label: "Pausadas",
-                    value: report.summary.pausedCount,
-                    icon: <Pause aria-hidden="true" className="size-3.5" />,
-                  },
-                  {
-                    label: "Encerradas",
-                    value: report.summary.endedCount,
-                    icon: <Square aria-hidden="true" className="size-3.5" />,
-                  },
+                  { label: "Ativas", value: report.summary.activeCount },
+                  { label: "Pausadas", value: report.summary.pausedCount },
+                  { label: "Encerradas", value: report.summary.endedCount },
                 ]}
+                label={
+                  income ? "Resumo das receitas recorrentes" : "Resumo das despesas recorrentes"
+                }
               />
               <Card>
                 <CardHeader>

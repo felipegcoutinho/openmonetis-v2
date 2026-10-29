@@ -105,7 +105,11 @@ export function AccountsPage() {
                 Nova conta
               </Button>
             }
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Finanças" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Finanças" },
+              { label: "Contas" },
+            ]}
             description="Organize suas contas e acompanhe como cada uma participa do saldo consolidado."
             eyebrow="Finanças"
             icon={<Landmark aria-hidden="true" className="size-5" />}
@@ -141,7 +145,7 @@ export function AccountsPage() {
 
           {!accountsQuery.isLoading && !accountsQuery.isError ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList variant="line">
+              <TabsList aria-label="Filtrar por status">
                 <TabsTrigger value="active">Ativas ({activeAccounts.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativas ({inactiveAccounts.length})</TabsTrigger>
               </TabsList>

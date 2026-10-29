@@ -80,7 +80,7 @@ export function MobileDatePicker(props: ComponentProps<typeof DatePicker>) {
         showCloseButton={false}
         className="mobile-bottom-panel max-h-[90dvh] overflow-y-auto rounded-t-2xl gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <SheetHeader className="pr-20">
+        <SheetHeader className="border-b-0 pr-20">
           <SheetTitle>Selecionar data</SheetTitle>
           <SheetDescription>Escolha um dia no calendário ou use um atalho.</SheetDescription>
         </SheetHeader>

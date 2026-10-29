@@ -2,6 +2,7 @@ import type { BudgetOutput } from "@openmonetis/validators/budgets";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { cn } from "@/lib/utils";
@@ -99,7 +101,7 @@ export function BudgetCard({
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
+      <CardFooter className="flex flex-wrap items-center gap-3 border-t pt-3">
         <button
           className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
           onClick={() => onEdit(budget)}
@@ -118,15 +120,11 @@ export function BudgetCard({
             Lançamentos
           </Link>
         ) : null}
-        <button
-          className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-          disabled={pending}
-          onClick={() => setRemoveOpen(true)}
-          type="button"
-        >
-          <Trash2 aria-hidden="true" className="size-3.5" />
-          Remover
-        </button>
+        <CardActionsMenu disabled={pending} label={`Mais ações para ${budget.categoryName}`}>
+          <DropdownMenuItem onClick={() => setRemoveOpen(true)} variant="destructive">
+            <Trash2 aria-hidden="true" /> Remover orçamento
+          </DropdownMenuItem>
+        </CardActionsMenu>
       </CardFooter>
 
       <AlertDialog onOpenChange={setRemoveOpen} open={removeOpen}>

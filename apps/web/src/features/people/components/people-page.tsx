@@ -75,7 +75,11 @@ export function PeoplePage() {
                 Nova pessoa
               </Button>
             }
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Organização" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Organização" },
+              { label: "Pessoas" },
+            ]}
             description="Cadastre pessoas para organizar e dividir valores. Isso não cria um acesso nem ativa compartilhamento. Gerencie quem participa dos seus lançamentos e divisões de despesas."
             eyebrow="Organização"
             icon={<Users aria-hidden="true" className="size-5" />}
@@ -87,7 +91,7 @@ export function PeoplePage() {
           ) : null}
           {query.data ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList variant="line">
+              <TabsList aria-label="Filtrar por status">
                 <TabsTrigger value="active">Ativas ({activePeople.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativas ({inactivePeople.length})</TabsTrigger>
               </TabsList>

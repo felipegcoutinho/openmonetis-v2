@@ -91,7 +91,11 @@ export function CardsPage() {
                 Novo cartão
               </Button>
             }
-            breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Finanças" }]}
+            breadcrumbs={[
+              { label: "Visão geral", href: "/dashboard" },
+              { label: "Finanças" },
+              { label: "Cartões" },
+            ]}
             description="Acompanhe limites, datas de fechamento e vencimentos dos seus cartões."
             eyebrow="Finanças"
             icon={<CreditCard aria-hidden="true" className="size-5" />}
@@ -105,7 +109,7 @@ export function CardsPage() {
           ) : null}
           {!loading && !failed ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList variant="line">
+              <TabsList aria-label="Filtrar por status">
                 <TabsTrigger value="active">Ativos ({activeCards.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativos ({inactiveCards.length})</TabsTrigger>
               </TabsList>

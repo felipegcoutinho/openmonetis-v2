@@ -33,7 +33,7 @@ export function ReleaseMenuItems({ enabled }: { enabled: boolean }) {
             <span className="sr-only">Há novidades</span>
           </>
         ) : null}
-        <Badge className="font-mono text-[0.65rem]" variant="outline">
+        <Badge className="font-mono text-2xs" variant="outline">
           v{releases.currentVersion}
         </Badge>
       </DropdownMenuItem>

@@ -2,8 +2,10 @@ import type { PersonOutput } from "@openmonetis/validators/people";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { MessageSquare, Pencil, Trash2, UserRound } from "lucide-react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -99,14 +101,13 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
           Editar
         </button>
         {onRemove ? (
-          <button
-            className="ml-auto inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-destructive text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-            onClick={() => onRemove(person)}
-            type="button"
-          >
-            <Trash2 aria-hidden="true" className="size-3.5" />
-            Remover
-          </button>
+          <CardActionsMenu label={`Mais ações para ${person.name}`}>
+            {onRemove ? (
+              <DropdownMenuItem onClick={() => onRemove(person)} variant="destructive">
+                <Trash2 aria-hidden="true" /> Remover pessoa
+              </DropdownMenuItem>
+            ) : null}
+          </CardActionsMenu>
         ) : null}
       </CardFooter>
     </Card>

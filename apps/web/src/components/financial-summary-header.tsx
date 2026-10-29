@@ -48,13 +48,13 @@ export function FinancialSummaryHeader({
     <Card
       data-mobile-financial-summary
       className={cn(
-        "overflow-hidden border-current/20 py-0 transition-colors duration-300",
+        "relative overflow-hidden py-0 transition-colors duration-300",
         variant === "solid"
-          ? "bg-primary text-primary-foreground"
+          ? "border-current/20 bg-primary text-primary-foreground"
           : "border-brand/25 bg-brand/15 text-foreground",
       )}
       style={
-        logoColors
+        variant === "solid" && logoColors
           ? ({
               backgroundColor: logoColors.backgroundColor,
               color: logoColors.foregroundColor,
@@ -62,7 +62,13 @@ export function FinancialSummaryHeader({
           : undefined
       }
     >
-      <CardContent className="p-0">
+      {variant === "solid" ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-linear-to-br from-white/15 via-transparent to-black/10"
+        />
+      ) : null}
+      <CardContent className="relative p-0">
         <div className="p-6 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-center gap-4">

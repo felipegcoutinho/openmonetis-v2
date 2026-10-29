@@ -24,18 +24,22 @@ export function ReleaseNotice({ enabled }: { enabled: boolean }) {
 
   return (
     <aside className="border-brand/20 border-b bg-brand/10" aria-label="Novidades da versão">
-      <div className="project-container flex flex-col gap-3 px-[clamp(1rem,3vw,2.5rem)] py-3 sm:flex-row sm:items-center">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-strong">
-          <Megaphone aria-hidden="true" className="size-4" />
+      <div className="project-container flex items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] py-2">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-strong">
+          <Megaphone aria-hidden="true" className="size-3.5" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm">Novidades da versão {currentRelease.version}</p>
-          <p className="line-clamp-2 text-muted-foreground text-sm">{currentRelease.summary}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <p className="min-w-0 flex-1 truncate text-sm">
+          <span className="font-medium">Novidades da versão {currentRelease.version}</span>
+          <span className="hidden text-muted-foreground md:inline">
+            {" "}
+            · {currentRelease.summary}
+          </span>
+        </p>
+        <div className="flex shrink-0 items-center gap-1">
           <Button asChild size="sm" variant="outline">
-            <Link onClick={dismiss} to="/changelog">
-              Ver novidades
+            <Link aria-label="Ver novidades" onClick={dismiss} to="/changelog">
+              <span className="sm:hidden">Ver</span>
+              <span className="hidden sm:inline">Ver novidades</span>
             </Link>
           </Button>
           <Button

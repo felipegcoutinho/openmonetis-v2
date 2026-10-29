@@ -2,6 +2,7 @@ import type { CategoryOutput, CreateCategoryInput } from "@openmonetis/validator
 import { Link } from "@tanstack/react-router";
 import { LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getCategoryGroups, getCategoryLabel } from "../categories.presentation";
 import { CategoryIcon } from "../category-icons";
@@ -87,26 +89,14 @@ export function CategoriesTable({
             </div>
             <CategoryActions
               category={parent}
+              onAddSubcategory={() => {
+                setExpandedIds((ids) => [...new Set([...ids, parent.id])]);
+                setAddingParentId(parent.id);
+              }}
               onEdit={onEdit}
               onRemove={onRemove}
               pending={pendingId === parent.id}
             />
-            {!parent.isSystem ? (
-              <Button
-                className="min-h-11 basis-full sm:min-h-8 sm:basis-auto"
-                variant="outline"
-                size="sm"
-                aria-label={`Adicionar subcategoria em ${parent.name}`}
-                aria-expanded={addingParentId === parent.id}
-                onClick={() => {
-                  setExpandedIds((ids) => [...new Set([...ids, parent.id])]);
-                  setAddingParentId(addingParentId === parent.id ? null : parent.id);
-                }}
-              >
-                <Plus aria-hidden="true" className="size-4" />
-                Subcategoria
-              </Button>
-            ) : null}
           </div>
           <AccordionContent className="pb-0 [&_a]:no-underline">
             {children.length ? (
@@ -156,11 +146,13 @@ export function CategoriesTable({
 
 function CategoryActions({
   category,
+  onAddSubcategory,
   onEdit,
   onRemove,
   pending,
 }: {
   category: CategoryOutput;
+  onAddSubcategory?: () => void;
   onEdit: (category: CategoryOutput) => void;
   onRemove: (category: CategoryOutput) => Promise<void>;
   pending: boolean;
@@ -179,41 +171,67 @@ function CategoryActions({
         </TooltipContent>
       </Tooltip>
     );
-  return (
-    <div className="flex shrink-0 items-center gap-1">
-      <Button
-        aria-label={`Editar ${getCategoryLabel(category)}`}
-        onClick={() => onEdit(category)}
-        size="icon"
-        variant="ghost"
-      >
-        <Pencil aria-hidden="true" className="size-4" />
-      </Button>
-      <RemoveAction category={category} onRemove={onRemove} pending={pending} />
-    </div>
-  );
+  return <EditableCategoryActions {...{ category, onAddSubcategory, onEdit, onRemove, pending }} />;
 }
-function RemoveAction({
+
+function EditableCategoryActions({
   category,
+  onAddSubcategory,
+  onEdit,
   onRemove,
   pending,
 }: {
   category: CategoryOutput;
+  onAddSubcategory?: () => void;
+  onEdit: (category: CategoryOutput) => void;
   onRemove: (category: CategoryOutput) => Promise<void>;
   pending: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const label = getCategoryLabel(category);
+
   return (
-    <AlertDialog onOpenChange={setOpen} open={open}>
-      <Button
-        aria-label={`Remover ${category.name}`}
-        disabled={pending}
-        onClick={() => setOpen(true)}
-        size="icon"
-        variant="ghost"
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
+    <>
+      <CardActionsMenu className="ml-0" disabled={pending} label={`Mais ações para ${label}`}>
+        <DropdownMenuItem onClick={() => onEdit(category)}>
+          <Pencil aria-hidden="true" /> Editar
+        </DropdownMenuItem>
+        {onAddSubcategory ? (
+          <DropdownMenuItem onClick={onAddSubcategory}>
+            <Plus aria-hidden="true" /> Adicionar subcategoria
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setRemoveOpen(true)} variant="destructive">
+          <Trash2 aria-hidden="true" /> Remover
+        </DropdownMenuItem>
+      </CardActionsMenu>
+      <RemoveCategoryDialog
+        category={category}
+        onOpenChange={setRemoveOpen}
+        onRemove={onRemove}
+        open={removeOpen}
+        pending={pending}
+      />
+    </>
+  );
+}
+
+function RemoveCategoryDialog({
+  category,
+  onOpenChange,
+  onRemove,
+  open,
+  pending,
+}: {
+  category: CategoryOutput;
+  onOpenChange: (open: boolean) => void;
+  onRemove: (category: CategoryOutput) => Promise<void>;
+  open: boolean;
+  pending: boolean;
+}) {
+  return (
+    <AlertDialog onOpenChange={onOpenChange} open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -231,7 +249,7 @@ function RemoveAction({
           <AlertDialogAction
             disabled={pending}
             onClick={() => {
-              void onRemove(category).then(() => setOpen(false));
+              void onRemove(category).then(() => onOpenChange(false));
             }}
             variant="destructive"
           >

@@ -6,7 +6,7 @@ import {
 } from "@/features/installments/installments.presentation";
 
 export const Route = createFileRoute("/reports/installments")({
-  head: () => ({ meta: [{ title: "Parcelamentos · OpenMonetis" }] }),
+  head: () => ({ meta: [{ title: "Despesas parceladas · OpenMonetis" }] }),
   component: InstallmentsRoute,
   validateSearch: validateInstallmentsSearch,
 });

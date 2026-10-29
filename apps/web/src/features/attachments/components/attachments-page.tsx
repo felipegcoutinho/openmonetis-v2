@@ -153,12 +153,14 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
                     ) : null}
                   </p>
                 </div>
-                <AttachmentLibraryFilters
-                  counts={data.counts}
-                  onSearchChange={onSearchChange}
-                  people={data.people}
-                  search={search}
-                />
+                {hasFilters || data.total > 0 ? (
+                  <AttachmentLibraryFilters
+                    counts={data.counts}
+                    onSearchChange={onSearchChange}
+                    people={data.people}
+                    search={search}
+                  />
+                ) : null}
               </div>
 
               {data.items.length ? (

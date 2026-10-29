@@ -194,7 +194,7 @@ export function InboxRulesDialog({
                       <div className="flex items-center gap-2">
                         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                           <p className="wrap-break-word font-medium text-sm">{rule.name}</p>
-                          <span className="text-muted-foreground text-[11px]">
+                          <span className="text-muted-foreground text-2xs">
                             Prioridade {rule.priority}
                           </span>
                         </div>
@@ -232,7 +232,7 @@ export function InboxRulesDialog({
                             <TooltipContent>Excluir</TooltipContent>
                           </Tooltip>
                           <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
-                          <span className="text-muted-foreground text-[11px]">
+                          <span className="text-muted-foreground text-2xs">
                             {rule.isActive ? "Ativa" : "Pausada"}
                           </span>
                           <Switch
@@ -268,7 +268,7 @@ export function InboxRulesDialog({
                       ) : (
                         <div className="grid gap-1 rounded-md bg-muted/40 px-2.5 py-2 text-xs leading-5">
                           <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wider">
                               Se
                             </span>
                             <p className="min-w-0 wrap-break-word">
@@ -279,7 +279,7 @@ export function InboxRulesDialog({
                             </p>
                           </div>
                           <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wider">
                               Então
                             </span>
                             <p className="min-w-0 wrap-break-word">

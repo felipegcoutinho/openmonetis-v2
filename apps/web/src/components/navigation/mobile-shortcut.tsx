@@ -129,8 +129,8 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
         <NavLink
           aria-label={`Abrir ${label}. Mantenha pressionado para alterar o atalho`}
           className={cn(
-            "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-[0.68rem] select-none focus-visible:outline-2 focus-visible:outline-ring",
-            isPathActive(location.pathname, option.href) && "text-primary",
+            "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-2xs select-none focus-visible:outline-2 focus-visible:outline-ring",
+            isPathActive(location.pathname, option.href) && "text-brand-strong",
           )}
           href={option.href}
           onClick={(event) => {
@@ -168,16 +168,16 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
 
       <Sheet onOpenChange={setOpen} open={open}>
         <SheetContent
-          className="max-h-[min(78svh,36rem)] gap-0 rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
+          className="max-h-[min(78svh,36rem)] rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
           side="bottom"
         >
-          <SheetHeader className="pr-14">
+          <SheetHeader>
             <SheetTitle>Escolher atalho</SheetTitle>
             <SheetDescription>
               Escolha o destino deste botão. Você também pode alterá-lo em Preferências.
             </SheetDescription>
           </SheetHeader>
-          <div className="min-h-0 overflow-y-auto px-2 pb-2">
+          <div className="min-h-0 overflow-y-auto p-2">
             {mobileShortcutDestinations.map((choice) => {
               const item = shortcutOptions[choice];
               return (

@@ -95,7 +95,7 @@ export function MobileRecordSelect({
         showCloseButton={false}
         className="mobile-bottom-panel mobile-record-panel h-[min(80dvh,36rem)] gap-3 rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <SheetHeader className="pr-20 pb-0">
+        <SheetHeader className="border-b-0 pr-20 pb-0">
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>Busque e toque para selecionar.</SheetDescription>
         </SheetHeader>

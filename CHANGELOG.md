@@ -7,6 +7,41 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- Aviso de novidades da versão ocupa uma única linha, com o resumo visível apenas em telas
+  largas.
+- Breadcrumbs terminam sempre na página atual e seguem as seções do menu; a aba do relatório de
+  parcelamentos passa a se chamar Despesas parceladas.
+- Ações de inativar, excluir e remover de contas, cartões, orçamentos, pessoas, anotações e
+  categorias ficam em um menu de mais ações; editar e adicionar subcategoria de categorias também.
+- Filtros de status de contas, cartões, pessoas, anotações e metas usam o mesmo controle
+  segmentado.
+- Textos auxiliares, selos e rótulos da navegação inferior têm no mínimo 12 px.
+- Painéis laterais (filtros e detalhes de lançamentos, personalização e listas da Visão geral,
+  Central de atenção e navegação) têm a mesma largura e a mesma estrutura de cabeçalho, conteúdo
+  rolável e rodapé fixo com ações lado a lado; deslizam a partir da borda e respeitam a preferência
+  por menos movimento. No celular, Central de atenção e Personalizar dashboard abrem em tela cheia,
+  e os filtros mostram a quantidade ativa no título com o botão Limpar filtros no rodapé.
+- Resumo dos detalhes do lançamento mostra tipo e condição acima do valor, com a parcela atual ou
+  a frequência da recorrência, e a situação com a data de baixa ou de vencimento logo abaixo.
+- Etiquetas sem cadastro e anexos sem arquivos no mês deixam de mostrar busca e filtros, e os
+  acertos de uma pessoa mostram uma mensagem quando não há repasses no período.
+- Extrato da conta, fatura do cartão e demais resumos financeiros usam fundo neutro, com a cor
+  do banco ou do cartão apenas em uma faixa lateral; o status da fatura aparece em cor de alerta
+  quando vencida.
+- Caixa de entrada e Lançamentos recorrentes trocam o bloco de destaque por uma faixa de resumo
+  compacta, deixando a lista mais acima.
+- Gráfico de Despesas parceladas passa a usar um único eixo, com a quantidade de compras no
+  detalhe de cada mês.
+- Evolução por categoria abre no gráfico em telas pequenas.
+- Barra de navegação por mês fixa é totalmente opaca.
+
+### Corrigido
+
+- Barra fixa de navegação por mês deixava o conteúdo aparecer por trás do texto ao rolar.
+- Textos de destaque e de aviso no tema claro passam a atender o contraste mínimo de leitura.
+
 ## [0.12.0] - 2026-10-28
 
 Amplia os relatórios com Compromissos futuros e Distribuição financeira, adiciona transferências ao

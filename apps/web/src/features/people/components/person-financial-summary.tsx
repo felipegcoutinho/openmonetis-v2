@@ -176,7 +176,7 @@ function HistoryCard({ data }: { data: PersonFinancialSummaryOutput }) {
             />
             <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[6, 6, 0, 0]}>
               <LabelList
-                className="fill-muted-foreground text-[10px]"
+                className="fill-muted-foreground text-2xs"
                 dataKey="expenses"
                 formatter={(value: unknown) => compactCurrencyFormatter.format(Number(value))}
                 position="top"

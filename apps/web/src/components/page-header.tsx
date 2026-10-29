@@ -52,7 +52,14 @@ export function PageHeader({
                       {breadcrumb.label}
                     </BreadcrumbLink>
                   ) : (
-                    <span>{breadcrumb.label}</span>
+                    <span
+                      aria-current={index === breadcrumbItems.length - 1 ? "page" : undefined}
+                      className={
+                        index === breadcrumbItems.length - 1 ? "text-foreground" : undefined
+                      }
+                    >
+                      {breadcrumb.label}
+                    </span>
                   )}
                 </BreadcrumbItem>
                 {index < breadcrumbItems.length - 1 ? <BreadcrumbSeparator /> : null}
