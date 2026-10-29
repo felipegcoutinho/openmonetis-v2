@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Medidor de faixas no índice de comprometimento de Compromissos futuros, com a situação do mês
+  (saudável, atenção ou crítico) ao lado do valor.
+
 ### Alterado
 
 - Aviso de novidades da versão ocupa uma única linha, com o resumo visível apenas em telas

@@ -1,9 +1,19 @@
 import type { CommitmentsOutput } from "@openmonetis/validators/commitments";
 import { MoneyValue } from "@/components/money-value";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { cn } from "@/lib/utils";
-import { formatCommitmentPercentage, formatCommitmentPeriod } from "../commitments.presentation";
+import {
+  commitmentGaugeBands,
+  commitmentStatusClassName,
+  commitmentStatusLabel,
+  commitmentStatusVariant,
+  describeCommitmentGauge,
+  formatCommitmentPercentage,
+  formatCommitmentPeriod,
+  getCommitmentGaugePosition,
+} from "../commitments.presentation";
 
 export function CommitmentsHighlights({ report }: { report: CommitmentsOutput }) {
   const current = report.months[0];
@@ -25,10 +35,19 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
           <MoneyValue amount={current.incomeAmount} className="font-medium text-xl leading-tight" />
         </Card>
         <Card className="min-w-0 gap-1 px-5 py-4">
-          <p className="text-muted-foreground text-xs">Índice de comprometimento</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-muted-foreground text-xs">Índice de comprometimento</p>
+            <Badge
+              className={commitmentStatusClassName(current.status)}
+              variant={commitmentStatusVariant(current.status)}
+            >
+              {commitmentStatusLabel(current.status)}
+            </Badge>
+          </div>
           <span className="font-medium font-mono text-xl leading-tight tabular-nums tracking-tighter">
             {formatCommitmentPercentage(current.commitmentPercentage)}
           </span>
+          <CommitmentGauge percentage={current.commitmentPercentage} status={current.status} />
         </Card>
         <Card className="min-w-0 gap-1 px-5 py-4">
           <p className="text-muted-foreground text-xs">Folga estimada</p>
@@ -101,5 +120,46 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
         </Card>
       </div>
     </>
+  );
+}
+
+const gaugeBandClassNames = {
+  healthy: "bg-success/35",
+  attention: "bg-warning/40",
+  critical: "bg-destructive/40",
+} as const;
+
+function CommitmentGauge({
+  percentage,
+  status,
+}: {
+  percentage: number | null;
+  status: CommitmentsOutput["months"][number]["status"];
+}) {
+  const position = getCommitmentGaugePosition(percentage);
+  return (
+    <div
+      aria-label={describeCommitmentGauge(percentage, status)}
+      className="relative mt-2 flex h-2 w-full overflow-visible rounded-full"
+      role="img"
+    >
+      {commitmentGaugeBands.map((band) => (
+        <span
+          className={cn(
+            "h-full first:rounded-l-full last:rounded-r-full",
+            gaugeBandClassNames[band.status],
+          )}
+          key={band.status}
+          style={{ width: `${band.to - band.from}%` }}
+        />
+      ))}
+      {position !== null ? (
+        <span
+          aria-hidden="true"
+          className="-translate-x-1/2 absolute -top-1 h-4 w-1 rounded-full bg-foreground"
+          style={{ left: `${position}%` }}
+        />
+      ) : null}
+    </div>
   );
 }
