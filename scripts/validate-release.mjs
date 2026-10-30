@@ -11,6 +11,7 @@ const workspacePackageFiles = [
 ];
 const changelog = readFileSync("CHANGELOG.md", "utf8");
 const readme = readFileSync("README.md", "utf8");
+const environmentExample = readFileSync(".env.example", "utf8");
 const version = rootPackage.version;
 const tagArgumentIndex = process.argv.indexOf("--tag");
 const tag = tagArgumentIndex >= 0 ? process.argv[tagArgumentIndex + 1] : undefined;
@@ -48,6 +49,11 @@ if (!releaseSummary) {
 
 if (!readme.includes(`version-${version}-`)) {
   fail(`O badge de versão do README.md não usa ${version}.`);
+}
+
+const exampleVersion = environmentExample.match(/^OPENMONETIS_VERSION=(.*)$/m)?.[1];
+if (exampleVersion !== version) {
+  fail(`.env.example usa OPENMONETIS_VERSION=${exampleVersion ?? ""}; esperado ${version}.`);
 }
 
 if (tag !== undefined) {

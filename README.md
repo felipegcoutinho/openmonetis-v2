@@ -59,9 +59,10 @@ irm https://github.com/felipegcoutinho/openmonetis-v2/raw/refs/heads/main/instal
 Abra [http://localhost:7002](http://localhost:7002) e crie sua conta. Antes de executar um script
 remoto, você pode revisar o [`install.sh`](install.sh) ou o [`install.ps1`](install.ps1).
 
-Os instaladores atuais usam a branch padrão e imagens `latest`; a fixação de versão nos scripts
-continua pendente. Em produção, use o procedimento manual do guia abaixo para alinhar a
-tag do checkout e a versão das imagens. Após criar a primeira conta, configure `DISABLE_SIGNUP=true`
+Os instaladores usam a versão publicada mais recente e fixam a tag do checkout e das imagens. Para
+escolher outra versão publicada, troque `| bash` por `| OPENMONETIS_VERSION=0.12.0 bash` no
+comando acima (no Windows, defina `$env:OPENMONETIS_VERSION` antes). Atualizações seguem o guia de produção
+abaixo. Após criar a primeira conta, configure `DISABLE_SIGNUP=true`
 para fechar novos cadastros por senha e Google, mantendo o login das contas existentes.
 
 Para publicar a aplicação com HTTPS, storage privado e segredos próprios, consulte o

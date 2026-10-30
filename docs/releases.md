@@ -24,7 +24,7 @@ alterações pendentes antes de preparar a release; não as misture ao commit de
 2. Atualize todos os `package.json` do workspace.
 3. Mova as mudanças de `Unreleased` para `## [X.Y.Z] - YYYY-MM-DD` no changelog e escreva um resumo
    curto antes das seções.
-4. Atualize o badge de versão do README.
+4. Atualize o badge de versão do README e `OPENMONETIS_VERSION` no `.env.example`.
 5. Valide o conjunto final com `pnpm release:check`, `pnpm check`, `pnpm test:coverage`,
    `pnpm build`, `pnpm test:integration` e `pnpm test:e2e`. `test:coverage` executa a suíte de
    `pnpm test` e verifica os limites de cobertura. Prepare os ambientes isolados conforme
@@ -57,9 +57,10 @@ imagens, apresentadas em `GET /releases` como `upgradeNotes` e exibidas separada
 Antes de publicar, confira os quatro assuntos mesmo que só parte deles exija ações. Versões antigas
 sem essa seção continuam sendo aceitas; o leitor retorna uma lista vazia de notas.
 
-A fixação de versão nos instaladores permanece pendente. Até sua implementação, os scripts
-continuam usando a branch padrão e `latest`; implantação e atualização com versão fixa exigem
-alinhar manualmente a tag do checkout ao `OPENMONETIS_VERSION`.
+Os instaladores clonam a tag `vX.Y.Z` da versão instalada e gravam a mesma versão em
+`OPENMONETIS_VERSION`. Por isso, uma versão só fica disponível para novas instalações depois que a
+tag é publicada, e o `.env.example` de cada tag precisa apontar para a própria versão;
+`pnpm release:check` recusa a divergência.
 
 ## Publicar
 

@@ -15,6 +15,8 @@ $publicUrl = if ($env:OPENMONETIS_URL) {
 } else {
     "http://localhost:7002"
 }
+$requestedVersion = $env:OPENMONETIS_VERSION
+$semanticVersionPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$'
 
 function Assert-Command {
     param([Parameter(Mandatory = $true)][string]$Name)
@@ -82,14 +84,37 @@ if (Test-Path $installDirectory) {
     throw "$installDirectory already exists. Choose another location with OPENMONETIS_INSTALL_DIR."
 }
 
-Write-Host "Cloning OpenMonetis into $installDirectory..."
-& git clone --depth 1 $repositoryUrl $installDirectory
+$publishedVersions = @(
+    & git ls-remote --tags --refs $repositoryUrl "v*" |
+        ForEach-Object { ($_ -split "\s+")[1] -replace "^refs/tags/v", "" } |
+        Where-Object { $_ -match $semanticVersionPattern }
+)
+Assert-LastCommandSucceeded "Published version lookup"
+
+if ($requestedVersion) {
+    $version = $requestedVersion -replace "^v", ""
+    if ($version -notmatch $semanticVersionPattern) {
+        throw "OPENMONETIS_VERSION must be a published version such as 0.12.0."
+    }
+    if ($publishedVersions -notcontains $version) {
+        throw "Version $version was not found in the published releases."
+    }
+} else {
+    $version = $publishedVersions | Sort-Object { [version]$_ } -Descending | Select-Object -First 1
+    if (-not $version) {
+        throw "No published version was found."
+    }
+}
+
+Write-Host "Cloning OpenMonetis $version into $installDirectory..."
+& git -c advice.detachedHead=false clone --depth 1 --branch "v$version" $repositoryUrl $installDirectory
 Assert-LastCommandSucceeded "Repository clone"
 
 $environmentFile = Join-Path $installDirectory ".env"
 Copy-Item (Join-Path $installDirectory ".env.example") $environmentFile
 
 $databasePassword = New-RandomSecret
+Set-EnvironmentValue $environmentFile "OPENMONETIS_VERSION" $version
 Set-EnvironmentValue $environmentFile "POSTGRES_PASSWORD" $databasePassword
 Set-EnvironmentValue $environmentFile "BETTER_AUTH_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "DEVICE_TOKEN_SECRET" (New-RandomSecret)
@@ -113,5 +138,6 @@ try {
 }
 
 Write-Host ""
-Write-Host "OpenMonetis is ready at $publicUrl"
+Write-Host "OpenMonetis $version is ready at $publicUrl"
 Write-Host "Installation directory: $installDirectory"
+Write-Host "To update, read the upgrade notes, back up your data, check out the new vX.Y.Z tag and set the same OPENMONETIS_VERSION."

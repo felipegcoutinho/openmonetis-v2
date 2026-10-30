@@ -66,10 +66,12 @@ docker compose config --quiet
 
 ## Primeira implantação
 
-Os instaladores atuais clonam a branch padrão e usam `latest` do `.env.example`. A seleção de versão
-nos instaladores continua pendente. Para uma implantação de produção com versão fixa,
-prepare manualmente o checkout da tag publicada e configure a mesma versão em `OPENMONETIS_VERSION`
-antes de executar os comandos abaixo. Por exemplo, checkout `v0.10.2` e imagens `0.10.2`.
+Os instaladores clonam a tag da versão publicada mais recente e gravam a mesma versão em
+`OPENMONETIS_VERSION`, mantendo `compose.yml`, `.env.example` e imagens alinhados. Para instalar
+outra versão publicada, defina `OPENMONETIS_VERSION=0.12.0` antes de executar o instalador. Em uma
+implantação manual, faça o mesmo: checkout da tag `v0.12.0` e imagens `0.12.0`. Evite `latest` em
+produção: um `docker compose pull` passaria a aplicar versões novas, com suas migrations, sem
+revisão das notas de atualização.
 
 ```bash
 docker compose pull

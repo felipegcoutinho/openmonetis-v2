@@ -17,7 +17,7 @@ do PostgreSQL com `openssl rand -hex 32` e os demais segredos com `openssl rand 
 | Variável | Descrição |
 | --- | --- |
 | `OPENMONETIS_PROJECT_NAME` | Nome do projeto Compose e prefixo dos recursos criados. |
-| `OPENMONETIS_VERSION` | Tag das imagens oficiais. Para produção, defina manualmente uma versão publicada explícita, como `0.10.2`, e alinhe o checkout à tag `v0.10.2`. Os instaladores atuais ainda herdam `latest` do exemplo e não selecionam a versão do checkout. |
+| `OPENMONETIS_VERSION` | Versão das imagens oficiais, alinhada à tag do checkout (`0.12.0` com `v0.12.0`). Os instaladores gravam a versão instalada; para escolher uma versão publicada, defina a variável antes de executá-los. Evite `latest` em produção. |
 | `APP_PORT` | Porta do host que publica o cliente web. Ao alterá-la, ajuste também as URLs públicas. |
 
 ## PostgreSQL
