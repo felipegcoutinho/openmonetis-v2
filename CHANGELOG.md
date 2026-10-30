@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-30
+
+Reorganiza a Visão geral em grupos de widgets personalizáveis e adiciona o Comprometimento do mês,
+etiquetas com cor e status, página inicial nas Preferências, renovação de token do Companion e prazo
+de recorrência por quantidade, além de nova tipografia e instaladores com versão fixa.
+
 ### Adicionado
 
 - Widget Comprometimento do mês no dashboard, na seção Planejamento: um velocímetro mostra
@@ -864,7 +870,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.10.2...v0.11.0
