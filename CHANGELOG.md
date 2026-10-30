@@ -190,9 +190,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Notas de atualização
 
+- Banco: três migrations novas, aplicadas pelo `migrator` na atualização: `0018_tag_status`
+  (coluna `status` em `tags`, padrão `active`), `0019_tag_color` (coluna `color` em `tags`, padrão
+  `neutral`) e `0020_user_start_page` (coluna `start_page` em `user_preferences`, padrão
+  `dashboard`). Dados existentes recebem os valores padrão e nada é removido. Faça backup do
+  PostgreSQL antes de atualizar e acompanhe `docker compose logs migrator`; para desfazer, restaure
+  o backup, pois reverter a imagem não desfaz as migrations.
 - API: nova rota autenticada `GET /transactions/recurrence-end-date`, com `startDate`, `frequency`,
   `occurrenceCount` (2 a 360) e, opcionalmente, `anchorDate` e `dueDate`. Retorna `endDate` ou
-  `null` quando nenhuma data mantém exatamente a quantidade pedida. Não há migration.
+  `null` quando nenhuma data mantém exatamente a quantidade pedida.
+- API: nova rota autenticada `POST /device-tokens/{id}/rotate`, que revoga o token atual do aparelho
+  e entrega o novo uma única vez. Campos novos nas respostas: `status` e `color` em `TagOutput`
+  (aceitos também na criação e em `PATCH /tags/{id}`), `transactionCount` em `GET /tags/report`,
+  `startPage` em `UserPreferencesOutput`, `recentCaptureCount` e `expiresSoon` em `DeviceToken`,
+  `paidAmount`, `remainingAmount` e `payments` em `invoiceSummary`, `openingBalance` e `netAmount`
+  no resumo da conta, e `recurringHolidays` (opcional) no calendário das regras de vencimento.
+  Clientes com validação estrita das respostas devem aceitar os campos adicionais.
 - Instalação: novas instalações passam a usar a versão publicada mais recente, não mais `latest`.
   Instalações existentes com `OPENMONETIS_VERSION=latest` continuam funcionando, mas recomenda-se
   fixar a versão: faça checkout da tag `vX.Y.Z` desejada e defina a mesma versão no `.env`.
