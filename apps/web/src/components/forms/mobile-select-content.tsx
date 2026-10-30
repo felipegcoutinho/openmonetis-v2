@@ -12,6 +12,18 @@ export function MobileSelectContent({ children, ...props }: ComponentProps<typeo
   const mobile = useIsMobile();
   const select = useContext(MobileSelectCloseContext);
   const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const open = select?.open ?? false;
+  const [presentation, setPresentation] = useState(mobile);
+  const [previousOpen, setPreviousOpen] = useState(open);
+  const [replacedWhileOpen, setReplacedWhileOpen] = useState(false);
+  if (presentation !== mobile) {
+    setPresentation(mobile);
+    setReplacedWhileOpen(open);
+  }
+  if (previousOpen !== open) {
+    setPreviousOpen(open);
+    if (open) setReplacedWhileOpen(false);
+  }
   useMobileViewport(element);
   useBlocker({
     disabled: !mobile || !select?.open,
@@ -22,7 +34,18 @@ export function MobileSelectContent({ children, ...props }: ComponentProps<typeo
       return true;
     },
   });
-  if (!mobile) return <SelectContent {...props}>{children}</SelectContent>;
+  // An aligned popup closes when the trigger regains focus and cannot finish its exit after a
+  // layout change, so a list carried over from the other presentation stays below the trigger
+  // until the next time it opens.
+  if (!mobile)
+    return (
+      <SelectContent
+        {...props}
+        alignItemWithTrigger={replacedWhileOpen ? false : props.alignItemWithTrigger}
+      >
+        {children}
+      </SelectContent>
+    );
 
   const {
     className: _className,

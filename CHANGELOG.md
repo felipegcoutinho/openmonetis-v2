@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Corrigido
+
+- Seletores com lista aberta ao trocar entre celular e desktop podiam fechar sozinhos ou continuar
+  visíveis depois de fechados com Esc. A lista trazida da outra visualização aparece abaixo do campo
+  até a próxima abertura.
+
 ## [0.13.0] - 2026-10-30
 
 Reorganiza a Visão geral em grupos de widgets personalizáveis e adiciona o Comprometimento do mês,
