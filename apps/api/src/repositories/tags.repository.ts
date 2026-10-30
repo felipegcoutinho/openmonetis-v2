@@ -65,19 +65,19 @@ export const tagsRepository: TagsRepository = {
   listForUser(userId) {
     return db.select().from(tags).where(eq(tags.userId, userId)).orderBy(asc(tags.name));
   },
-  async createForUser(userId, name, nameKey) {
+  async createForUser(userId, name, nameKey, color) {
     const [tag] = await db
       .insert(tags)
-      .values({ userId, name, nameKey })
+      .values({ userId, name, nameKey, color })
       .onConflictDoNothing()
       .returning();
     return tag ?? null;
   },
-  async updateForUser(id, userId, name, nameKey) {
+  async updateForUser(id, userId, changes) {
     try {
       const [tag] = await db
         .update(tags)
-        .set({ name, nameKey, updatedAt: new Date() })
+        .set({ ...changes, updatedAt: new Date() })
         .where(and(eq(tags.id, id), eq(tags.userId, userId)))
         .returning();
       return tag ?? null;

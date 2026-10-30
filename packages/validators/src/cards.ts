@@ -125,6 +125,11 @@ export const CardInvoiceSummarySchema = z
   .object({
     period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
     amount: z.number().nonnegative(),
+    paidAmount: z.number().nonnegative(),
+    remainingAmount: z.number().nonnegative(),
+    payments: z.array(
+      z.object({ id: z.uuid(), amount: z.number().positive(), paidAt: z.iso.date() }),
+    ),
     status: z.enum(cardInvoiceStatuses),
     closingDate: z.iso.date(),
     dueDate: z.iso.date(),

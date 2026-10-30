@@ -5,6 +5,12 @@ import {
 } from "./transactions";
 
 export const maximumTransactionTags = 20;
+/** Inactive tags keep their assignments and history but are no longer offered for new ones. */
+export const tagStatuses = ["active", "inactive"] as const;
+export type TagStatus = (typeof tagStatuses)[number];
+/** Fixed palette names; each client maps them to its own theme tokens. */
+export const tagColors = ["neutral", "orange", "blue", "green", "purple", "yellow", "red"] as const;
+export type TagColor = (typeof tagColors)[number];
 export function normalizeTagName(name: string) {
   return name.trim().replace(/\s+/g, " ");
 }
@@ -34,7 +40,9 @@ export type TaggedFinancialEntry = {
   allocation?: { amount: number } | null;
 };
 export function summarizeTags(tagIds: readonly string[], entries: readonly TaggedFinancialEntry[]) {
-  const totals = new Map(tagIds.map((id) => [id, { income: 0, expenses: 0, transfers: 0 }]));
+  const totals = new Map(
+    tagIds.map((id) => [id, { income: 0, expenses: 0, transfers: 0, transactionCount: 0 }]),
+  );
   const seen = new Set<string>();
   for (const entry of entries) {
     if (seen.has(entry.id)) continue;
@@ -53,12 +61,15 @@ export function summarizeTags(tagIds: readonly string[], entries: readonly Tagge
       entry.type === "income" && entry.origin === "regular"
         ? Math.round(Math.abs(amount) * 100)
         : 0;
+    // A transfer is one movement with two postings: only the outgoing one counts.
+    const countsAsTransaction = entry.type !== "transfer" || amount < 0;
     for (const id of new Set(entry.tagIds ?? [])) {
       const total = totals.get(id);
       if (total) {
         total.income += incomeCents;
         total.expenses += expenseCents;
         total.transfers += transferCents;
+        if (countsAsTransaction) total.transactionCount += 1;
       }
     }
   }
@@ -68,5 +79,6 @@ export function summarizeTags(tagIds: readonly string[], entries: readonly Tagge
     expenses: total.expenses / 100,
     transfers: total.transfers / 100,
     balance: (total.income - total.expenses) / 100,
+    transactionCount: total.transactionCount,
   }));
 }

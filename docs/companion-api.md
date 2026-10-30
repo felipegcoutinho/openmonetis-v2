@@ -29,6 +29,8 @@ O Companion envia `Authorization: Bearer <device-token>`. O token:
 - é exibido uma única vez pelo servidor;
 - usa o prefixo `opm_`, 256 bits de aleatoriedade e validade de 365 dias;
 - pode ser revogado independentemente;
+- pode ser renovado pela sessão web em `POST /device-tokens/{id}/rotate`, que revoga o token atual e
+  devolve um novo com o mesmo nome, também exibido uma única vez;
 - autoriza apenas verificação da própria credencial e ingestão no inbox;
 - é persistido no servidor somente como digest HMAC-SHA-256.
 
@@ -41,7 +43,9 @@ malformadas retornam HTTP `401`:
 
 O identificador do proprietário, o digest, o segredo da instalação e detalhes internos nunca são
 retornados. A API não oferece refresh token em `/api/auth/device/refresh`: após expiração ou revogação,
-o usuário deve gerar uma nova credencial pela sessão web.
+o usuário deve gerar ou renovar a credencial pela sessão web, em **Ajustes → Integrações**. A
+listagem `GET /device-tokens` informa `expiresSoon` quando faltam até 30 dias para a expiração e
+`recentCaptureCount` com as capturas recebidas de cada aparelho nos últimos 7 dias.
 
 ### Pareamento por QR Code
 

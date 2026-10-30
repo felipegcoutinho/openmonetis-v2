@@ -3,6 +3,7 @@ import {
   applicationThemes,
   mobileShortcutDestinations,
   notificationDueSoonDayOptions,
+  startPageDestinations,
   transactionPageSizeOptions,
 } from "@openmonetis/domain/preferences";
 import { paymentMethods } from "@openmonetis/domain/transactions";
@@ -34,6 +35,7 @@ export const UserPreferencesOutputSchema = z
     notificationDueSoonDays: NotificationDueSoonDaysSchema,
     transactionsPageSize: TransactionsPageSizeSchema,
     mobileShortcut: z.enum(mobileShortcutDestinations),
+    startPage: z.enum(startPageDestinations),
   })
   .openapi("UserPreferencesOutput");
 

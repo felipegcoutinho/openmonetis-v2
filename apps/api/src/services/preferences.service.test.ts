@@ -57,6 +57,14 @@ test("saving a mobile shortcut keeps it across preference updates", async () => 
   assert.equal(updated.mobileShortcut, "cards");
 });
 
+test("saving a start page keeps it across preference updates", async () => {
+  const { service } = setup();
+  const saved = await service.update({ startPage: "transactions" }, "user-a");
+  assert.equal(saved.startPage, "transactions");
+  const updated = await service.update({ theme: "light" }, "user-a");
+  assert.equal(updated.startPage, "transactions");
+});
+
 test("unavailable related IDs are rejected without saving preferences", async () => {
   const { service, writes } = setup();
   await assert.rejects(

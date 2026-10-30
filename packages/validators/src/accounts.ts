@@ -91,8 +91,10 @@ export const AccountPeriodQuerySchema = z
 export const AccountPeriodSummarySchema = z
   .object({
     period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    openingBalance: z.number(),
     income: z.number().nonnegative(),
     expenses: z.number().nonnegative(),
+    netAmount: z.number(),
     balance: z.number(),
   })
   .openapi("AccountPeriodSummary");

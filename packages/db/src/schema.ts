@@ -2,6 +2,7 @@ import type {
   DueDateAdjustmentDetails,
   DueDateRuleVersion,
 } from "@openmonetis/domain/due-date-rules";
+import { tagColors, tagStatuses } from "@openmonetis/domain/tags";
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
@@ -42,6 +43,14 @@ export const mobileShortcutDestination = pgEnum("mobile_shortcut_destination", [
   "categories",
   "notes",
   "attachments",
+  "inbox",
+]);
+export const startPageDestination = pgEnum("start_page_destination", [
+  "dashboard",
+  "transactions",
+  "accounts",
+  "cards",
+  "budgets",
   "inbox",
 ]);
 
@@ -544,6 +553,7 @@ export const userPreferences = pgTable(
     notificationDueSoonDays: integer("notification_due_soon_days").notNull().default(5),
     transactionsPageSize: integer("transactions_page_size").notNull().default(30),
     mobileShortcut: mobileShortcutDestination("mobile_shortcut").notNull().default("accounts"),
+    startPage: startPageDestination("start_page").notNull().default("dashboard"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -606,6 +616,9 @@ export const categories = pgTable(
   ],
 );
 
+export const tagStatus = pgEnum("tag_status", tagStatuses);
+export const tagColor = pgEnum("tag_color", tagColors);
+
 export const tags = pgTable(
   "tags",
   {
@@ -615,6 +628,8 @@ export const tags = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 80 }).notNull(),
     nameKey: varchar("name_key", { length: 80 }).notNull(),
+    status: tagStatus("status").notNull().default("active"),
+    color: tagColor("color").notNull().default("neutral"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()

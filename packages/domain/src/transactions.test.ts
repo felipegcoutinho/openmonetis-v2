@@ -7,6 +7,7 @@ import {
   type BulkTransactionTarget,
   buildTrackedInstallmentSchedule,
   buildTransferPostings,
+  calculateRecurrenceEndDate,
   calculateRefund,
   canApplyBulkTransactionAction,
   canAssignBulkCategory,
@@ -15,6 +16,7 @@ import {
   InsufficientTransferBalanceError,
   isTransactionSelectionItemSelectable,
   listRecurrenceDatesInPeriod,
+  maximumRecurrenceOccurrenceCount,
   previewInstallmentOptions,
   rebalanceTwoAmountShares,
   rebalanceTwoPercentageShares,
@@ -281,6 +283,82 @@ test("versioned recurrence preserves the original calendar anchor", () => {
     }),
     ["2026-03-31"],
   );
+});
+
+test("recurrence end date keeps exactly the requested number of occurrences", () => {
+  const cases = [
+    { frequency: "monthly", startDate: "2026-11-15", occurrenceCount: 12, endDate: "2027-10-15" },
+    { frequency: "monthly", startDate: "2026-01-31", occurrenceCount: 3, endDate: "2026-03-31" },
+    { frequency: "weekly", startDate: "2026-11-02", occurrenceCount: 4, endDate: "2026-11-23" },
+    { frequency: "quarterly", startDate: "2026-11-10", occurrenceCount: 10, endDate: "2029-02-10" },
+    { frequency: "annual", startDate: "2024-02-29", occurrenceCount: 2, endDate: "2025-02-28" },
+    {
+      frequency: "monthly",
+      startDate: "2026-11-25",
+      dueDate: "2026-12-05",
+      occurrenceCount: 2,
+      endDate: "2026-12-05",
+    },
+  ] as const;
+
+  for (const { endDate, ...input } of cases) {
+    const recurrenceEndDate = calculateRecurrenceEndDate(input);
+    assert.equal(recurrenceEndDate, endDate, JSON.stringify(input));
+
+    const occurrences = Array.from({ length: 48 }, (_, offset) => {
+      const [year, month] = input.startDate.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1 + offset, 1));
+      return date.toISOString().slice(0, 7);
+    }).flatMap((period) =>
+      listRecurrenceDatesInPeriod({
+        startDate: input.startDate,
+        dueDate: "dueDate" in input ? input.dueDate : null,
+        endDate: null,
+        recurrenceEndDate,
+        frequency: input.frequency,
+        period,
+      }),
+    );
+    assert.equal(occurrences.length, input.occurrenceCount, JSON.stringify(input));
+  }
+});
+
+test("recurrence end date counts from the edited occurrence of an anchored series", () => {
+  assert.equal(
+    calculateRecurrenceEndDate({
+      anchorDate: "2026-01-31",
+      startDate: "2026-02-28",
+      frequency: "monthly",
+      occurrenceCount: 3,
+    }),
+    "2026-04-30",
+  );
+});
+
+test("recurrence end date is unavailable when occurrences share the same due date", () => {
+  assert.equal(
+    calculateRecurrenceEndDate({
+      startDate: "2026-11-02",
+      dueDate: "2026-11-10",
+      frequency: "weekly",
+      occurrenceCount: 2,
+    }),
+    null,
+  );
+});
+
+test("recurrence end date rejects counts outside the supported range", () => {
+  for (const occurrenceCount of [0, 1, 2.5, maximumRecurrenceOccurrenceCount + 1]) {
+    assert.throws(
+      () =>
+        calculateRecurrenceEndDate({
+          startDate: "2026-11-02",
+          frequency: "monthly",
+          occurrenceCount,
+        }),
+      RangeError,
+    );
+  }
 });
 
 test("recurring edit scope selects past, current and future rule versions correctly", () => {

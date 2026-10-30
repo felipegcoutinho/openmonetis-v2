@@ -2,7 +2,9 @@ import { z } from "@hono/zod-openapi";
 import { recurringActions } from "@openmonetis/domain/recurring-transactions";
 import {
   maximumInstallmentCount,
+  maximumRecurrenceOccurrenceCount,
   minimumInstallmentCount,
+  minimumRecurrenceOccurrenceCount,
   paymentMethods,
   recurrenceFrequencies,
   transactionConditions,
@@ -15,7 +17,9 @@ import { TagIdsSchema } from "./tags";
 
 export {
   maximumInstallmentCount,
+  maximumRecurrenceOccurrenceCount,
   minimumInstallmentCount,
+  minimumRecurrenceOccurrenceCount,
   paymentMethods,
   recurrenceFrequencies,
   transactionConditions,
@@ -43,6 +47,29 @@ export const InstallmentOptionsOutputSchema = z
 export type InstallmentOptionsQuery = z.infer<typeof InstallmentOptionsQuerySchema>;
 export type InstallmentOptionOutput = z.infer<typeof InstallmentOptionOutputSchema>;
 export type InstallmentOptionsOutput = z.infer<typeof InstallmentOptionsOutputSchema>;
+export const RecurrenceEndDateQuerySchema = z
+  .object({
+    startDate: dateSchema,
+    anchorDate: dateSchema.optional(),
+    dueDate: dateSchema.optional(),
+    frequency: z.enum(recurrenceFrequencies),
+    occurrenceCount: z.coerce
+      .number()
+      .int()
+      .min(minimumRecurrenceOccurrenceCount)
+      .max(maximumRecurrenceOccurrenceCount),
+  })
+  .openapi("RecurrenceEndDateQuery");
+export const RecurrenceEndDateOutputSchema = z
+  .object({
+    endDate: dateSchema.nullable().openapi({
+      description:
+        "Inclusive recurrenceEndDate that keeps exactly occurrenceCount occurrences from startDate; null when no date can keep that count",
+    }),
+  })
+  .openapi("RecurrenceEndDateOutput");
+export type RecurrenceEndDateQuery = z.infer<typeof RecurrenceEndDateQuerySchema>;
+export type RecurrenceEndDateOutput = z.infer<typeof RecurrenceEndDateOutputSchema>;
 
 const csvUuidSchema = z
   .string()

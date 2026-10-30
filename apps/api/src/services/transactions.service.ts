@@ -34,6 +34,7 @@ import {
   buildTrackedInstallmentSchedule,
   buildTransferPostings,
   calculateInstallmentEndPeriod,
+  calculateRecurrenceEndDate,
   calculateRefund,
   canApplyBulkTransactionAction,
   canAssignBulkCategory,
@@ -69,6 +70,7 @@ import type {
   InstallmentOptionsQuery,
   ListTransactionsQuery,
   PreviewTransactionImportInput,
+  RecurrenceEndDateQuery,
   RecurringOccurrenceActionInput,
   TransactionActionScope,
   TransactionInput,
@@ -2863,6 +2865,9 @@ export function createTransactionsService(
     changeRecurringRuleStatus,
     previewInstallmentOptions: (input: InstallmentOptionsQuery, _userId: string) => ({
       options: previewInstallmentOptions(input.amount),
+    }),
+    previewRecurrenceEndDate: (input: RecurrenceEndDateQuery, _userId: string) => ({
+      endDate: calculateRecurrenceEndDate(input),
     }),
     applyRecurringRuleAction,
     categorizeTransactions,

@@ -7,6 +7,7 @@ import {
   ExportTransactionsQuerySchema,
   InstallmentOptionsOutputSchema,
   ListTransactionsQuerySchema,
+  RecurrenceEndDateOutputSchema,
   type TransactionInput,
   TransactionInputSchema,
   UpdateRecurringRuleQuerySchema,
@@ -1217,6 +1218,35 @@ test("installment preview HTTP contract validates amounts and returns domain opt
       maximumAmount: 0.43,
     },
   );
+});
+
+test("recurrence end date HTTP contract validates counts and returns the domain end date", async () => {
+  const service = createTransactionsService({} as TransactionsServiceDependencies, {
+    cleanupOrphans: async () => ({ deletedCount: 0 }),
+  });
+  const route = createTransactionsRoute(service);
+  const base = "/recurrence-end-date?startDate=2026-11-15&frequency=monthly";
+  for (const query of [
+    `${base}&occurrenceCount=1`,
+    `${base}&occurrenceCount=361`,
+    `${base}&occurrenceCount=2.5`,
+    "/recurrence-end-date?startDate=2026-11-15&frequency=daily&occurrenceCount=12",
+    "/recurrence-end-date?startDate=15/11/2026&frequency=monthly&occurrenceCount=12",
+  ]) {
+    const response = await route.request(query);
+    assert.equal(response.status, 400, query);
+  }
+
+  const response = await route.request(`${base}&occurrenceCount=12`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.error, null);
+  assert.deepEqual(RecurrenceEndDateOutputSchema.parse(body.data), { endDate: "2027-10-15" });
+
+  const weeklyPayable = await route.request(
+    "/recurrence-end-date?startDate=2026-11-02&dueDate=2026-11-10&frequency=weekly&occurrenceCount=2",
+  );
+  assert.deepEqual((await weeklyPayable.json()).data, { endDate: null });
 });
 
 test("closing-day purchases shift new singles and installments while existing and explicit periods stay fixed", async () => {

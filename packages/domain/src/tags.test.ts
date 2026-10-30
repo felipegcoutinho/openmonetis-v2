@@ -54,9 +54,9 @@ test("tag totals respect allocations, refunds, neutral movements and duplicate e
     },
   ];
   assert.deepEqual(summarizeTags(["a", "b", "empty"], [...entries, entries[0]]), [
-    { tagId: "a", income: 200, expenses: 75, transfers: 0, balance: 125 },
-    { tagId: "b", income: 0, expenses: 75, transfers: 0, balance: -75 },
-    { tagId: "empty", income: 0, expenses: 0, transfers: 0, balance: 0 },
+    { tagId: "a", income: 200, expenses: 75, transfers: 0, balance: 125, transactionCount: 4 },
+    { tagId: "b", income: 0, expenses: 75, transfers: 0, balance: -75, transactionCount: 3 },
+    { tagId: "empty", income: 0, expenses: 0, transfers: 0, balance: 0, transactionCount: 0 },
   ]);
 });
 test("tag transfers count each outgoing posting once without affecting financial results", () => {
@@ -70,9 +70,9 @@ test("tag transfers count each outgoing posting once without affecting financial
     })),
   );
   const expected = [
-    { tagId: "a", income: 0, expenses: 0, transfers: 450.23, balance: 0 },
-    { tagId: "b", income: 0, expenses: 0, transfers: 450.23, balance: 0 },
-    { tagId: "empty", income: 0, expenses: 0, transfers: 0, balance: 0 },
+    { tagId: "a", income: 0, expenses: 0, transfers: 450.23, balance: 0, transactionCount: 2 },
+    { tagId: "b", income: 0, expenses: 0, transfers: 450.23, balance: 0, transactionCount: 2 },
+    { tagId: "empty", income: 0, expenses: 0, transfers: 0, balance: 0, transactionCount: 0 },
   ];
   assert.deepEqual(summarizeTags(["a", "b", "empty"], [...entries, ...entries]), expected);
   assert.deepEqual(summarizeTags(["a", "b", "empty"], [...entries].reverse()), expected);
@@ -89,7 +89,7 @@ test("distinct transfers of equal amounts are preserved and sum monetary cents e
   );
   entries.push({ id: "untagged", type: "transfer", origin: "regular", amount: -100 });
   assert.deepEqual(summarizeTags(["a"], entries), [
-    { tagId: "a", income: 0, expenses: 0, transfers: 0.4, balance: 0 },
+    { tagId: "a", income: 0, expenses: 0, transfers: 0.4, balance: 0, transactionCount: 3 },
   ]);
 });
 test("tag totals sum monetary cents exactly", () => {

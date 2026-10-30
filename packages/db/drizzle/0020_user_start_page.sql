@@ -1,0 +1,2 @@
+CREATE TYPE "public"."start_page_destination" AS ENUM('dashboard', 'transactions', 'accounts', 'cards', 'budgets', 'inbox');--> statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "start_page" "start_page_destination" DEFAULT 'dashboard' NOT NULL;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildDashboardAttentionItems } from "./dashboard";
+import { buildDashboardAttentionItems, compareDashboardMetric } from "./dashboard";
 
 const today = "2026-10-29";
 
@@ -120,4 +120,37 @@ test("nothing needs attention when everything is settled and within budget", () 
     }),
     [],
   );
+});
+
+test("metric comparison never reports a tiny drop as -0%", () => {
+  assert.deepEqual(compareDashboardMetric(3684.99, 3689.3), {
+    change: { kind: "percent", value: 0 },
+    trend: "flat",
+  });
+  assert.deepEqual(compareDashboardMetric(4135.22, 3912.65), {
+    change: { kind: "percent", value: 6 },
+    trend: "up",
+  });
+});
+
+test("metric comparison uses the amount when the base is not positive or the sign flips", () => {
+  assert.deepEqual(compareDashboardMetric(0, -223.35), {
+    change: { kind: "amount", value: 223.35 },
+    trend: "up",
+  });
+  assert.deepEqual(compareDashboardMetric(-50, 100), {
+    change: { kind: "amount", value: -150 },
+    trend: "down",
+  });
+  assert.deepEqual(compareDashboardMetric(0, 0), {
+    change: { kind: "amount", value: 0 },
+    trend: "flat",
+  });
+});
+
+test("metric comparison bounds extreme percentages", () => {
+  assert.deepEqual(compareDashboardMetric(100000, 1), {
+    change: { kind: "percent", value: 999 },
+    trend: "up",
+  });
 });

@@ -17,7 +17,9 @@ function createRepository(overrides: Partial<DeviceTokenRepository> = {}): Devic
       revokedAt: null,
       createdAt: now,
     }),
+    replaceForUser: async () => null,
     listActiveForUser: async () => [],
+    countCapturesSince: async () => new Map(),
     findActiveByDigest: async () => null,
     touchLastUsed: async () => undefined,
     revokeForUser: async () => false,
@@ -97,4 +99,77 @@ test("device token authentication requires the exact format and touches owned cr
   const principal = await service.authenticate(rawToken);
   assert.equal(principal?.userId, userId);
   assert.equal(touchedId, "00000000-0000-4000-8000-000000000002");
+});
+
+const activeRecord = {
+  id: "00000000-0000-4000-8000-000000000003",
+  userId,
+  name: "Android",
+  tokenDigest: "digest",
+  tokenPrefix: "opm_aaaaaaaa",
+  lastUsedAt: now,
+  expiresAt: new Date("2026-08-30T12:00:00.000Z"),
+  revokedAt: null,
+  createdAt: new Date("2025-08-30T12:00:00.000Z"),
+};
+
+test("device token listing flags expiring tokens and counts recent captures per device", async () => {
+  let countedSince: Date | null = null;
+  const service = createDeviceTokensService(
+    createRepository({
+      listActiveForUser: async () => [
+        activeRecord,
+        {
+          ...activeRecord,
+          id: "00000000-0000-4000-8000-000000000004",
+          expiresAt: new Date("2027-01-01T00:00:00.000Z"),
+        },
+      ],
+      countCapturesSince: async (_userId, since) => {
+        countedSince = since;
+        return new Map([[activeRecord.id, 4]]);
+      },
+    }),
+    { secret, now: () => now },
+  );
+
+  const [expiring, healthy] = await service.list(userId);
+
+  assert.equal(expiring.expiresSoon, true);
+  assert.equal(expiring.recentCaptureCount, 4);
+  assert.equal(healthy.expiresSoon, false);
+  assert.equal(healthy.recentCaptureCount, 0);
+  assert.deepEqual(countedSince, new Date("2026-08-03T12:00:00.000Z"));
+});
+
+test("device token rotation keeps the name and replaces only an owned active token", async () => {
+  let replacedId: string | null = null;
+  const service = createDeviceTokensService(
+    createRepository({
+      listActiveForUser: async (owner) => (owner === userId ? [activeRecord] : []),
+      replaceForUser: async (id, data) => {
+        replacedId = id;
+        return {
+          id: "00000000-0000-4000-8000-000000000005",
+          ...data,
+          lastUsedAt: null,
+          revokedAt: null,
+          createdAt: now,
+        };
+      },
+    }),
+    { secret, now: () => now },
+  );
+
+  const rotated = await service.rotate(activeRecord.id, userId);
+
+  assert.equal(replacedId, activeRecord.id);
+  assert.equal(rotated.name, "Android");
+  assert.match(rotated.token, /^opm_[A-Za-z0-9_-]{43}$/);
+  assert.equal(rotated.lastUsedAt, null);
+  await assert.rejects(
+    service.rotate(activeRecord.id, "00000000-0000-4000-8000-000000000009"),
+    (error: unknown) =>
+      error instanceof Error && "code" in error && error.code === "device_token_not_found",
+  );
 });

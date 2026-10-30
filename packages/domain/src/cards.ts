@@ -99,6 +99,8 @@ export function calculateCardCycleSpending(input: {
 export type CardInvoiceSummary = {
   period: string;
   amount: number;
+  paidAmount: number;
+  remainingAmount: number;
   status: CardInvoiceStatus;
   closingDate: string;
   dueDate: string;
@@ -175,6 +177,9 @@ export function calculateCardInvoiceSummary(input: {
 
   const paidPeriods = new Set(input.paidPeriods);
   const amountCents = Math.max(0, invoiceCentsByPeriod.get(input.period) ?? 0);
+  const paidAmountCents = paymentCentsByPeriod.get(input.period) ?? 0;
+  const remainingAmountCents =
+    input.paymentStatus === "paid" ? 0 : Math.max(0, amountCents - paidAmountCents);
   const usedLimitCents = Math.max(
     0,
     [...invoiceCentsByPeriod].reduce(
@@ -223,6 +228,8 @@ export function calculateCardInvoiceSummary(input: {
   return {
     period: input.period,
     amount: fromCents(amountCents),
+    paidAmount: fromCents(paidAmountCents),
+    remainingAmount: fromCents(remainingAmountCents),
     status: resolveInvoiceStatus({
       paymentStatus: input.paymentStatus,
       today: input.today,

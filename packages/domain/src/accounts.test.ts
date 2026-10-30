@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateAccountCashFlow } from "./accounts";
+import { calculateAccountCashFlow, calculateAccountPeriodSummary } from "./accounts";
 
 test("account cash flow reconciles daily movements and monthly balances", () => {
   const flow = calculateAccountCashFlow({
@@ -61,4 +61,26 @@ test("account cash flow keeps out-of-month dates outside the daily bars", () => 
   assert.equal(flow.daily[0]?.expenses, 0);
   assert.equal(flow.daily.at(-1)?.balance, -75);
   assert.equal(flow.history.items.at(-1)?.expenses, 75);
+});
+
+test("account period summary separates the opening balance from the month result", () => {
+  const summary = calculateAccountPeriodSummary({
+    period: "2026-10",
+    postings: [
+      { period: "2026-09", amount: 500 },
+      { period: "2026-10", amount: 120.5 },
+      { period: "2026-10", amount: -80.2 },
+      { period: "2026-10", amount: 30, includeInSummary: false },
+      { period: "2026-11", amount: -999 },
+    ],
+  });
+
+  assert.deepEqual(summary, {
+    period: "2026-10",
+    openingBalance: 500,
+    income: 120.5,
+    expenses: 80.2,
+    netAmount: 40.3,
+    balance: 570.3,
+  });
 });

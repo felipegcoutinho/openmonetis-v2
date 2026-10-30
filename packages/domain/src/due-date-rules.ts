@@ -3,6 +3,7 @@ import {
   type BusinessCalendar,
   defaultBusinessCalendar,
   isBusinessDay,
+  isRecurringHoliday,
   listNationalHolidays,
   type nationalHolidayIds,
 } from "./business-calendars";
@@ -35,7 +36,7 @@ export function defaultDueDateRules(effectiveFrom: string): DueDateRuleVersion {
   return {
     revision: 0,
     effectiveFrom,
-    calendar: { ...defaultBusinessCalendar, holidays: [] },
+    calendar: { ...defaultBusinessCalendar, holidays: [], recurringHolidays: [] },
     rules: [],
   };
 }
@@ -131,7 +132,8 @@ export function resolveDueDate(
         ? (listNationalHolidays(date.getUTCFullYear()).find((holiday) => holiday.date === dueDate)
             ?.id ?? null)
         : null,
-      additionalHoliday: calendar.holidays.includes(dueDate),
+      additionalHoliday:
+        calendar.holidays.includes(dueDate) || isRecurringHoliday(dueDate, calendar),
     });
   }
   throw new DueDateRuleError("CALENDAR_NO_BUSINESS_DAY");
@@ -154,7 +156,9 @@ export class DueDateRuleError extends Error {
     super(code);
   }
 }
-export function validateDueDateRuleConflicts(rules: DueDateRule[]) {
+/** Returns the ids of rules that cover at least one item also covered by another rule. */
+export function findDueDateRuleConflicts(rules: DueDateRule[]) {
+  const conflicting = new Set<string>();
   for (let i = 0; i < rules.length; i++)
     for (const other of rules.slice(i + 1)) {
       const rule = rules[i];
@@ -165,9 +169,15 @@ export function validateDueDateRuleConflicts(rules: DueDateRule[]) {
         rule.cardIds.some((id) => other.cardIds.includes(id)) ||
         rule.transactionIds.some((id) => other.transactionIds.includes(id)) ||
         rule.seriesIds.some((id) => other.seriesIds.includes(id))
-      )
-        throw new DueDateRuleError("DUE_DATE_RULE_CONFLICT");
+      ) {
+        conflicting.add(rule.id);
+        conflicting.add(other.id);
+      }
     }
+  return conflicting;
+}
+export function validateDueDateRuleConflicts(rules: DueDateRule[]) {
+  if (findDueDateRuleConflicts(rules).size) throw new DueDateRuleError("DUE_DATE_RULE_CONFLICT");
 }
 
 export type DueDateExceptionState = {

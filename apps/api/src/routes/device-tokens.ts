@@ -77,6 +77,32 @@ export function createDeviceTokensRoute(service: DeviceTokensService) {
 
   route.openapi(
     createRoute({
+      method: "post",
+      path: "/{id}/rotate",
+      tags: ["Device tokens"],
+      request: { params: DeviceTokenParamsSchema },
+      responses: {
+        201: {
+          description:
+            "Device token replaced; the previous token stops working and the new secret is returned only once",
+          content: {
+            "application/json": {
+              schema: z.object({ data: CreatedDeviceTokenOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        ...errorResponses,
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.rotate(context.req.valid("param").id, context.get("userId"))),
+        201,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
       method: "delete",
       path: "/{id}",
       tags: ["Device tokens"],

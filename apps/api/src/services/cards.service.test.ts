@@ -54,7 +54,22 @@ test("card writes persist the option and preserve recorded invoice periods when 
     deleteInactiveForUser: async () => ({ status: "not_found" }),
     listMovementsByUser: async () => recordedMovements,
     listInvoiceStatesByUser: async () => [],
-    listInvoicePaymentsByUser: async () => [],
+    listInvoicePaymentsByUser: async () => [
+      {
+        id: "33333333-3333-4333-8333-333333333333",
+        cardId: id,
+        period: "2026-10",
+        amount: "40.00",
+        paidAt: "2026-10-05",
+      },
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        cardId: id,
+        period: "2026-09",
+        amount: "15.00",
+        paidAt: "2026-09-12",
+      },
+    ],
     listActiveRecurringRulesThroughPeriod: async () => [],
   };
   const service = createCardsService(repository, () => "2026-10-05");
@@ -78,6 +93,11 @@ test("card writes persist the option and preserve recorded invoice periods when 
   assert.equal(october.invoiceSummary.amount, 100);
   assert.equal(october.invoiceSummary.closingDate, "2026-10-04");
   assert.equal(october.invoiceSummary.status, "closed");
+  assert.equal(october.invoiceSummary.paidAmount, 40);
+  assert.equal(october.invoiceSummary.remainingAmount, 60);
+  assert.deepEqual(october.invoiceSummary.payments, [
+    { id: "33333333-3333-4333-8333-333333333333", amount: 40, paidAt: "2026-10-05" },
+  ]);
   assert.equal((await service.get(id, userId, "2026-11")).invoiceSummary.amount, 0);
   assert.equal(recordedMovements[0]?.period, "2026-10");
   assert.equal(

@@ -20,6 +20,7 @@ export const dashboardWidgetIds = [
   "person-settlements",
   "budgets",
   "goals",
+  "commitments",
   "income-expense-balance",
   "expense-categories",
   "category-trends",
@@ -143,6 +144,59 @@ function uniqueDashboardWidgetIds(widgetIds: string[]): DashboardWidgetId[] {
   return [
     ...new Set(widgetIds.map((widgetId) => legacyDashboardWidgetIds[widgetId] ?? widgetId)),
   ].filter((widgetId): widgetId is DashboardWidgetId => dashboardWidgetIdSet.has(widgetId));
+}
+
+export type DashboardMetricTrend = "down" | "flat" | "up";
+
+export type DashboardMetricChange =
+  | { kind: "amount"; value: number }
+  | { kind: "percent"; value: number };
+
+export type DashboardMetricComparison = {
+  change: DashboardMetricChange;
+  trend: DashboardMetricTrend;
+};
+
+const maximumMetricChangePercent = 999;
+
+/**
+ * Compares a monthly metric with the previous month. A percentage is only meaningful against a
+ * positive base; when the previous value is zero or negative, or the sign flips, the change is
+ * expressed as an amount so a move from -223 to 0 is not reported as +100%. Changes that round to
+ * zero are flat, never "-0%".
+ */
+export function compareDashboardMetric(
+  current: number,
+  previous: number,
+): DashboardMetricComparison {
+  const currentCents = toCents(current);
+  const previousCents = toCents(previous);
+  const differenceCents = currentCents - previousCents;
+  const crossesZero = Math.sign(currentCents) * Math.sign(previousCents) < 0;
+
+  if (previousCents <= 0 || crossesZero) {
+    return {
+      change: { kind: "amount", value: differenceCents / 100 },
+      trend: trendOf(differenceCents),
+    };
+  }
+
+  const percent = Math.round((differenceCents / previousCents) * 100);
+  const boundedPercent = Math.max(
+    -maximumMetricChangePercent,
+    Math.min(maximumMetricChangePercent, percent),
+  );
+
+  return {
+    change: { kind: "percent", value: boundedPercent === 0 ? 0 : boundedPercent },
+    trend: trendOf(boundedPercent),
+  };
+}
+
+function trendOf(change: number): DashboardMetricTrend {
+  if (change > 0) return "up";
+  if (change < 0) return "down";
+  return "flat";
 }
 
 export type DashboardMetricEntry = {

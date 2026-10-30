@@ -93,12 +93,15 @@ test("tags persist across transaction and recurring scopes with database ownersh
           )
         ).items,
     );
-    const first = await tagService.create({ name: "Viagem" }, owner.id);
-    const second = await tagService.create({ name: "Negócio" }, owner.id);
-    const foreign = await tagService.create({ name: "Viagem" }, stranger.id);
-    await assert.rejects(() => tagService.create({ name: "  VIAGEM " }, owner.id), {
-      code: "tag_name_conflict",
-    });
+    const first = await tagService.create({ name: "Viagem", color: "neutral" }, owner.id);
+    const second = await tagService.create({ name: "Negócio", color: "neutral" }, owner.id);
+    const foreign = await tagService.create({ name: "Viagem", color: "neutral" }, stranger.id);
+    await assert.rejects(
+      () => tagService.create({ name: "  VIAGEM ", color: "neutral" }, owner.id),
+      {
+        code: "tag_name_conflict",
+      },
+    );
     assert.equal((await tagService.list(stranger.id)).length, 1);
     await assert.rejects(() => tagService.update(first.id, { name: "Other" }, stranger.id), {
       code: "tag_not_found",
@@ -271,6 +274,7 @@ test("tags persist across transaction and recurring scopes with database ownersh
         expenses: 250,
         transfers: 450.23,
         balance: -250,
+        transactionCount: 5,
       },
     );
     assert.deepEqual(
@@ -281,6 +285,7 @@ test("tags persist across transaction and recurring scopes with database ownersh
         expenses: 100,
         transfers: 450.23,
         balance: -100,
+        transactionCount: 3,
       },
     );
     assert.ok(

@@ -15,6 +15,8 @@ import {
   PaginatedTransactionsOutputSchema,
   PreviewTransactionImportInputSchema,
   RecentEstablishmentsOutputSchema,
+  RecurrenceEndDateOutputSchema,
+  RecurrenceEndDateQuerySchema,
   RecurringOccurrenceActionInputSchema,
   RecurringRuleActionInputSchema,
   RecurringRuleOccurrenceQuerySchema,
@@ -183,6 +185,39 @@ export function createTransactionsRoute(service: TransactionsService) {
     (context) =>
       context.json(
         ok(service.previewInstallmentOptions(context.req.valid("query"), context.get("userId"))),
+        200,
+      ),
+  );
+
+  transactionsRoute.openapi(
+    createRoute({
+      method: "get",
+      path: "/recurrence-end-date",
+      tags: ["Transactions"],
+      request: { query: RecurrenceEndDateQuerySchema },
+      responses: {
+        200: {
+          description:
+            "Inclusive recurrence end date that keeps the requested number of occurrences, calculated by the domain",
+          content: {
+            "application/json": {
+              schema: z.object({ data: RecurrenceEndDateOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        400: {
+          description: "Invalid start date, frequency or occurrence count",
+          content: { "application/json": { schema: errorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: errorSchema } },
+        },
+      },
+    }),
+    (context) =>
+      context.json(
+        ok(service.previewRecurrenceEndDate(context.req.valid("query"), context.get("userId"))),
         200,
       ),
   );

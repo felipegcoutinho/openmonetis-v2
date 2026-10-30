@@ -20,8 +20,10 @@ export type AccountBalancePosting = {
 
 export type AccountPeriodSummary = {
   period: string;
+  openingBalance: number;
   income: number;
   expenses: number;
+  netAmount: number;
   balance: number;
 };
 
@@ -187,6 +189,7 @@ export function calculateAccountPeriodSummary(input: {
   period: string;
   postings: AccountBalancePosting[];
 }): AccountPeriodSummary {
+  let openingBalanceCents = 0;
   let balanceCents = 0;
   let incomeCents = 0;
   let expenseCents = 0;
@@ -194,6 +197,7 @@ export function calculateAccountPeriodSummary(input: {
   for (const posting of input.postings) {
     const amountCents = toCents(posting.amount);
 
+    if (posting.period < input.period) openingBalanceCents += amountCents;
     if (posting.period <= input.period) balanceCents += amountCents;
     if (posting.period !== input.period) continue;
     if (posting.includeInSummary === false) continue;
@@ -203,8 +207,10 @@ export function calculateAccountPeriodSummary(input: {
 
   return {
     period: input.period,
+    openingBalance: fromCents(openingBalanceCents),
     income: fromCents(incomeCents),
     expenses: fromCents(expenseCents),
+    netAmount: fromCents(incomeCents - expenseCents),
     balance: fromCents(balanceCents),
   };
 }

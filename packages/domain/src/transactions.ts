@@ -13,6 +13,8 @@ export const transactionOrigins = [
 export const transactionConditions = ["single", "installment", "recurring"] as const;
 export const minimumInstallmentCount = 2;
 export const maximumInstallmentCount = 60;
+export const minimumRecurrenceOccurrenceCount = 2;
+export const maximumRecurrenceOccurrenceCount = 360;
 export const paymentMethods = [
   "credit_card",
   "debit_card",
@@ -1034,12 +1036,11 @@ export function listRecurrenceDatesInPeriod(input: {
     }
     return dates;
   }
-  const interval = frequencyMonths[input.frequency] as number;
   let occurrence = 0;
   let current = anchor;
   while (current < effectiveStart) {
     occurrence += 1;
-    current = addMonths(anchor, interval * occurrence);
+    current = getRecurrenceDateAt(anchor, input.frequency, occurrence);
   }
   while (current <= periodEnd) {
     const date = toDateString(current);
@@ -1051,9 +1052,49 @@ export function listRecurrenceDatesInPeriod(input: {
       dates.push(date);
     }
     occurrence += 1;
-    current = addMonths(anchor, interval * occurrence);
+    current = getRecurrenceDateAt(anchor, input.frequency, occurrence);
   }
   return dates;
+}
+
+/**
+ * Converts "N occurrences from startDate" into the inclusive recurrenceEndDate stored by the
+ * series. Returns null when no end date keeps exactly N occurrences, e.g. weekly payables whose
+ * monthly due date is shared by several occurrences.
+ */
+export function calculateRecurrenceEndDate(input: {
+  anchorDate?: string | null;
+  dueDate?: string | null;
+  frequency: RecurrenceFrequency;
+  occurrenceCount: number;
+  startDate: string;
+}) {
+  if (
+    !Number.isInteger(input.occurrenceCount) ||
+    input.occurrenceCount < minimumRecurrenceOccurrenceCount ||
+    input.occurrenceCount > maximumRecurrenceOccurrenceCount
+  ) {
+    throw new RangeError("occurrenceCount is outside the supported range");
+  }
+
+  const anchor = parseDate(input.anchorDate || input.startDate);
+  const start = parseDate(input.startDate);
+  let firstIndex = 0;
+  while (getRecurrenceDateAt(anchor, input.frequency, firstIndex) < start) firstIndex += 1;
+
+  const getEndDateLimit = (index: number) => {
+    const date = toDateString(getRecurrenceDateAt(anchor, input.frequency, index));
+    return resolveRecurringDueDate(date, input.dueDate ?? null) ?? date;
+  };
+  const endDate = getEndDateLimit(firstIndex + input.occurrenceCount - 1);
+  const nextLimit = getEndDateLimit(firstIndex + input.occurrenceCount);
+
+  return endDate >= input.startDate && nextLimit > endDate ? endDate : null;
+}
+
+function getRecurrenceDateAt(anchor: Date, frequency: RecurrenceFrequency, index: number) {
+  if (frequency === "weekly") return addDays(anchor, 7 * index);
+  return addMonths(anchor, (frequencyMonths[frequency] as number) * index);
 }
 
 export function selectRecurringRuleVersionsToUpdate<

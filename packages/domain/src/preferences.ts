@@ -14,11 +14,20 @@ export const mobileShortcutDestinations = [
   "attachments",
   "inbox",
 ] as const;
+export const startPageDestinations = [
+  "dashboard",
+  "transactions",
+  "accounts",
+  "cards",
+  "budgets",
+  "inbox",
+] as const;
 
 export type ApplicationTheme = (typeof applicationThemes)[number];
 export type NotificationDueSoonDays = (typeof notificationDueSoonDayOptions)[number];
 export type TransactionPageSize = (typeof transactionPageSizeOptions)[number];
 export type MobileShortcutDestination = (typeof mobileShortcutDestinations)[number];
+export type StartPageDestination = (typeof startPageDestinations)[number];
 
 export type UserPreferences = {
   theme: ApplicationTheme;
@@ -29,6 +38,7 @@ export type UserPreferences = {
   notificationDueSoonDays: NotificationDueSoonDays;
   transactionsPageSize: TransactionPageSize;
   mobileShortcut: MobileShortcutDestination;
+  startPage: StartPageDestination;
 };
 
 export type UserPreferencesRecord = {
@@ -40,6 +50,7 @@ export type UserPreferencesRecord = {
   notificationDueSoonDays: number;
   transactionsPageSize: number;
   mobileShortcut: string;
+  startPage: string;
 };
 
 const applicationThemeSet = new Set<string>(applicationThemes);
@@ -47,6 +58,7 @@ const notificationDueSoonDaySet = new Set<number>(notificationDueSoonDayOptions)
 const paymentMethodSet = new Set<string>(paymentMethods);
 const transactionPageSizeSet = new Set<number>(transactionPageSizeOptions);
 const mobileShortcutDestinationSet = new Set<string>(mobileShortcutDestinations);
+const startPageDestinationSet = new Set<string>(startPageDestinations);
 
 export function createDefaultUserPreferences(): UserPreferences {
   return {
@@ -58,6 +70,7 @@ export function createDefaultUserPreferences(): UserPreferences {
     notificationDueSoonDays: 5,
     transactionsPageSize: 30,
     mobileShortcut: "accounts",
+    startPage: "dashboard",
   };
 }
 
@@ -92,5 +105,8 @@ export function normalizeUserPreferences(
     mobileShortcut: mobileShortcutDestinationSet.has(preferences.mobileShortcut ?? "")
       ? (preferences.mobileShortcut as MobileShortcutDestination)
       : defaults.mobileShortcut,
+    startPage: startPageDestinationSet.has(preferences.startPage ?? "")
+      ? (preferences.startPage as StartPageDestination)
+      : defaults.startPage,
   };
 }

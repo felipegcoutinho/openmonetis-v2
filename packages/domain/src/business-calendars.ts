@@ -2,12 +2,25 @@ export type BusinessCalendar = {
   workingWeekdays: number[];
   includeNationalHolidays: boolean;
   holidays: string[];
+  /** Month-day pairs (MM-DD) treated as holidays every year. */
+  recurringHolidays: string[];
 };
+export const recurringHolidayMaximumCount = 50;
 export const defaultBusinessCalendar: BusinessCalendar = {
   workingWeekdays: [1, 2, 3, 4, 5],
   includeNationalHolidays: true,
   holidays: [],
+  recurringHolidays: [],
 };
+/** Fills calendar fields added after a version was stored. */
+export function normalizeBusinessCalendar(
+  calendar: Omit<BusinessCalendar, "recurringHolidays"> & { recurringHolidays?: string[] },
+): BusinessCalendar {
+  return { ...calendar, recurringHolidays: calendar.recurringHolidays ?? [] };
+}
+export function isRecurringHoliday(date: string, calendar: BusinessCalendar) {
+  return calendar.recurringHolidays.includes(date.slice(5));
+}
 export const nationalHolidayIds = [
   "newYear",
   "tiradentes",
@@ -47,6 +60,7 @@ export function isBusinessDay(date: string, calendar: BusinessCalendar) {
       calendar.includeNationalHolidays &&
       listNationalHolidays(Number(date.slice(0, 4))).some((holiday) => holiday.date === date)
     ) &&
-    !calendar.holidays.includes(date)
+    !calendar.holidays.includes(date) &&
+    !isRecurringHoliday(date, calendar)
   );
 }

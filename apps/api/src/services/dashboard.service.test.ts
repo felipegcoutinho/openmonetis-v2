@@ -125,7 +125,7 @@ function accountBalance(period: string, balance: number) {
     note: null,
     excludeFromBalance: false,
     isArchived: false,
-    summary: { period, income: 0, expenses: 0, balance },
+    summary: { period, openingBalance: balance, income: 0, expenses: 0, netAmount: 0, balance },
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
   };
@@ -435,6 +435,8 @@ test("dashboard upgrades only the old default order without hiding widgets", () 
   );
   expectedCustom.splice(expectedCustom.indexOf("budgets") + 1, 0, "goals");
   expectedCustom.unshift("attention");
+  // Widgets added after the layout was saved go to the end of a custom order.
+  expectedCustom.push("commitments");
   assert.deepEqual(
     normalizeDashboardWidgetPreferences({ order: custom, hidden: ["external-expenses"] }),
     {

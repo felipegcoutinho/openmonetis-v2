@@ -14,6 +14,7 @@ export const preferencesRepository = {
         notificationDueSoonDays: userPreferences.notificationDueSoonDays,
         transactionsPageSize: userPreferences.transactionsPageSize,
         mobileShortcut: userPreferences.mobileShortcut,
+        startPage: userPreferences.startPage,
       })
       .from(userPreferences)
       .leftJoin(

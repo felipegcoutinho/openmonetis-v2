@@ -193,3 +193,30 @@ test("invoice history groups movements by invoice period and offsets credits", (
     ],
   );
 });
+
+test("card invoice summary reports paid and remaining amounts of the period", () => {
+  const input = {
+    period: "2026-10",
+    limit: 1000,
+    closingDay: 5,
+    dueDay: 10,
+    today: "2026-10-20",
+    paymentStatus: "pending" as const,
+    movements: [
+      { period: "2026-10", amount: -300 },
+      { period: "2026-11", amount: -50 },
+    ],
+    payments: [
+      { period: "2026-10", amount: 120.4 },
+      { period: "2026-09", amount: 75 },
+    ],
+    paidPeriods: [],
+  };
+  const pending = calculateCardInvoiceSummary(input);
+  assert.equal(pending.paidAmount, 120.4);
+  assert.equal(pending.remainingAmount, 179.6);
+
+  const paid = calculateCardInvoiceSummary({ ...input, paymentStatus: "paid" });
+  assert.equal(paid.paidAmount, 120.4);
+  assert.equal(paid.remainingAmount, 0);
+});

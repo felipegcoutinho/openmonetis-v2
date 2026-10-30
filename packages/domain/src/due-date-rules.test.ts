@@ -5,6 +5,7 @@ import {
   type DueDateRule,
   DueDateRuleError,
   defaultDueDateRules,
+  findDueDateRuleConflicts,
   resolveDueDate,
   validateDueDateRuleConflicts,
 } from "./due-date-rules";
@@ -126,6 +127,29 @@ test("triggers are independent while resulting dates are always business days", 
   assert.equal(resolveDueDate(boleto, [weekendOnly]).dueDate, "2026-11-03");
   const custom = { ...version, calendar: { ...version.calendar, holidays: ["2026-11-03"] } };
   assert.equal(resolveDueDate(boleto, [custom]).dueDate, "2026-11-04");
+});
+test("recurring holidays apply every year and are reported as additional holidays", () => {
+  const recurring = {
+    ...version,
+    calendar: { ...version.calendar, recurringHolidays: ["11-03"] },
+  };
+  const thisYear = resolveDueDate(boleto, [recurring]);
+  assert.equal(thisYear.dueDate, "2026-11-04");
+  assert.equal(thisYear.dueDateAdjustment?.reasons.at(-1)?.additionalHoliday, true);
+  assert.equal(
+    resolveDueDate({ ...boleto, dueDate: "2027-11-03" }, [recurring]).dueDate,
+    "2027-11-04",
+  );
+});
+test("conflicting rule ids are listed so each overlap can be pointed out", () => {
+  const selected = { ...rule, scope: "selected" as const, transactionIds: ["one"] };
+  const conflicts = findDueDateRuleConflicts([
+    selected,
+    { ...selected, id: "overlap", transactionIds: ["one", "two"] },
+    { ...selected, id: "disjoint", transactionIds: ["three"] },
+    { ...rule, id: "invoice", target: "invoice" },
+  ]);
+  assert.deepEqual([...conflicts].sort(), ["overlap", "rule"]);
 });
 test("overlapping rules are rejected, disjoint selections are allowed", () => {
   assert.throws(

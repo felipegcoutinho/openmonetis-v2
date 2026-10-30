@@ -62,14 +62,18 @@ test("paid boleto affects the account in the payment month, not the due month", 
 
   assert.deepEqual(august[0]?.summary, {
     period: "2026-08",
+    openingBalance: 0,
     income: 0,
     expenses: 100,
+    netAmount: -100,
     balance: -100,
   });
   assert.deepEqual(september[0]?.summary, {
     period: "2026-09",
+    openingBalance: -100,
     income: 0,
     expenses: 0,
+    netAmount: 0,
     balance: -100,
   });
 });
@@ -93,8 +97,10 @@ test("paid split boleto uses only the admin allocation returned by the repositor
 
   assert.deepEqual(result[0]?.summary, {
     period: "2026-09",
+    openingBalance: 0,
     income: 0,
     expenses: 400,
+    netAmount: -400,
     balance: -400,
   });
 });
@@ -138,8 +144,10 @@ test("early recurring boleto payment is posted before its occurrence due month",
 
   assert.deepEqual(result[0]?.summary, {
     period: "2026-08",
+    openingBalance: 0,
     income: 0,
     expenses: 250,
+    netAmount: -250,
     balance: -250,
   });
 });
@@ -201,8 +209,10 @@ test("balance adjustments affect balance without becoming income or expenses", a
 
   assert.deepEqual(result[0]?.summary, {
     period: "2026-09",
+    openingBalance: 0,
     income: 0,
     expenses: 0,
+    netAmount: 0,
     balance: 250,
   });
 });

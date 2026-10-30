@@ -17,6 +17,8 @@ export const DeviceTokenOutputSchema = z
     tokenPrefix: z.string(),
     lastUsedAt: z.iso.datetime().nullable(),
     expiresAt: z.iso.datetime(),
+    expiresSoon: z.boolean(),
+    recentCaptureCount: z.number().int().nonnegative(),
     createdAt: z.iso.datetime(),
   })
   .openapi("DeviceToken");

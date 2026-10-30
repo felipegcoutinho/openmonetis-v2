@@ -1,0 +1,2 @@
+CREATE TYPE "public"."tag_color" AS ENUM('neutral', 'orange', 'blue', 'green', 'purple', 'yellow', 'red');--> statement-breakpoint
+ALTER TABLE "tags" ADD COLUMN "color" "tag_color" DEFAULT 'neutral' NOT NULL;

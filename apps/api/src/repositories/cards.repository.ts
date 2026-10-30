@@ -8,7 +8,7 @@ import {
   recurringTransactionRules,
   transactions,
 } from "@openmonetis/db";
-import { and, asc, eq, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import type { CardsRepository } from "../services/cards.service";
 import { effectiveRecurringEndDateSql } from "./recurring-transactions.repository";
 import {
@@ -211,12 +211,14 @@ export const cardsRepository = {
       );
   },
 
-  listInvoicePaymentsByUser(userId, cardId) {
-    return db
+  async listInvoicePaymentsByUser(userId, cardId) {
+    const rows = await db
       .select({
+        id: invoicePayments.id,
         cardId: invoicePayments.cardId,
         period: invoicePayments.period,
         amount: invoicePayments.amount,
+        paidAt: invoicePayments.paidAt,
       })
       .from(invoicePayments)
       .where(
@@ -224,7 +226,9 @@ export const cardsRepository = {
           eq(invoicePayments.userId, userId),
           ...(cardId ? [eq(invoicePayments.cardId, cardId)] : []),
         ),
-      );
+      )
+      .orderBy(desc(invoicePayments.createdAt));
+    return rows.map((row) => ({ ...row, paidAt: row.paidAt.toISOString().slice(0, 10) }));
   },
 
   async listActiveRecurringRulesThroughPeriod(userId, periodEnd, cardId) {

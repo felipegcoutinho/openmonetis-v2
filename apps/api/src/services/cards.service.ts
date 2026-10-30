@@ -2,7 +2,6 @@ import {
   type CardBrand,
   type CardClosingOffsetMode,
   type CardClosingRuleType,
-  type CardInvoiceSummary,
   type CardStatus,
   calculateCardCycleSpending,
   calculateCardInvoiceHistory,
@@ -79,9 +78,11 @@ type CardInvoiceStateRecord = {
 };
 
 type CardInvoicePaymentRecord = {
+  id: string;
   cardId: string;
   period: string;
   amount: string;
+  paidAt: string;
 };
 
 type CardRecurringRuleRecord = {
@@ -121,7 +122,7 @@ export type CardsRepository = {
 
 function toCardOutput(
   card: CardRecord,
-  invoiceSummary: CardInvoiceSummary,
+  invoiceSummary: CardOutput["invoiceSummary"],
   cycleSpending: CardOutput["cycleSpending"],
 ): CardOutput {
   return {
@@ -144,6 +145,12 @@ function toCardOutput(
     createdAt: card.createdAt.toISOString(),
     updatedAt: card.updatedAt.toISOString(),
   };
+}
+
+function toInvoicePaymentSummaries(payments: CardInvoicePaymentRecord[], period: string) {
+  return payments
+    .filter((payment) => payment.period === period)
+    .map((payment) => ({ id: payment.id, amount: Number(payment.amount), paidAt: payment.paidAt }));
 }
 
 export function createCardsService(
@@ -223,7 +230,10 @@ export function createCardsService(
           })),
         });
       };
-      const invoiceSummary = summarizeInvoice(period);
+      const invoiceSummary = {
+        ...summarizeInvoice(period),
+        payments: toInvoicePaymentSummaries(payments, period),
+      };
       const previousInvoiceSummary = summarizeInvoice(addMonthsToPeriod(period, -1));
       return toCardOutput(
         card,

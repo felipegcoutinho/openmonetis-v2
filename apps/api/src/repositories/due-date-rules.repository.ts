@@ -9,6 +9,7 @@ import {
   transactions,
   user,
 } from "@openmonetis/db";
+import { normalizeBusinessCalendar } from "@openmonetis/domain/business-calendars";
 import { isActiveRecurringOccurrence } from "@openmonetis/domain/recurring-transactions";
 import { and, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
 import type { DueDateRulesRepository } from "../services/due-date-rules.service";
@@ -150,7 +151,7 @@ export const dueDateRulesRepository: DueDateRulesRepository = {
     });
   },
   async listVersions(userId) {
-    return db
+    const rows = await db
       .select({
         revision: dueDateRuleVersions.revision,
         effectiveFrom: dueDateRuleVersions.effectiveFrom,
@@ -160,6 +161,7 @@ export const dueDateRulesRepository: DueDateRulesRepository = {
       .from(dueDateRuleVersions)
       .where(eq(dueDateRuleVersions.userId, userId))
       .orderBy(desc(dueDateRuleVersions.revision));
+    return rows.map((row) => ({ ...row, calendar: normalizeBusinessCalendar(row.calendar) }));
   },
   async listTargets(userId) {
     const [cardRows, payableRows, recurringRows] = await Promise.all([

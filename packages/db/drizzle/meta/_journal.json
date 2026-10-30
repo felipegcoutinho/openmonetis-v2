@@ -127,6 +127,27 @@
       "when": 1791829024778,
       "tag": "0017_payable_due_date_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793326118779,
+      "tag": "0018_tag_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793326899402,
+      "tag": "0019_tag_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793364807361,
+      "tag": "0020_user_start_page",
+      "breakpoints": true
     }
   ]
 }
