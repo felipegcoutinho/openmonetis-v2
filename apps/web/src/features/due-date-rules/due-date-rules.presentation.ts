@@ -45,6 +45,14 @@ export function dueDateRuleSummary(rule: DueDateRule) {
   const action = dueDateAdjustmentLabels[rule.adjustment];
   return `${target} · ${rule.scope === "all" ? "todos" : "itens selecionados"} · ${action}`;
 }
+export function dueDateRuleSelectionSummary(rule: DueDateRule) {
+  const count = rule.cardIds.length + rule.transactionIds.length + rule.seriesIds.length;
+  return count === 1 ? "1 item" : `${count} itens`;
+}
+export function formatRecurringHoliday(monthDay: string) {
+  const [month, day] = monthDay.split("-");
+  return `${day}/${month}`;
+}
 export function formatDueDate(date: string) {
   return new Date(`${date}T12:00:00.000Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }

@@ -3,6 +3,7 @@ import type { UserPreferencesOutput } from "@openmonetis/validators/preferences"
 import { Check, Monitor, Moon, ShieldCheck, Sun } from "lucide-react";
 import { useId } from "react";
 import { SettingsSection } from "@/components/settings-panel";
+import { useTheme } from "@/components/theme-provider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -16,10 +17,11 @@ export function PreferencesDisplaySections({
   disabled: boolean;
 }) {
   const privacyId = useId();
+  const { setTheme } = useTheme();
   return (
     <>
       <SettingsSection
-        description="Escolha um tema. A mudança será aplicada ao salvar."
+        description="Veja a prévia do tema agora. Salve para mantê-lo."
         icon={Sun}
         title="Aparência"
       >
@@ -39,7 +41,10 @@ export function PreferencesDisplaySections({
                       selected && "border-brand-strong/50 bg-brand/10 ring-1 ring-brand-strong/20",
                     )}
                     key={theme}
-                    onClick={() => field.handleChange(theme)}
+                    onClick={() => {
+                      field.handleChange(theme);
+                      setTheme(theme);
+                    }}
                     type="button"
                   >
                     <span

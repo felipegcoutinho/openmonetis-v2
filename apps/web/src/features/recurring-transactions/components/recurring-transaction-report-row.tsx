@@ -49,7 +49,7 @@ export function RecurringTransactionReportRow({
           />
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              <h3 className="min-w-0 truncate font-bold">{item.name}</h3>
+              <h3 className="min-w-0 truncate font-medium">{item.name}</h3>
               <Badge variant={item.status === "active" ? "outline" : "secondary"}>
                 {recurringStatusLabels[item.status]}
               </Badge>

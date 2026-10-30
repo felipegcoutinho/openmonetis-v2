@@ -1,7 +1,13 @@
 import type { CreateNoteInput } from "@openmonetis/validators/notes";
 import type { TransactionInput } from "@openmonetis/validators/transactions";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, NotebookPen } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  LoaderCircle,
+  NotebookPen,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -58,29 +64,35 @@ const transactionActions: Array<{
 ];
 
 export function DashboardQuickActions({ period }: { period: string }) {
+  const queryClient = useQueryClient();
   const [transactionAction, setTransactionAction] = useState<TransactionAction | null>(null);
+  const [preparingAction, setPreparingAction] = useState<TransactionAction | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const accountsQuery = useQuery(accountsQueryOptions());
   const cardsQuery = useQuery(cardsQueryOptions());
   const categoriesQuery = useQuery(categoriesQueryOptions());
   const peopleQuery = useQuery(peopleQueryOptions());
   const createNote = useCreateNoteMutation();
-  const referenceLoading =
-    accountsQuery.isLoading ||
-    cardsQuery.isLoading ||
-    categoriesQuery.isLoading ||
-    peopleQuery.isLoading;
-  const referenceError =
-    accountsQuery.isError || cardsQuery.isError || categoriesQuery.isError || peopleQuery.isError;
 
-  function openTransaction(type: TransactionAction) {
-    if (referenceError) {
+  // Waits for the form options (reusing cached data or retrying failed loads) so a click made
+  // while they load opens the form, and a failure is reported on that same click.
+  async function openTransaction(type: TransactionAction) {
+    setPreparingAction(type);
+    try {
+      await Promise.all([
+        queryClient.ensureQueryData(accountsQueryOptions()),
+        queryClient.ensureQueryData(cardsQueryOptions()),
+        queryClient.ensureQueryData(categoriesQueryOptions()),
+        queryClient.ensureQueryData(peopleQueryOptions()),
+      ]);
+      setTransactionAction(type);
+    } catch {
       toast.error("Não foi possível preparar o formulário.", {
-        description: "Atualize a página e tente novamente.",
+        description: "Verifique sua conexão e tente novamente.",
       });
-      return;
+    } finally {
+      setPreparingAction(null);
     }
-    setTransactionAction(type);
   }
 
   return (
@@ -95,21 +107,29 @@ export function DashboardQuickActions({ period }: { period: string }) {
             "group/quick-action h-auto min-h-16 flex-col justify-center gap-2 rounded-lg bg-muted/40 px-1 py-3 text-foreground text-xs md:h-10 md:min-h-0 md:flex-row md:bg-transparent md:px-3 md:py-0 md:text-sm hover:text-foreground sm:justify-center",
             action.hoverClassName,
           )}
-          disabled={referenceLoading}
+          aria-busy={preparingAction === action.type}
+          disabled={preparingAction !== null}
           key={action.type}
-          onClick={() => openTransaction(action.type)}
+          onClick={() => void openTransaction(action.type)}
           size="sm"
           type="button"
           variant="ghost"
         >
-          <action.icon
-            aria-hidden="true"
-            className={cn(
-              "size-4 transition-transform duration-200 ease-out motion-reduce:transition-none",
-              action.iconClassName,
-              action.iconMotionClassName,
-            )}
-          />
+          {preparingAction === action.type ? (
+            <LoaderCircle
+              aria-hidden="true"
+              className="size-4 animate-spin text-muted-foreground"
+            />
+          ) : (
+            <action.icon
+              aria-hidden="true"
+              className={cn(
+                "size-4 transition-transform duration-200 ease-out motion-reduce:transition-none",
+                action.iconClassName,
+                action.iconMotionClassName,
+              )}
+            />
+          )}
           {action.shortLabel}
         </Button>
       ))}

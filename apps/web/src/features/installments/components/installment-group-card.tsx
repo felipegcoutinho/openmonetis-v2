@@ -64,7 +64,7 @@ export function InstallmentGroupCard({
           />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h3 className="min-w-0 truncate font-bold">{group.name}</h3>
+              <h3 className="min-w-0 truncate font-medium">{group.name}</h3>
               <Badge variant={statusVariant}>{installmentSeriesStatusLabels[group.status]}</Badge>
               {selectedInGroup > 0 ? (
                 <Badge variant="secondary">{selectedInGroup} selecionadas</Badge>

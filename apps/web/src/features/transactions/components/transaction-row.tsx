@@ -29,6 +29,7 @@ export function TransactionRow({
   period,
   accountStatement,
   adminPersonId,
+  selectionMode,
   selected,
   selectable,
   splitConnector,
@@ -130,28 +131,30 @@ export function TransactionRow({
         splitConnector && splitConnector !== "end" && "border-b-0",
       )}
     >
-      <TableCell>
-        <Checkbox
-          aria-label={
-            selectable
-              ? `Selecionar ${transaction.name}`
-              : `${transaction.name} não participa da conferência`
-          }
-          checked={selected}
-          className={cn(!selectable && "opacity-40!")}
-          disabled={!selectable}
-          // Shift extends the row range; keep the browser from extending a text selection too.
-          onMouseDown={(event) => {
-            if (event.shiftKey) event.preventDefault();
-          }}
-          onCheckedChange={(checked, details) =>
-            onSelectionChange(
-              checked,
-              details.event instanceof MouseEvent && details.event.shiftKey,
-            )
-          }
-        />
-      </TableCell>
+      {selectionMode ? (
+        <TableCell>
+          <Checkbox
+            aria-label={
+              selectable
+                ? `Selecionar ${transaction.name}`
+                : `${transaction.name} não participa da conferência`
+            }
+            checked={selected}
+            className={cn(!selectable && "opacity-40!")}
+            disabled={!selectable}
+            // Shift extends the row range; keep the browser from extending a text selection too.
+            onMouseDown={(event) => {
+              if (event.shiftKey) event.preventDefault();
+            }}
+            onCheckedChange={(checked, details) =>
+              onSelectionChange(
+                checked,
+                details.event instanceof MouseEvent && details.event.shiftKey,
+              )
+            }
+          />
+        </TableCell>
+      ) : null}
       <TransactionRowDescription
         period={period}
         transaction={transaction}

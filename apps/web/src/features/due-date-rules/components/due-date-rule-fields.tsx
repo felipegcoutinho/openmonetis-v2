@@ -1,31 +1,23 @@
 import type { DueDateRule } from "@openmonetis/domain/due-date-rules";
 import type { DueDateRuleOptions } from "@openmonetis/validators/due-date-rules";
-import { Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  dueDateAdjustmentLabels,
-  dueDateRuleSummary,
-  dueDateTargetLabels,
-} from "../due-date-rules.presentation";
+import { dueDateAdjustmentLabels, dueDateTargetLabels } from "../due-date-rules.presentation";
 export function DueDateRuleFields({
   rule,
   options,
   disabled,
   onChange,
-  onRemove,
 }: {
   rule: DueDateRule;
   options: DueDateRuleOptions;
   disabled: boolean;
   onChange: (rule: DueDateRule) => void;
-  onRemove: () => void;
 }) {
   const id = useId();
   const [search, setSearch] = useState("");
@@ -36,24 +28,8 @@ export function DueDateRuleFields({
   const selectedCount = rule.cardIds.length + rule.transactionIds.length + rule.seriesIds.length;
   const update = (changes: Partial<DueDateRule>) => onChange({ ...rule, ...changes });
   return (
-    <fieldset disabled={disabled} className="grid min-w-0 gap-4 rounded-lg border p-4">
+    <fieldset disabled={disabled} className="grid min-w-0 gap-4">
       <legend className="sr-only">{rule.name || "Nova regra"}</legend>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-medium">{rule.name || "Nova regra"}</p>
-          <p className="text-muted-foreground text-xs">{dueDateRuleSummary(rule)}</p>
-        </div>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          disabled={disabled}
-          onClick={onRemove}
-          aria-label={`Remover regra ${rule.name}`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </div>
       <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={`${id}-name`}>Nome da regra</Label>

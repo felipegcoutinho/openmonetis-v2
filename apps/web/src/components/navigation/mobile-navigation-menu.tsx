@@ -56,9 +56,7 @@ export function MobileNavigationMenu({
         <SheetBody>
           <nav aria-label="Navegação principal" className="grid gap-5">
             <section className="grid gap-2 md:hidden">
-              <h2 className="px-1 font-medium text-muted-foreground text-xs tracking-wider">
-                Ferramentas
-              </h2>
+              <h2 className="eyebrow px-1 text-muted-foreground">Ferramentas</h2>
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   className="h-20! w-full! flex-col gap-2 rounded-lg p-2 hover:bg-accent"
@@ -103,9 +101,7 @@ export function MobileNavigationMenu({
             </NavLink>
             {navSections.map((section) => (
               <section className="grid gap-1" key={section.label}>
-                <h2 className="px-3 pb-1 font-medium text-muted-foreground text-xs  tracking-wider">
-                  {section.label}
-                </h2>
+                <h2 className="eyebrow px-3 pb-1 text-muted-foreground">{section.label}</h2>
                 <NavigationSectionItems
                   items={section.items}
                   onNavigate={() => setMobileNavigationOpen(false)}

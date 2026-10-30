@@ -1,6 +1,6 @@
 import type { CreateTagInput, TagOutput } from "@openmonetis/validators/tags";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Tag } from "lucide-react";
+import { Plus, Search, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useCreateTagMutation,
   useDeleteTagMutation,
@@ -28,6 +30,9 @@ import {
 import { tagsQueryOptions, tagsReportQueryOptions } from "../tags.queries";
 import { TagDialog } from "./tag-dialog";
 import { TagsList } from "./tags-list";
+
+type TagStatus = TagOutput["status"];
+
 export function TagsPage({
   period,
   onPeriodChange,
@@ -36,6 +41,7 @@ export function TagsPage({
   onPeriodChange: (period: string) => void;
 }) {
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<TagStatus>("active");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TagOutput | null>(null);
   const [removing, setRemoving] = useState<TagOutput | null>(null);
@@ -45,9 +51,37 @@ export function TagsPage({
   const update = useUpdateTagMutation();
   const remove = useDeleteTagMutation();
   const tags = query.data ?? [];
-  const visibleTags = tags.filter((tag) =>
-    tag.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")),
+  const statusCounts = {
+    active: tags.filter((tag) => tag.status === "active").length,
+    inactive: tags.filter((tag) => tag.status === "inactive").length,
+  };
+  const visibleTags = tags.filter(
+    (tag) =>
+      tag.status === status &&
+      tag.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")),
   );
+  async function toggleStatus(tag: TagOutput) {
+    const nextStatus: TagStatus = tag.status === "active" ? "inactive" : "active";
+    try {
+      await update.mutateAsync({ id: tag.id, input: { status: nextStatus } });
+      toast.success(nextStatus === "inactive" ? "Etiqueta inativada" : "Etiqueta reativada", {
+        description:
+          nextStatus === "inactive"
+            ? "Ela some dos seletores, mas continua nos lançamentos."
+            : "Ela voltou a aparecer nos seletores.",
+        action: {
+          label: "Desfazer",
+          onClick: () =>
+            update.mutate(
+              { id: tag.id, input: { status: tag.status } },
+              { onError: () => toast.error("Não foi possível desfazer.") },
+            ),
+        },
+      });
+    } catch {
+      toast.error("Não foi possível alterar a etiqueta.");
+    }
+  }
   async function save(input: CreateTagInput) {
     if (editing) await update.mutateAsync({ id: editing.id, input });
     else await create.mutateAsync(input);
@@ -83,24 +117,48 @@ export function TagsPage({
           {tags.length ? (
             <>
               <MonthNavigation onPeriodChange={onPeriodChange} period={period} />
-              <div className="flex flex-wrap gap-3">
-                <Input
-                  className="min-w-0 flex-1"
-                  aria-label="Buscar etiquetas"
-                  placeholder="Buscar etiqueta"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Resultado é a diferença entre receitas e despesas do mês, incluindo pendências.
-                Transferências mostram o valor movimentado entre contas, contado uma vez por
-                transferência, sem afetar o resultado. Um lançamento pode aparecer em mais de uma
-                etiqueta; os totais das etiquetas não devem ser somados.
-              </p>
+              <Tabs
+                className="gap-0"
+                onValueChange={(value) => {
+                  if (value === "active" || value === "inactive") setStatus(value);
+                }}
+                value={status}
+              >
+                <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:border-border lg:border-b">
+                  <TabsList
+                    aria-label="Filtrar por status"
+                    className="lg:border-b-0"
+                    variant="line"
+                  >
+                    <TabsTrigger value="active">Ativas ({statusCounts.active})</TabsTrigger>
+                    <TabsTrigger value="inactive">
+                      {statusCounts.inactive ? `Inativas (${statusCounts.inactive})` : "Inativas"}
+                    </TabsTrigger>
+                  </TabsList>
+                  <div className="relative min-w-0 sm:w-72">
+                    <Search
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                    />
+                    <Input
+                      className="h-8 pl-9"
+                      aria-label="Buscar etiquetas"
+                      placeholder="Buscar etiqueta"
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </div>
+                </div>
+              </Tabs>
             </>
           ) : null}
-          {query.isLoading ? <p role="status">Carregando etiquetas...</p> : null}
+          {query.isLoading ? (
+            <div aria-label="Carregando etiquetas" className="grid gap-2" role="status">
+              <Skeleton className="h-10" />
+              <Skeleton className="h-40" />
+            </div>
+          ) : null}
           {query.isError ? (
             <p role="alert" className="text-destructive">
               Não foi possível carregar as etiquetas.{" "}
@@ -119,27 +177,46 @@ export function TagsPage({
           ) : null}
           {query.data ? (
             visibleTags.length ? (
-              <TagsList
-                tags={visibleTags}
-                period={period}
-                report={report.data}
-                loading={report.isPending}
-                onEdit={(tag) => {
-                  setEditing(tag);
-                  setOpen(true);
-                }}
-                onRemove={setRemoving}
-              />
+              <div className="grid gap-2">
+                <TagsList
+                  tags={visibleTags}
+                  period={period}
+                  report={report.data}
+                  loading={report.isPending}
+                  onEdit={(tag) => {
+                    setEditing(tag);
+                    setOpen(true);
+                  }}
+                  onRemove={setRemoving}
+                  onToggleStatus={(tag) => void toggleStatus(tag)}
+                  pendingTagId={update.isPending ? (update.variables?.id ?? null) : null}
+                />
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Resultado é receitas menos despesas do mês, incluindo pendências. Transferências
+                  não afetam o resultado. Um lançamento pode ter várias etiquetas, então os totais
+                  não devem ser somados.
+                </p>
+              </div>
             ) : (
               <Card className="items-center gap-3 p-6 text-center" role="status">
                 <Tag aria-hidden="true" className="size-6 text-muted-foreground" />
                 <p className="font-medium">
-                  {tags.length ? "Nenhuma etiqueta encontrada" : "Nenhuma etiqueta cadastrada"}
+                  {!tags.length
+                    ? "Nenhuma etiqueta cadastrada"
+                    : search.trim()
+                      ? "Nenhuma etiqueta encontrada"
+                      : status === "inactive"
+                        ? "Nenhuma etiqueta inativa"
+                        : "Nenhuma etiqueta ativa"}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {tags.length
-                    ? "Tente outro nome ou limpe a busca para ver todas as etiquetas."
-                    : "Crie sua primeira etiqueta para organizar os lançamentos."}
+                  {!tags.length
+                    ? "Crie sua primeira etiqueta para organizar os lançamentos."
+                    : search.trim()
+                      ? "Tente outro nome ou limpe a busca para ver todas as etiquetas."
+                      : status === "inactive"
+                        ? "Etiquetas inativadas aparecem aqui e podem ser reativadas."
+                        : "Reative uma etiqueta ou crie uma nova."}
                 </p>
                 {search.trim() ? (
                   <Button variant="outline" onClick={() => setSearch("")}>

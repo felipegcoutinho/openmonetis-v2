@@ -1,5 +1,6 @@
 import type { AdjustAccountBalanceInput } from "@openmonetis/validators/accounts";
 import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousDataForRecord } from "@/lib/query-placeholder";
 import {
   getAccount,
   getAccountCashFlow,
@@ -26,6 +27,7 @@ export function accountQueryOptions(id: string, period = getCurrentAccountPeriod
   return queryOptions({
     queryKey: accountKeys.detail(id, period),
     queryFn: () => getAccount(id, period),
+    placeholderData: keepPreviousDataForRecord(id),
   });
 }
 
@@ -33,6 +35,7 @@ export function accountCashFlowQueryOptions(id: string, period: string) {
   return queryOptions({
     queryKey: accountKeys.cashFlow(id, period),
     queryFn: () => getAccountCashFlow(id, period),
+    placeholderData: keepPreviousDataForRecord(id),
   });
 }
 

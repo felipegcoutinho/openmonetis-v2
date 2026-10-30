@@ -161,7 +161,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
               {cardInvoiceStatusLabels[card.invoiceSummary.status]}
             </span>
           </div>
-          <MoneyValue amount={card.invoiceSummary.amount} className="mt-1 font-medium text-2xl" />
+          <MoneyValue amount={card.invoiceSummary.amount} className="kpi-value mt-1 text-2xl" />
         </div>
         <div className="grid grid-cols-3 gap-2">
           <CardMetric

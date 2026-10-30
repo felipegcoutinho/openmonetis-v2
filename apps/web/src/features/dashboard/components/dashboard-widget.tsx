@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { DashboardWidgetMenu, useDashboardWidgetControls } from "./dashboard-widget-menu";
 
 type DashboardWidgetProps = {
   action?: ReactNode;
@@ -21,6 +22,8 @@ export function DashboardWidget({
   icon,
   title,
 }: DashboardWidgetProps) {
+  const controls = useDashboardWidgetControls();
+
   return (
     <Card className={cn("h-115 gap-0 border py-0", className)}>
       <div className="border-b">
@@ -40,7 +43,12 @@ export function DashboardWidget({
               ) : null}
             </div>
           </div>
-          {action ? <div className="shrink-0">{action}</div> : null}
+          {action || controls ? (
+            <div className="flex shrink-0 items-center gap-1">
+              {action}
+              {controls ? <DashboardWidgetMenu controls={controls} /> : null}
+            </div>
+          ) : null}
         </CardHeader>
       </div>
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-2">

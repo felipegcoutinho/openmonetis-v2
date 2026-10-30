@@ -1,4 +1,7 @@
-import type { MobileShortcutDestination } from "@openmonetis/domain/preferences";
+import type {
+  MobileShortcutDestination,
+  StartPageDestination,
+} from "@openmonetis/domain/preferences";
 import type { UserPreferencesOutput } from "@openmonetis/validators/preferences";
 import type { TransactionCreateDefaults } from "@/features/transactions/components/transaction-form.validation";
 import { PreferencesApiError } from "./preferences.api";
@@ -16,6 +19,24 @@ export const mobileShortcutLabels: Record<MobileShortcutDestination, string> = {
   attachments: "Anexos",
   inbox: "Capturas",
 };
+
+export const startPageLabels: Record<StartPageDestination, string> = {
+  dashboard: "Visão geral",
+  transactions: "Lançamentos",
+  accounts: "Contas",
+  cards: "Cartões",
+  budgets: "Orçamentos",
+  inbox: "Caixa de entrada",
+};
+
+export const startPagePaths = {
+  dashboard: "/dashboard",
+  transactions: "/transactions",
+  accounts: "/accounts",
+  cards: "/cards",
+  budgets: "/budgets",
+  inbox: "/inbox",
+} as const satisfies Record<StartPageDestination, string>;
 
 export function getTransactionPreferenceDefaults(
   preferences?: UserPreferencesOutput,

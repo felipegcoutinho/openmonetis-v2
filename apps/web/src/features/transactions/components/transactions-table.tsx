@@ -13,6 +13,7 @@ import type { TransactionsTableProps } from "./transactions-table.types";
 export function TransactionsTable({
   accountStatement = false,
   adminPersonId,
+  selectionMode = false,
   transactions,
   pendingTransactionId,
   pendingSettlementKey,
@@ -49,14 +50,16 @@ export function TransactionsTable({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-10">
-                          <Checkbox
-                            aria-label="Selecionar lançamentos operacionais desta página"
-                            checked={selection.allSelectableSelected}
-                            disabled={!selection.selectableCount}
-                            onCheckedChange={selection.setAllSelectableSelected}
-                          />
-                        </TableHead>
+                        {selectionMode ? (
+                          <TableHead className="w-10">
+                            <Checkbox
+                              aria-label="Selecionar lançamentos operacionais desta página"
+                              checked={selection.allSelectableSelected}
+                              disabled={!selection.selectableCount}
+                              onCheckedChange={selection.setAllSelectableSelected}
+                            />
+                          </TableHead>
+                        ) : null}
                         <TableHead>Descrição</TableHead>
                         <TableHead className="text-right">Valor</TableHead>
                         <TableHead className="pl-5">Condição</TableHead>
@@ -71,6 +74,7 @@ export function TransactionsTable({
                           accountStatement={accountStatement}
                           adminPersonId={adminPersonId}
                           key={transaction.id}
+                          selectionMode={selectionMode}
                           selected={selection.isSelected(transaction.id)}
                           selectable={selection.isSelectable(transaction)}
                           splitConnector={splitConnector}

@@ -44,10 +44,10 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
               {commitmentStatusLabel(current.status)}
             </Badge>
           </div>
-          <span className="font-medium font-mono text-xl leading-tight tabular-nums tracking-tighter">
+          <span className="kpi-value text-xl">
             {formatCommitmentPercentage(current.commitmentPercentage)}
           </span>
-          <CommitmentGauge percentage={current.commitmentPercentage} status={current.status} />
+          <CommitmentBandBar percentage={current.commitmentPercentage} status={current.status} />
         </Card>
         <Card className="min-w-0 gap-1 px-5 py-4">
           <p className="text-muted-foreground text-xs">Folga estimada</p>
@@ -62,7 +62,7 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
       </section>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="gap-2 p-5 shadow-none">
-          <h2 className="font-heading font-medium text-lg">Próximo alívio</h2>
+          <h2 className="section-title">Próximo alívio</h2>
           {report.relief ? (
             <p className="text-muted-foreground text-sm">
               Em {formatCommitmentPeriod(report.relief.period)} os compromissos caem{" "}
@@ -80,7 +80,7 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
           )}
         </Card>
         <Card className="gap-2 p-5 shadow-none">
-          <h2 className="font-heading font-medium text-lg">Parcelamentos que terminam</h2>
+          <h2 className="section-title">Parcelamentos que terminam</h2>
           {report.endingSeries.length ? (
             <ul className="grid gap-2 text-sm">
               {report.endingSeries.map((series) => (
@@ -123,13 +123,15 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
   );
 }
 
+const gaugeBandAnimationStepMs = 120;
+
 const gaugeBandClassNames = {
   healthy: "bg-success/35",
   attention: "bg-warning/40",
   critical: "bg-destructive/40",
 } as const;
 
-function CommitmentGauge({
+function CommitmentBandBar({
   percentage,
   status,
 }: {
@@ -143,20 +145,23 @@ function CommitmentGauge({
       className="relative mt-2 flex h-2 w-full overflow-visible rounded-full"
       role="img"
     >
-      {commitmentGaugeBands.map((band) => (
+      {commitmentGaugeBands.map((band, index) => (
         <span
           className={cn(
-            "h-full first:rounded-l-full last:rounded-r-full",
+            "h-full origin-left animate-[progress-fill_0.5s_cubic-bezier(0.22,1,0.36,1)_both] first:rounded-l-full last:rounded-r-full motion-reduce:animate-none",
             gaugeBandClassNames[band.status],
           )}
           key={band.status}
-          style={{ width: `${band.to - band.from}%` }}
+          style={{
+            width: `${band.to - band.from}%`,
+            animationDelay: `${index * gaugeBandAnimationStepMs}ms`,
+          }}
         />
       ))}
       {position !== null ? (
         <span
           aria-hidden="true"
-          className="-translate-x-1/2 absolute -top-1 h-4 w-1 rounded-full bg-foreground"
+          className="-translate-x-1/2 absolute -top-1 h-4 w-1 animate-[gauge-marker-in_0.9s_cubic-bezier(0.22,1,0.36,1)_0.3s_both] rounded-full bg-foreground motion-reduce:animate-none"
           style={{ left: `${position}%` }}
         />
       ) : null}

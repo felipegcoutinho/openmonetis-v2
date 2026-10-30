@@ -57,6 +57,7 @@ export function TagsFilter({
         }
       />
       <TagsPicker
+        includeInactive
         tags={tags}
         selected={slugs}
         disabled={query.isPending || query.isError || Boolean(search.withoutTags)}

@@ -1,17 +1,26 @@
 import { SettingsApiError } from "./settings.api";
 
 export const settingsTabs = [
+  "profile",
   "preferences",
   "due-date-rules",
   "security",
-  "companion",
-  "danger-zone",
+  "integrations",
+  "account-data",
 ] as const;
 export type SettingsTab = (typeof settingsTabs)[number];
 type SettingsSearch = { tab?: SettingsTab };
 
+/** Keeps links shared before the tabs were renamed working. */
+const legacySettingsTabs: Record<string, SettingsTab> = {
+  companion: "integrations",
+  "danger-zone": "account-data",
+};
+
 export function validateSettingsSearch(search: Record<string, unknown>): SettingsSearch {
-  return settingsTabs.includes(search.tab as SettingsTab) ? { tab: search.tab as SettingsTab } : {};
+  const tab =
+    typeof search.tab === "string" ? (legacySettingsTabs[search.tab] ?? search.tab) : null;
+  return settingsTabs.includes(tab as SettingsTab) ? { tab: tab as SettingsTab } : {};
 }
 
 export function settingsMutationErrorMessage(error: unknown) {

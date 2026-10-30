@@ -123,7 +123,11 @@ function InstallmentExpenseList({ items }: { items: InstallmentExpense[] }) {
                     item.isPaid ? "text-success" : "text-muted-foreground",
                   )}
                 >
-                  {item.isPaid ? "Paga" : `${item.pendingInstallmentCount} em aberto`}
+                  {item.isPaid ? (
+                    <span className="animate-status-confirm">Paga</span>
+                  ) : (
+                    `${item.pendingInstallmentCount} em aberto`
+                  )}
                 </p>
               </div>
             </div>

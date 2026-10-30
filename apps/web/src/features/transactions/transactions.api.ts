@@ -10,6 +10,8 @@ import type {
   InstallmentOptionsOutput,
   PaginatedTransactionsOutput,
   RecentEstablishmentsOutput,
+  RecurrenceEndDateOutput,
+  RecurrenceEndDateQuery,
   RecurringOccurrenceActionInput,
   TransactionActionScope,
   TransactionExportOutput,
@@ -102,6 +104,17 @@ export function exportTransactions(
 
 export function getInstallmentOptions(amount: number) {
   return request<InstallmentOptionsOutput>(`/transactions/installments/preview?amount=${amount}`);
+}
+
+export function getRecurrenceEndDate(query: RecurrenceEndDateQuery) {
+  const params = new URLSearchParams({
+    startDate: query.startDate,
+    frequency: query.frequency,
+    occurrenceCount: String(query.occurrenceCount),
+  });
+  if (query.anchorDate) params.set("anchorDate", query.anchorDate);
+  if (query.dueDate) params.set("dueDate", query.dueDate);
+  return request<RecurrenceEndDateOutput>(`/transactions/recurrence-end-date?${params}`);
 }
 
 export function getTransaction(id: string) {

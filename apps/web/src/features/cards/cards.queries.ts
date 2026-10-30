@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousDataForRecord } from "@/lib/query-placeholder";
 import { getCard, getCardInvoiceHistory, getCardInvoicePeriod, getCards } from "./cards.api";
 import { getCurrentCardPeriod } from "./cards.presentation";
 
@@ -27,6 +28,7 @@ export function cardQueryOptions(id: string, period = getCurrentCardPeriod()) {
   return queryOptions({
     queryKey: cardKeys.detail(id, period),
     queryFn: () => getCard(id, period),
+    placeholderData: keepPreviousDataForRecord(id),
   });
 }
 
@@ -34,5 +36,6 @@ export function cardInvoiceHistoryQueryOptions(id: string, period: string) {
   return queryOptions({
     queryKey: cardKeys.invoiceHistory(id, period),
     queryFn: () => getCardInvoiceHistory(id, period),
+    placeholderData: keepPreviousDataForRecord(id),
   });
 }

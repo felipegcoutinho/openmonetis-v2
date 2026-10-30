@@ -1,6 +1,15 @@
 import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { FileSearch, ListChecks, NotebookPen, Plus, RefreshCw, Search } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  FileSearch,
+  ListChecks,
+  NotebookPen,
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -191,12 +200,22 @@ export function NotesPage() {
             }}
             value={status}
           >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:border-border lg:border-b">
-              <TabsList aria-label="Filtrar por status">
+            <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:border-border lg:border-b">
+              <TabsList aria-label="Filtrar por status" className="lg:border-b-0" variant="line">
                 <TabsTrigger value="active">Ativas</TabsTrigger>
                 <TabsTrigger value="archived">Arquivadas</TabsTrigger>
               </TabsList>
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button
+                  aria-pressed={hideCompleted}
+                  onClick={() => setHideCompleted(!hideCompleted)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  {hideCompleted ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
+                  {hideCompleted ? "Mostrar concluídas" : "Ocultar concluídas"}
+                </Button>
                 <div className="relative min-w-0 sm:w-72">
                   <Search
                     aria-hidden="true"
@@ -204,7 +223,7 @@ export function NotesPage() {
                   />
                   <Input
                     aria-label="Buscar anotações"
-                    className="pl-9"
+                    className="h-8 pl-9"
                     maxLength={120}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar título, conteúdo ou item"
@@ -265,15 +284,6 @@ export function NotesPage() {
                 </div>
               ) : null}
 
-              <Button
-                className="w-fit"
-                variant="outline"
-                size="sm"
-                aria-pressed={hideCompleted}
-                onClick={() => setHideCompleted(!hideCompleted)}
-              >
-                {hideCompleted ? "Mostrar tarefas concluídas" : "Ocultar tarefas concluídas"}
-              </Button>
               {notes.length > 0 ? (
                 <>
                   {hideCompleted &&

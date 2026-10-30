@@ -2,6 +2,7 @@ import {
   dateOnlyToSafeInstant,
   formatDateInBrazil,
   getCurrentPeriodInBrazil,
+  getPeriodEndDateString,
   periodToSafeInstant,
 } from "@openmonetis/shared/date-time";
 import type { AccountOutput, CreateAccountInput } from "@openmonetis/validators/accounts";
@@ -43,9 +44,20 @@ export function formatAccountChartDate(date: string, short = false) {
   return short ? formatted.replace(" de ", " ") : formatted;
 }
 
-export function formatAccountHistoryPeriod(period: string, short = false) {
-  return formatDateInBrazil(periodToSafeInstant(period), {
-    month: short ? "short" : "long",
-    year: short ? "2-digit" : "numeric",
+export function formatAccountHistoryPeriod(period: string) {
+  return formatDateInBrazil(periodToSafeInstant(period), { month: "long", year: "numeric" });
+}
+
+/** "Saldo em 31 de out." — the balance shown includes every posting through the period's end. */
+export function formatAccountBalanceLabel(period: string) {
+  const endDate = formatDateInBrazil(dateOnlyToSafeInstant(getPeriodEndDateString(period)), {
+    day: "numeric",
+    month: "short",
   });
+  return `Saldo em ${endDate}`;
+}
+
+/** Account types whose main recurring movement is yield, so it is offered as the primary action. */
+export function isYieldAccountType(type: AccountOutput["type"]) {
+  return type === "savings" || type === "investment";
 }

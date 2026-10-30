@@ -194,7 +194,10 @@ export function InstallmentAnticipationDialog({
                     />
                     <Label className="min-w-0 flex-1 cursor-pointer" htmlFor={checkboxId}>
                       <span className="block font-medium text-sm">
-                        Parcela {installment.installmentNumber}/{group?.totalInstallments}
+                        Parcela{" "}
+                        <span className="font-mono">
+                          {installment.installmentNumber}/{group?.totalInstallments}
+                        </span>
                       </span>
                       <span className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                         <CalendarDays aria-hidden="true" className="size-3" />

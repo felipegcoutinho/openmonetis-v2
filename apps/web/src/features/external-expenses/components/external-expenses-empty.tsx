@@ -12,7 +12,7 @@ export function ExternalExpensesEmpty({
   return (
     <Card className="border-dashed shadow-none">
       <CardContent className="grid place-items-center py-14 text-center">
-        <span className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
+        <span className="grid size-11 fill-mode-both animate-in place-items-center rounded-full bg-muted text-muted-foreground duration-300 fade-in-0 zoom-in-75 motion-reduce:animate-none">
           <Check aria-hidden="true" className="size-5" />
         </span>
         <p className="mt-3 font-medium">

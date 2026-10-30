@@ -66,7 +66,7 @@
   --secondary: oklch(93.597% 0.01475 80.639);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
-  --muted-foreground: color-mix(in srgb, var(--palette-charcoal) 68%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--palette-charcoal) 72%, var(--background));
   --accent: color-mix(in srgb, var(--primary) 16%, var(--background));
   --accent-foreground: var(--foreground);
   --destructive: color-mix(in srgb, var(--palette-red) 90%, var(--palette-charcoal));
@@ -166,6 +166,78 @@
   }
 }
 
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+}
+
+@keyframes status-confirm {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes gauge-marker-in {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+}
+
+/* Lists enter one item after another; the delay stops growing after the eighth item. */
+@utility animate-list-item {
+  animation: list-item-in 320ms cubic-bezier(0.22, 1, 0.36, 1)
+    calc(var(--list-item-index, 0) * 45ms) both;
+
+  &:nth-child(2) {
+    --list-item-index: 1;
+  }
+  &:nth-child(3) {
+    --list-item-index: 2;
+  }
+  &:nth-child(4) {
+    --list-item-index: 3;
+  }
+  &:nth-child(5) {
+    --list-item-index: 4;
+  }
+  &:nth-child(6) {
+    --list-item-index: 5;
+  }
+  &:nth-child(7) {
+    --list-item-index: 6;
+  }
+  &:nth-child(n + 8) {
+    --list-item-index: 7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-status-confirm {
+  display: inline-flex;
+  animation: status-confirm 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50 antialiased;
@@ -197,9 +269,18 @@
 
   :where(h1, h2, h3, h4, h5, h6) {
     font-family: var(--font-app-heading);
-    font-weight: 400;
+    font-weight: 600;
     line-height: 1.2;
     letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :where(code, kbd, samp, .font-mono) {
+    font-feature-settings: "zero" 1;
   }
 
   button:not(:disabled),
@@ -262,7 +343,7 @@
 [data-slot="dialog-title"],
 [data-slot="sheet-title"] {
   font-family: var(--font-app-heading);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: normal;
 }
 
@@ -336,16 +417,6 @@
   );
 }
 
-.dashboard-mobile-summary {
-  background:
-    radial-gradient(
-      circle at 92% 8%,
-      color-mix(in srgb, var(--brand) 23%, transparent),
-      transparent 44%
-    ),
-    linear-gradient(145deg, color-mix(in srgb, var(--card) 94%, var(--brand)), var(--card));
-}
-
 @media (max-width: 47.999rem) {
   main:has(> .app-navbar) {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
@@ -373,4 +444,40 @@
   [data-slot="table-row"] > [data-slot="table-cell"]:first-child {
     transition: none;
   }
+}
+
+@utility page-title {
+  font-family: var(--font-app-heading);
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+
+  @media (width >= 40rem) {
+    font-size: var(--text-4xl);
+  }
+}
+
+@utility section-title {
+  font-family: var(--font-app-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+@utility kpi-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility eyebrow {
+  font-family: var(--font-app-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

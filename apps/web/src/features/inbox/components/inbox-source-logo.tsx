@@ -40,7 +40,7 @@ export function InboxSourceLogo({
 
   return (
     <Avatar className={cn("shrink-0", className)}>
-      <AvatarFallback className="bg-brand/10 font-medium text-brand-strong text-[10px]">
+      <AvatarFallback className="bg-brand/10 font-medium text-brand-strong text-2xs">
         {getInboxSourceInitials(match.name)}
       </AvatarFallback>
     </Avatar>

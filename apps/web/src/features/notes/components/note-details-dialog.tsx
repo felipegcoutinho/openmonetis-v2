@@ -1,5 +1,5 @@
 import type { NoteOutput } from "@openmonetis/validators/notes";
-import { CalendarCheck2, CalendarDays, CheckSquare2, FileText, Pencil } from "lucide-react";
+import { CalendarDays, Pencil } from "lucide-react";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   formatTaskDueDate,
   getChecklistProgressLabel,
   noteCompletionCheckboxClassName,
+  noteKindIcons,
   noteKindLabels,
 } from "../notes.presentation";
 
@@ -43,6 +44,7 @@ export function NoteDetailsDialog({
   if (!note) return null;
   const isChecklist = note.kind === "checklist";
   const isTask = note.kind === "task";
+  const KindIcon = noteKindIcons[note.kind];
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -50,24 +52,21 @@ export function NoteDetailsDialog({
         <DialogHeader>
           <div className="flex items-start gap-3 pr-8">
             <span className="grid size-9 shrink-0 place-items-center rounded-md bg-brand/10 text-brand-strong">
-              {isChecklist ? (
-                <CheckSquare2 aria-hidden="true" className="size-4" />
-              ) : isTask ? (
-                <CalendarCheck2 aria-hidden="true" className="size-4" />
-              ) : (
-                <FileText aria-hidden="true" className="size-4" />
-              )}
+              <KindIcon aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0">
-              <DialogTitle className="break-all">{note.title}</DialogTitle>
-              <DialogDescription className="mt-1">
-                Atualizada em {formatNoteUpdatedAt(note.updatedAt)}
+              <DialogTitle className="[overflow-wrap:anywhere]">{note.title}</DialogTitle>
+              <DialogDescription className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                <span>{noteKindLabels[note.kind]}</span>
+                <span aria-hidden="true">·</span>
+                <span>Atualizada em {formatNoteUpdatedAt(note.updatedAt)}</span>
+                {note.isArchived ? (
+                  <Badge className="ml-1" variant="secondary">
+                    Arquivada · somente leitura
+                  </Badge>
+                ) : null}
               </DialogDescription>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge variant="outline">{noteKindLabels[note.kind]}</Badge>
-            {note.isArchived ? <Badge variant="secondary">Somente leitura</Badge> : null}
           </div>
         </DialogHeader>
         <div className="contents" data-mobile-detail-body>
@@ -109,7 +108,7 @@ export function NoteDetailsDialog({
                     />
                     <label
                       className={cn(
-                        "block min-w-0 flex-1 whitespace-pre-wrap break-all",
+                        "block min-w-0 flex-1 whitespace-pre-wrap [overflow-wrap:anywhere]",
                         note.isArchived ? "cursor-default" : "cursor-pointer",
                         item.isCompleted && "text-muted-foreground line-through",
                       )}
@@ -160,7 +159,7 @@ export function NoteDetailsDialog({
                   data-mobile-detail-list
                   className="min-w-0 max-h-[45svh] overflow-x-hidden overflow-y-auto rounded-lg border bg-muted/20 p-4"
                 >
-                  <p className="w-full min-w-0 whitespace-pre-wrap break-all text-sm leading-relaxed">
+                  <p className="w-full min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm leading-relaxed">
                     {note.content}
                   </p>
                 </div>
@@ -171,7 +170,7 @@ export function NoteDetailsDialog({
               data-mobile-detail-list
               className="min-w-0 max-h-[55svh] overflow-x-hidden overflow-y-auto rounded-lg border bg-muted/20 p-4"
             >
-              <p className="w-full min-w-0 whitespace-pre-wrap break-all text-sm leading-relaxed">
+              <p className="w-full min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm leading-relaxed">
                 {note.content}
               </p>
             </div>

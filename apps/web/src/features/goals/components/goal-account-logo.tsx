@@ -30,12 +30,8 @@ export function GoalAccountLogo({
     <span
       aria-hidden="true"
       className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-muted font-medium text-muted-foreground",
-        size === 18
-          ? "size-4.5 text-[9px]"
-          : size === 24
-            ? "size-6 text-[10px]"
-            : "size-5 text-[9px]",
+        "grid shrink-0 place-items-center rounded-full bg-muted font-medium text-2xs text-muted-foreground",
+        size === 18 ? "size-4.5" : size === 24 ? "size-6" : "size-5",
       )}
     >
       {name.slice(0, 1).toLocaleUpperCase("pt-BR")}

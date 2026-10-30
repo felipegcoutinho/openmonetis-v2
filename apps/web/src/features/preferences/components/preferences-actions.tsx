@@ -1,50 +1,29 @@
 import { useStore } from "@tanstack/react-form";
-import { useBlocker } from "@tanstack/react-router";
 import { LoaderCircle, RotateCcw } from "lucide-react";
-import { getTopmostMobileSurface } from "@/components/forms/mobile-surface";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import type { PreferencesFormApi } from "../usePreferencesForm";
 
 export function PreferencesActions({
   form,
   isRestoring,
   onRestoreDefaults,
+  onDiscard,
 }: {
   form: PreferencesFormApi;
   isRestoring: boolean;
   onRestoreDefaults: () => Promise<void>;
+  onDiscard: () => void;
 }) {
   const hasChanges = useStore(form.store, (state) => !state.isDefaultValue);
-  const mobile = useIsMobile();
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
   const isBusy = isSubmitting || isRestoring;
-  const blocker = useBlocker({
-    shouldBlockFn: ({ action }) => {
-      const surface = mobile ? getTopmostMobileSurface() : undefined;
-      if (action === "BACK" && surface && surface.getAttribute("role") !== "alertdialog") {
-        return false;
-      }
-      return hasChanges || isBusy;
-    },
-    enableBeforeUnload: hasChanges || isBusy,
-    withResolver: true,
-  });
 
   return (
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-sm">
-          As preferências são aplicadas somente ao salvar.
+          O tema aparece como prévia. As demais preferências valem ao salvar.
         </p>
         <Button
           disabled={isBusy}
@@ -70,7 +49,7 @@ export function PreferencesActions({
                 : "Alterações não salvas"}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:flex">
-            <Button disabled={isBusy} onClick={() => form.reset()} type="button" variant="outline">
+            <Button disabled={isBusy} onClick={onDiscard} type="button" variant="outline">
               Descartar
             </Button>
             <Button disabled={isBusy || !hasChanges} type="submit">
@@ -80,39 +59,13 @@ export function PreferencesActions({
           </div>
         </div>
       ) : null}
-      <AlertDialog
-        open={blocker.status === "blocked"}
-        onOpenChange={(open) => {
-          if (!open) blocker.reset?.();
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isBusy ? "Aguarde a conclusão" : "Descartar alterações?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {isBusy
-                ? "As preferências estão sendo processadas. Aguarde antes de sair."
-                : "Você tem preferências não salvas. Continue editando ou descarte para sair."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
-            <Button
-              disabled={isBusy}
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                form.reset();
-                blocker.proceed?.();
-              }}
-            >
-              Descartar e sair
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UnsavedChangesGuard
+        busyDescription="As preferências estão sendo processadas. Aguarde antes de sair."
+        dirtyDescription="Você tem preferências não salvas. Continue editando ou descarte para sair."
+        hasChanges={hasChanges}
+        isBusy={isBusy}
+        onDiscard={onDiscard}
+      />
     </>
   );
 }

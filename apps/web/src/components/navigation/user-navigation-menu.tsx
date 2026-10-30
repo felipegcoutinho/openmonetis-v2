@@ -1,6 +1,7 @@
 import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
 
-import { Copy, LogOut } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Copy, LogOut, Settings, UserRound } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ export function UserNavigationMenu({
   handleSignOut: () => Promise<void>;
   handleCopyUserId: () => Promise<void>;
 }) {
+  const navigate = useNavigate();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -43,7 +46,7 @@ export function UserNavigationMenu({
             className="scale-[1.06]"
             src={user?.image?.trim() || defaultAdminPersonAvatarUrl}
           />
-          <AvatarFallback className="bg-primary/10 font-bold text-foreground">
+          <AvatarFallback className="bg-primary/10 font-semibold text-foreground">
             {getInitials(user?.name)}
           </AvatarFallback>
         </Avatar>
@@ -76,6 +79,19 @@ export function UserNavigationMenu({
             </span>
             <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
           </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => void navigate({ to: "/settings" })}>
+            <UserRound className="size-4" aria-hidden="true" />
+            Meu perfil
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => void navigate({ to: "/settings", search: { tab: "preferences" } })}
+          >
+            <Settings className="size-4" aria-hidden="true" />
+            Ajustes
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <ReleaseMenuItems enabled={Boolean(user)} />
         <DropdownMenuSeparator />

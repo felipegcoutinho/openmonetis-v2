@@ -31,7 +31,7 @@ export function InboxEmpty({ filtered, status }: { filtered: boolean; status: In
   return (
     <Card>
       <CardContent className="grid place-items-center py-16 text-center">
-        <span className="grid size-12 place-items-center rounded-full bg-success/10 text-success">
+        <span className="grid size-12 fill-mode-both animate-in place-items-center rounded-full bg-success/10 text-success duration-300 fade-in-0 zoom-in-75 motion-reduce:animate-none">
           <CircleCheck aria-hidden="true" className="size-5" />
         </span>
         <p className="mt-3 font-medium">{copy[0]}</p>

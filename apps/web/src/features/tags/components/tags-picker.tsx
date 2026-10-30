@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { TagColorIcon } from "./tag-color-icon";
 export function TagsPicker({
   tags,
   selected,
@@ -19,6 +20,7 @@ export function TagsPicker({
   maximum,
   onCreate,
   invalid,
+  includeInactive = false,
 }: {
   tags: TagOutput[];
   selected: string[];
@@ -28,12 +30,16 @@ export function TagsPicker({
   maximum?: number;
   onCreate?: () => void;
   invalid?: boolean;
+  /** Filters show inactive tags; assignment pickers only keep the ones already selected. */
+  includeInactive?: boolean;
 }) {
   const id = useId();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const visible = tags.filter((tag) =>
-    tag.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")),
+  const visible = tags.filter(
+    (tag) =>
+      (includeInactive || tag.status === "active" || selected.includes(tag.id)) &&
+      tag.name.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR")),
   );
   return (
     <div className="grid min-w-0 gap-2">
@@ -99,8 +105,13 @@ export function TagsPicker({
                     )
                   }
                 />
-                <Tag aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-                <span className="min-w-0 break-words text-sm">{tag.name}</span>
+                <TagColorIcon color={tag.color} />
+                <span className="min-w-0 break-words text-sm">
+                  {tag.name}
+                  {tag.status === "inactive" ? (
+                    <span className="text-muted-foreground"> (inativa)</span>
+                  ) : null}
+                </span>
               </label>
             ))}
             {!visible.length ? (
@@ -150,10 +161,11 @@ export function TagsPicker({
       {selected.length ? (
         <div className="flex min-w-0 flex-wrap gap-1.5">
           {selected.map((tagId) => {
-            const name = tags.find((tag) => tag.id === tagId)?.name ?? "Etiqueta indisponível";
+            const tag = tags.find((item) => item.id === tagId);
+            const name = tag?.name ?? "Etiqueta indisponível";
             return (
               <Badge variant="secondary" className="h-auto max-w-full gap-1 py-1 pr-1" key={tagId}>
-                <Tag aria-hidden="true" data-icon="inline-start" className="shrink-0" />
+                <TagColorIcon className="size-3" color={tag?.color ?? "neutral"} />
                 <span className="min-w-0 truncate" title={name}>
                   {name}
                 </span>

@@ -1,7 +1,8 @@
-import type {
-  DashboardAttentionKind,
-  DashboardWidgetId,
-  DashboardWidgetPreferences,
+import {
+  createDefaultDashboardWidgetPreferences,
+  type DashboardAttentionKind,
+  type DashboardWidgetId,
+  type DashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
 import {
   formatDateInBrazil,
@@ -10,9 +11,11 @@ import {
 } from "@openmonetis/shared/date-time";
 import type { DashboardAttentionItemOutput } from "@openmonetis/validators/dashboard";
 
-export type MetricTrend = "down" | "flat" | "up";
-
-const trendThreshold = 0.005;
+const metricChangePercentFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 0,
+  signDisplay: "exceptZero",
+  style: "percent",
+});
 
 export function getDashboardGreeting(date = new Date()) {
   const hour = getCurrentHourInBrazil(date);
@@ -31,25 +34,8 @@ export function formatDashboardDate(date = new Date()) {
   return `${formatted.charAt(0).toLocaleUpperCase("pt-BR")}${formatted.slice(1)}`;
 }
 
-export function getMetricComparison(current: number, previous: number) {
-  if (Math.abs(previous) < 0.01) {
-    return {
-      label: Math.abs(current) < 0.01 ? "0%" : null,
-      trend: "flat" as MetricTrend,
-    };
-  }
-
-  const change = ((current - previous) / Math.abs(previous)) * 100;
-  const boundedChange = Math.max(-999, Math.min(999, change));
-  const trend: MetricTrend =
-    change > trendThreshold ? "up" : change < -trendThreshold ? "down" : "flat";
-  const label = new Intl.NumberFormat("pt-BR", {
-    maximumFractionDigits: 0,
-    signDisplay: "always",
-    style: "percent",
-  }).format(boundedChange / 100);
-
-  return { label, trend };
+export function formatMetricChangePercent(percent: number) {
+  return metricChangePercentFormatter.format(percent / 100);
 }
 
 export function formatProjectedMetricHelp(period: string) {
@@ -97,32 +83,56 @@ export function formatDashboardTransactionCount(count: number) {
   return `${count} ${count === 1 ? "lançamento" : "lançamentos"}`;
 }
 
+/**
+ * Moves a widget to the position of another one, its neighbour inside the same section. Moving
+ * forward lands after the target and moving back lands before it, so swapping two neighbours
+ * behaves the same either way.
+ */
 export function moveDashboardWidget(
   preferences: DashboardWidgetPreferences,
   widgetId: DashboardWidgetId,
-  direction: -1 | 1,
+  targetWidgetId: DashboardWidgetId,
 ): DashboardWidgetPreferences {
   const currentIndex = preferences.order.indexOf(widgetId);
-  const nextIndex = currentIndex + direction;
-  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= preferences.order.length) {
-    return preferences;
-  }
+  const targetIndex = preferences.order.indexOf(targetWidgetId);
+  if (currentIndex < 0 || targetIndex < 0 || currentIndex === targetIndex) return preferences;
 
-  const order = [...preferences.order];
-  [order[currentIndex], order[nextIndex]] = [order[nextIndex], order[currentIndex]];
+  const order = preferences.order.filter((id) => id !== widgetId);
+  const insertionIndex = order.indexOf(targetWidgetId) + (currentIndex < targetIndex ? 1 : 0);
+  order.splice(insertionIndex, 0, widgetId);
   return { ...preferences, order };
 }
 
-export function toggleDashboardWidget(
+export function hideDashboardWidget(
   preferences: DashboardWidgetPreferences,
   widgetId: DashboardWidgetId,
 ): DashboardWidgetPreferences {
-  return {
-    ...preferences,
-    hidden: preferences.hidden.includes(widgetId)
-      ? preferences.hidden.filter((id) => id !== widgetId)
-      : [...preferences.hidden, widgetId],
-  };
+  if (preferences.hidden.includes(widgetId)) return preferences;
+  return { ...preferences, hidden: [...preferences.hidden, widgetId] };
+}
+
+/**
+ * Shows a hidden widget at the end of its section, right after the last visible widget of the
+ * same section, so it appears where the person asked for it instead of its old position.
+ */
+export function showDashboardWidget(
+  preferences: DashboardWidgetPreferences,
+  widgetId: DashboardWidgetId,
+  sectionWidgetIds: readonly DashboardWidgetId[],
+): DashboardWidgetPreferences {
+  if (!preferences.hidden.includes(widgetId)) return preferences;
+
+  const hidden = preferences.hidden.filter((id) => id !== widgetId);
+  const order = preferences.order.filter((id) => id !== widgetId);
+  const lastVisibleIndex = order.reduce(
+    (lastIndex, id, index) =>
+      sectionWidgetIds.includes(id) && !hidden.includes(id) ? index : lastIndex,
+    -1,
+  );
+  if (lastVisibleIndex < 0) return { ...preferences, hidden };
+
+  order.splice(lastVisibleIndex + 1, 0, widgetId);
+  return { hidden, order };
 }
 
 export function areDashboardWidgetPreferencesEqual(
@@ -190,3 +200,7 @@ export const attentionActionLabels: Record<DashboardAttentionKind, string> = {
   budget: "Ver orçamento",
   inbox: "Revisar",
 };
+
+export function isDefaultDashboardWidgetPreferences(preferences: DashboardWidgetPreferences) {
+  return areDashboardWidgetPreferencesEqual(preferences, createDefaultDashboardWidgetPreferences());
+}

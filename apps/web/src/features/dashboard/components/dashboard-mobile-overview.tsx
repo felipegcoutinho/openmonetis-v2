@@ -54,6 +54,7 @@ export function DashboardMobileOverview({ period }: { period: string }) {
             excludedWidgetIds={essentialWidgetIds}
             period={period}
             placeBillsAfterInvoices
+            sectionHeadingLevel="h3"
           />
         </div>
       ) : null}

@@ -37,6 +37,7 @@ export function InboxWidget() {
               date: undefined,
               page: undefined,
               rule: undefined,
+              rules: undefined,
               status: undefined,
             }}
             to="/inbox"

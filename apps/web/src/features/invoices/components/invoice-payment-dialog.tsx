@@ -188,26 +188,23 @@ export function InvoicePaymentDialog({
                     }
                     value={field.state.value}
                   >
-                    <TabsList
-                      className="min-h-11 min-w-0 items-stretch group-data-horizontal/tabs:h-auto"
-                      variant="line"
-                    >
+                    <TabsList className="w-full min-w-0 items-stretch group-data-horizontal/tabs:h-auto">
                       <TabsTrigger
-                        className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                        className="min-w-0 whitespace-normal px-1 py-1.5 text-center text-xs leading-tight sm:px-2 sm:text-sm"
                         value="invoice"
                       >
                         Fatura inteira
                       </TabsTrigger>
                       {canPayByPerson ? (
                         <TabsTrigger
-                          className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                          className="min-w-0 whitespace-normal px-1 py-1.5 text-center text-xs leading-tight sm:px-2 sm:text-sm"
                           value="person"
                         >
                           Registrar parte da pessoa
                         </TabsTrigger>
                       ) : null}
                       <TabsTrigger
-                        className="min-w-0 whitespace-normal px-1 py-2 text-center text-xs leading-tight group-data-[variant=line]/tabs-list:h-auto group-data-[variant=line]/tabs-list:flex-1 sm:px-3 sm:text-sm"
+                        className="min-w-0 whitespace-normal px-1 py-1.5 text-center text-xs leading-tight sm:px-2 sm:text-sm"
                         value="manual"
                       >
                         Valor parcial
@@ -382,7 +379,7 @@ function PersonOption({ person }: { person: DashboardInvoice["people"][number] }
     <span className="flex min-w-0 items-center gap-2">
       <Avatar className="size-6 shrink-0">
         <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
-        <AvatarFallback className="text-[10px]">{person.personName.slice(0, 1)}</AvatarFallback>
+        <AvatarFallback className="text-2xs">{person.personName.slice(0, 1)}</AvatarFallback>
       </Avatar>
       <span className="truncate">
         {person.personName} · {formatCurrency(person.remainingAmount)}
@@ -404,7 +401,7 @@ function AccountOption({ account }: { account: InvoiceAccount }) {
           width={20}
         />
       ) : (
-        <span className="grid size-5 place-items-center rounded-full bg-muted font-medium text-[9px]">
+        <span className="grid size-5 place-items-center rounded-full bg-muted font-medium text-2xs">
           {account.name.slice(0, 2).toLocaleUpperCase("pt-BR")}
         </span>
       )}

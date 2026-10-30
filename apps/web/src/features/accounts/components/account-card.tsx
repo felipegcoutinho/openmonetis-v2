@@ -114,7 +114,7 @@ export function AccountCard({
       <CardContent>
         <div data-mobile-primary-value>
           <p className="text-muted-foreground text-xs">Saldo</p>
-          <MoneyValue amount={account.summary.balance} className="mt-1 font-medium text-2xl" />
+          <MoneyValue amount={account.summary.balance} className="kpi-value mt-1 text-2xl" />
         </div>
       </CardContent>
 

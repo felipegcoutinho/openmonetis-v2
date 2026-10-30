@@ -106,7 +106,7 @@ export function TransactionRefundDialog({
           <Card className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-4">
             <div>
               <p className="text-muted-foreground text-xs">Valor da despesa</p>
-              <MoneyValue amount={transaction?.displayAmount ?? 0} className="mt-1 font-semibold" />
+              <MoneyValue amount={transaction?.displayAmount ?? 0} className="kpi-value mt-1" />
             </div>
             <div className="text-right">
               <p className="text-muted-foreground text-xs">Disponível para reembolso</p>

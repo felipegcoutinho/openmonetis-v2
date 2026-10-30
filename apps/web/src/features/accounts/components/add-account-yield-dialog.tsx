@@ -115,13 +115,9 @@ function AddAccountYieldForm({
             }
             value={field.state.value}
           >
-            <TabsList className="grid grid-cols-2" variant="line">
-              <TabsTrigger className="w-full" value="amount">
-                Valor do rendimento
-              </TabsTrigger>
-              <TabsTrigger className="w-full" value="currentBalance">
-                Saldo da conta real
-              </TabsTrigger>
+            <TabsList className="w-full">
+              <TabsTrigger value="amount">Valor do rendimento</TabsTrigger>
+              <TabsTrigger value="currentBalance">Saldo da conta real</TabsTrigger>
             </TabsList>
           </Tabs>
         )}

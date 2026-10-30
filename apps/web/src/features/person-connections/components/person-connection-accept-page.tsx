@@ -104,7 +104,7 @@ export function PersonConnectionAcceptPage() {
               )}
             </span>
             <div className="min-w-0">
-              <h2 className="font-heading font-semibold text-lg tracking-tight">
+              <h2 className="section-title">
                 {result ? "Agora compartilhe o código" : "Convite para compartilhar despesas"}
               </h2>
               <p className="mt-0.5 max-w-2xl text-muted-foreground text-sm leading-relaxed">
@@ -287,9 +287,7 @@ function ConfirmationCode({
       </div>
 
       <div className="rounded-xl border border-brand-strong/20 bg-brand/5 p-5 text-center">
-        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-          Código de confirmação
-        </p>
+        <p className="eyebrow text-muted-foreground">Código de confirmação</p>
         <output
           aria-label={`Código de confirmação ${code.split("").join(" ")}`}
           className="mt-2 block font-mono font-bold text-3xl tracking-[0.3em] tabular-nums sm:text-4xl"

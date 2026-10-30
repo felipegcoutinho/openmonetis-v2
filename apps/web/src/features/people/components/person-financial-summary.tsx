@@ -106,7 +106,7 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
                       {personPaymentMethodLabels[item.paymentMethod]}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono text-muted-foreground text-xs">
+                  <span className="shrink-0 text-muted-foreground text-xs tabular-nums">
                     {item.percentage}%
                   </span>
                 </div>

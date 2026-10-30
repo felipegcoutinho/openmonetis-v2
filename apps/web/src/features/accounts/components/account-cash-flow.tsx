@@ -1,8 +1,18 @@
 import type { AccountCashFlowOutput } from "@openmonetis/validators/accounts";
 import { useQuery } from "@tanstack/react-query";
 import { ChartNoAxesCombined } from "lucide-react";
-import { Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
+import { ChartPeriodTick } from "@/components/chart-period-tick";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { Button } from "@/components/ui/button";
@@ -24,6 +34,9 @@ const chartConfig = {
   expenses: { label: "Saídas", color: "var(--chart-1)" },
   balance: { label: "Saldo", color: "var(--chart-2)" },
 } satisfies ChartConfig;
+
+const BAR_OPACITY = 0.65;
+const UNSELECTED_HISTORY_BAR_OPACITY = 0.3;
 
 export function AccountCashFlow({
   accountId,
@@ -118,21 +131,18 @@ function FlowChart({
   const hasActivity = items.some(
     (item) => item.income !== 0 || item.expenses !== 0 || item.balance !== 0,
   );
-  if (!hasActivity && !history) {
+  if (!hasActivity) {
     return (
       <div className="grid min-h-40 place-items-center text-center text-muted-foreground text-sm">
         Nenhuma movimentação registrada nesse intervalo.
       </div>
     );
   }
+  const barOpacity = (period: string) =>
+    !history || period === data.period ? BAR_OPACITY : UNSELECTED_HISTORY_BAR_OPACITY;
 
   return (
     <>
-      {!hasActivity ? (
-        <p className="mb-2 text-center text-muted-foreground text-sm">
-          Nenhuma movimentação registrada nesse intervalo.
-        </p>
-      ) : null}
       <ChartContainer
         aria-label={
           history
@@ -163,14 +173,18 @@ function FlowChart({
           <XAxis
             axisLine={false}
             dataKey={history ? "period" : "date"}
-            interval="preserveStartEnd"
-            minTickGap={history ? 14 : 24}
+            height={history ? 40 : undefined}
+            interval={history ? 0 : "preserveStartEnd"}
+            minTickGap={history ? undefined : 24}
             tick={
               history
                 ? (props) => (
-                    <HistoryMonthTick
+                    <ChartPeriodTick
                       {...props}
                       disabled={isPrivacyModeEnabled}
+                      getLabel={(period) =>
+                        `Abrir extrato de ${formatAccountHistoryPeriod(period)}`
+                      }
                       onPeriodChange={onPeriodChange}
                       selectedPeriod={data.period}
                     />
@@ -207,19 +221,25 @@ function FlowChart({
           <Bar
             dataKey="income"
             fill="var(--color-income)"
-            fillOpacity={0.65}
             maxBarSize={history ? 20 : 12}
             radius={[2, 2, 0, 0]}
             yAxisId="flow"
-          />
+          >
+            {items.map((item) => (
+              <Cell fillOpacity={barOpacity(item.period)} key={item.period} />
+            ))}
+          </Bar>
           <Bar
             dataKey="expenses"
             fill="var(--color-expenses)"
-            fillOpacity={0.65}
             maxBarSize={history ? 20 : 12}
             radius={[2, 2, 0, 0]}
             yAxisId="flow"
-          />
+          >
+            {items.map((item) => (
+              <Cell fillOpacity={barOpacity(item.period)} key={item.period} />
+            ))}
+          </Bar>
           <Line
             activeDot={{ r: 5 }}
             dataKey="balance"
@@ -241,11 +261,7 @@ function FlowChart({
           Saídas
         </span>
         <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="h-0.5 w-3"
-            style={{ backgroundColor: chartConfig.balance.color }}
-          />
+          <ChartLegendMarker color={chartConfig.balance.color} variant="line" />
           Saldo
         </span>
       </div>
@@ -253,56 +269,5 @@ function FlowChart({
         <span className="sr-only">Gráfico oculto pelo modo privacidade.</span>
       ) : null}
     </>
-  );
-}
-
-function HistoryMonthTick({
-  x = 0,
-  y = 0,
-  payload,
-  disabled,
-  onPeriodChange,
-  selectedPeriod,
-}: {
-  x?: number | string;
-  y?: number | string;
-  payload?: { value: string | number };
-  disabled: boolean;
-  onPeriodChange?: (period: string) => void;
-  selectedPeriod: string;
-}) {
-  const period = String(payload?.value ?? "");
-  if (!period) return null;
-
-  return (
-    <a
-      aria-current={period === selectedPeriod ? "date" : undefined}
-      aria-label={`Abrir extrato de ${formatAccountHistoryPeriod(period)}`}
-      className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      href={`?period=${encodeURIComponent(period)}`}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!disabled) onPeriodChange?.(period);
-      }}
-      onKeyDown={(event) => {
-        if (disabled || event.key !== " ") return;
-        event.preventDefault();
-        onPeriodChange?.(period);
-      }}
-      tabIndex={disabled ? -1 : 0}
-    >
-      <text
-        className="cursor-pointer"
-        dy={16}
-        fill={period === selectedPeriod ? "var(--foreground)" : "var(--muted-foreground)"}
-        fontWeight={period === selectedPeriod ? 600 : undefined}
-        textAnchor="middle"
-        x={x}
-        y={y}
-      >
-        {formatAccountHistoryPeriod(period, true)}
-      </text>
-    </a>
   );
 }

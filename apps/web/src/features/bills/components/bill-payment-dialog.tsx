@@ -262,7 +262,7 @@ function AccountOption({ account }: { account: BillAccount }) {
           width={20}
         />
       ) : (
-        <span className="grid size-5 place-items-center rounded-full bg-muted font-medium text-[9px]">
+        <span className="grid size-5 place-items-center rounded-full bg-muted font-medium text-2xs">
           {account.name.slice(0, 2).toLocaleUpperCase("pt-BR")}
         </span>
       )}

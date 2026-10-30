@@ -76,6 +76,12 @@ export function commitmentStatusClassName(status: CommitmentStatus) {
   return undefined;
 }
 
+export function commitmentStatusTextClassName(status: CommitmentStatus) {
+  if (status === "healthy") return "text-success";
+  if (status === "attention") return "text-warning";
+  return "text-destructive";
+}
+
 export function commitmentStatusVariant(status: CommitmentStatus) {
   return status === "critical" ? ("destructive" as const) : ("secondary" as const);
 }
@@ -94,4 +100,18 @@ export function getCommitmentGaugePosition(percentage: number | null) {
 
 export function describeCommitmentGauge(percentage: number | null, status: CommitmentStatus) {
   return `${formatCommitmentPercentage(percentage)} da receita prevista, faixa ${statusLabels[status].toLowerCase()}. Saudável até ${commitmentAttentionThreshold}%, atenção até ${commitmentCriticalThreshold}%.`;
+}
+
+/** Change of the commitment index between two months, in percentage points. */
+export function formatCommitmentPercentagePointChange(
+  current: number | null,
+  previous: number | null,
+) {
+  if (current === null || previous === null) return null;
+  const change = Math.round((current - previous) * 10) / 10;
+  if (change === 0) return "igual ao mês anterior";
+  const formatted = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(
+    Math.abs(change),
+  );
+  return `${change > 0 ? "+" : "−"}${formatted} p.p. vs. mês anterior`;
 }

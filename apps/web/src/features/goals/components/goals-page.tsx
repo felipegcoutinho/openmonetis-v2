@@ -137,15 +137,15 @@ export function GoalsPage() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   <Card className="gap-1 border p-5">
                     <p className="text-muted-foreground text-sm">Metas ativas</p>
-                    <p className="font-semibold text-3xl tabular-nums">{activeCount}</p>
+                    <p className="kpi-value text-3xl">{activeCount}</p>
                   </Card>
                   <Card className="gap-1 border p-5">
                     <p className="text-muted-foreground text-sm">Concluídas</p>
-                    <p className="font-semibold text-3xl tabular-nums">{completedCount}</p>
+                    <p className="kpi-value text-3xl">{completedCount}</p>
                   </Card>
                   <Card className="gap-1 border p-5">
                     <p className="text-muted-foreground text-sm">Total de metas</p>
-                    <p className="font-semibold text-3xl tabular-nums">{goals.length}</p>
+                    <p className="kpi-value text-3xl">{goals.length}</p>
                   </Card>
                 </div>
               ) : null}
@@ -156,7 +156,7 @@ export function GoalsPage() {
                 }}
                 value={filter}
               >
-                <TabsList aria-label="Filtrar metas" className="max-w-full overflow-x-auto">
+                <TabsList aria-label="Filtrar metas" className="overflow-x-auto" variant="line">
                   {filters.map((item) => (
                     <TabsTrigger key={item.value} value={item.value}>
                       {item.label}

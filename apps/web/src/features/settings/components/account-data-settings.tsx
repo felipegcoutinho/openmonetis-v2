@@ -4,7 +4,7 @@ import {
   settingsConfirmation,
 } from "@openmonetis/validators/settings";
 import { useForm } from "@tanstack/react-form";
-import { Trash2, TriangleAlert } from "lucide-react";
+import { type LucideIcon, RotateCcw, TriangleAlert, UserX } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { queueFlashToast } from "@/lib/flash-toast";
 import { useDeleteSettingsAccountMutation, useResetSettingsMutation } from "../settings.mutations";
 import { settingsMutationErrorMessage } from "../settings.presentation";
 
@@ -37,8 +38,8 @@ const actionContent = {
       "Lançamentos, contas, cartões, anexos, pendências externas e demais dados financeiros serão removidos de forma permanente. Lançamentos já importados por outra pessoa permanecem na conta dela, e conexões ativas serão encerradas.",
     confirmation: settingsConfirmation.reset,
     submitLabel: "Apagar dados financeiros",
-    pendingLabel: "Zerando...",
-    successMessage: "Dados zerados",
+    pendingLabel: "Apagando…",
+    successMessage: "Dados financeiros apagados",
   },
   delete: {
     title: "Excluir minha conta de acesso",
@@ -49,16 +50,17 @@ const actionContent = {
       "Seu acesso, credenciais, lançamentos, pendências externas e arquivos serão removidos permanentemente. Lançamentos já importados por outra pessoa permanecem na conta dela.",
     confirmation: settingsConfirmation.delete,
     submitLabel: "Excluir meu acesso",
-    pendingLabel: "Excluindo...",
-    successMessage: "Conta excluída",
+    pendingLabel: "Excluindo…",
+    successMessage: "Conta de acesso excluída",
   },
 } as const;
 
-export function SettingsDangerZone() {
+export function AccountDataSettings() {
   const [action, setAction] = useState<DangerousAction | null>(null);
 
   function finish(currentAction: DangerousAction) {
-    toast.success(actionContent[currentAction].successMessage);
+    // A full reload clears every cached query, so the confirmation is shown after it.
+    queueFlashToast(actionContent[currentAction].successMessage);
     window.location.assign(currentAction === "reset" ? "/dashboard" : "/");
   }
 
@@ -75,7 +77,7 @@ export function SettingsDangerZone() {
           "Histórico já importado por outras pessoas nas contas delas",
         ]}
         note="A pessoa principal e as categorias padrão serão recriadas."
-        icon={Trash2}
+        icon={RotateCcw}
         onSelect={setAction}
       />
       <DangerousActionSection
@@ -87,7 +89,7 @@ export function SettingsDangerZone() {
         retained={[
           "Histórico já importado por outras pessoas, de forma anonimizada nas contas delas",
         ]}
-        icon={Trash2}
+        icon={UserX}
         onSelect={setAction}
       />
 
@@ -117,7 +119,7 @@ function DangerousActionSection({
   removed: string[];
   retained: string[];
   note?: string;
-  icon: typeof Trash2;
+  icon: LucideIcon;
   onSelect: (action: DangerousAction) => void;
 }) {
   const content = actionContent[action];

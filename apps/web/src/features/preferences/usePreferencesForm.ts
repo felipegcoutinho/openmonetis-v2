@@ -51,6 +51,7 @@ export function usePreferencesForm(preferences: UserPreferencesOutput) {
     try {
       const defaults = await queryClient.fetchQuery(defaultUserPreferencesQueryOptions());
       form.reset(defaults, { keepDefaultValues: true });
+      setTheme(defaults.theme);
       toast.info("Padrões carregados", {
         description: "Salve para aplicar ou descarte as alterações.",
       });
@@ -61,7 +62,13 @@ export function usePreferencesForm(preferences: UserPreferencesOutput) {
     }
   }
 
-  return { form, isRestoring, restoreDefaults };
+  /** Returns the form to the saved values, including the theme shown as a preview. */
+  function discardChanges() {
+    form.reset();
+    setTheme(form.options.defaultValues?.theme ?? preferences.theme);
+  }
+
+  return { form, isRestoring, restoreDefaults, discardChanges };
 }
 
 export type PreferencesFormApi = ReturnType<typeof usePreferencesForm>["form"];

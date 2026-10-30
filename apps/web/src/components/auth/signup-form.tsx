@@ -256,7 +256,7 @@ export function SignupForm() {
         <>
           <div className="relative flex items-center py-1" aria-hidden="true">
             <div className="grow border-t border-border" />
-            <span className="px-3 text-muted-foreground text-xs uppercase">ou</span>
+            <span className="eyebrow px-3 text-muted-foreground">ou</span>
             <div className="grow border-t border-border" />
           </div>
           <form.Subscribe selector={(state) => state.isSubmitting}>

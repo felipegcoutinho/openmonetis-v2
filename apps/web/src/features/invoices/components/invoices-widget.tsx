@@ -203,7 +203,7 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
             Registrar pagamento
           </Button>
         ) : (
-          <span className="text-success text-xs">Paga</span>
+          <span className="animate-status-confirm text-success text-xs">Paga</span>
         )}
       </div>
     </DashboardWidgetRow>

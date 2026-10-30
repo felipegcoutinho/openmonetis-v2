@@ -134,7 +134,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
             >
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <h2 className="font-semibold text-lg" id="attachment-list-title">
+                  <h2 className="section-title" id="attachment-list-title">
                     Documentos do mês
                   </h2>
                   <p className="text-muted-foreground text-sm">

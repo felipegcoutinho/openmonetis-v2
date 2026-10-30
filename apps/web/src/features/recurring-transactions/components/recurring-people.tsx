@@ -11,7 +11,7 @@ export function RecurringPeople({ item }: { item: ReportItem }) {
             alt={`Avatar de ${item.personName}`}
             src={item.personAvatarUrl ?? undefined}
           />
-          <AvatarFallback className="text-[9px]">
+          <AvatarFallback className="text-2xs">
             {item.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
           </AvatarFallback>
         </Avatar>

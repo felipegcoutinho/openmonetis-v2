@@ -34,11 +34,6 @@ export function formatBudgetPeriod(period: string) {
   return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }
 
-export function getPreviousBudgetPeriod(period: string) {
-  const [year, month] = period.split("-").map(Number);
-  return month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, "0")}`;
-}
-
 export function getBudgetWidgetItems(items: BudgetOutput[], limit?: number) {
   const sorted = [...items].sort(
     (left, right) =>

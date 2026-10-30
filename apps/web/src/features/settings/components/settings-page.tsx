@@ -1,11 +1,12 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   CalendarClock,
+  Database,
+  Plug,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
-  Smartphone,
-  TriangleAlert,
+  UserRound,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Navbar } from "@/components/navigation/navbar";
@@ -14,22 +15,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DueDateRulesPage } from "@/features/due-date-rules/components/due-date-rules-page";
 import { PreferencesForm } from "@/features/preferences/components/preferences-form";
 import { type SettingsTab, settingsTabs } from "../settings.presentation";
-import { CompanionSettings } from "./companion-settings";
+import { AccountDataSettings } from "./account-data-settings";
+import { IntegrationsSettings } from "./integrations-settings";
+import { ProfileSettings } from "./profile-settings";
 import { SecuritySettings } from "./security-settings";
-import { SettingsDangerZone } from "./settings-danger-zone";
+
+const tabItems = [
+  { value: "profile", label: "Perfil", icon: UserRound },
+  { value: "preferences", label: "Preferências", icon: SlidersHorizontal },
+  { value: "due-date-rules", label: "Regras de vencimento", icon: CalendarClock },
+  { value: "security", label: "Segurança", icon: ShieldCheck },
+  { value: "integrations", label: "Integrações", icon: Plug },
+  { value: "account-data", label: "Dados da conta", icon: Database },
+] as const satisfies ReadonlyArray<{ value: SettingsTab; label: string; icon: typeof Settings }>;
 
 export function SettingsPage() {
   const search = useSearch({ from: "/settings" });
   const navigate = useNavigate({ from: "/settings" });
   const activeTab = settingsTabs.includes(search.tab as SettingsTab)
     ? (search.tab as SettingsTab)
-    : "preferences";
+    : "profile";
 
   function changeTab(value: string) {
     const tab = value as SettingsTab;
     void navigate({
       replace: true,
-      search: { tab: tab === "preferences" ? undefined : tab },
+      search: { tab: tab === "profile" ? undefined : tab },
     });
   }
 
@@ -50,26 +61,12 @@ export function SettingsPage() {
             <div className="relative">
               <div className="overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
                 <TabsList className="min-w-max" variant="line">
-                  <TabsTrigger value="preferences">
-                    <SlidersHorizontal aria-hidden="true" />
-                    Preferências
-                  </TabsTrigger>
-                  <TabsTrigger value="due-date-rules">
-                    <CalendarClock aria-hidden="true" />
-                    Regras de vencimento
-                  </TabsTrigger>
-                  <TabsTrigger value="security">
-                    <ShieldCheck aria-hidden="true" />
-                    Segurança
-                  </TabsTrigger>
-                  <TabsTrigger value="companion">
-                    <Smartphone aria-hidden="true" />
-                    Companion
-                  </TabsTrigger>
-                  <TabsTrigger value="danger-zone">
-                    <TriangleAlert aria-hidden="true" />
-                    Ações perigosas
-                  </TabsTrigger>
+                  {tabItems.map(({ value, label, icon: Icon }) => (
+                    <TabsTrigger key={value} value={value}>
+                      <Icon aria-hidden="true" />
+                      {label}
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
               </div>
               <div
@@ -78,23 +75,23 @@ export function SettingsPage() {
               />
             </div>
 
+            <TabsContent className="pt-5" value="profile">
+              <ProfileSettings />
+            </TabsContent>
             <TabsContent className="pt-5" value="preferences">
               <PreferencesForm />
             </TabsContent>
-
             <TabsContent className="pt-5" value="due-date-rules">
               <DueDateRulesPage />
             </TabsContent>
-            <TabsContent className="pt-5" value="companion">
-              <CompanionSettings />
-            </TabsContent>
-
             <TabsContent className="pt-5" value="security">
               <SecuritySettings />
             </TabsContent>
-
-            <TabsContent className="pt-5" value="danger-zone">
-              <SettingsDangerZone />
+            <TabsContent className="pt-5" value="integrations">
+              <IntegrationsSettings />
+            </TabsContent>
+            <TabsContent className="pt-5" value="account-data">
+              <AccountDataSettings />
             </TabsContent>
           </Tabs>
         </section>

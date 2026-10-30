@@ -1,3 +1,7 @@
+import {
+  compareDashboardMetric,
+  type DashboardMetricComparison,
+} from "@openmonetis/domain/dashboard";
 import type { DashboardMetricsOutput } from "@openmonetis/validators/dashboard";
 import { Link } from "@tanstack/react-router";
 import {
@@ -16,14 +20,10 @@ import {
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import {
-  formatProjectedMetricHelp,
-  getMetricComparison,
-  type MetricTrend,
-} from "../dashboard.presentation";
+import { formatMetricChangePercent, formatProjectedMetricHelp } from "../dashboard.presentation";
 import { useAdminPersonSlug } from "../useAdminPersonSlug";
 
 type MetricKey = "balance" | "expenses" | "income" | "projected";
@@ -41,7 +41,7 @@ const cards: Array<{
   {
     key: "income",
     label: "Suas receitas",
-    description: "Sua parte nas entradas do mês, com previstas",
+    description: "Entradas do mês, com previstas",
     help: "Soma das receitas atribuídas a você em contas consideradas no saldo, incluindo recorrências previstas do mês.",
     icon: ArrowDownLeft,
     iconClassName: "text-success",
@@ -51,7 +51,7 @@ const cards: Array<{
   {
     key: "expenses",
     label: "Suas despesas",
-    description: "Sua parte nas despesas do mês, com previstas",
+    description: "Saídas do mês, com previstas",
     help: "Soma das despesas atribuídas a você em contas consideradas no saldo, incluindo recorrências previstas do mês.",
     icon: ArrowUpRight,
     iconClassName: "text-destructive",
@@ -61,10 +61,10 @@ const cards: Array<{
   {
     key: "balance",
     label: "Resultado do mês",
-    description: "Receitas menos despesas, com previstas",
-    help: "Receitas menos despesas atribuídas a você no mês selecionado, incluindo recorrências previstas. Em Distribuição financeira, use Com previsões para ver o mesmo valor.",
+    description: "Receitas menos despesas",
+    help: "Receitas menos despesas atribuídas a você no mês selecionado, incluindo recorrências previstas.",
     icon: Scale,
-    iconClassName: "text-warning",
+    iconClassName: "text-muted-foreground",
     invertTrend: false,
   },
   {
@@ -80,7 +80,7 @@ const cards: Array<{
 
 export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput }) {
   const primarySlug = useAdminPersonSlug();
-  const projectedComparison = getMetricComparison(
+  const projectedComparison = compareDashboardMetric(
     metrics.projected.current,
     metrics.projected.previous,
   );
@@ -94,15 +94,10 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
           <CardHeader className="gap-1 px-5">
             <CardTitle className="flex items-center gap-2 text-sm">
               Saldo previsto
-              <Tooltip>
-                <TooltipTrigger
-                  aria-label="Como calculamos o saldo previsto"
-                  className="rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <CircleHelp aria-hidden="true" className="size-3.5" />
-                </TooltipTrigger>
-                <TooltipContent>{formatProjectedMetricHelp(metrics.period)}</TooltipContent>
-              </Tooltip>
+              <MetricHelp
+                help={formatProjectedMetricHelp(metrics.period)}
+                label="Como calculamos o saldo previsto"
+              />
             </CardTitle>
             <CardDescription className="text-xs">Previsão para o fim do mês</CardDescription>
           </CardHeader>
@@ -117,8 +112,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                 hasPreviousData={metrics.projected.hasPreviousData}
                 invertTrend={false}
                 previous={metrics.projected.previous}
-                trend={projectedComparison.trend}
-                trendLabel={projectedComparison.label}
+                comparison={projectedComparison}
               />
             </div>
           </CardContent>
@@ -153,7 +147,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
       <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
           const metric = metrics[card.key];
-          const comparison = getMetricComparison(metric.current, metric.previous);
+          const comparison = compareDashboardMetric(metric.current, metric.previous);
           const help =
             card.key === "projected" ? formatProjectedMetricHelp(metrics.period) : card.help;
 
@@ -161,23 +155,21 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             <Card className="gap-4 border py-5" key={card.key}>
               <CardHeader className="gap-1 px-5">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <card.icon aria-hidden="true" className={cn("size-4", card.iconClassName)} />
-                    {card.label}
-                    <Tooltip>
-                      <TooltipTrigger
-                        aria-label={`Como calculamos ${card.label.toLocaleLowerCase("pt-BR")}`}
-                        className="rounded-full text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                      >
-                        <CircleHelp aria-hidden="true" className="size-3.5" />
-                      </TooltipTrigger>
-                      <TooltipContent>{help}</TooltipContent>
-                    </Tooltip>
+                  <CardTitle className="flex min-w-0 items-center gap-2 text-sm">
+                    <card.icon
+                      aria-hidden="true"
+                      className={cn("size-4 shrink-0", card.iconClassName)}
+                    />
+                    <span className="truncate">{card.label}</span>
+                    <MetricHelp
+                      help={help}
+                      label={`Como calculamos ${card.label.toLocaleLowerCase("pt-BR")}`}
+                    />
                   </CardTitle>
                   {card.transactionType && primarySlug ? (
                     <Link
                       aria-label={`Ver lançamentos de ${card.label.toLocaleLowerCase("pt-BR")}`}
-                      className="group/metric-link rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="group/metric-link -m-1 grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       search={{
                         period: metrics.period,
                         type: card.transactionType,
@@ -192,16 +184,17 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                     </Link>
                   ) : null}
                 </div>
-                <CardDescription className="text-xs">{card.description}</CardDescription>
+                <CardDescription className="truncate text-xs" title={card.description}>
+                  {card.description}
+                </CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3 px-5">
+              <CardContent className="mt-auto grid gap-3 px-5">
                 <MoneyValue amount={metric.current} className="font-medium text-2xl leading-none" />
                 <MetricComparison
                   hasPreviousData={metric.hasPreviousData}
                   invertTrend={card.invertTrend}
                   previous={metric.previous}
-                  trend={comparison.trend}
-                  trendLabel={comparison.label}
+                  comparison={comparison}
                 />
               </CardContent>
             </Card>
@@ -233,32 +226,31 @@ function MobileMetric({
   return href ? (
     <Link
       aria-label={`Ver lançamentos de ${label.toLocaleLowerCase("pt-BR")}`}
-      className="flex min-h-8 min-w-0 items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="flex min-h-11 min-w-0 items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       search={href}
       to="/transactions"
     >
       {content}
     </Link>
   ) : (
-    <div className="flex min-h-8 min-w-0 items-center justify-between gap-3">{content}</div>
+    <div className="flex min-h-11 min-w-0 items-center justify-between gap-3">{content}</div>
   );
 }
 
 function MetricComparison({
+  comparison,
   subtle = false,
   hasPreviousData,
   invertTrend,
   previous,
-  trend,
-  trendLabel,
 }: {
+  comparison: DashboardMetricComparison;
   subtle?: boolean;
   hasPreviousData: boolean;
   invertTrend: boolean;
   previous: number;
-  trend: MetricTrend;
-  trendLabel: string | null;
 }) {
+  const { change, trend } = comparison;
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const isPositive = invertTrend ? trend === "down" : trend === "up";
   const isNegative = invertTrend ? trend === "up" : trend === "down";
@@ -275,7 +267,7 @@ function MetricComparison({
     <div className="flex min-h-5 flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
       <span>{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
       <MoneyValue amount={previous} className="text-xs" />
-      {trendLabel ? (
+      {change.kind === "percent" || change.value !== 0 ? (
         <span
           className={cn(
             "inline-flex items-center gap-1 tabular-nums",
@@ -285,7 +277,11 @@ function MetricComparison({
           )}
         >
           <TrendIcon aria-hidden="true" className="size-3" />
-          {trendLabel}
+          {change.kind === "percent" ? (
+            formatMetricChangePercent(change.value)
+          ) : (
+            <MoneyValue amount={change.value} className="text-xs" showPositiveSign />
+          )}
         </span>
       ) : null}
     </div>
@@ -345,5 +341,19 @@ export function DashboardMetricsError({ onRetry }: { onRetry: () => void }) {
         </Button>
       </div>
     </Card>
+  );
+}
+
+function MetricHelp({ help, label }: { help: string; label: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger
+        aria-label={label}
+        className="relative grid size-4 shrink-0 place-items-center rounded-full text-muted-foreground outline-none after:absolute after:-inset-3.5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <CircleHelp aria-hidden="true" className="size-3.5" />
+      </PopoverTrigger>
+      <PopoverContent className="w-72 text-sm">{help}</PopoverContent>
+    </Popover>
   );
 }

@@ -93,7 +93,7 @@ export function NotificationPanel({
           {unreadCount > 0 ? (
             <span
               className={cn(
-                "absolute top-0 right-0 grid size-4.5 place-items-center rounded-full bg-foreground font-semibold text-[10px] text-background leading-none ring-2 ring-background",
+                "absolute top-0 right-0 grid size-4.5 place-items-center rounded-full bg-foreground font-semibold text-2xs text-background leading-none ring-2 ring-background",
                 badgeClassName,
               )}
             >

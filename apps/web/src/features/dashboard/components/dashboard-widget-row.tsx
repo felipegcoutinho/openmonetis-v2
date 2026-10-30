@@ -13,7 +13,7 @@ export function DashboardWidgetRow({
   return (
     <li
       className={cn(
-        "flex items-center gap-3",
+        "flex animate-list-item items-center gap-3",
         structure === "details" ? "h-16" : "h-20 py-2",
         className,
       )}

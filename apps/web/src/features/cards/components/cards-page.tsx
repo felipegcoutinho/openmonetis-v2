@@ -109,7 +109,7 @@ export function CardsPage() {
           ) : null}
           {!loading && !failed ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList aria-label="Filtrar por status">
+              <TabsList aria-label="Filtrar por status" variant="line">
                 <TabsTrigger value="active">Ativos ({activeCards.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativos ({inactiveCards.length})</TabsTrigger>
               </TabsList>

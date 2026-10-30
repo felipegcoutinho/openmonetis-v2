@@ -1,10 +1,17 @@
 import { dateOnlyToSafeInstant, formatDateInBrazil } from "@openmonetis/shared/date-time";
 import type { NoteOutput } from "@openmonetis/validators/notes";
+import { CalendarCheck2, FileText, ListChecks, type LucideIcon } from "lucide-react";
 
 export const noteKindLabels: Record<NoteOutput["kind"], string> = {
   text: "Nota",
   checklist: "Lista",
   task: "Tarefa",
+};
+
+export const noteKindIcons: Record<NoteOutput["kind"], LucideIcon> = {
+  text: FileText,
+  checklist: ListChecks,
+  task: CalendarCheck2,
 };
 
 export const noteKindOptions = [
@@ -47,4 +54,17 @@ export function formatTaskDueDate(value: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+/** Share of a field's limit from which its counter becomes visible. */
+const limitCounterVisibilityThreshold = 0.8;
+
+export function isNearLimit(count: number, maximum: number) {
+  return count >= maximum * limitCounterVisibilityThreshold;
+}
+
+/** Shifts a `YYYY-MM-DD` date by whole days, without time-zone drift. */
+export function addDaysToDateOnly(value: string, days: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 }

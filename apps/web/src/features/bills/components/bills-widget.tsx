@@ -164,7 +164,7 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
           {" · "}
           {bill.status === "paid" ? (
             <span className="inline-flex items-center gap-1">
-              <CheckCircle2 aria-hidden="true" className="size-3" />
+              <CheckCircle2 aria-hidden="true" className="size-3 animate-status-confirm" />
               {bill.settledDate ? billPaidLabel(bill.settledDate) : "Pago"}
             </span>
           ) : (
@@ -224,7 +224,7 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
           className={cn("font-medium text-sm", bill.isSettled && "text-success")}
         />
         {bill.isSettled ? (
-          <span className="text-success text-xs">Pago</span>
+          <span className="animate-status-confirm text-success text-xs">Pago</span>
         ) : (
           <Button
             className="h-auto px-0 text-xs"

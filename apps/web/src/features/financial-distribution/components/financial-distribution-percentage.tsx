@@ -23,7 +23,7 @@ export function FinancialDistributionPercentage({
       role="img"
       aria-label={isPrivacyModeEnabled ? "Percentual oculto" : formattedValue}
       className={cn(
-        "font-mono text-muted-foreground text-xs tabular-nums",
+        "text-muted-foreground text-xs tabular-nums",
         isPrivacyModeEnabled && "blur-md select-none",
         className,
       )}

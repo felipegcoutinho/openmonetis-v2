@@ -174,7 +174,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
               <section aria-labelledby="budget-list-title" className="grid gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <h2 className="font-semibold text-lg" id="budget-list-title">
+                    <h2 className="section-title" id="budget-list-title">
                       Limites por categoria
                     </h2>
                     <p className="text-muted-foreground text-sm">

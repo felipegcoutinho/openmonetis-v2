@@ -268,9 +268,7 @@ export function InboxRulesDialog({
                       ) : (
                         <div className="grid gap-1 rounded-md bg-muted/40 px-2.5 py-2 text-xs leading-5">
                           <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wider">
-                              Se
-                            </span>
+                            <span className="eyebrow text-muted-foreground">Se</span>
                             <p className="min-w-0 wrap-break-word">
                               <span className="text-muted-foreground">
                                 {rule.matchMode === "all" ? "Todas: " : "Qualquer uma: "}
@@ -279,9 +277,7 @@ export function InboxRulesDialog({
                             </p>
                           </div>
                           <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wider">
-                              Então
-                            </span>
+                            <span className="eyebrow text-muted-foreground">Então</span>
                             <p className="min-w-0 wrap-break-word">
                               Preencher {describeInboxRuleActions(rule)}
                             </p>

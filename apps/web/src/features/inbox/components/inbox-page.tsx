@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Kbd } from "@/components/ui/kbd";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
@@ -60,6 +61,7 @@ export function InboxPage({
   page,
   sourceAppName,
   ruleId,
+  rulesRequested = false,
   status,
   onSearchChange,
 }: {
@@ -67,6 +69,7 @@ export function InboxPage({
   page: number;
   sourceAppName: string | undefined;
   ruleId: string | undefined;
+  rulesRequested?: boolean;
   status: InboxItemStatus;
   onSearchChange: (search: {
     status?: InboxItemStatus;
@@ -74,6 +77,7 @@ export function InboxPage({
     app?: string;
     date?: string;
     rule?: string;
+    rules?: "open";
   }) => void;
 }) {
   const query = useQuery(
@@ -110,7 +114,7 @@ export function InboxPage({
     null,
   );
   const [resolvingItemId, setResolvingItemId] = useState<string | null>(null);
-  const [rulesOpen, setRulesOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(rulesRequested);
   const [deleteItem, setDeleteItem] = useState<InboxItemSummaryOutput | null>(null);
   const [clearStatus, setClearStatus] = useState<InboxClearableStatus | null>(null);
   const dataSourcesReady =
@@ -345,6 +349,7 @@ export function InboxPage({
                 </div>
                 {selectedItemIds.length ? (
                   <Button
+                    className="animate-in fade-in-0 slide-in-from-left-2 duration-200 motion-reduce:animate-none"
                     disabled={discardManyMutation.isPending}
                     onClick={() => void discardSelected()}
                     size="sm"
@@ -356,10 +361,8 @@ export function InboxPage({
                   </Button>
                 ) : null}
                 <p className="ml-auto hidden text-muted-foreground text-xs lg:block">
-                  Atalhos: <kbd className="font-mono">J</kbd>/<kbd className="font-mono">K</kbd>{" "}
-                  navegam, <kbd className="font-mono">Enter</kbd> revisa,{" "}
-                  <kbd className="font-mono">D</kbd> descarta, <kbd className="font-mono">X</kbd>{" "}
-                  seleciona
+                  Atalhos: <Kbd>J</Kbd>/<Kbd>K</Kbd> navegam, <Kbd>Enter</Kbd> revisa, <Kbd>D</Kbd>{" "}
+                  descarta, <Kbd>X</Kbd> seleciona
                 </p>
               </div>
             ) : null}
@@ -488,7 +491,10 @@ export function InboxPage({
 
       <InboxRulesDialog
         categories={categoriesQuery.data ?? []}
-        onOpenChange={setRulesOpen}
+        onOpenChange={(open) => {
+          setRulesOpen(open);
+          if (!open && rulesRequested) onSearchChange({ rules: undefined });
+        }}
         open={rulesOpen}
         people={peopleQuery.data ?? []}
       />

@@ -1,4 +1,4 @@
-import type { AccountOutput, CreateAccountInput } from "@openmonetis/validators/accounts";
+import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type { CreateCardInput } from "@openmonetis/validators/cards";
 import type { CreateCategoryInput } from "@openmonetis/validators/categories";
 import type { CreatePersonInput } from "@openmonetis/validators/people";
@@ -40,7 +40,7 @@ export function TransactionRelatedRecordDialog({
         open
         onOpenChange={changeOpen}
         onSubmit={async (input) => {
-          const result = await account.mutateAsync(input as CreateAccountInput);
+          const result = await account.mutateAsync(input);
           onCreated(kind, result.id);
         }}
       />

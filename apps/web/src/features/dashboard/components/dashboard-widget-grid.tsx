@@ -1,25 +1,51 @@
-import {
-  createDefaultDashboardWidgetPreferences,
-  type DashboardWidgetId,
-} from "@openmonetis/domain/dashboard";
-import { useQuery } from "@tanstack/react-query";
-import { EyeOff } from "lucide-react";
+import type { DashboardWidgetId } from "@openmonetis/domain/dashboard";
+import { LayoutGrid } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { dashboardWidgetPreferencesQueryOptions } from "../dashboard.queries";
-import { dashboardWidgetById } from "./dashboard-widget-registry";
+import { cn } from "@/lib/utils";
+import {
+  hideDashboardWidget,
+  moveDashboardWidget,
+  showDashboardWidget,
+} from "../dashboard.presentation";
+import { useDashboardWidgetEditor } from "../useDashboardWidgetEditor";
+import { DashboardAddWidgetDialog } from "./dashboard-add-widget-dialog";
+import { DashboardWidgetControlsContext } from "./dashboard-widget-menu";
+import {
+  type DashboardWidgetDefinition,
+  dashboardWidgetById,
+  dashboardWidgetRegistry,
+  dashboardWidgetSections,
+} from "./dashboard-widget-registry";
+
+/**
+ * Widgets wrap in rows of up to three (two on medium screens) and grow to share what is left of
+ * their row, so a section never ends with an empty gap. A wide widget counts as two.
+ */
+const widgetSlotClassName =
+  "min-w-0 grow basis-full md:basis-[calc((100%-1rem)/2)] xl:basis-[calc((100%-2rem)/3)]";
+const wideWidgetSlotClassName = "min-w-0 grow basis-full xl:basis-[calc((100%-2rem)/3*2+1rem)]";
+
+/** Swap the widget row for a short notice when every widget collapsed for lack of data. */
+const widgetRowClassName =
+  "flex flex-wrap gap-4 [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:hidden";
+const collapsedNoticeClassName =
+  "hidden rounded-card border border-dashed px-4 py-3 text-muted-foreground text-sm [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:block";
 
 export function DashboardWidgetGrid({
   excludedWidgetIds = [],
   period,
   placeBillsAfterInvoices = false,
+  sectionHeadingLevel = "h2",
 }: {
   excludedWidgetIds?: readonly DashboardWidgetId[];
   period: string;
   placeBillsAfterInvoices?: boolean;
+  /** Use "h3" when the grid is rendered under another section heading. */
+  sectionHeadingLevel?: "h2" | "h3";
 }) {
-  const defaults = createDefaultDashboardWidgetPreferences();
-  const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
-  const preferences = preferencesQuery.data ?? defaults;
+  const SectionHeading = sectionHeadingLevel;
+  const { canEdit, preferences, preferencesQuery, update } = useDashboardWidgetEditor();
   const excludedWidgets = new Set<DashboardWidgetId>([...excludedWidgetIds, "attention"]);
   const visibleWidgets = preferences.order.flatMap((widgetId) => {
     const widget = dashboardWidgetById.get(widgetId);
@@ -37,8 +63,26 @@ export function DashboardWidgetGrid({
     }
   }
 
+  function addWidget(widget: DashboardWidgetDefinition) {
+    const sectionWidgetIds = dashboardWidgetRegistry
+      .filter((candidate) => candidate.section === widget.section)
+      .map((candidate) => candidate.id);
+    update((current) => showDashboardWidget(current, widget.id, sectionWidgetIds));
+    toast.success(`${widget.title} adicionado ao dashboard`);
+  }
+
+  function removeWidget(widget: DashboardWidgetDefinition) {
+    update((current) => hideDashboardWidget(current, widget.id));
+    toast.success(`${widget.title} removido do dashboard`, {
+      action: {
+        label: "Desfazer",
+        onClick: () => addWidget(widget),
+      },
+    });
+  }
+
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {preferencesQuery.isError ? (
         <div className="flex flex-col gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground text-sm">
@@ -55,30 +99,97 @@ export function DashboardWidgetGrid({
         </div>
       ) : null}
 
-      {visibleWidgets.length > 0 ? (
-        <section
-          aria-label="Widgets do dashboard"
-          className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
-        >
-          {visibleWidgets.map((widget) => (
-            <div className="min-w-0 has-[[data-dashboard-widget-collapse]]:hidden" key={widget.id}>
-              {widget.render(period)}
-            </div>
-          ))}
-        </section>
-      ) : (
-        <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed bg-card/50 px-6 text-center">
-          <div className="max-w-sm">
-            <span className="mx-auto grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
-              <EyeOff aria-hidden="true" className="size-5" />
-            </span>
-            <h2 className="mt-4 font-heading font-medium">Seu dashboard está vazio</h2>
-            <p className="mt-1 text-muted-foreground text-sm">
-              Use a personalização para ativar os widgets que deseja acompanhar.
-            </p>
-          </div>
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-8">
+        {dashboardWidgetSections.map((section) => {
+          const sectionWidgets = visibleWidgets.filter((widget) => widget.section === section.id);
+          const availableWidgets = dashboardWidgetRegistry.filter(
+            (widget) =>
+              widget.section === section.id &&
+              preferences.hidden.includes(widget.id) &&
+              (widget.id === "attention" || !excludedWidgets.has(widget.id)),
+          );
+          const titleId = `dashboard-section-${section.id}`;
+
+          return (
+            <section
+              aria-labelledby={titleId}
+              className="grid grid-cols-1 gap-3"
+              data-dashboard-section
+              key={section.id}
+            >
+              <div className="flex items-center gap-2">
+                <SectionHeading
+                  className="font-heading font-medium text-muted-foreground text-sm"
+                  id={titleId}
+                >
+                  {section.title}
+                </SectionHeading>
+                <DashboardAddWidgetDialog
+                  availableWidgets={availableWidgets}
+                  disabled={!canEdit}
+                  onAdd={addWidget}
+                  sectionTitle={section.title}
+                />
+              </div>
+
+              {sectionWidgets.length > 0 ? (
+                <>
+                  <div className={widgetRowClassName}>
+                    {sectionWidgets.map((widget, index) => {
+                      const previous = sectionWidgets[index - 1];
+                      const next = sectionWidgets[index + 1];
+
+                      return (
+                        <div
+                          className={cn(
+                            widget.wide ? wideWidgetSlotClassName : widgetSlotClassName,
+                            "has-[[data-dashboard-widget-collapse]]:hidden",
+                          )}
+                          data-dashboard-widget-slot
+                          key={widget.id}
+                        >
+                          <DashboardWidgetControlsContext
+                            value={
+                              canEdit
+                                ? {
+                                    onMoveBack: previous
+                                      ? () =>
+                                          update((current) =>
+                                            moveDashboardWidget(current, widget.id, previous.id),
+                                          )
+                                      : undefined,
+                                    onMoveForward: next
+                                      ? () =>
+                                          update((current) =>
+                                            moveDashboardWidget(current, widget.id, next.id),
+                                          )
+                                      : undefined,
+                                    onRemove: () => removeWidget(widget),
+                                    title: widget.title,
+                                  }
+                                : null
+                            }
+                          >
+                            {widget.render(period)}
+                          </DashboardWidgetControlsContext>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className={collapsedNoticeClassName}>
+                    Nenhum dado neste mês para os widgets deste grupo.
+                  </p>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 rounded-card border border-dashed px-4 py-3 text-muted-foreground text-sm">
+                  <LayoutGrid aria-hidden="true" className="size-4 shrink-0" />
+                  Nenhum widget neste grupo. Use Adicionar para escolher o que acompanhar.
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

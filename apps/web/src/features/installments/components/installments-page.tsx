@@ -206,10 +206,7 @@ export function InstallmentsPage({ filters, onStatusChange }: InstallmentsPagePr
                   <CardHeader className="flex flex-col items-stretch gap-4 p-5 sm:p-6">
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                       <div>
-                        <h2
-                          className="font-heading font-medium text-lg"
-                          id="installment-groups-title"
-                        >
+                        <h2 className="section-title" id="installment-groups-title">
                           Compras parceladas
                         </h2>
                         <p className="text-muted-foreground text-sm">

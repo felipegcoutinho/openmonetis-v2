@@ -38,7 +38,7 @@ export function CommitmentsChart({
   return (
     <Card className="gap-0 py-0 shadow-none">
       <CardHeader className="p-5 pb-2 sm:p-6 sm:pb-2">
-        <h2 className="font-heading font-medium text-lg">Comprometimento mês a mês</h2>
+        <h2 className="section-title">Comprometimento mês a mês</h2>
         <p className="mt-0.5 text-muted-foreground text-xs sm:text-sm">
           Barras: o que já está contratado. Linha: receita prevista no mês.
         </p>

@@ -20,7 +20,7 @@ export function DashboardWelcome({
         {formatDashboardDate()}
       </p>
       {displayName ? (
-        <h1 className="font-heading text-xl tracking-tight sm:text-3xl">
+        <h1 className="font-heading font-normal text-xl tracking-tight sm:text-2xl">
           <span className="text-muted-foreground" suppressHydrationWarning>
             {getDashboardGreeting()},
           </span>{" "}
@@ -29,12 +29,12 @@ export function DashboardWelcome({
       ) : (
         <div className="flex items-center gap-2">
           <h1
-            className="font-heading text-xl tracking-tight text-muted-foreground sm:text-3xl"
+            className="font-heading text-xl tracking-tight text-muted-foreground sm:text-2xl"
             suppressHydrationWarning
           >
             {getDashboardGreeting()},
           </h1>
-          <Skeleton className="h-7 w-48 sm:h-8" />
+          <Skeleton className="h-7 w-48" />
         </div>
       )}
     </header>

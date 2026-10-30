@@ -7,6 +7,7 @@ import type {
 export type TransactionsTableProps = {
   accountStatement?: boolean;
   adminPersonId: string | null;
+  selectionMode?: boolean;
   transactions: TransactionOutput[];
   pendingTransactionId: string | null;
   pendingSettlementKey: string | null;
@@ -40,6 +41,7 @@ export type TransactionsTableProps = {
 export type TransactionRowProps = {
   accountStatement: boolean;
   adminPersonId: string | null;
+  selectionMode: boolean;
   selected: boolean;
   selectable: boolean;
   splitConnector: "start" | "middle" | "end" | null;

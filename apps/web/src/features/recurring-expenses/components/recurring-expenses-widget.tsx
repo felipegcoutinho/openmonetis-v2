@@ -190,7 +190,13 @@ function RecurringExpenseList({
             <p
               className={item.isSettled ? "text-success text-xs" : "text-muted-foreground text-xs"}
             >
-              {item.status === "paused" ? "Inativa" : item.isSettled ? "Paga" : "Prevista"}
+              {item.status === "paused" ? (
+                "Inativa"
+              ) : item.isSettled ? (
+                <span className="animate-status-confirm">Paga</span>
+              ) : (
+                "Prevista"
+              )}
             </p>
           </div>
           <DropdownMenu>

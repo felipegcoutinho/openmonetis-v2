@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeftRight, FileUp } from "lucide-react";
+import { ArrowLeftRight, FileUp, ListChecks } from "lucide-react";
+import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { getCategoryLabel } from "@/features/categories/categories.presentation";
@@ -69,6 +70,7 @@ export function TransactionsScreen({
   contentOverride,
 }: TransactionsScreenProps) {
   const isMobile = useIsMobile();
+  const [selectionMode, setSelectionMode] = useState(false);
   const adminPersonId = people.find((person) => person.role === "admin")?.id ?? null;
   const {
     isDialogOpen,
@@ -315,6 +317,19 @@ export function TransactionsScreen({
                 disabled={isLoading || hasLoadError || isUpdating === true || totalItems === 0}
               />
             ) : null}
+            {isMobile !== true ? (
+              <Button
+                aria-pressed={selectionMode}
+                className={cn(selectionMode && "border-brand bg-brand/10")}
+                disabled={isLoading || hasLoadError || totalItems === 0}
+                onClick={() => setSelectionMode((current) => !current)}
+                type="button"
+                variant="outline"
+              >
+                <ListChecks aria-hidden="true" />
+                Selecionar
+              </Button>
+            ) : null}
           </div>
         ) : null}
 
@@ -428,7 +443,8 @@ export function TransactionsScreen({
       {!isLoading && !hasLoadError && isMobile === false ? (
         <TransactionsTable
           accountStatement={accountStatement}
-          key={`desktop:${selectionScopeKey}`}
+          key={`desktop:${selectionScopeKey}:${selectionMode}`}
+          selectionMode={selectionMode}
           adminPersonId={adminPersonId}
           currentPage={Math.min(page, pageCount)}
           onAnticipate={setAnticipatingTransaction}

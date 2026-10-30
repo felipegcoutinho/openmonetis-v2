@@ -1,11 +1,20 @@
+import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
 import { CreateNoteInputSchema, noteContentMaximumLength } from "@openmonetis/validators/notes";
 import { FieldError } from "@/components/forms/field-error";
 import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { noteCompletionCheckboxClassName } from "../notes.presentation";
+import { addDaysToDateOnly, noteCompletionCheckboxClassName } from "../notes.presentation";
 import type { useNoteForm } from "../useNoteForm";
+import { NoteCharacterCount } from "./note-character-count";
+
+const quickDueDates = [
+  { label: "Hoje", days: 0 },
+  { label: "Amanhã", days: 1 },
+  { label: "Em 7 dias", days: 7 },
+] as const;
 
 export function NoteTaskFields({
   isEditing,
@@ -41,6 +50,24 @@ export function NoteTaskFields({
               placeholder="Selecione a data"
               value={field.state.value}
             />
+            <div className="flex flex-wrap gap-1.5">
+              {quickDueDates.map((option) => {
+                const date = addDaysToDateOnly(getCurrentDateInBrazil(), option.days);
+                return (
+                  <Button
+                    aria-pressed={field.state.value === date}
+                    className="aria-pressed:border-brand-strong/50 aria-pressed:bg-brand/10"
+                    key={option.label}
+                    onClick={() => field.handleChange(date)}
+                    size="xs"
+                    type="button"
+                    variant="outline"
+                  >
+                    {option.label}
+                  </Button>
+                );
+              })}
+            </div>
             <FieldError errors={field.state.meta.errors} />
           </div>
         )}
@@ -51,9 +78,10 @@ export function NoteTaskFields({
           <div className="grid gap-1.5">
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor={fieldId("task-content")}>Detalhes (opcional)</Label>
-              <span className="text-muted-foreground text-xs tabular-nums">
-                {field.state.value.length}/{noteContentMaximumLength}
-              </span>
+              <NoteCharacterCount
+                length={field.state.value.length}
+                maximum={noteContentMaximumLength}
+              />
             </div>
             <Textarea
               className="min-h-28 resize-y"

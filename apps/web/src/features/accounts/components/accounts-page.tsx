@@ -46,16 +46,14 @@ export function AccountsPage() {
     setOpen(true);
   }
 
-  async function saveAccount(input: CreateAccountInput | ReplaceAccountInput) {
-    if (editingAccount) {
-      await replaceMutation.mutateAsync({
-        id: editingAccount.id,
-        input: input as ReplaceAccountInput,
-      });
-    } else {
-      const created = await createMutation.mutateAsync(input as CreateAccountInput);
-      setCreatedAccountId(created.id);
-    }
+  async function createAccount(input: CreateAccountInput) {
+    const created = await createMutation.mutateAsync(input);
+    setCreatedAccountId(created.id);
+    closeDialog(false);
+  }
+
+  async function replaceAccount(account: AccountOutput, input: ReplaceAccountInput) {
+    await replaceMutation.mutateAsync({ id: account.id, input });
     closeDialog(false);
   }
 
@@ -145,7 +143,7 @@ export function AccountsPage() {
 
           {!accountsQuery.isLoading && !accountsQuery.isError ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList aria-label="Filtrar por status">
+              <TabsList aria-label="Filtrar por status" variant="line">
                 <TabsTrigger value="active">Ativas ({activeAccounts.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativas ({inactiveAccounts.length})</TabsTrigger>
               </TabsList>
@@ -180,12 +178,21 @@ export function AccountsPage() {
         </section>
       </main>
 
-      <AccountDialog
-        account={editingAccount}
-        onOpenChange={closeDialog}
-        onSubmit={saveAccount}
-        open={open}
-      />
+      {editingAccount ? (
+        <AccountDialog
+          account={editingAccount}
+          onOpenChange={closeDialog}
+          onSubmit={(input) => replaceAccount(editingAccount, input)}
+          open={open}
+        />
+      ) : (
+        <AccountDialog
+          account={null}
+          onOpenChange={closeDialog}
+          onSubmit={createAccount}
+          open={open}
+        />
+      )}
     </ProtectedRoute>
   );
 }

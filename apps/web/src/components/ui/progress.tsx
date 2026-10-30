@@ -54,7 +54,7 @@ function ProgressIndicator({ className, ...props }: ProgressPrimitive.Indicator.
     <ProgressPrimitive.Indicator
       data-slot="progress-indicator"
       className={cn(
-        "min-h-3 bg-foreground transition-[width] motion-reduce:transition-none",
+        "min-h-3 origin-left animate-[progress-fill_0.9s_cubic-bezier(0.22,1,0.36,1)_both] bg-foreground transition-[width] motion-reduce:animate-none motion-reduce:transition-none",
         className,
       )}
       {...props}

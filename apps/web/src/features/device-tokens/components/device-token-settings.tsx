@@ -4,7 +4,15 @@ import {
 } from "@openmonetis/validators/device-tokens";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
-import { Clipboard, Plus, Smartphone, Unplug } from "lucide-react";
+import {
+  CircleCheck,
+  Clipboard,
+  LoaderCircle,
+  Plus,
+  RefreshCw,
+  Smartphone,
+  Unplug,
+} from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
@@ -22,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -31,18 +40,37 @@ import { showInvalidFormToast } from "@/lib/form-feedback";
 import {
   useCreateDeviceTokenMutation,
   useRevokeDeviceTokenMutation,
+  useRotateDeviceTokenMutation,
 } from "../device-tokens.mutations";
-import { formatDeviceTokenDate, formatDeviceTokenLastUsed } from "../device-tokens.presentation";
+import {
+  formatDeviceTokenDate,
+  formatDeviceTokenLastUsed,
+  formatDeviceTokenRecentCaptures,
+} from "../device-tokens.presentation";
 import { deviceTokensQueryOptions } from "../device-tokens.queries";
 import { DeviceTokenQrCode } from "./device-token-qr-code";
 
+const connectionCheckIntervalMs = 3_000;
+
 export function DeviceTokenSettings() {
-  const query = useQuery(deviceTokensQueryOptions());
-  const createMutation = useCreateDeviceTokenMutation();
-  const revokeMutation = useRevokeDeviceTokenMutation();
   const [createOpen, setCreateOpen] = useState(false);
   const [createdToken, setCreatedToken] = useState<CreatedDeviceTokenOutput | null>(null);
+  const query = useQuery({
+    ...deviceTokensQueryOptions(),
+    // While the QR Code is on screen, watch for the first request made with the new token.
+    refetchInterval: (current) =>
+      createdToken && !current.state.data?.find((token) => token.id === createdToken.id)?.lastUsedAt
+        ? connectionCheckIntervalMs
+        : false,
+  });
+  const createMutation = useCreateDeviceTokenMutation();
+  const revokeMutation = useRevokeDeviceTokenMutation();
+  const rotateMutation = useRotateDeviceTokenMutation();
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [rotateId, setRotateId] = useState<string | null>(null);
+  const createdTokenConnected = Boolean(
+    createdToken && query.data?.find((token) => token.id === createdToken.id)?.lastUsedAt,
+  );
   const nameId = useId();
   const form = useForm({
     defaultValues: { name: "" },
@@ -78,6 +106,18 @@ export function DeviceTokenSettings() {
       toast.success("Token copiado");
     } catch {
       toast.error("Não foi possível copiar. Selecione o token manualmente.");
+    }
+  }
+
+  async function rotate(id: string) {
+    try {
+      const rotated = await rotateMutation.mutateAsync(id);
+      setRotateId(null);
+      setCreatedToken(rotated);
+      setCreateOpen(true);
+      toast.success("Token renovado");
+    } catch {
+      toast.error("Não foi possível renovar o token.");
     }
   }
 
@@ -132,20 +172,41 @@ export function DeviceTokenSettings() {
                   <Smartphone aria-hidden="true" className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-sm" title={token.name}>
-                    {token.name}
-                  </p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="truncate font-medium text-sm" title={token.name}>
+                      {token.name}
+                    </p>
+                    {token.expiresSoon ? (
+                      <Badge className="shrink-0" variant="destructive">
+                        Expira em breve
+                      </Badge>
+                    ) : null}
+                  </div>
                   <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-muted-foreground text-xs">
                     <span>{formatDeviceTokenLastUsed(token.lastUsedAt)}</span>
+                    <span>{formatDeviceTokenRecentCaptures(token.recentCaptureCount)}</span>
                     <span>Expira em {formatDeviceTokenDate(token.expiresAt)}</span>
                   </div>
                 </div>
                 <Button
+                  aria-label={`Renovar token de ${token.name}`}
+                  className="text-muted-foreground"
+                  disabled={rotateMutation.isPending || revokeMutation.isPending}
+                  onClick={() => setRotateId(token.id)}
+                  size="icon"
+                  title="Renovar token"
+                  type="button"
+                  variant="ghost"
+                >
+                  <RefreshCw aria-hidden="true" />
+                </Button>
+                <Button
                   aria-label={`Revogar acesso de ${token.name}`}
                   className="text-muted-foreground hover:text-destructive"
-                  disabled={revokeMutation.isPending}
+                  disabled={revokeMutation.isPending || rotateMutation.isPending}
                   onClick={() => setRevokeId(token.id)}
                   size="icon"
+                  title="Revogar acesso"
                   type="button"
                   variant="ghost"
                 >
@@ -162,11 +223,6 @@ export function DeviceTokenSettings() {
         )
       ) : null}
 
-      <p className="text-muted-foreground text-sm leading-relaxed">
-        Antes de conectar, configure o endereço HTTPS da API no Companion. Depois, escaneie o QR
-        Code ou copie o token de acesso.
-      </p>
-
       <Dialog onOpenChange={changeCreateOpen} open={createOpen}>
         <DialogContent guarded className="max-h-[calc(100svh-2rem)] overflow-y-auto">
           <DialogHeader>
@@ -181,9 +237,28 @@ export function DeviceTokenSettings() {
           </DialogHeader>
           {createdToken ? (
             <div className="grid gap-3">
-              <div className="text-center">
+              <div className="grid justify-items-center gap-1 text-center">
                 <p className="font-medium text-sm">{createdToken.name}</p>
-                <p className="text-muted-foreground text-sm">Aguardando conexão no Companion</p>
+                <p
+                  aria-live="polite"
+                  className={
+                    createdTokenConnected
+                      ? "flex items-center gap-1.5 font-medium text-sm text-success"
+                      : "flex items-center gap-1.5 text-muted-foreground text-sm"
+                  }
+                >
+                  {createdTokenConnected ? (
+                    <>
+                      <CircleCheck aria-hidden="true" className="size-4" />
+                      Aparelho conectado
+                    </>
+                  ) : (
+                    <>
+                      <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+                      Aguardando conexão no Companion
+                    </>
+                  )}
+                </p>
               </div>
               <DeviceTokenQrCode token={createdToken.token} />
               <div className="rounded-lg border bg-muted/40 p-3">
@@ -195,11 +270,14 @@ export function DeviceTokenSettings() {
                 <Clipboard aria-hidden="true" /> Copiar token
               </Button>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                No Companion, configure o endereço HTTPS da API antes de escanear. Depois, confira
-                se uma notificação capturada aparece em pré-lançamentos.
+                No Companion, configure o endereço HTTPS da API antes de escanear.
               </p>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => changeCreateOpen(false)}>
+                <Button
+                  type="button"
+                  variant={createdTokenConnected ? "default" : "outline"}
+                  onClick={() => changeCreateOpen(false)}
+                >
                   Concluir
                 </Button>
               </DialogFooter>
@@ -269,6 +347,36 @@ export function DeviceTokenSettings() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open && !rotateMutation.isPending) setRotateId(null);
+        }}
+        open={Boolean(rotateId)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renovar este token?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O token atual de {query.data?.find((token) => token.id === rotateId)?.name} deixa de
+              funcionar agora. Em seguida, conecte o aparelho de novo com o novo QR Code. Capturas
+              já recebidas serão mantidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rotateMutation.isPending}>Cancelar</AlertDialogCancel>
+            <Button
+              disabled={rotateMutation.isPending}
+              onClick={() => {
+                if (rotateId) void rotate(rotateId);
+              }}
+              type="button"
+            >
+              {rotateMutation.isPending ? "Renovando…" : "Renovar"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         onOpenChange={(open) => {

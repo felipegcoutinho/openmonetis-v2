@@ -15,11 +15,11 @@ import {
   formatAttentionDetail,
   getAttentionKindLabel,
   getAttentionTitle,
+  hideDashboardWidget,
 } from "../dashboard.presentation";
-import {
-  dashboardAttentionQueryOptions,
-  dashboardWidgetPreferencesQueryOptions,
-} from "../dashboard.queries";
+import { dashboardAttentionQueryOptions } from "../dashboard.queries";
+import { useDashboardWidgetEditor } from "../useDashboardWidgetEditor";
+import { DashboardWidgetMenu } from "./dashboard-widget-menu";
 
 const collapsedItemCount = 4;
 
@@ -42,7 +42,8 @@ export function DashboardAttentionWidget({
   period: string;
   variant?: "band" | "list";
 }) {
-  const preferencesQuery = useQuery(dashboardWidgetPreferencesQueryOptions());
+  const editor = useDashboardWidgetEditor();
+  const preferencesQuery = editor.preferencesQuery;
   const query = useQuery({
     ...dashboardAttentionQueryOptions(period),
     enabled: !preferencesQuery.data?.hidden.includes("attention"),
@@ -54,6 +55,27 @@ export function DashboardAttentionWidget({
   const hasPartialError = Boolean(query.data?.unavailableSources.length);
 
   if (preferencesQuery.data?.hidden.includes("attention")) return null;
+  const menu = editor.canEdit ? (
+    <DashboardWidgetMenu
+      controls={{
+        onRemove: () => editor.update((current) => hideDashboardWidget(current, "attention")),
+        title: "Precisa de atenção",
+      }}
+    />
+  ) : null;
+
+  if (query.data && items.length === 0 && !hasPartialError) {
+    return (
+      <div className="flex min-h-11 items-center gap-2 rounded-card border border-dashed py-1 pr-1 pl-4 text-muted-foreground text-sm">
+        <CheckCircle2 aria-hidden="true" className="size-4 shrink-0 text-success" />
+        <p className="min-w-0 flex-1">
+          <span className="font-medium text-foreground">Precisa de atenção:</span> tudo em dia,
+          nenhuma pendência neste mês.
+        </p>
+        {menu}
+      </div>
+    );
+  }
 
   return (
     <Card aria-labelledby={`attention-${variant}-title`} className="gap-3 border p-4" role="region">
@@ -62,9 +84,12 @@ export function DashboardAttentionWidget({
           Precisa de atenção
         </h2>
         {items.length > 0 ? <Badge variant="secondary">{items.length}</Badge> : null}
-        {variant === "band" && items.length > 0 ? (
-          <span className="ml-auto text-muted-foreground text-xs">Ordenado por urgência</span>
-        ) : null}
+        <span className="ml-auto flex items-center gap-2">
+          {variant === "band" && items.length > 0 ? (
+            <span className="text-muted-foreground text-xs">Ordenado por urgência</span>
+          ) : null}
+          {menu}
+        </span>
       </div>
 
       {query.isPending ? (
@@ -140,7 +165,15 @@ function AttentionItem({
           aria-hidden="true"
           className={cn("size-2 shrink-0 rounded-full", severityDotClassNames[item.severity])}
         />
-        <span className="sr-only">{severityLabels[item.severity]}:</span>
+        {item.severity === "critical" ? (
+          <span className="shrink-0 font-medium text-destructive">
+            {severityLabels.critical}
+            <span aria-hidden="true"> ·</span>
+            <span className="sr-only">:</span>
+          </span>
+        ) : (
+          <span className="sr-only">{severityLabels[item.severity]}:</span>
+        )}
         <span className="truncate">{getAttentionKindLabel(item)}</span>
       </span>
       <span className="flex min-w-0 items-baseline justify-between gap-2">
@@ -232,6 +265,7 @@ function AttentionLink({
         date: undefined,
         page: undefined,
         rule: undefined,
+        rules: undefined,
         status: undefined,
       }}
       to="/inbox"

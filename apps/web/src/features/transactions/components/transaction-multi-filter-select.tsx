@@ -171,7 +171,7 @@ export function FilterOptionContent({
             width={24}
           />
         ) : (
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted font-medium text-[10px] text-muted-foreground">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted font-medium text-2xs text-muted-foreground">
             {option.label.slice(0, 2).toLocaleUpperCase("pt-BR")}
           </span>
         )}

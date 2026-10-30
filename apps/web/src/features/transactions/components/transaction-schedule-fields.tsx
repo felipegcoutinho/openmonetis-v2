@@ -4,6 +4,7 @@ import {
 } from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { MobileDatePicker } from "@/components/forms/mobile-date-picker";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
@@ -19,6 +20,7 @@ import {
 } from "../transactions.presentation";
 import { installmentOptionsQueryOptions } from "../transactions.queries";
 import type { useTransactionForm } from "../useTransactionForm";
+import { RecurrenceOccurrenceCountPicker } from "./recurrence-occurrence-count-picker";
 import { TransactionConditionOption } from "./transaction-condition-option";
 import { FieldShell } from "./transaction-field-shell";
 import type { TransactionFormProps } from "./transaction-form.types";
@@ -51,6 +53,18 @@ export function TransactionScheduleFields({
   const preview = useQuery(
     installmentOptionsQueryOptions(values.amount, values.condition === "installment"),
   );
+  const [appliedOccurrenceCount, setAppliedOccurrenceCount] = useState<{
+    endDate: string;
+    frequency: TransactionFormValues["recurrenceFrequency"];
+    occurrenceCount: number;
+    startDate: string;
+  } | null>(null);
+  const recurrenceEndDateQuery = {
+    startDate: values.purchaseDate,
+    anchorDate: values.recurrenceAnchorDate || undefined,
+    dueDate: values.paymentMethod !== "credit_card" && values.dueDate ? values.dueDate : undefined,
+    frequency: values.recurrenceFrequency,
+  };
   const getInstallmentLabel = (count: number) =>
     formatInstallmentOption(
       count,
@@ -249,11 +263,32 @@ export function TransactionScheduleFields({
                   </Tooltip>
                 ) : null}
               </div>
-              <p className="text-muted-foreground text-xs">
-                {field.state.value
-                  ? "Inclui a data selecionada."
-                  : "Sem data final, a recorrência continua sem prazo."}
-              </p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-muted-foreground text-xs">
+                  {field.state.value
+                    ? appliedOccurrenceCount?.endDate === field.state.value &&
+                      appliedOccurrenceCount.startDate === values.purchaseDate &&
+                      appliedOccurrenceCount.frequency === values.recurrenceFrequency
+                      ? `${appliedOccurrenceCount.occurrenceCount} ocorrências; inclui a data selecionada.`
+                      : "Inclui a data selecionada."
+                    : "Sem data final, a recorrência continua sem prazo."}
+                </p>
+                {values.purchaseDate ? (
+                  <RecurrenceOccurrenceCountPicker
+                    disabled={isSubmitting}
+                    query={recurrenceEndDateQuery}
+                    onApply={({ endDate, occurrenceCount }) => {
+                      field.handleChange(endDate);
+                      setAppliedOccurrenceCount({
+                        endDate,
+                        frequency: values.recurrenceFrequency,
+                        occurrenceCount,
+                        startDate: values.purchaseDate,
+                      });
+                    }}
+                  />
+                ) : null}
+              </div>
             </FieldShell>
           )}
         </form.Field>

@@ -1,17 +1,7 @@
 import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarCheck2,
-  CheckSquare2,
-  Eye,
-  FileText,
-  NotebookPen,
-  Pencil,
-  Plus,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowRight, Eye, NotebookPen, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,7 +17,7 @@ import {
   useSetNoteItemCompletionMutation,
   useSetTaskCompletionMutation,
 } from "../notes.mutations";
-import { formatTaskDueDate, getChecklistProgressLabel } from "../notes.presentation";
+import { formatTaskDueDate, getChecklistProgressLabel, noteKindIcons } from "../notes.presentation";
 import { notesDashboardQueryOptions } from "../notes.queries";
 import { NoteDetailsDialog } from "./note-details-dialog";
 import { NoteDialog } from "./note-dialog";
@@ -189,6 +179,7 @@ function NotesWidgetList({
       {notes.map((note) => {
         const checklist = note.kind === "checklist";
         const task = note.kind === "task";
+        const KindIcon = noteKindIcons[note.kind];
 
         return (
           <DashboardWidgetRow
@@ -197,13 +188,7 @@ function NotesWidgetList({
             structure={checklist ? "progress" : "details"}
           >
             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-              {checklist ? (
-                <CheckSquare2 aria-hidden="true" className="size-4" />
-              ) : task ? (
-                <CalendarCheck2 aria-hidden="true" className="size-4" />
-              ) : (
-                <FileText aria-hidden="true" className="size-4" />
-              )}
+              <KindIcon aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
               <button

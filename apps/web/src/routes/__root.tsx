@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import { FlashToast } from "@/components/flash-toast";
 import { PrivacyProvider } from "@/components/privacy-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -147,6 +148,7 @@ function RootApp() {
         <PreferencesSynchronizer />
         <Outlet />
         <Toaster closeButton position="bottom-right" />
+        <FlashToast />
       </PrivacyProvider>
     </QueryClientProvider>
   );

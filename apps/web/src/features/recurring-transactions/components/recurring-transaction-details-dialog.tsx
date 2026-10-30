@@ -59,11 +59,11 @@ export function RecurringTransactionDetailsDialog({
           <div className="grid gap-3 rounded-lg bg-muted/40 p-4 sm:grid-cols-2">
             <div>
               <p className="text-muted-foreground text-xs">Sua parte por ocorrência</p>
-              <MoneyValue amount={item.amount} className="mt-1 font-semibold" />
+              <MoneyValue amount={item.amount} className="kpi-value mt-1" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Valor total por ocorrência</p>
-              <MoneyValue amount={item.totalAmount} className="mt-1 font-semibold" />
+              <MoneyValue amount={item.totalAmount} className="kpi-value mt-1" />
             </div>
           </div>
 

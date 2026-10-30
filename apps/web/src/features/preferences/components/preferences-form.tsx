@@ -32,7 +32,7 @@ export function PreferencesForm() {
 }
 
 function PreferencesEditor({ preferences }: { preferences: UserPreferencesOutput }) {
-  const { form, isRestoring, restoreDefaults } = usePreferencesForm(preferences);
+  const { form, isRestoring, restoreDefaults, discardChanges } = usePreferencesForm(preferences);
   return (
     <form
       data-mobile-page-form
@@ -55,6 +55,7 @@ function PreferencesEditor({ preferences }: { preferences: UserPreferencesOutput
       <PreferencesActions
         form={form}
         isRestoring={isRestoring}
+        onDiscard={discardChanges}
         onRestoreDefaults={restoreDefaults}
       />
     </form>

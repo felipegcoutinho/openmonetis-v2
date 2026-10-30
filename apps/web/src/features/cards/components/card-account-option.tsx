@@ -15,7 +15,7 @@ export function AccountOption({ account }: { account: AccountOutput }) {
           width={20}
         />
       ) : (
-        <span className="grid size-5 place-items-center rounded-full bg-muted text-[9px]">
+        <span className="grid size-5 place-items-center rounded-full bg-muted text-2xs">
           {account.name.slice(0, 1).toUpperCase()}
         </span>
       )}

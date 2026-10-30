@@ -165,7 +165,7 @@ export function RecurringTransactionsReportPage({
               <Card className="gap-0 py-0 shadow-none" aria-labelledby="recurring-rules-title">
                 <CardHeader className="gap-4 p-5 sm:p-6">
                   <div>
-                    <h2 id="recurring-rules-title" className="font-heading font-medium text-lg">
+                    <h2 id="recurring-rules-title" className="section-title">
                       {income ? "Receitas cadastradas" : "Despesas cadastradas"}
                     </h2>
                     <p className="text-muted-foreground text-sm">

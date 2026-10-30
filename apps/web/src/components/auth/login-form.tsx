@@ -1,7 +1,6 @@
 import { LoginInputSchema } from "@openmonetis/validators/auth";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { Fingerprint, LogIn } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -10,13 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { authConfigQueryOptions } from "@/features/auth-config/auth-config.queries";
+import { useStartPageNavigation } from "@/features/preferences/useStartPageNavigation";
 import { usePasskeySupport } from "@/hooks/usePasskeySupport";
 import { authClient } from "@/lib/auth-client";
 import { GoogleAuthButton } from "./google-auth-button";
 
 export function LoginForm() {
   const configuration = useQuery(authConfigQueryOptions());
-  const navigate = useNavigate();
+  const navigateToStartPage = useStartPageNavigation();
   const id = useId();
   const [error, setError] = useState<string | null>(null);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export function LoginForm() {
       const result = await authClient.signIn
         .email({
           ...input.data,
-          callbackURL: "/dashboard",
+          callbackURL: "/",
         })
         .catch(() => null);
       if (!result) {
@@ -56,7 +56,7 @@ export function LoginForm() {
       }
 
       toast.success("Acesso realizado");
-      await navigate({ to: "/dashboard" });
+      await navigateToStartPage();
     },
   });
 
@@ -74,7 +74,7 @@ export function LoginForm() {
       }
 
       toast.success("Acesso realizado");
-      await navigate({ to: "/dashboard" });
+      await navigateToStartPage();
     } catch {
       const message = "A confirmação da chave de acesso foi cancelada ou não pôde ser concluída.";
       setError(message);
@@ -92,7 +92,7 @@ export function LoginForm() {
       const origin = window.location.origin;
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: new URL("/dashboard", origin).toString(),
+        callbackURL: new URL("/", origin).toString(),
         errorCallbackURL: new URL("/", origin).toString(),
       });
 
@@ -193,7 +193,7 @@ export function LoginForm() {
         <>
           <div className="relative flex items-center py-1" aria-hidden="true">
             <div className="grow border-t border-border" />
-            <span className="px-3 text-muted-foreground text-xs uppercase">ou</span>
+            <span className="eyebrow px-3 text-muted-foreground">ou</span>
             <div className="grow border-t border-border" />
           </div>
           <form.Subscribe selector={(state) => state.isSubmitting}>

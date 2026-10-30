@@ -9,6 +9,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Widget Comprometimento do mês no dashboard, na seção Planejamento: um velocímetro mostra
+  quanto da receita prevista do mês já está comprometido, nas mesmas faixas de Compromissos
+  futuros (saudável abaixo de 60%, atenção até 85% e crítico a partir daí), com os valores
+  comprometidos, a folga e a variação em pontos percentuais em relação ao mês anterior. Sem
+  receita prevista, o widget avisa em vez de posicionar o ponteiro. Layouts personalizados recebem
+  o widget no fim da ordem e ele pode ser ocultado em Personalizar dashboard.
+- Etiquetas podem ser inativadas e reativadas. A página de Etiquetas ganhou as abas Ativas e
+  Inativas com a contagem de cada uma, e o botão de inativar desfaz a ação pelo aviso. Etiquetas
+  inativas continuam nos lançamentos e nos filtros, mas deixam de ser oferecidas ao etiquetar
+  lançamentos, exceto as que já estão selecionadas. A API expõe o campo `status` em `TagOutput`
+  e aceita `status` em `PATCH /tags/{id}`; a migration `0018_tag_status` adiciona a coluna com
+  `active` como padrão.
+- Cor nas etiquetas, escolhida entre uma paleta fixa (neutra, laranja, azul, verde, roxa, amarela
+  e vermelha) ao criar ou editar. A cor aparece no ícone da etiqueta na página de Etiquetas, nos
+  seletores e nos chips dos lançamentos. A API expõe `color` em `TagOutput` e aceita o campo na
+  criação e em `PATCH /tags/{id}`; a migration `0019_tag_color` adiciona a coluna com `neutral` como
+  padrão.
+- Quantidade de lançamentos do mês abaixo do nome de cada etiqueta. O relatório
+  `GET /tags/report` passa a devolver `transactionCount`, contando cada transferência uma vez.
 - Botão Registrar pagamento no topo da fatura do cartão sempre que houver saldo em aberto,
   abrindo o mesmo fluxo de pagamento do painel.
 - Faixa Precisa de atenção na Visão geral, logo abaixo dos indicadores, com faturas e contas
@@ -33,9 +52,46 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   `PATCH /transactions/bulk/tags` e
   `POST /transactions/bulk/delete`, que validam posse e elegibilidade de todos os lançamentos antes
   de alterar qualquer um.
+- Página inicial nas Preferências: escolha entre Visão geral, Lançamentos, Contas, Cartões,
+  Orçamentos e Caixa de entrada como a página aberta ao entrar, inclusive pelo Google e por chave
+  de acesso. A API expõe `startPage` em `UserPreferencesOutput`; a migration
+  `0020_user_start_page` adiciona a coluna com `dashboard` como padrão.
+- Feriados que se repetem todo ano nas Regras de vencimento, para incluir feriados estaduais e
+  municipais uma única vez. O calendário aceita `recurringHolidays` (dias no formato `MM-DD`), e
+  versões salvas antes continuam válidas sem esse campo.
+- Renovação do token de um aparelho do Companion em Integrações, que revoga o token atual e mostra
+  o novo QR Code (`POST /device-tokens/{id}/rotate`). Cada aparelho mostra quantas capturas enviou
+  nos últimos 7 dias e um aviso quando o token expira em até 30 dias; a API expõe
+  `recentCaptureCount` e `expiresSoon` em `DeviceToken`.
+- Aba Perfil em Ajustes, aberta por padrão e pelo item Meu perfil do menu do usuário: mostra
+  avatar, nome e e-mail de acesso da pessoa principal, com edição pelo mesmo formulário de Pessoas,
+  um resumo das formas de entrar com atalho para Segurança, a data de criação da conta e o atalho
+  para os próprios lançamentos. O menu do usuário também ganhou o item Ajustes.
+- Atalho Gerenciar regras de vencimento no detalhe de vencimentos ajustados, e link direto para as
+  regras da Caixa de entrada em Integrações (`/inbox?rules=open`).
+- Prazo de recorrências por quantidade de ocorrências: em Repetir até, a opção Definir por
+  quantidade mostra a data em que a série termina (por exemplo, 12 ocorrências mensais a partir de
+  15/11/2026 terminam em 15/10/2027) e a aplica como data final. A data é calculada pela API
+  (`GET /transactions/recurrence-end-date`), considerando a âncora da série e o vencimento, e só
+  `recurrenceEndDate` é gravado; pular uma ocorrência depois não estende o prazo.
 
 ### Alterado
 
+- Instaladores fixam a versão: `install.sh` e `install.ps1` clonam a tag da versão publicada mais
+  recente, em vez da branch padrão, e gravam a mesma versão em `OPENMONETIS_VERSION`, mantendo
+  `compose.yml`, `.env.example` e imagens alinhados. `OPENMONETIS_VERSION` definido antes da
+  execução escolhe outra versão publicada. O `.env.example` passa a trazer a versão da release em
+  vez de `latest`, e `pnpm release:check` recusa a divergência.
+
+- Tipografia mais legível: valores em reais usam a fonte principal com algarismos tabulares em
+  vez da fonte monoespaçada, nenhum texto fica abaixo de 12px, títulos de página e de seção seguem
+  uma escala única e as fontes passam a ser servidas pelo próprio app, sem depender do Google
+  Fonts e com arquivos menores. Títulos de cards e diálogos e os valores de destaque ficam em
+  peso maior, o texto secundário ganha mais contraste no tema claro e códigos e atalhos exibem o
+  zero cortado para não confundir com a letra O. A escala de pesos fica restrita a regular, médio
+  e seminegrito, sem subtítulos mais pesados que o título da seção; rótulos de sobrelinha, o
+  texto original das capturas da Caixa de entrada, os contadores de parcela e os atalhos de
+  teclado passam a usar a fonte monoespaçada.
 - Aviso de novidades da versão ocupa uma única linha, com o resumo visível apenas em telas
   largas.
 - Breadcrumbs terminam sempre na página atual e seguem as seções do menu; a aba do relatório de
@@ -69,12 +125,77 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   detalhe de cada mês.
 - Evolução por categoria abre no gráfico em telas pequenas.
 - Barra de navegação por mês fixa é totalmente opaca.
+- Indicadores da Visão geral têm descrições mais curtas.
+- Ajuda dos indicadores da Visão geral abre com toque ou clique, linhas e atalhos dos indicadores
+  têm área de toque maior, pendências urgentes mostram o rótulo Urgente e a saudação ficou mais
+  compacta.
+- Widgets da Visão geral ficam agrupados em Contas e compromissos, Planejamento e Análises do
+  período, e cada grupo preenche suas linhas sem deixar espaço vazio; o gráfico de receitas,
+  despesas e resultado ocupa duas colunas. O painel Personalizar deixa de existir: cada grupo tem
+  um botão Adicionar com os widgets disponíveis daquele grupo, e cada widget tem um menu para
+  mover ou remover, salvos na hora. Restaurar padrão fica no topo da página, com confirmação.
+- Sem nenhuma conta cadastrada, a Visão geral mostra só o convite para cadastrar a primeira, sem
+  indicadores zerados; com tudo em dia, a faixa Precisa de atenção vira uma única linha.
+- Ações rápidas da Visão geral podem ser usadas durante o carregamento, abrem o formulário assim
+  que ele estiver pronto e avisam no mesmo clique quando ele não pode ser carregado.
+- Animações de entrada em todo o app: barras de progresso e o medidor do índice de
+  comprometimento se preenchem ao aparecer, linhas dos widgets e capturas da Caixa de entrada
+  entram em sequência, status Pago/Paga surgem com um destaque, estados vazios aparecem
+  suavemente, a barra de ações em lote dos lançamentos sobe da base da tela e capturas sendo
+  descartadas esmaecem antes de sair. Tudo é desativado quando o sistema pede movimento reduzido.
+- Fatura do cartão: o topo mostra o limite disponível com a barra de uso, quanto já foi pago e
+  quanto resta, e indica cartão inativo. Ajustar fatura, Ajustar datas, Desfazer pagamento e
+  Reabrir fatura passam para o menu Mais ações, que explica por que uma ação está indisponível.
+  O resumo da fatura na API (`invoiceSummary`) passa a trazer `paidAmount`, `remainingAmount` e
+  `payments`.
+- Extrato da conta: o topo mostra o saldo anterior e o resultado do mês, rotula o saldo como
+  "Saldo em" último dia do mês e indica conta arquivada. Em poupança e investimento, Adicionar
+  rendimento vira a ação principal. O resumo da conta na API passa a trazer `openingBalance` e
+  `netAmount`.
+- Históricos de 12 meses do cartão e da conta destacam o mês aberto da mesma forma e permitem
+  abrir qualquer mês pelo teclado. O nome do cartão ou da conta aparece no título da aba, e o
+  carregamento inicial mostra a estrutura da página em vez de só um texto.
+- Ajustes reorganizado: Companion passa a se chamar Integrações e Ações perigosas passa a se chamar
+  Dados da conta. Links antigos com `?tab=companion`
+  e `?tab=danger-zone` continuam abrindo a seção certa.
+- Preferências mostram o tema escolhido como prévia antes de salvar, e descartar volta ao tema
+  salvo. Conta e cartão padrão indicam o modo automático com clareza e oferecem atalho para
+  cadastrar quando não há opção ativa.
+- Regras de vencimento ficam recolhidas em uma lista com resumo e marcam regras em conflito ou
+  incompletas antes de revisar. A barra de salvar fica fixa enquanto há alterações.
+- O diálogo de conexão do Companion confirma em tempo real quando o aparelho se conecta, e as
+  instruções de conexão ficam reunidas em uma única seção.
 
 ### Corrigido
 
+- Trocar o mês na fatura do cartão ou no extrato da conta fazia a página inteira piscar e perder a
+  rolagem enquanto os dados carregavam.
+- Desfazer um pagamento de fatura com vários pagamentos mantinha o diálogo aberto e aceitava
+  clique duplo; Reabrir fatura sumia sem animação e não mostrava o carregamento.
+- Editar a conta pelo extrato exibia a confirmação duas vezes.
 - Botão Importar extrato aparecia duplicado na lista de lançamentos no celular.
 - Barra fixa de navegação por mês deixava o conteúdo aparecer por trás do texto ao rolar.
 - Textos de destaque e de aviso no tema claro passam a atender o contraste mínimo de leitura.
+- Visão geral deixava de exibir o conteúdo abaixo dos indicadores até concluir o carregamento,
+  deslocando a página quando ele aparecia.
+- Comparação com o mês anterior mostrava -0% em quedas pequenas e porcentagens enganosas quando o
+  valor anterior era zero ou negativo, como +100% de -R$ 223,35 para R$ 0,00; nesses casos, passa a
+  mostrar a diferença em reais.
+- Trocar de seção ou de página em Regras de vencimento com alterações não salvas agora pede
+  confirmação em vez de descartá-las sem aviso.
+- A confirmação de apagar dados financeiros ou excluir a conta de acesso volta a aparecer após o
+  recarregamento da página.
+- A descrição do atalho da barra inferior nas Preferências não cita mais um botão que só existe no
+  celular quando vista no desktop.
+
+### Notas de atualização
+
+- API: nova rota autenticada `GET /transactions/recurrence-end-date`, com `startDate`, `frequency`,
+  `occurrenceCount` (2 a 360) e, opcionalmente, `anchorDate` e `dueDate`. Retorna `endDate` ou
+  `null` quando nenhuma data mantém exatamente a quantidade pedida. Não há migration.
+- Instalação: novas instalações passam a usar a versão publicada mais recente, não mais `latest`.
+  Instalações existentes com `OPENMONETIS_VERSION=latest` continuam funcionando, mas recomenda-se
+  fixar a versão: faça checkout da tag `vX.Y.Z` desejada e defina a mesma versão no `.env`.
 
 ## [0.12.0] - 2026-10-28
 

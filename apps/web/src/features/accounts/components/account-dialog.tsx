@@ -1,21 +1,15 @@
-import type {
-  AccountOutput,
-  CreateAccountInput,
-  ReplaceAccountInput,
-} from "@openmonetis/validators/accounts";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AccountForm } from "./account-form";
+import { AccountForm, type AccountSubmission } from "./account-form";
 
-type AccountDialogProps = {
-  account: AccountOutput | null;
+type AccountDialogProps = AccountSubmission & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (input: CreateAccountInput | ReplaceAccountInput) => Promise<void>;
 };
 
-export function AccountDialog({ account, open, onOpenChange, onSubmit }: AccountDialogProps) {
+export function AccountDialog({ open, onOpenChange, ...submission }: AccountDialogProps) {
+  const { account } = submission;
   const isEditing = Boolean(account);
 
   return (
@@ -31,9 +25,8 @@ export function AccountDialog({ account, open, onOpenChange, onSubmit }: Account
         </DialogHeader>
         <AccountForm
           key={account?.id ?? "new-account"}
-          account={account}
+          {...submission}
           onCancel={() => onOpenChange(false)}
-          onSubmit={onSubmit}
         />
       </DialogContent>
     </Dialog>

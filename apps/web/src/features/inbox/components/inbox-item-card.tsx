@@ -64,7 +64,7 @@ export function InboxItemCard({
         title={person.name}
       >
         {person.avatarUrl ? <AvatarImage src={person.avatarUrl} alt="" /> : null}
-        <AvatarFallback className="text-[9px]">{getInitials(person.name)}</AvatarFallback>
+        <AvatarFallback className="text-2xs">{getInitials(person.name)}</AvatarFallback>
       </Avatar>
     );
   }
@@ -81,8 +81,9 @@ export function InboxItemCard({
   return (
     <Card
       className={cn(
-        "min-w-0 gap-0 py-0 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "min-w-0 animate-list-item gap-0 py-0 outline-none transition-[opacity,scale] duration-300 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none",
         selection?.checked && "border-brand/50 bg-brand/5",
+        processing && "scale-[0.98] opacity-50",
       )}
       data-inbox-item-id={item.id}
       tabIndex={selection ? 0 : -1}
@@ -117,7 +118,7 @@ export function InboxItemCard({
               ))}
             </div>
           ) : null}
-          <p className="line-clamp-2 wrap-break-word text-muted-foreground text-sm leading-relaxed">
+          <p className="line-clamp-2 wrap-break-word font-mono text-muted-foreground text-sm leading-relaxed">
             {item.originalText}
           </p>
         </div>
@@ -162,7 +163,7 @@ export function InboxItemCard({
                 ))
               : null}
           </div>
-          <p className="mt-2 line-clamp-2 wrap-break-word text-muted-foreground text-sm leading-relaxed">
+          <p className="mt-2 line-clamp-2 wrap-break-word font-mono text-muted-foreground text-sm leading-relaxed">
             {item.originalText}
           </p>
         </div>

@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showInvalidFormToast } from "@/lib/form-feedback";
-import { getTagErrorMessage } from "../tags.presentation";
+import { cn } from "@/lib/utils";
+import { getTagErrorMessage, tagColorOptions, tagColorTokens } from "../tags.presentation";
+import { TagColorIcon } from "./tag-color-icon";
 export function TagForm({
   tag,
   onSubmit,
@@ -24,8 +26,8 @@ export function TagForm({
   const id = useId();
   const [error, setError] = useState<string | null>(null);
   const form = useForm({
-    defaultValues: { name: tag?.name ?? "" },
-    validators: { onSubmit: CreateTagInputSchema },
+    defaultValues: { name: tag?.name ?? "", color: tag?.color ?? "neutral" },
+    validators: { onSubmit: CreateTagInputSchema.required() },
     onSubmitInvalid: showInvalidFormToast,
     onSubmit: async ({ value }) => {
       setError(null);
@@ -73,6 +75,49 @@ export function TagForm({
               </p>
             ) : null}
           </div>
+        )}
+      </form.Field>
+      <form.Field name="color">
+        {(field) => (
+          <fieldset className="grid gap-2">
+            <legend className="mb-2 font-medium text-sm leading-none">Cor</legend>
+            <div className="flex flex-wrap gap-2">
+              {tagColorOptions.map((option) => {
+                const selected = field.state.value === option.value;
+                return (
+                  <label
+                    className="cursor-pointer"
+                    htmlFor={`${id}-color-${option.value}`}
+                    key={option.value}
+                    title={option.label}
+                  >
+                    <input
+                      checked={selected}
+                      className="peer sr-only"
+                      id={`${id}-color-${option.value}`}
+                      name={field.name}
+                      onChange={() => field.handleChange(option.value)}
+                      type="radio"
+                      value={option.value}
+                    />
+                    <span className="sr-only">{option.label}</span>
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "grid size-8 place-items-center rounded-full ring-offset-2 ring-offset-background transition-shadow peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
+                        selected && "ring-2 ring-foreground/70",
+                      )}
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${tagColorTokens[option.value]} 18%, transparent)`,
+                      }}
+                    >
+                      <TagColorIcon color={option.value} />
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
         )}
       </form.Field>
       {error ? (

@@ -2,6 +2,8 @@ import type { MobileShortcutDestination } from "@openmonetis/domain/preferences"
 import {
   mobileShortcutDestinations,
   notificationDueSoonDayOptions,
+  type StartPageDestination,
+  startPageDestinations,
   transactionPageSizeOptions,
 } from "@openmonetis/domain/preferences";
 import type { UserPreferencesOutput } from "@openmonetis/validators/preferences";
@@ -13,7 +15,7 @@ import { SettingsSection } from "@/components/settings-panel";
 import { SettingsRow } from "@/components/settings-row";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { mobileShortcutLabels } from "../preferences.presentation";
+import { mobileShortcutLabels, startPageLabels } from "../preferences.presentation";
 import type { PreferencesFormApi } from "../usePreferencesForm";
 
 export function PreferencesBrowsingSection({
@@ -26,14 +28,48 @@ export function PreferencesBrowsingSection({
   const dueSoonDaysId = useId();
   const pageSizeId = useId();
   const mobileShortcutId = useId();
+  const startPageId = useId();
   const mobile = useIsMobile();
   return (
     <SettingsSection
-      description="Ajuste como você acompanha vencimentos e navega pelos seus dados."
+      description="Ajuste por onde você começa, como acompanha vencimentos e navega pelos dados."
       icon={ListFilter}
-      title="Vencimentos e listagem"
+      title="Navegação e listagem"
     >
       <div className="divide-y divide-border">
+        <form.Field name="startPage">
+          {(field) => (
+            <SettingsRow
+              description="Página aberta ao entrar no OpenMonetis."
+              id={startPageId}
+              label="Página inicial"
+            >
+              <Select
+                disabled={isMutating}
+                onValueChange={(value) =>
+                  value && field.handleChange(value as StartPageDestination)
+                }
+                value={field.state.value}
+              >
+                <SelectTrigger
+                  aria-describedby={`${startPageId}-description`}
+                  className="w-full"
+                  id={startPageId}
+                >
+                  <SelectValue>{startPageLabels[field.state.value]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {startPageDestinations.map((destination) => (
+                    <SelectItem key={destination} value={destination}>
+                      {startPageLabels[destination]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </SettingsRow>
+          )}
+        </form.Field>
+
         <form.Field name="notificationDueSoonDays">
           {(field) => (
             <SettingsRow
@@ -112,7 +148,7 @@ export function PreferencesBrowsingSection({
               description={
                 mobile
                   ? "Página exibida no botão de atalho. Na barra inferior, pressione e segure para trocar."
-                  : "Página exibida no terceiro botão. Na barra inferior, pressione e segure para trocar."
+                  : "Usado no celular: página exibida no botão de atalho da barra inferior."
               }
               id={mobileShortcutId}
               label="Atalho da barra inferior"

@@ -28,6 +28,7 @@ export const Route = createFileRoute("/inbox")({
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(search.rule)
         ? search.rule
         : undefined,
+    rules: search.rules === "open" ? ("open" as const) : undefined,
   }),
 });
 
@@ -48,6 +49,7 @@ function InboxRoute() {
           page={search.page ?? 1}
           notificationDate={search.date}
           ruleId={search.rule}
+          rulesRequested={search.rules === "open"}
           sourceAppName={search.app}
           status={search.status ?? "pending"}
         />

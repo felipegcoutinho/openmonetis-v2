@@ -109,10 +109,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
       </div>
       {[...groups.entries()].map(([date, transactions]) => (
         <section aria-labelledby={`transactions-${date}`} className="grid gap-2" key={date}>
-          <h2
-            className="px-1 font-medium text-muted-foreground text-xs uppercase tracking-wide"
-            id={`transactions-${date}`}
-          >
+          <h2 className="eyebrow px-1 text-muted-foreground" id={`transactions-${date}`}>
             {formatGroupDate(date)}
           </h2>
           <Card className="gap-0 overflow-hidden py-0">

@@ -101,7 +101,7 @@ export function TransactionSplitDialog({
             onValueChange={(value) => changeSplitMode(value as SplitMode)}
             value={splitMode}
           >
-            <TabsList variant="line">
+            <TabsList className="w-full">
               <TabsTrigger value="amount">Valor (R$)</TabsTrigger>
               <TabsTrigger value="percentage">Percentual (%)</TabsTrigger>
             </TabsList>

@@ -81,7 +81,7 @@ export function DashboardDistributionChart({
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                   <div className="flex flex-col">
-                    <span className="text-muted-foreground text-xs uppercase">{entry.label}</span>
+                    <span className="eyebrow text-muted-foreground">{entry.label}</span>
                     <MoneyValue amount={entry.amount} className="font-medium text-foreground" />
                     <span className="text-muted-foreground text-xs">
                       {formatPercentage(entry.percentage, percentageDigits)} do total

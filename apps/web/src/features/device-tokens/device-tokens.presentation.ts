@@ -1,3 +1,4 @@
+import { deviceTokenActivityWindowDays } from "@openmonetis/domain/device-tokens";
 import { formatDateInBrazil } from "@openmonetis/shared/date-time";
 
 export function formatDeviceTokenDate(value: string) {
@@ -15,4 +16,10 @@ export function formatDeviceTokenLastUsed(value: string | null) {
 
 export function formatDeviceTokenQrCodeValue(token: string) {
   return `openmonetis://companion/token?v=1&token=${encodeURIComponent(token)}`;
+}
+
+export function formatDeviceTokenRecentCaptures(count: number) {
+  const period = `nos últimos ${deviceTokenActivityWindowDays} dias`;
+  if (count === 0) return `Nenhuma captura ${period}`;
+  return `${count} ${count === 1 ? "captura" : "capturas"} ${period}`;
 }

@@ -172,7 +172,7 @@ export function FinancialDistributionCategories({
               Total de {type === "expense" ? "despesas" : "receitas"}
             </dt>
             <dd>
-              <MoneyValue amount={total} className="text-2xl font-semibold" />
+              <MoneyValue amount={total} className="kpi-value text-2xl" />
             </dd>
           </dl>
           <div className="flex items-center gap-3">

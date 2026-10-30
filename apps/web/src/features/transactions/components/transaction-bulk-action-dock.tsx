@@ -82,7 +82,7 @@ function DockActionButton({
       <Button
         aria-disabled={!description.available}
         aria-label={description.hint}
-        className={cn("aria-disabled:opacity-50", className)}
+        className={cn("aria-disabled:opacity-70", className)}
         disabled={activeAction !== null}
         onClick={() =>
           description.available ? onClick() : toast.info(description.unavailableReason)
@@ -131,7 +131,7 @@ export function TransactionBulkActionDock({
         className="dark sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mx-auto w-full md:bottom-4 md:max-w-max"
         role="toolbar"
       >
-        <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1.5 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-2xl ring-1 ring-foreground/15 md:flex-nowrap md:rounded-full">
+        <div className="flex animate-in flex-wrap items-center justify-center gap-x-1 gap-y-1.5 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-2xl ring-1 ring-foreground/15 duration-300 ease-out fade-in-0 slide-in-from-bottom-4 zoom-in-95 motion-reduce:animate-none md:flex-nowrap md:rounded-full">
           <div
             aria-live="polite"
             className="flex items-center gap-2 pr-2 max-md:w-full max-md:border-b max-md:pb-1.5"
@@ -149,12 +149,12 @@ export function TransactionBulkActionDock({
                 <X aria-hidden="true" />
               </Button>
             </DockTooltip>
-            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-success px-1.5 font-semibold text-[11px] text-background tabular-nums">
+            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-success px-1.5 font-semibold text-2xs text-background tabular-nums">
               {summary.selectedCount}
             </span>
             <span className="flex items-baseline gap-1.5 whitespace-nowrap text-sm">
-              <span className="text-muted-foreground max-md:sr-only">selecionado{plural}</span>
-              <span aria-hidden="true" className="text-muted-foreground max-md:hidden">
+              <span className="text-popover-foreground/85 max-md:sr-only">selecionado{plural}</span>
+              <span aria-hidden="true" className="text-popover-foreground/85 max-md:hidden">
                 ·
               </span>
               <MoneyValue
@@ -167,7 +167,7 @@ export function TransactionBulkActionDock({
                 showPositiveSign
               />
             </span>
-            <span className="flex items-center gap-2 whitespace-nowrap text-muted-foreground text-xs max-md:ml-auto max-md:grid max-md:justify-items-end max-md:gap-0">
+            <span className="flex items-center gap-2 whitespace-nowrap text-popover-foreground/85 text-xs max-md:ml-auto max-md:grid max-md:justify-items-end max-md:gap-0">
               <span className="flex items-center gap-0.5" title="Entradas">
                 <ArrowUp aria-hidden="true" className="size-3 text-success" />
                 <span className="sr-only">Entradas</span>
@@ -181,7 +181,7 @@ export function TransactionBulkActionDock({
             </span>
           </div>
           <span aria-hidden="true" className="h-5 w-px bg-border max-md:hidden" />
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 text-popover-foreground">
             <DockActionButton
               action="settle"
               activeAction={actions.activeAction}

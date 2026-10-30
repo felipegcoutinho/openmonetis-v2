@@ -1,3 +1,4 @@
+import { getPreviousBudgetPeriod } from "@openmonetis/domain/budgets";
 import type { BudgetOutput, CopyPreviousBudgetsOutput } from "@openmonetis/validators/budgets";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, RefreshCw } from "lucide-react";
@@ -16,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { cn } from "@/lib/utils";
 import { useCopyPreviousBudgetsMutation } from "../budgets.mutations";
-import { formatBudgetPeriod, getPreviousBudgetPeriod } from "../budgets.presentation";
+import { formatBudgetPeriod } from "../budgets.presentation";
 import { budgetsQueryOptions } from "../budgets.queries";
 
 type CopyBudgetsDialogProps = {

@@ -1,11 +1,9 @@
 /*
- * Optional Google Fonts fallbacks.
- *
- * Keep the requested weights aligned with the weights used by the application
- * (400, 500 and 700).
+ * Self-hosted fonts. Geist is variable (100-900) and split by unicode-range,
+ * so browsers only download the subsets a page actually renders.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Geist:wght@100..900&display=swap");
+@import "@fontsource-variable/geist";
 
 @font-face {
   font-family: "Aeonik Fono";
@@ -20,7 +18,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("../assets/fonts/aeonik-fono-medium.otf") format("opentype");
+  src: url("../assets/fonts/aeonik-fono-medium.woff2") format("woff2");
 }
 
 @font-face {
@@ -28,14 +26,12 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("../assets/fonts/aeonik-fono-bold.otf") format("opentype");
+  src: url("../assets/fonts/aeonik-fono-bold.woff2") format("woff2");
 }
 
 :root {
-  --font-aeonik: "Aeonik Fono", monospace, system-ui, sans-serif;
-  --font-dmsans: "DM Sans", system-ui, sans-serif;
-
-  --font-geist: "Geist", system-ui, sans-serif;
+  --font-aeonik: "Aeonik Fono", ui-monospace, monospace;
+  --font-geist: "Geist Variable", system-ui, sans-serif;
 
   --font-app-sans: var(--font-geist);
   --font-app-mono: var(--font-aeonik);

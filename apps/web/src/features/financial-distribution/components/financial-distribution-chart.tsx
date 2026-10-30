@@ -197,7 +197,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                         className="fill-foreground text-xs"
                       >
                         <tspan x={x + width / 2}>{node.label}</tspan>
-                        <tspan x={x + width / 2} dy={20} className="font-mono">
+                        <tspan x={x + width / 2} dy={20} className="tabular-nums">
                           {formatDistributionMoney(node.amount)}
                         </tspan>
                       </text>
@@ -211,7 +211,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                         <tspan x={labelX}>
                           {node.label.length > 32 ? `${node.label.slice(0, 31)}…` : node.label}
                         </tspan>
-                        <tspan x={labelX} dy={20} className="font-mono">
+                        <tspan x={labelX} dy={20} className="tabular-nums">
                           {formatDistributionMoney(node.amount)} ·{" "}
                           {formatDistributionPercentage(node.percentage)}
                         </tspan>

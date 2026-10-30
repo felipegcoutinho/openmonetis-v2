@@ -51,7 +51,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-heading font-medium text-lg">Parcelas por mês</h2>
+            <h2 className="section-title">Parcelas por mês</h2>
             <Tooltip>
               <TooltipTrigger
                 render={

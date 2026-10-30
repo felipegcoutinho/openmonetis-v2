@@ -1,20 +1,25 @@
+import { findDueDateRuleConflicts } from "@openmonetis/domain/due-date-rules";
 import type {
   DueDateRuleOptions,
   DueDateRulesOutput,
 } from "@openmonetis/validators/due-date-rules";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock, ListChecks, Plus } from "lucide-react";
+import { ListChecks, Plus } from "lucide-react";
+import { useState } from "react";
+import { UnsavedChangesGuard } from "@/components/forms/unsaved-changes-guard";
 import { SettingsPanel, SettingsSection } from "@/components/settings-panel";
 import { SettingsQueryError } from "@/components/settings-query-error";
+import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { createDueDateRule, formatDueDate } from "../due-date-rules.presentation";
 import {
   dueDateRuleOptionsQueryOptions,
   dueDateRulesQueryOptions,
 } from "../due-date-rules.queries";
 import { useDueDateRulesForm } from "../useDueDateRulesForm";
-import { DueDateRuleFields } from "./due-date-rule-fields";
+import { DueDateRuleItem } from "./due-date-rule-item";
 import { DueDateRulesCalendar } from "./due-date-rules-calendar";
 export function DueDateRulesPage() {
   const config = useQuery(dueDateRulesQueryOptions());
@@ -44,6 +49,7 @@ function DueDateRulesEditor({
 }) {
   const { form, preview, previewFingerprint, calculatePreview, discardChanges } =
     useDueDateRulesForm(config);
+  const [openRuleIds, setOpenRuleIds] = useState<string[]>([]);
   return (
     <form
       className="grid min-w-0 gap-4"
@@ -58,52 +64,55 @@ function DueDateRulesEditor({
         selector={(state) => ({
           values: state.values,
           isSubmitting: state.isSubmitting,
-          isDirty: state.isDirty,
+          isDirty: !state.isDefaultValue,
         })}
       >
         {({ values, isSubmitting, isDirty }) => {
           const disabled = isSubmitting || preview.isPending;
           const previewCurrent = previewFingerprint === JSON.stringify(values);
+          const conflictingRuleIds = findDueDateRuleConflicts(values.rules);
           return (
             <>
               <SettingsPanel>
                 <SettingsSection
-                  icon={CalendarClock}
-                  title="Ajuste automático"
-                  description="Contas a pagar e faturas passam para o próximo dia útil em fins de semana e feriados."
-                >
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    As regras salvas valem para vencimentos de hoje em diante. Pagamentos
-                    confirmados mantêm suas datas.
-                  </p>
-                </SettingsSection>
-                <SettingsSection
                   icon={ListChecks}
                   title="Personalizações e exceções"
-                  description="Escolha os itens e o ajuste. Cada item pode ser abrangido por uma regra."
+                  description="Por padrão, contas a pagar e faturas que vencem em fins de semana e feriados passam para o próximo dia útil. Crie regras para mudar isso."
                 >
                   <form.Field name="rules">
                     {(field) => (
                       <div className="grid gap-4">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          As regras valem para vencimentos de hoje em diante e cada item pode ser
+                          abrangido por uma única regra. Pagamentos confirmados mantêm suas datas.
+                        </p>
                         {field.state.value.length ? (
-                          field.state.value.map((rule, index) => (
-                            <DueDateRuleFields
-                              key={rule.id}
-                              rule={rule}
-                              options={options}
-                              disabled={disabled}
-                              onChange={(next) =>
-                                field.handleChange(
-                                  field.state.value.map((item, i) => (i === index ? next : item)),
-                                )
-                              }
-                              onRemove={() =>
-                                field.handleChange(
-                                  field.state.value.filter((item) => item.id !== rule.id),
-                                )
-                              }
-                            />
-                          ))
+                          <Accordion
+                            className="gap-2"
+                            multiple
+                            onValueChange={(ids: string[]) => setOpenRuleIds(ids)}
+                            value={openRuleIds}
+                          >
+                            {field.state.value.map((rule, index) => (
+                              <DueDateRuleItem
+                                conflicting={conflictingRuleIds.has(rule.id)}
+                                disabled={disabled}
+                                key={rule.id}
+                                onChange={(next) =>
+                                  field.handleChange(
+                                    field.state.value.map((item, i) => (i === index ? next : item)),
+                                  )
+                                }
+                                onRemove={() =>
+                                  field.handleChange(
+                                    field.state.value.filter((item) => item.id !== rule.id),
+                                  )
+                                }
+                                options={options}
+                                rule={rule}
+                              />
+                            ))}
+                          </Accordion>
                         ) : (
                           <p className="rounded-lg border border-dashed p-5 text-muted-foreground text-sm">
                             Nenhuma personalização cadastrada. Contas a pagar e faturas usam o
@@ -115,9 +124,11 @@ function DueDateRulesEditor({
                           type="button"
                           variant="outline"
                           disabled={disabled || field.state.value.length >= 50}
-                          onClick={() =>
-                            field.handleChange([...field.state.value, createDueDateRule()])
-                          }
+                          onClick={() => {
+                            const rule = createDueDateRule();
+                            field.handleChange([...field.state.value, rule]);
+                            setOpenRuleIds((ids) => [...ids, rule.id]);
+                          }}
                         >
                           <Plus aria-hidden="true" className="size-4" />
                           Adicionar personalização
@@ -167,13 +178,28 @@ function DueDateRulesEditor({
                   )}
                 </section>
               ) : null}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-muted-foreground text-sm" aria-live="polite">
+              <div
+                className={cn(
+                  "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+                  isDirty &&
+                    "sticky bottom-4 z-20 rounded-xl border border-border bg-background/95 p-4 shadow-lg backdrop-blur-sm",
+                )}
+              >
+                <p
+                  className={
+                    conflictingRuleIds.size
+                      ? "text-destructive text-sm"
+                      : "text-muted-foreground text-sm"
+                  }
+                  aria-live="polite"
+                >
                   {!isDirty
                     ? "Nenhuma alteração para salvar."
-                    : previewCurrent
-                      ? "Confira a prévia e salve para aplicar."
-                      : "Alterações não salvas. Revise o impacto antes de aplicar."}
+                    : conflictingRuleIds.size
+                      ? "Resolva os conflitos entre regras antes de revisar."
+                      : previewCurrent
+                        ? "Confira a prévia e salve para aplicar."
+                        : "Alterações não salvas. Revise o impacto antes de aplicar."}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {isDirty ? (
@@ -193,7 +219,7 @@ function DueDateRulesEditor({
                   ) : (
                     <Button
                       type="button"
-                      disabled={disabled || !isDirty}
+                      disabled={disabled || !isDirty || conflictingRuleIds.size > 0}
                       onClick={() => void calculatePreview()}
                     >
                       {preview.isPending ? "Calculando…" : "Revisar alterações"}
@@ -201,6 +227,13 @@ function DueDateRulesEditor({
                   )}
                 </div>
               </div>
+              <UnsavedChangesGuard
+                busyDescription="As regras estão sendo processadas. Aguarde antes de sair."
+                dirtyDescription="Você tem regras de vencimento não salvas. Continue editando ou descarte para sair."
+                hasChanges={isDirty}
+                isBusy={disabled}
+                onDiscard={discardChanges}
+              />
             </>
           );
         }}

@@ -1,8 +1,12 @@
-import { InstallmentOptionsQuerySchema } from "@openmonetis/validators/transactions";
+import {
+  InstallmentOptionsQuerySchema,
+  type RecurrenceEndDateQuery,
+} from "@openmonetis/validators/transactions";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import {
   getInstallmentOptions,
   getRecentEstablishments,
+  getRecurrenceEndDate,
   getTransaction,
   getTransactions,
   type TransactionsApiSearch,
@@ -15,6 +19,8 @@ export const transactionKeys = {
   recentEstablishments: () => [...transactionKeys.all, "recent-establishments"] as const,
   installmentOptions: (amount: number | null) =>
     [...transactionKeys.all, "installment-options", amount] as const,
+  recurrenceEndDate: (query: RecurrenceEndDateQuery) =>
+    [...transactionKeys.all, "recurrence-end-date", query] as const,
 };
 
 export function installmentOptionsQueryOptions(amount: string, enabled: boolean) {
@@ -24,6 +30,14 @@ export function installmentOptionsQueryOptions(amount: string, enabled: boolean)
     enabled: enabled && parsed.success,
     queryFn: () => getInstallmentOptions(InstallmentOptionsQuerySchema.parse({ amount }).amount),
     staleTime: 60_000,
+  });
+}
+
+export function recurrenceEndDateQueryOptions(query: RecurrenceEndDateQuery) {
+  return queryOptions({
+    queryKey: transactionKeys.recurrenceEndDate(query),
+    queryFn: () => getRecurrenceEndDate(query),
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 

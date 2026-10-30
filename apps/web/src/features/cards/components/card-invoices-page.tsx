@@ -1,26 +1,31 @@
 import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type { CardOutput, ReplaceCardInput } from "@openmonetis/validators/cards";
-import type { AdjustInvoiceInput, DashboardInvoice } from "@openmonetis/validators/invoices";
+import type { AdjustInvoiceInput } from "@openmonetis/validators/invoices";
 import type { PersonOutput } from "@openmonetis/validators/people";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
   CalendarClock,
   CalendarDays,
+  CircleAlert,
   CircleCheck,
   CreditCard,
   Pencil,
   RotateCcw,
   Scale,
+  Undo2,
   Wallet,
 } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EntityLoadError } from "@/components/entity-load-error";
+import { FinancialDetailLoading } from "@/components/financial-detail-loading";
 import {
   FinancialSummaryAction,
+  FinancialSummaryBadge,
   FinancialSummaryHeader,
+  FinancialSummaryMenu,
   FinancialSummaryTitleAction,
 } from "@/components/financial-summary-header";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
@@ -36,8 +41,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardQueryOptions } from "@/features/cards/cards.queries";
@@ -58,6 +64,7 @@ import {
   formatPeriod,
   type TransactionsSearch,
 } from "@/features/transactions/transactions.presentation";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
 import { useReplaceCardMutation } from "../cards.mutations";
@@ -71,17 +78,31 @@ type CardInvoicesPageProps = {
   onSearchChange: (search: Partial<TransactionsSearch>) => void;
 };
 
+// Opening the payment fetches the invoices; the dialog's query then reuses that fresh result.
+const PAYMENT_INVOICES_STALE_TIME = 30_000;
+
 export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoicesPageProps) {
   const selectedPeriod = search.period ?? getCurrentPeriodInBrazil();
+  const queryClient = useQueryClient();
   const cardQuery = useQuery(cardQueryOptions(cardId, selectedPeriod));
-  const invoicesQuery = useQuery(invoicesQueryOptions(selectedPeriod));
   const peopleQuery = useQuery(peopleQueryOptions());
   const accountsQuery = useQuery(accountsQueryOptions());
   const replaceMutation = useReplaceCardMutation();
   const [editOpen, setEditOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [openingPayment, setOpeningPayment] = useState(false);
+  // The payment dialog needs the per-person invoice breakdown, so it is loaded only on demand.
+  const invoicesQuery = useQuery({
+    ...invoicesQueryOptions(selectedPeriod),
+    enabled: paymentOpen,
+    staleTime: PAYMENT_INVOICES_STALE_TIME,
+  });
   const invoice = invoicesQuery.data?.items.find((item) => item.cardId === cardId);
-  const activePeople = peopleQuery.data?.filter((person) => person.status === "active") ?? [];
+  const activePeople = peopleQuery.data?.filter((person) => person.status === "active");
+  const periodLabel = formatPeriod(selectedPeriod);
+  useDocumentTitle(
+    cardQuery.data ? `${cardQuery.data.name} · Fatura de ${periodLabel}` : undefined,
+  );
 
   async function saveCard(input: ReplaceCardInput) {
     await replaceMutation.mutateAsync({ id: cardId, input });
@@ -89,12 +110,34 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
     toast.success("Cartão atualizado");
   }
 
+  async function openPayment() {
+    setOpeningPayment(true);
+    try {
+      const invoices = await queryClient.fetchQuery({
+        ...invoicesQueryOptions(selectedPeriod),
+        staleTime: PAYMENT_INVOICES_STALE_TIME,
+      });
+      if (!invoices.items.some((item) => item.cardId === cardId)) throw new Error();
+      setPaymentOpen(true);
+    } catch {
+      toast.error("Não foi possível abrir o pagamento", {
+        description: "Tente novamente em instantes.",
+      });
+    } finally {
+      setOpeningPayment(false);
+    }
+  }
+
+  function changePeriod(period: string) {
+    onSearchChange({ period, dateStart: undefined, dateEnd: undefined, page: undefined });
+  }
+
   return (
     <ProtectedRoute>
       <main className="min-h-svh bg-background">
         <Navbar />
-        {cardQuery.isLoading ? <CardInvoicesLoading /> : null}
-        {cardQuery.isError ? (
+        {cardQuery.isLoading ? <FinancialDetailLoading message="Carregando fatura" /> : null}
+        {cardQuery.isError && !cardQuery.data ? (
           <EntityLoadError
             error={cardQuery.error}
             entity="o cartão"
@@ -106,21 +149,47 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
         {cardQuery.data ? (
           <TransactionsContainer
             onSearchChange={onSearchChange}
-            scope={getCardInvoiceScope(
-              cardQuery.data,
-              selectedPeriod,
-              activePeople,
-              () => setEditOpen(true),
-              (period) =>
-                onSearchChange({
-                  period,
-                  dateStart: undefined,
-                  dateEnd: undefined,
-                  page: undefined,
-                }),
-              invoice,
-              () => setPaymentOpen(true),
-            )}
+            scope={{
+              allowCreate: cardQuery.data.status === "active",
+              cardIds: [cardQuery.data.id],
+              createDefaults: {
+                cardId: cardQuery.data.id,
+                invoicePeriod: selectedPeriod,
+                paymentMethod: "credit_card" as const,
+              },
+              createTypes: ["income", "expense"] as const,
+              header: {
+                breadcrumbs: [
+                  { label: "Visão geral", href: "/dashboard" },
+                  { label: "Finanças" },
+                  { label: "Cartões", href: "/cards" },
+                  { label: cardQuery.data.name },
+                  { label: `Fatura de ${periodLabel}` },
+                ],
+                summary: (
+                  <CardInvoiceSummary
+                    card={cardQuery.data}
+                    isRefreshing={cardQuery.isPlaceholderData}
+                    onEdit={() => setEditOpen(true)}
+                    onPay={() => void openPayment()}
+                    payPending={openingPayment}
+                    people={activePeople}
+                    period={selectedPeriod}
+                    periodLabel={periodLabel}
+                  />
+                ),
+              },
+              hiddenFilters: ["type", "paymentMethod", "accountCard"] as const,
+              contentNavigation: (
+                <CardSpendingFlow
+                  cardId={cardQuery.data.id}
+                  cycle={cardQuery.data.cycleSpending}
+                  onPeriodChange={changePeriod}
+                  period={selectedPeriod}
+                />
+              ),
+              periodNavigationPlacement: "afterPageHeader" as const,
+            }}
             search={search}
           />
         ) : null}
@@ -147,87 +216,48 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
   );
 }
 
-function getCardInvoiceScope(
-  card: CardOutput,
-  period: string,
-  people: PersonOutput[],
-  onEdit: () => void,
-  onPeriodChange: (period: string) => void,
-  invoice?: DashboardInvoice,
-  onPay?: () => void,
-) {
-  const periodLabel = formatPeriod(period);
-
-  return {
-    allowCreate: card.status === "active",
-    cardIds: [card.id],
-    createDefaults: {
-      cardId: card.id,
-      invoicePeriod: period,
-      paymentMethod: "credit_card" as const,
-    },
-    createTypes: ["income", "expense"] as const,
-    header: {
-      breadcrumbs: [
-        { label: "Visão geral", href: "/dashboard" },
-        { label: "Finanças" },
-        { label: "Cartões", href: "/cards" },
-        { label: card.name },
-        { label: `Fatura de ${periodLabel}` },
-      ],
-      summary: (
-        <CardInvoiceSummary
-          card={card}
-          invoice={invoice}
-          people={people}
-          period={period}
-          periodLabel={periodLabel}
-          onEdit={onEdit}
-          onPay={onPay}
-        />
-      ),
-    },
-    hiddenFilters: ["type", "paymentMethod", "accountCard"] as const,
-    contentNavigation: (
-      <CardSpendingFlow
-        cardId={card.id}
-        cycle={card.cycleSpending}
-        onPeriodChange={onPeriodChange}
-        period={period}
-      />
-    ),
-    periodNavigationPlacement: "afterPageHeader" as const,
-  };
-}
-
 function CardInvoiceSummary({
   card,
-  invoice,
+  isRefreshing,
+  onEdit,
+  onPay,
+  payPending,
   people,
   period,
   periodLabel,
-  onEdit,
-  onPay,
 }: {
   card: CardOutput;
-  invoice?: DashboardInvoice;
-  people: PersonOutput[];
+  isRefreshing: boolean;
+  onEdit: () => void;
+  onPay: () => void;
+  payPending: boolean;
+  /** Active people; `undefined` while they load. */
+  people: PersonOutput[] | undefined;
   period: string;
   periodLabel: string;
-  onEdit?: () => void;
-  onPay?: () => void;
 }) {
+  const summary = card.invoiceSummary;
+  const payments = summary.payments;
+  const isActive = card.status === "active";
   const brandAsset = getCardBrandAsset(card.brand);
-  const undoMutation = useUndoInvoicePaymentMutation();
   const adjustMutation = useAdjustInvoiceMutation();
-  const reopenMutation = useReopenInvoiceMutation();
-  const payments = invoice?.payments ?? [];
-  const invoicePeriod = invoice?.period ?? "";
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [datesOpen, setDatesOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const selectedPayment =
-    payments.find((payment) => payment.id === selectedPaymentId) ?? payments[0];
+  const [undoOpen, setUndoOpen] = useState(false);
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const canPay = isActive && summary.remainingAmount > 0;
+  const canAdjustInvoice = isActive && period <= getCurrentPeriodInBrazil();
+  const adjustBlockedReason =
+    payments.length > 0
+      ? "Reabra a fatura para ajustá-la."
+      : people?.length === 0
+        ? "Cadastre uma pessoa ativa primeiro."
+        : undefined;
+  const datesBlockedReason =
+    payments.length > 0 || summary.status === "paid"
+      ? "Indisponível em fatura com pagamento."
+      : undefined;
+  const hasMenuActions = isActive || payments.length > 0;
 
   async function adjustInvoice(input: AdjustInvoiceInput) {
     const adjustment = await adjustMutation.mutateAsync({ cardId: card.id, period, input });
@@ -242,203 +272,133 @@ function CardInvoiceSummary({
   }
 
   return (
-    <>
+    <div
+      aria-busy={isRefreshing}
+      className={cn("transition-opacity", isRefreshing && "opacity-70")}
+    >
       <FinancialSummaryHeader
         accentImage={card.logo}
         actions={
-          <>
-            {onPay && card.status === "active" && invoice && invoice.remainingAmount > 0 ? (
-              <FinancialSummaryAction
-                className="border-current/40 bg-current/15 hover:bg-current/25 dark:hover:bg-current/25"
-                onClick={onPay}
-                type="button"
-              >
-                <Wallet aria-hidden="true" className="size-4" />
-                Registrar pagamento
-              </FinancialSummaryAction>
-            ) : null}
-            {card.status === "active" && period <= getCurrentPeriodInBrazil() ? (
-              <FinancialSummaryAction
-                disabled={people.length === 0}
-                onClick={() => {
-                  if (payments.length > 0) {
-                    toast.error("Reabra a fatura antes de ajustá-la", {
-                      description: "A reabertura desfaz todos os pagamentos desta fatura.",
-                    });
-                    return;
-                  }
-                  setAdjustOpen(true);
-                }}
-              >
-                <Scale aria-hidden="true" className="size-4" />
-                Ajustar fatura
-              </FinancialSummaryAction>
-            ) : null}
-            <FinancialSummaryAction
-              disabled={payments.length > 0 || invoice?.status === "paid"}
-              onClick={() => setDatesOpen(true)}
-            >
-              <CalendarClock aria-hidden="true" className="size-4" />
-              Ajustar datas
-            </FinancialSummaryAction>
-            {selectedPayment ? (
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <FinancialSummaryAction disabled={reopenMutation.isPending} type="button" />
-                  }
+          canPay || hasMenuActions ? (
+            <>
+              {canPay ? (
+                <FinancialSummaryAction
+                  primary
+                  disabled={payPending || isRefreshing}
+                  onClick={onPay}
+                  type="button"
                 >
-                  <RotateCcw aria-hidden="true" className="size-4" />
-                  Reabrir e desfazer todos os pagamentos
-                </AlertDialogTrigger>
-                <AlertDialogContent className="w-[calc(100%-2rem)]">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Reabrir fatura?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {payments.length === 1
-                        ? "O pagamento registrado será desfeito."
-                        : `Os ${payments.length} pagamentos registrados serão desfeitos.`}{" "}
-                      Os lançamentos correspondentes nas contas serão removidos, e os saldos no
-                      sistema serão recalculados. Depois, você poderá ajustar a fatura e registrar
-                      novos pagamentos.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter className="grid-cols-1 sm:grid-cols-2">
-                    <AlertDialogCancel disabled={reopenMutation.isPending}>
-                      Cancelar
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      disabled={reopenMutation.isPending}
-                      variant="destructive"
-                      onClick={async () => {
-                        try {
-                          await reopenMutation.mutateAsync({ cardId: card.id, period });
-                          toast.success("Fatura reaberta", {
-                            description: "Todos os pagamentos foram desfeitos.",
-                          });
-                        } catch {
-                          toast.error("Não foi possível reabrir a fatura");
-                        }
-                      }}
-                    >
-                      {reopenMutation.isPending ? "Reabrindo…" : "Reabrir fatura"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            ) : null}
-            {selectedPayment ? (
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <FinancialSummaryAction disabled={undoMutation.isPending} type="button" />
-                  }
-                >
-                  <RotateCcw aria-hidden="true" className="size-4" />
-                  Desfazer um pagamento
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Desfazer um pagamento?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {payments.length > 1
-                        ? "Selecione o pagamento que deseja desfazer. O valor será devolvido à conta e o limite usado do cartão será restaurado."
-                        : "O pagamento selecionado será removido. O saldo voltará para a conta e o limite usado do cartão será restaurado."}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  {payments.length > 1 ? (
-                    <Select onValueChange={setSelectedPaymentId} value={selectedPayment.id}>
-                      <SelectTrigger aria-label="Pagamento a desfazer" className="w-full">
-                        <SelectValue>
-                          {formatInvoicePaymentOption(
-                            selectedPayment.amount,
-                            selectedPayment.paidAt,
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {payments.map((payment) => (
-                          <SelectItem key={payment.id} value={payment.id}>
-                            {formatInvoicePaymentOption(payment.amount, payment.paidAt)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">
-                      {formatInvoicePaymentOption(selectedPayment.amount, selectedPayment.paidAt)}
-                    </p>
-                  )}
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={async () => {
-                        try {
-                          await undoMutation.mutateAsync({
-                            cardId: card.id,
-                            period: invoicePeriod,
-                            paymentId: selectedPayment.id,
-                          });
-                          toast.success("Pagamento desfeito");
-                        } catch {
-                          toast.error("Não foi possível desfazer o pagamento");
-                        }
-                      }}
-                    >
-                      Desfazer um pagamento
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            ) : null}
-          </>
+                  <Wallet aria-hidden="true" className="size-4" />
+                  {payPending ? "Abrindo…" : "Registrar pagamento"}
+                </FinancialSummaryAction>
+              ) : null}
+              {hasMenuActions ? (
+                <FinancialSummaryMenu disabled={isRefreshing}>
+                  {canAdjustInvoice ? (
+                    <SummaryMenuItem
+                      description={adjustBlockedReason}
+                      disabled={people === undefined || adjustBlockedReason !== undefined}
+                      icon={<Scale aria-hidden="true" />}
+                      label="Ajustar fatura"
+                      onClick={() => setAdjustOpen(true)}
+                    />
+                  ) : null}
+                  {isActive ? (
+                    <SummaryMenuItem
+                      description={datesBlockedReason}
+                      disabled={datesBlockedReason !== undefined}
+                      icon={<CalendarClock aria-hidden="true" />}
+                      label="Ajustar datas"
+                      onClick={() => setDatesOpen(true)}
+                    />
+                  ) : null}
+                  {payments.length > 0 ? (
+                    <>
+                      {isActive ? <DropdownMenuSeparator /> : null}
+                      <SummaryMenuItem
+                        icon={<Undo2 aria-hidden="true" />}
+                        label={payments.length > 1 ? "Desfazer um pagamento" : "Desfazer pagamento"}
+                        onClick={() => setUndoOpen(true)}
+                      />
+                      <SummaryMenuItem
+                        description="Desfaz todos os pagamentos."
+                        icon={<RotateCcw aria-hidden="true" />}
+                        label="Reabrir fatura"
+                        onClick={() => setReopenOpen(true)}
+                        variant="destructive"
+                      />
+                    </>
+                  ) : null}
+                </FinancialSummaryMenu>
+              ) : null}
+            </>
+          ) : undefined
         }
+        details={summary.totalLimit > 0 ? <CardLimitUsage summary={summary} /> : undefined}
         eyebrow={`Fatura de ${periodLabel}`}
-        identity={<CardInvoiceIcon card={card} size="lg" />}
+        identity={<CardInvoiceIcon card={card} />}
         metrics={[
           {
-            icon: <CircleCheck aria-hidden="true" className="size-3.5" />,
+            icon:
+              summary.status === "overdue" ? (
+                <CircleAlert aria-hidden="true" className="size-3.5" />
+              ) : (
+                <CircleCheck aria-hidden="true" className="size-3.5" />
+              ),
             label: "Status",
             value: (
               <span
                 className={cn(
-                  card.invoiceSummary.status === "overdue" && "font-medium text-destructive",
-                  card.invoiceSummary.status === "paid" && "text-success",
+                  (summary.status === "overdue" || summary.status === "paid") && "font-medium",
                 )}
               >
-                {cardInvoiceStatusLabels[card.invoiceSummary.status]}
+                {cardInvoiceStatusLabels[summary.status]}
               </span>
             ),
           },
           {
             icon: <CalendarDays aria-hidden="true" className="size-3.5" />,
             label: "Fecha",
-            value: formatInvoiceDate(card.invoiceSummary.closingDate),
+            value: formatInvoiceDate(summary.closingDate),
           },
           {
             icon: <CalendarDays aria-hidden="true" className="size-3.5" />,
             label: "Vence",
             value: (
               <DueDateIndicator
-                dueDate={card.invoiceSummary.dueDate}
-                originalDueDate={card.invoiceSummary.originalDueDate}
-                adjustment={card.invoiceSummary.dueDateAdjustment}
-                excluded={card.invoiceSummary.dueDateRuleExcluded}
-                editable={card.invoiceSummary.dueDateExceptionEditable}
+                dueDate={summary.dueDate}
+                originalDueDate={summary.originalDueDate}
+                adjustment={summary.dueDateAdjustment}
+                excluded={summary.dueDateRuleExcluded}
+                editable={summary.dueDateExceptionEditable}
                 target={{ target: "invoice", cardId: card.id, period }}
               >
-                {formatInvoiceDate(card.invoiceSummary.dueDate)}
+                {formatInvoiceDate(summary.dueDate)}
               </DueDateIndicator>
             ),
           },
         ]}
+        primaryDescription={
+          summary.paidAmount > 0 ? (
+            <>
+              <span>
+                Pago <MoneyValue amount={summary.paidAmount} className="text-current" />
+              </span>
+              {summary.remainingAmount > 0 ? (
+                <span>
+                  Restante <MoneyValue amount={summary.remainingAmount} className="text-current" />
+                </span>
+              ) : null}
+            </>
+          ) : undefined
+        }
         primaryLabel="Valor da fatura"
-        primaryValue={<MoneyValue amount={card.invoiceSummary.amount} />}
+        primaryValue={<MoneyValue amount={summary.amount} />}
         subtitle={
           <>
             {brandAsset ? (
               <Image
-                alt={cardBrandLabels[card.brand]}
+                alt=""
                 className="h-4 w-auto object-contain"
                 height={16}
                 layout="fixed"
@@ -447,37 +407,36 @@ function CardInvoiceSummary({
               />
             ) : null}
             <span>{cardBrandLabels[card.brand]}</span>
+            {isActive ? null : <FinancialSummaryBadge>Inativo</FinancialSummaryBadge>}
           </>
         }
         title={card.name}
         titleAction={
-          onEdit ? (
-            <FinancialSummaryTitleAction
-              aria-label={`Editar cartão ${card.name}`}
-              onClick={onEdit}
-              type="button"
-            >
-              <Pencil aria-hidden="true" className="size-3.5" />
-            </FinancialSummaryTitleAction>
-          ) : undefined
+          <FinancialSummaryTitleAction
+            aria-label={`Editar cartão ${card.name}`}
+            onClick={onEdit}
+            type="button"
+          >
+            <Pencil aria-hidden="true" className="size-3.5" />
+          </FinancialSummaryTitleAction>
         }
       />
       {datesOpen ? (
         <InvoiceDatesDialog
-          key={`${card.id}-${period}-${card.invoiceSummary.closingDate}-${card.invoiceSummary.dueDate}`}
+          key={`${card.id}-${period}-${summary.closingDate}-${summary.dueDate}`}
           cardId={card.id}
           cardName={card.name}
-          closingDate={card.invoiceSummary.closingDate}
-          dueDate={card.invoiceSummary.dueDate}
+          closingDate={summary.closingDate}
+          dueDate={summary.dueDate}
           onOpenChange={setDatesOpen}
           open={datesOpen}
           period={period}
         />
       ) : null}
-      {adjustOpen ? (
+      {adjustOpen && people ? (
         <AdjustInvoiceDialog
           cardName={card.name}
-          currentAmount={card.invoiceSummary.amount}
+          currentAmount={summary.amount}
           onOpenChange={setAdjustOpen}
           onSubmit={adjustInvoice}
           open={adjustOpen}
@@ -485,47 +444,241 @@ function CardInvoiceSummary({
           period={period}
         />
       ) : null}
-    </>
+      <UndoInvoicePaymentDialog
+        cardId={card.id}
+        onOpenChange={setUndoOpen}
+        open={undoOpen}
+        payments={payments}
+        period={period}
+      />
+      <ReopenInvoiceDialog
+        cardId={card.id}
+        onOpenChange={setReopenOpen}
+        open={reopenOpen}
+        paymentCount={payments.length}
+        period={period}
+      />
+    </div>
   );
 }
 
-function CardInvoiceIcon({ card, size = "sm" }: { card: CardOutput; size?: "sm" | "lg" }) {
-  const dimension = size === "lg" ? 64 : 24;
+function SummaryMenuItem({
+  description,
+  disabled,
+  icon,
+  label,
+  onClick,
+  variant,
+}: {
+  description?: string;
+  disabled?: boolean;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  variant?: "default" | "destructive";
+}) {
+  return (
+    <DropdownMenuItem
+      className="items-start"
+      disabled={disabled}
+      onClick={onClick}
+      variant={variant}
+    >
+      <span className="mt-0.5">{icon}</span>
+      <span className="grid gap-0.5">
+        <span>{label}</span>
+        {description ? <span className="text-muted-foreground text-xs">{description}</span> : null}
+      </span>
+    </DropdownMenuItem>
+  );
+}
 
-  if (!card.logo)
+function CardLimitUsage({ summary }: { summary: CardOutput["invoiceSummary"] }) {
+  const usage = summary.usagePercentage.toLocaleString("pt-BR");
+
+  return (
+    <div className="grid gap-3 p-5 sm:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+        <span className="text-current/70">Limite disponível</span>
+        <span className="flex flex-wrap items-baseline gap-1">
+          <MoneyValue amount={summary.availableLimit} className="font-medium" />
+          <span className="text-current/70">
+            de <MoneyValue amount={summary.totalLimit} />
+          </span>
+        </span>
+      </div>
+      <Progress
+        aria-label={`${usage}% do limite utilizado`}
+        indicatorClassName={cn("bg-current", summary.usagePercentage > 100 && "bg-destructive")}
+        trackClassName="bg-current/20"
+        value={Math.min(100, summary.usagePercentage)}
+      />
+      <p className="text-current/70 text-xs">
+        {usage}% utilizado · parcelas futuras também ocupam o limite.
+      </p>
+    </div>
+  );
+}
+
+function UndoInvoicePaymentDialog({
+  cardId,
+  onOpenChange,
+  open,
+  payments,
+  period,
+}: {
+  cardId: string;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  payments: CardOutput["invoiceSummary"]["payments"];
+  period: string;
+}) {
+  const mutation = useUndoInvoicePaymentMutation();
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const selectedPayment =
+    payments.find((payment) => payment.id === selectedPaymentId) ?? payments[0];
+
+  async function undoPayment() {
+    if (!selectedPayment) return;
+    try {
+      await mutation.mutateAsync({ cardId, period, paymentId: selectedPayment.id });
+      onOpenChange(false);
+      setSelectedPaymentId(null);
+      toast.success("Pagamento desfeito");
+    } catch {
+      toast.error("Não foi possível desfazer o pagamento");
+    }
+  }
+
+  return (
+    <AlertDialog
+      onOpenChange={(nextOpen) => {
+        if (!mutation.isPending) onOpenChange(nextOpen);
+      }}
+      open={open}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {payments.length > 1 ? "Desfazer um pagamento?" : "Desfazer pagamento?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {payments.length > 1
+              ? "Selecione o pagamento que deseja desfazer. O valor volta para a conta e o limite usado do cartão é restaurado."
+              : "O pagamento será removido. O valor volta para a conta e o limite usado do cartão é restaurado."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {selectedPayment && payments.length > 1 ? (
+          <Select onValueChange={setSelectedPaymentId} value={selectedPayment.id}>
+            <SelectTrigger aria-label="Pagamento a desfazer" className="w-full">
+              <SelectValue>
+                {formatInvoicePaymentOption(selectedPayment.amount, selectedPayment.paidAt)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {payments.map((payment) => (
+                <SelectItem key={payment.id} value={payment.id}>
+                  {formatInvoicePaymentOption(payment.amount, payment.paidAt)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
+        {selectedPayment && payments.length === 1 ? (
+          <p className="text-muted-foreground text-sm">
+            {formatInvoicePaymentOption(selectedPayment.amount, selectedPayment.paidAt)}
+          </p>
+        ) : null}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={mutation.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={!selectedPayment || mutation.isPending}
+            onClick={() => void undoPayment()}
+          >
+            {mutation.isPending ? "Desfazendo…" : "Desfazer pagamento"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function ReopenInvoiceDialog({
+  cardId,
+  onOpenChange,
+  open,
+  paymentCount,
+  period,
+}: {
+  cardId: string;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  paymentCount: number;
+  period: string;
+}) {
+  const mutation = useReopenInvoiceMutation();
+
+  async function reopenInvoice() {
+    try {
+      await mutation.mutateAsync({ cardId, period });
+      onOpenChange(false);
+      toast.success("Fatura reaberta", { description: "Todos os pagamentos foram desfeitos." });
+    } catch {
+      toast.error("Não foi possível reabrir a fatura");
+    }
+  }
+
+  return (
+    <AlertDialog
+      onOpenChange={(nextOpen) => {
+        if (!mutation.isPending) onOpenChange(nextOpen);
+      }}
+      open={open}
+    >
+      <AlertDialogContent className="w-[calc(100%-2rem)]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reabrir fatura?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {paymentCount === 1
+              ? "O pagamento registrado será desfeito."
+              : "Todos os pagamentos registrados serão desfeitos."}{" "}
+            Os lançamentos correspondentes nas contas serão removidos e os saldos recalculados.
+            Depois, você poderá ajustar a fatura e registrar novos pagamentos.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="grid-cols-1 sm:grid-cols-2">
+          <AlertDialogCancel disabled={mutation.isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={mutation.isPending}
+            onClick={() => void reopenInvoice()}
+            variant="destructive"
+          >
+            {mutation.isPending ? "Reabrindo…" : "Reabrir fatura"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function CardInvoiceIcon({ card }: { card: CardOutput }) {
+  if (!card.logo) {
     return (
-      <span
-        className={
-          size === "lg"
-            ? "grid size-12 shrink-0 place-items-center rounded-xl bg-current/10"
-            : "grid size-6 shrink-0 place-items-center rounded-md bg-brand/10"
-        }
-      >
-        <CreditCard aria-hidden="true" className={size === "lg" ? "size-6" : "size-5"} />
+      <span className="grid size-16 shrink-0 place-items-center rounded-full bg-current/10">
+        <CreditCard aria-hidden="true" className="size-7" />
       </span>
     );
+  }
 
   return (
     <Image
       alt=""
-      className={
-        size === "lg"
-          ? "size-16 shrink-0 rounded-full object-cover"
-          : "size-6 shrink-0 rounded-md object-contain"
-      }
-      height={dimension}
+      className="size-16 shrink-0 rounded-full object-cover"
+      height={64}
       layout="fixed"
       src={card.logo}
-      width={dimension}
+      width={64}
     />
-  );
-}
-
-function CardInvoicesLoading() {
-  return (
-    <section className="app-page project-container">
-      <p className="text-muted-foreground text-sm">Carregando fatura...</p>
-    </section>
   );
 }
 

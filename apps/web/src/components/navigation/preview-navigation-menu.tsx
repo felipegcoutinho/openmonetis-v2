@@ -339,7 +339,7 @@ function PersonPreviewItem({ person }: { person: PersonOutput }) {
             src={person.avatarUrl}
           />
         ) : null}
-        <AvatarFallback className="text-[10px]">{getInitials(person.name)}</AvatarFallback>
+        <AvatarFallback className="text-2xs">{getInitials(person.name)}</AvatarFallback>
       </Avatar>
       <span className="grid min-w-0 flex-1 gap-0.5">
         <span className="flex min-w-0 items-center gap-1.5">
@@ -357,7 +357,7 @@ function PersonPreviewItem({ person }: { person: PersonOutput }) {
 function FinanceLogo({ logo, name }: { logo: string | null; name: string }) {
   if (!logo) {
     return (
-      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted font-medium text-muted-foreground text-[10px]">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted font-medium text-muted-foreground text-2xs">
         {name.slice(0, 2).toUpperCase()}
       </span>
     );

@@ -1,6 +1,13 @@
+import { Ellipsis } from "lucide-react";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLogoColors } from "@/hooks/useLogoColors";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +26,7 @@ type FinancialSummaryHeaderProps = {
   eyebrow?: string;
   identity: ReactNode;
   metrics: FinancialSummaryMetric[];
+  primaryDescription?: ReactNode;
   primaryLabel?: string;
   primaryValue?: ReactNode;
   subtitle: ReactNode;
@@ -34,6 +42,7 @@ export function FinancialSummaryHeader({
   eyebrow,
   identity,
   metrics,
+  primaryDescription,
   primaryLabel,
   primaryValue,
   subtitle,
@@ -96,10 +105,15 @@ export function FinancialSummaryHeader({
 
           {hasPrimaryValue ? (
             <div data-mobile-primary-value className="mt-8">
-              <p className="text-current/70 text-xs uppercase tracking-tight">{primaryLabel}</p>
+              <p className="eyebrow text-current/70">{primaryLabel}</p>
               <div className="mt-2 font-heading text-4xl font-normal leading-none tracking-tight sm:text-5xl">
                 {primaryValue}
               </div>
+              {primaryDescription ? (
+                <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-current/70 text-sm">
+                  {primaryDescription}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -147,14 +161,16 @@ export function FinancialSummaryHeader({
 
 export function FinancialSummaryAction({
   className,
+  primary = false,
   size = "sm",
   variant = "ghost",
   ...props
-}: ComponentProps<typeof Button>) {
+}: ComponentProps<typeof Button> & { primary?: boolean }) {
   return (
     <Button
       className={cn(
         "rounded-full border-current/30 bg-transparent text-current shadow-none hover:border-current/70 hover:bg-transparent hover:text-current hover:underline focus-visible:border-current focus-visible:ring-current/30 aria-expanded:bg-transparent aria-expanded:text-current dark:hover:bg-transparent",
+        primary && "border-current/40 bg-current/15 hover:bg-current/25 dark:hover:bg-current/25",
         className,
       )}
       size={size}
@@ -178,5 +194,35 @@ export function FinancialSummaryTitleAction({
       variant="ghost"
       {...props}
     />
+  );
+}
+
+export function FinancialSummaryMenu({
+  children,
+  disabled,
+  label = "Mais ações",
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+  label?: string;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger disabled={disabled} render={<FinancialSummaryAction type="button" />}>
+        <Ellipsis aria-hidden="true" className="size-4" />
+        {label}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function FinancialSummaryBadge({ children }: { children: ReactNode }) {
+  return (
+    <Badge className="border-current/30 bg-current/10 text-current" variant="outline">
+      {children}
+    </Badge>
   );
 }

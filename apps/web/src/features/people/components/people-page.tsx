@@ -91,7 +91,7 @@ export function PeoplePage() {
           ) : null}
           {query.data ? (
             <Tabs className="gap-0" defaultValue="active">
-              <TabsList aria-label="Filtrar por status">
+              <TabsList aria-label="Filtrar por status" variant="line">
                 <TabsTrigger value="active">Ativas ({activePeople.length})</TabsTrigger>
                 <TabsTrigger value="inactive">Inativas ({inactivePeople.length})</TabsTrigger>
               </TabsList>

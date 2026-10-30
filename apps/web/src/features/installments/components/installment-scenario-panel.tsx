@@ -42,7 +42,7 @@ export function InstallmentScenarioPanel({
                 {isQuoting || !quote ? (
                   <Skeleton className="h-7 w-32" />
                 ) : (
-                  <MoneyValue amount={quote.totalAmount} className="text-2xl font-semibold" />
+                  <MoneyValue amount={quote.totalAmount} className="kpi-value text-2xl" />
                 )}
                 <span className="text-muted-foreground text-sm">
                   {selectedCount}{" "}

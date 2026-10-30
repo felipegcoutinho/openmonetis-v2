@@ -44,7 +44,7 @@ export function InboxDetailsDialog({
               ) : null}
               <div>
                 <dt className="font-medium text-muted-foreground text-xs">Texto da notificação</dt>
-                <dd className="mt-1 rounded-lg border bg-muted/30 p-3 wrap-break-word text-sm leading-relaxed">
+                <dd className="mt-1 rounded-lg border bg-muted/30 p-3 wrap-break-word font-mono text-sm leading-relaxed">
                   {item.originalText}
                 </dd>
               </div>

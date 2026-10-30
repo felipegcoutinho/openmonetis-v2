@@ -45,7 +45,7 @@ export function TransactionSummary({ transaction }: { transaction: TransactionOu
       <MoneyValue
         amount={transaction.amount}
         className={cn(
-          "block max-w-full break-all font-semibold text-3xl tracking-tight tabular-nums",
+          "kpi-value block max-w-full break-all text-3xl",
           amountStyles[transaction.type],
         )}
         showPositiveSign={transaction.type === "income"}

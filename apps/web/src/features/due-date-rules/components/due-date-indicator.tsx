@@ -2,7 +2,8 @@ import type {
   DueDateAdjustmentDetails,
   SetDueDateExceptionInput,
 } from "@openmonetis/validators/due-date-rules";
-import { CalendarCheck, CalendarClock } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { CalendarCheck, CalendarClock, Settings2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,14 @@ export function DueDateIndicator({
             Data preservada após pagamento ou personalização.
           </p>
         )}
+        <Link
+          className="flex items-center gap-1.5 border-t pt-3 font-medium text-brand-strong text-xs hover:underline"
+          search={{ tab: "due-date-rules" }}
+          to="/settings"
+        >
+          <Settings2 aria-hidden="true" className="size-3.5" />
+          Gerenciar regras de vencimento
+        </Link>
       </PopoverContent>
     </Popover>
   );

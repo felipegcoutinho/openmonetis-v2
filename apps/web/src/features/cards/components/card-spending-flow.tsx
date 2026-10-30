@@ -130,7 +130,7 @@ export function CardSpendingFlow({
                     No dia
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span aria-hidden="true" className="h-0.5 w-3 bg-brand-strong" />
+                    <ChartLegendMarker className="text-brand-strong" variant="line" />
                     Acumulado
                   </span>
                 </div>

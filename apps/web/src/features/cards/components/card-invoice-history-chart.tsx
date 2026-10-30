@@ -1,6 +1,7 @@
 import type { CardInvoiceHistoryOutput } from "@openmonetis/validators/cards";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis } from "recharts";
+import { ChartPeriodTick } from "@/components/chart-period-tick";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,8 @@ const chartConfig = {
 
 type HistoryItem = CardInvoiceHistoryOutput["items"][number];
 
+const HISTORY_BAR_OPACITY = 0.45;
+
 export function CardInvoiceHistoryChart({
   cardId,
   period,
@@ -40,8 +43,8 @@ export function CardInvoiceHistoryChart({
   return (
     <CardContent className="py-5">
       <p className="mb-4 text-muted-foreground text-sm">
-        Últimas 12 faturas até {formatCardHistoryPeriod(historyEndPeriod)}. Selecione um mês para
-        abrir a fatura.
+        Últimas 12 faturas até {formatCardHistoryPeriod(historyEndPeriod)}. Selecione uma barra ou
+        um mês para abrir a fatura.
       </p>
       {query.isPending ? <Skeleton className="h-60 w-full" /> : null}
       {query.isError ? (
@@ -68,11 +71,18 @@ export function CardInvoiceHistoryChart({
                 <XAxis
                   axisLine={false}
                   dataKey="period"
-                  interval="preserveStartEnd"
-                  minTickGap={14}
-                  tickFormatter={(value) => formatCardHistoryPeriod(String(value), true)}
+                  height={40}
+                  interval={0}
+                  tick={(props) => (
+                    <ChartPeriodTick
+                      {...props}
+                      disabled={isPrivacyModeEnabled}
+                      getLabel={(value) => `Abrir fatura de ${formatCardHistoryPeriod(value)}`}
+                      onPeriodChange={onPeriodChange}
+                      selectedPeriod={period}
+                    />
+                  )}
                   tickLine={false}
-                  tickMargin={8}
                 />
                 <ChartTooltip
                   content={
@@ -101,19 +111,9 @@ export function CardInvoiceHistoryChart({
                 >
                   {items.map((item) => (
                     <Cell
-                      aria-label={`Abrir fatura de ${formatCardHistoryPeriod(item.period)}`}
-                      className="cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       fill={item.period === period ? "var(--brand-strong)" : "var(--color-amount)"}
-                      fillOpacity={item.period === period ? 1 : 0.5}
+                      fillOpacity={item.period === period ? 1 : HISTORY_BAR_OPACITY}
                       key={item.period}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          onPeriodChange(item.period);
-                        }
-                      }}
-                      role="link"
-                      tabIndex={isPrivacyModeEnabled ? -1 : 0}
                     />
                   ))}
                 </Bar>

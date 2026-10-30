@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createDeviceToken, revokeDeviceToken } from "./device-tokens.api";
+import { createDeviceToken, revokeDeviceToken, rotateDeviceToken } from "./device-tokens.api";
 import { deviceTokenKeys } from "./device-tokens.queries";
 
 export function useCreateDeviceTokenMutation() {
@@ -14,6 +14,14 @@ export function useRevokeDeviceTokenMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: revokeDeviceToken,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: deviceTokenKeys.all }),
+  });
+}
+
+export function useRotateDeviceTokenMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: rotateDeviceToken,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: deviceTokenKeys.all }),
   });
 }

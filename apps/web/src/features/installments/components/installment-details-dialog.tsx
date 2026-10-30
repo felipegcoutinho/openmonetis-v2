@@ -91,7 +91,10 @@ export function InstallmentDetailsDialog({
                   key={installment.id}
                 >
                   {paid ? (
-                    <CheckCircle2 aria-label="Paga" className="size-5 shrink-0 text-success" />
+                    <CheckCircle2
+                      aria-label="Paga"
+                      className="size-5 shrink-0 animate-status-confirm text-success"
+                    />
                   ) : (
                     <Checkbox
                       aria-label={[
@@ -107,7 +110,10 @@ export function InstallmentDetailsDialog({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium text-sm">
-                        Parcela {installment.installmentNumber}/{group.totalInstallments}
+                        Parcela{" "}
+                        <span className="font-mono">
+                          {installment.installmentNumber}/{group.totalInstallments}
+                        </span>
                       </span>
                       {installment.isDueInReferencePeriod ? (
                         <Badge variant="secondary">Neste mês</Badge>
@@ -145,7 +151,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <p className="text-muted-foreground text-xs">{label}</p>
-      <MoneyValue amount={value} className="mt-1 font-semibold" />
+      <MoneyValue amount={value} className="kpi-value mt-1" />
     </div>
   );
 }

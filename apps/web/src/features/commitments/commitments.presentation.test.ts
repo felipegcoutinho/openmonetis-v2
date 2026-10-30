@@ -4,6 +4,7 @@ import {
   commitmentStatusLabel,
   formatCommitmentChartPeriod,
   formatCommitmentPercentage,
+  formatCommitmentPercentagePointChange,
   resolveCommitmentsSearch,
   validateCommitmentsSearch,
 } from "./commitments.presentation";
@@ -47,4 +48,11 @@ test("commitments labels are in Portuguese", () => {
   assert.equal(formatCommitmentPercentage(35.1), "35,1%");
   assert.equal(commitmentStatusLabel("attention"), "Atenção");
   assert.match(formatCommitmentChartPeriod("2026-10"), /^Out/);
+});
+
+test("commitment change between months is shown in percentage points", () => {
+  assert.equal(formatCommitmentPercentagePointChange(72.4, 64.4), "+8 p.p. vs. mês anterior");
+  assert.equal(formatCommitmentPercentagePointChange(50, 62.5), "−12,5 p.p. vs. mês anterior");
+  assert.equal(formatCommitmentPercentagePointChange(40, 40), "igual ao mês anterior");
+  assert.equal(formatCommitmentPercentagePointChange(null, 40), null);
 });

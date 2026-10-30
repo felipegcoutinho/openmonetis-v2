@@ -75,10 +75,10 @@ export function formatCardCycleDate(date: string) {
   });
 }
 
-export function formatCardHistoryPeriod(period: string, short = false) {
+export function formatCardHistoryPeriod(period: string) {
   return formatDateInBrazil(dateOnlyToSafeInstant(`${period}-01`), {
-    month: short ? "short" : "long",
-    year: short ? "2-digit" : "numeric",
+    month: "long",
+    year: "numeric",
   });
 }
 

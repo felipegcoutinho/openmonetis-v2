@@ -25,11 +25,11 @@ import { showInvalidFormToast } from "@/lib/form-feedback";
 import { logoCatalog } from "@/lib/logo-catalog";
 import { accountTypeOptions, getLogoDisplayName } from "../accounts.presentation";
 
-type AccountFormProps = {
-  account?: AccountOutput | null;
-  onCancel: () => void;
-  onSubmit: (input: CreateAccountInput | ReplaceAccountInput) => Promise<void>;
-};
+export type AccountSubmission =
+  | { account: null; onSubmit: (input: CreateAccountInput) => Promise<void> }
+  | { account: AccountOutput; onSubmit: (input: ReplaceAccountInput) => Promise<void> };
+
+type AccountFormProps = AccountSubmission & { onCancel: () => void };
 
 type FormValues = {
   name: string;
@@ -55,7 +55,8 @@ function validationMessage(result: { success: boolean }, message: string) {
   return result.success ? undefined : message;
 }
 
-export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
+export function AccountForm(props: AccountFormProps) {
+  const { account, onCancel } = props;
   const idPrefix = useId();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const isEditing = Boolean(account);
@@ -72,17 +73,15 @@ export function AccountForm({ account, onCancel, onSubmit }: AccountFormProps) {
         note: value.note.trim() || null,
         excludeFromBalance: value.excludeFromBalance,
       };
-      const result = isEditing
-        ? ReplaceAccountInputSchema.safeParse({ ...baseInput, isArchived: value.isArchived })
-        : CreateAccountInputSchema.safeParse(baseInput);
+      const submit = getAccountSubmit(props, baseInput, value.isArchived);
 
-      if (!result.success) {
+      if (!submit) {
         showInvalidFormToast();
         return;
       }
 
       try {
-        await onSubmit(result.data);
+        await submit();
         toast.success(isEditing ? "Conta atualizada" : "Conta criada", {
           description: `${value.name.trim()} foi salva com sucesso.`,
         });
@@ -306,4 +305,17 @@ function AccountStatusOption({ archived }: { archived: boolean }) {
       {archived ? "Inativa" : "Ativa"}
     </span>
   );
+}
+
+function getAccountSubmit(
+  submission: AccountSubmission,
+  baseInput: Omit<CreateAccountInput, "isArchived">,
+  isArchived: boolean,
+): (() => Promise<void>) | null {
+  if (submission.account) {
+    const result = ReplaceAccountInputSchema.safeParse({ ...baseInput, isArchived });
+    return result.success ? () => submission.onSubmit(result.data) : null;
+  }
+  const result = CreateAccountInputSchema.safeParse(baseInput);
+  return result.success ? () => submission.onSubmit(result.data) : null;
 }

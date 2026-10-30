@@ -1,6 +1,7 @@
 import { paymentMethods } from "@openmonetis/domain/transactions";
 import type { UserPreferencesOutput } from "@openmonetis/validators/preferences";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { Banknote, Barcode, CreditCard, Landmark, QrCode, ReceiptText, Ticket } from "lucide-react";
 import { useId } from "react";
@@ -76,7 +77,7 @@ export function PreferencesTransactionSection({
         <form.Field name="defaultAccountId">
           {(field) => (
             <SettingsRow
-              description="Sem uma preferência, usa a primeira conta ativa da lista."
+              description="No modo automático, usa a primeira conta ativa da lista."
               id={accountId}
               label="Conta padrão"
             >
@@ -95,6 +96,7 @@ export function PreferencesTransactionSection({
                   >
                     <SelectValue>
                       <PreferenceEntityLabel
+                        automaticLabel={automaticAccountLabel}
                         entity={accounts.find((account) => account.id === field.state.value)}
                         unavailable={Boolean(field.state.value)}
                         loading={accountsQuery.isPending}
@@ -102,7 +104,9 @@ export function PreferencesTransactionSection({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={automaticPreferenceValue}>Primeiro da lista</SelectItem>
+                    <SelectItem value={automaticPreferenceValue}>
+                      {automaticAccountLabel}
+                    </SelectItem>
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         <PreferenceEntityLabel entity={account} />
@@ -119,7 +123,10 @@ export function PreferencesTransactionSection({
                 ) : null}
                 {accountsQuery.isSuccess && accounts.length === 0 ? (
                   <p className="text-muted-foreground text-sm">
-                    Nenhuma conta ativa disponível. Você pode cadastrar em Finanças.
+                    Nenhuma conta ativa disponível.{" "}
+                    <Link className="font-medium text-brand-strong hover:underline" to="/accounts">
+                      Cadastrar conta
+                    </Link>
                   </p>
                 ) : null}
               </div>
@@ -130,7 +137,7 @@ export function PreferencesTransactionSection({
         <form.Field name="defaultCardId">
           {(field) => (
             <SettingsRow
-              description="No crédito, usa este cartão ou o primeiro cartão ativo da lista."
+              description="Usado em lançamentos no crédito. No modo automático, usa o primeiro cartão ativo."
               id={cardId}
               label="Cartão padrão"
             >
@@ -149,6 +156,7 @@ export function PreferencesTransactionSection({
                   >
                     <SelectValue>
                       <PreferenceEntityLabel
+                        automaticLabel={automaticCardLabel}
                         entity={cards.find((card) => card.id === field.state.value)}
                         unavailable={Boolean(field.state.value)}
                         loading={cardsQuery.isPending}
@@ -156,7 +164,7 @@ export function PreferencesTransactionSection({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={automaticPreferenceValue}>Primeiro da lista</SelectItem>
+                    <SelectItem value={automaticPreferenceValue}>{automaticCardLabel}</SelectItem>
                     {cards.map((card) => (
                       <SelectItem key={card.id} value={card.id}>
                         <PreferenceEntityLabel entity={card} />
@@ -173,7 +181,10 @@ export function PreferencesTransactionSection({
                 ) : null}
                 {cardsQuery.isSuccess && cards.length === 0 ? (
                   <p className="text-muted-foreground text-sm">
-                    Nenhum cartão ativo disponível. Você pode cadastrar em Finanças.
+                    Nenhum cartão ativo disponível.{" "}
+                    <Link className="font-medium text-brand-strong hover:underline" to="/cards">
+                      Cadastrar cartão
+                    </Link>
                   </p>
                 ) : null}
               </div>
@@ -205,17 +216,22 @@ function PaymentMethodLabel({ method }: { method: UserPreferencesOutput["default
   );
 }
 
+const automaticAccountLabel = "Automático (primeira conta ativa)";
+const automaticCardLabel = "Automático (primeiro cartão ativo)";
+
 function PreferenceEntityLabel({
   entity,
+  automaticLabel = "",
   unavailable = false,
   loading = false,
 }: {
   entity?: { logo: string | null; name: string };
+  automaticLabel?: string;
   unavailable?: boolean;
   loading?: boolean;
 }) {
   if (loading) return "Carregando…";
-  if (!entity) return unavailable ? "Seleção indisponível" : "Primeiro da lista";
+  if (!entity) return unavailable ? "Seleção indisponível" : automaticLabel;
 
   return (
     <span className="flex min-w-0 items-center gap-2">
@@ -230,7 +246,7 @@ function PreferenceEntityLabel({
           width={20}
         />
       ) : (
-        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-medium text-[8px] text-muted-foreground">
+        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-medium text-2xs text-muted-foreground">
           {entity.name.slice(0, 2).toUpperCase()}
         </span>
       )}

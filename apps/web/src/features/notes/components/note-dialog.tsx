@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { noteKindLabels } from "../notes.presentation";
 import { NoteForm, type NoteFormHandle } from "./note-form";
 
 type NoteDialogProps = {
@@ -43,11 +44,13 @@ export function NoteDialog({ note, onOpenChange, onSubmit, open, pending }: Note
           showCloseButton={!pending}
         >
           <DialogHeader className="shrink-0">
-            <DialogTitle>{note ? "Editar anotação" : "Nova anotação"}</DialogTitle>
+            <DialogTitle>
+              {note ? `Editar ${noteKindLabels[note.kind].toLowerCase()}` : "Nova anotação"}
+            </DialogTitle>
             <DialogDescription>
               {note
                 ? "Atualize o conteúdo e os itens já registrados."
-                : "Crie uma nota, uma lista ou uma tarefa com data para acompanhar."}
+                : "Escolha o tipo e preencha o que precisa acompanhar."}
             </DialogDescription>
           </DialogHeader>
           <NoteForm

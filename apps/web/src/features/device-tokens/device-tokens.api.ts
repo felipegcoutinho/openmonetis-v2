@@ -20,6 +20,10 @@ export function createDeviceToken(input: CreateDeviceTokenInput) {
   });
 }
 
+export function rotateDeviceToken(id: string) {
+  return request<CreatedDeviceTokenOutput>(`/device-tokens/${id}/rotate`, { method: "POST" });
+}
+
 export function revokeDeviceToken(id: string) {
   return request<{ id: string }>(`/device-tokens/${id}`, { method: "DELETE" });
 }

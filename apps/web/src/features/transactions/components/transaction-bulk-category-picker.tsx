@@ -61,7 +61,7 @@ export function TransactionBulkCategoryPicker({
             aria-expanded={open}
             aria-label="Categoria"
             aria-disabled={Boolean(blockedReason)}
-            className="aria-disabled:opacity-50"
+            className="aria-disabled:opacity-70"
             disabled={busy}
             size="icon-sm"
             type="button"

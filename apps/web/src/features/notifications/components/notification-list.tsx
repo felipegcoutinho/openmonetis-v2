@@ -33,9 +33,7 @@ export function NotificationList({
       {sections.map((section) =>
         section.items.length > 0 ? (
           <section className="grid gap-2" key={section.label}>
-            <h2 className="px-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-              {section.label}
-            </h2>
+            <h2 className="eyebrow px-1 text-muted-foreground">{section.label}</h2>
             <ul className="grid gap-2">
               {section.items.map((notification) => (
                 <NotificationRow

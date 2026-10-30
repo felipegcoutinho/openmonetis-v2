@@ -8,6 +8,7 @@ import {
   CreditCard,
   FileClock,
   FolderKanban,
+  Gauge,
   Goal,
   HandCoins,
   Landmark,
@@ -25,6 +26,7 @@ import type { ReactNode } from "react";
 import { BillsWidget } from "@/features/bills/components/bills-widget";
 import { BudgetsWidget } from "@/features/budgets/components/budgets-widget";
 import { CategoryTrendsWidget } from "@/features/category-trends/components/category-trends-widget";
+import { CommitmentsWidget } from "@/features/commitments/components/commitments-widget";
 import { GoalsWidget } from "@/features/goals/components/goals-widget";
 import { InboxWidget } from "@/features/inbox/components/inbox-widget";
 import { InstallmentExpensesWidget } from "@/features/installments/components/installment-expenses-widget";
@@ -42,17 +44,33 @@ import { PaymentMethodsWidget } from "./payment-methods-widget";
 import { PaymentStatusWidget } from "./payment-status-widget";
 import { PeopleWidget } from "./people-widget";
 
+export type DashboardWidgetSectionId = "analysis" | "obligations" | "planning";
+
+/** Groups the grid into titled sections; widgets keep the user's order inside each one. */
+export const dashboardWidgetSections: ReadonlyArray<{
+  id: DashboardWidgetSectionId;
+  title: string;
+}> = [
+  { id: "obligations", title: "Contas e compromissos" },
+  { id: "planning", title: "Planejamento" },
+  { id: "analysis", title: "Análises do período" },
+];
+
 export type DashboardWidgetDefinition = {
   description: string;
   icon: LucideIcon;
   id: DashboardWidgetId;
   render: (period: string) => ReactNode;
+  section: DashboardWidgetSectionId;
   title: string;
+  /** Takes two of the three columns on wide screens, for charts that need horizontal room. */
+  wide?: boolean;
 };
 
 export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   {
     id: "attention",
+    section: "obligations",
     title: "Precisa de atenção",
     description: "Faturas, contas, orçamentos e capturas que pedem ação",
     icon: BellRing,
@@ -60,6 +78,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "accounts",
+    section: "obligations",
     title: "Minhas contas",
     description: "Saldos disponíveis e consolidado",
     icon: Landmark,
@@ -67,6 +86,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "invoices",
+    section: "obligations",
     title: "Minhas faturas",
     description: "Resumo das faturas do período",
     icon: CreditCard,
@@ -74,6 +94,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "bills",
+    section: "obligations",
     title: "Contas a pagar",
     description: "Vencimentos e pagamentos do período",
     icon: ReceiptText,
@@ -81,6 +102,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "payment-status",
+    section: "obligations",
     title: "Status de pagamento",
     description: "Valores confirmados e pendentes",
     icon: CircleDollarSign,
@@ -88,6 +110,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "inbox",
+    section: "obligations",
     title: "Caixa de entrada",
     description: "Capturas e itens pendentes de revisão",
     icon: FileClock,
@@ -95,6 +118,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "person-settlements",
+    section: "obligations",
     title: "Acertos por pessoas",
     description: "Valores a receber e créditos do mês",
     icon: HandCoins,
@@ -102,13 +126,16 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "income-expense-balance",
+    section: "analysis",
     title: "Receitas, despesas e resultado",
     description: "Evolução dos últimos seis meses",
     icon: ChartNoAxesCombined,
     render: (period) => <IncomeExpenseBalanceWidget period={period} />,
+    wide: true,
   },
   {
     id: "budgets",
+    section: "planning",
     title: "Orçamentos",
     description: "Progresso por categoria no período",
     icon: FolderKanban,
@@ -116,13 +143,23 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "goals",
+    section: "planning",
     title: "Metas",
     description: "Progresso dos objetivos ativos",
     icon: Goal,
     render: () => <GoalsWidget />,
   },
   {
+    id: "commitments",
+    section: "planning",
+    title: "Comprometimento do mês",
+    description: "Quanto da receita do mês já está comprometido",
+    icon: Gauge,
+    render: (period) => <CommitmentsWidget period={period} />,
+  },
+  {
     id: "category-trends",
+    section: "analysis",
     title: "Tendências de categorias",
     description: "Maiores variações contra o mês anterior",
     icon: Target,
@@ -130,6 +167,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "expense-categories",
+    section: "analysis",
     title: "Despesas por categoria",
     description: "Distribuição das despesas do período",
     icon: PieChart,
@@ -137,6 +175,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "income-categories",
+    section: "analysis",
     title: "Receitas por categoria",
     description: "Distribuição das receitas do período",
     icon: PieChart,
@@ -144,6 +183,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "category-transactions",
+    section: "analysis",
     title: "Lançamentos por categoria",
     description: "Categorias com maior movimentação",
     icon: Tags,
@@ -151,6 +191,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "people",
+    section: "analysis",
     title: "Pessoas",
     description: "Despesas por pessoa no período",
     icon: Users,
@@ -158,6 +199,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "payment-conditions",
+    section: "analysis",
     title: "Condições de pagamento",
     description: "À vista, parceladas e recorrentes",
     icon: Waypoints,
@@ -165,6 +207,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "payment-methods",
+    section: "analysis",
     title: "Formas de pagamento",
     description: "Distribuição por meio de pagamento",
     icon: WalletCards,
@@ -172,6 +215,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "installments",
+    section: "obligations",
     title: "Lançamentos parcelados",
     description: "Parcelas abertas e andamento",
     icon: CalendarClock,
@@ -179,6 +223,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "recurring-expenses",
+    section: "obligations",
     title: "Lançamentos recorrentes",
     description: "Compromissos recorrentes do período",
     icon: RefreshCcw,
@@ -186,6 +231,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
   },
   {
     id: "notes",
+    section: "planning",
     title: "Anotações",
     description: "Anotações ativas mais recentes",
     icon: BookOpenText,

@@ -21,7 +21,7 @@ export function EntityOption({
           width={20}
         />
       ) : (
-        <span className="grid size-5 place-items-center rounded-full bg-muted text-[9px]">
+        <span className="grid size-5 place-items-center rounded-full bg-muted text-2xs">
           {entity.name.slice(0, 2).toUpperCase()}
         </span>
       )}

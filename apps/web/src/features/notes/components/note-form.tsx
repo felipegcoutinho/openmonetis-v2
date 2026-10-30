@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNoteForm } from "../useNoteForm";
+import { NoteCharacterCount } from "./note-character-count";
 import { NoteChecklistEditor } from "./note-checklist-editor";
 import type { NoteFormProps } from "./note-form.types";
 import { NoteFormActions } from "./note-form-actions";
@@ -23,7 +24,7 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
   return (
     <form
       data-mobile-page-form
-      className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden"
+      className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
       noValidate
       onKeyDown={(event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
@@ -67,9 +68,10 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between gap-3">
                 <Label htmlFor={fieldId(field.name)}>Título</Label>
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  {field.state.value.length}/{noteTitleMaximumLength}
-                </span>
+                <NoteCharacterCount
+                  length={field.state.value.length}
+                  maximum={noteTitleMaximumLength}
+                />
               </div>
               <Input
                 aria-invalid={!field.state.meta.isValid}
@@ -107,13 +109,14 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
                   <div className="grid gap-1.5">
                     <div className="flex items-center justify-between gap-3">
                       <Label htmlFor={fieldId(field.name)}>Conteúdo</Label>
-                      <span className="text-muted-foreground text-xs tabular-nums">
-                        {field.state.value.length}/{noteContentMaximumLength}
-                      </span>
+                      <NoteCharacterCount
+                        length={field.state.value.length}
+                        maximum={noteContentMaximumLength}
+                      />
                     </div>
                     <Textarea
                       aria-invalid={!field.state.meta.isValid}
-                      className="min-h-44 resize-y"
+                      className="min-h-40 resize-y"
                       id={fieldId(field.name)}
                       maxLength={noteContentMaximumLength}
                       name={field.name}

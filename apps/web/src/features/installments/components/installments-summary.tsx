@@ -22,7 +22,7 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
             <Layers3 aria-hidden="true" className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-muted-foreground text-sm">Total em aberto</h2>
+            <h2 className="font-normal text-muted-foreground text-sm">Total em aberto</h2>
             <MoneyValue
               amount={summary.totalPendingAmount}
               className="mt-2 text-3xl leading-none sm:text-4xl"
@@ -40,7 +40,9 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
             <CalendarDays aria-hidden="true" className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-muted-foreground text-xs sm:text-sm">Pendentes neste mês</h2>
+            <h2 className="font-normal text-muted-foreground text-xs sm:text-sm">
+              Pendentes neste mês
+            </h2>
             <MoneyValue
               amount={summary.dueInPeriodAmount}
               className="mt-2 text-xl leading-none sm:text-4xl"
@@ -58,8 +60,10 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
             <ShoppingBag aria-hidden="true" className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-muted-foreground text-xs sm:text-sm">Compras em andamento</h2>
-            <p className="mt-2 font-heading text-xl leading-none tabular-nums sm:text-4xl">
+            <h2 className="font-normal text-muted-foreground text-xs sm:text-sm">
+              Compras em andamento
+            </h2>
+            <p className="kpi-value mt-2 font-heading text-xl sm:text-4xl">
               {summary.openSeriesCount}
             </p>
             <p className="mt-3 hidden text-muted-foreground text-xs sm:block">

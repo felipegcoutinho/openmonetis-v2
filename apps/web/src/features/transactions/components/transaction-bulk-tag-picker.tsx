@@ -17,6 +17,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TagColorIcon } from "@/features/tags/components/tag-color-icon";
 import { cn } from "@/lib/utils";
 
 type TagOperation = "add" | "remove";
@@ -63,7 +64,7 @@ export function TransactionBulkTagPicker({
             aria-expanded={open}
             aria-label="Etiquetas"
             aria-disabled={Boolean(blockedReason)}
-            className="aria-disabled:opacity-50"
+            className="aria-disabled:opacity-70"
             disabled={busy}
             size="icon-sm"
             type="button"
@@ -109,27 +110,29 @@ export function TransactionBulkTagPicker({
           <CommandList className="max-h-60 p-1">
             <CommandEmpty>Nenhuma etiqueta encontrada.</CommandEmpty>
             <CommandGroup className="p-0">
-              {tags.map((tag) => (
-                <CommandItem
-                  className="min-h-11 gap-2 md:min-h-9"
-                  key={tag.id}
-                  onSelect={() => {
-                    setOpen(false);
-                    onSelect(tag.id, operation);
-                  }}
-                  value={`${tag.name} ${tag.id}`}
-                >
-                  <Tag aria-hidden="true" className="size-4 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate">{tag.name}</span>
-                  <OperationIcon
-                    aria-hidden="true"
-                    className={cn(
-                      "size-4 opacity-0 transition-opacity group-data-[selected=true]/command-item:opacity-100",
-                      operation === "remove" ? "text-destructive" : "text-muted-foreground",
-                    )}
-                  />
-                </CommandItem>
-              ))}
+              {tags
+                .filter((tag) => operation === "remove" || tag.status === "active")
+                .map((tag) => (
+                  <CommandItem
+                    className="min-h-11 gap-2 md:min-h-9"
+                    key={tag.id}
+                    onSelect={() => {
+                      setOpen(false);
+                      onSelect(tag.id, operation);
+                    }}
+                    value={`${tag.name} ${tag.id}`}
+                  >
+                    <TagColorIcon color={tag.color} />
+                    <span className="min-w-0 flex-1 truncate">{tag.name}</span>
+                    <OperationIcon
+                      aria-hidden="true"
+                      className={cn(
+                        "size-4 opacity-0 transition-opacity group-data-[selected=true]/command-item:opacity-100",
+                        operation === "remove" ? "text-destructive" : "text-muted-foreground",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
