@@ -7,11 +7,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-30
+
+Corrige os seletores que fechavam sozinhos ou ficavam presos ao trocar entre celular e desktop,
+falha que interrompeu a publicação da `0.13.0`. Esta é a primeira versão publicada com as novidades
+da `0.13.0`.
+
 ### Corrigido
 
 - Seletores com lista aberta ao trocar entre celular e desktop podiam fechar sozinhos ou continuar
   visíveis depois de fechados com Esc. A lista trazida da outra visualização aparece abaixo do campo
   até a próxima abertura.
+
+### Notas de atualização
+
+- Publicação: a `0.13.0` não teve imagens nem GitHub Release publicadas; use a `0.13.1`. Configure
+  `OPENMONETIS_VERSION=0.13.1`, faça checkout da tag `v0.13.1` e atualize API, web e migrator juntos
+  com `docker compose pull` e `docker compose up -d`.
+- Banco: ao atualizar a partir da `0.12.0` ou anterior, faça backup do PostgreSQL e siga também as
+  notas da `0.13.0` abaixo. As migrations `0018`–`0020` continuam necessárias; acompanhe
+  `docker compose logs migrator`. Esta correção não adiciona migrations.
 
 ## [0.13.0] - 2026-10-30
 
@@ -876,7 +891,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.11.0...v0.11.1
