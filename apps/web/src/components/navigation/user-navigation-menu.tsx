@@ -1,7 +1,8 @@
 import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
 
 import { useNavigate } from "@tanstack/react-router";
-import { Copy, LogOut, Settings, UserRound } from "lucide-react";
+import { Check, Copy, LogOut, Settings, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ import type { authClient } from "@/lib/auth-client";
 
 import { getInitials } from "./navigation-initials";
 
+const COPIED_FEEDBACK_DURATION_MS = 5000;
+
 export function UserNavigationMenu({
   user,
   handleSignOut,
@@ -30,9 +33,29 @@ export function UserNavigationMenu({
 }: {
   user: NonNullable<ReturnType<typeof authClient.useSession>["data"]>["user"] | undefined;
   handleSignOut: () => Promise<void>;
-  handleCopyUserId: () => Promise<void>;
+  handleCopyUserId: () => Promise<boolean>;
 }) {
   const navigate = useNavigate();
+  const [userIdCopied, setUserIdCopied] = useState(false);
+  const copiedResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedResetTimeoutRef.current) clearTimeout(copiedResetTimeoutRef.current);
+    };
+  }, []);
+
+  async function handleCopyClick() {
+    const copied = await handleCopyUserId();
+    if (!copied) return;
+
+    if (copiedResetTimeoutRef.current) clearTimeout(copiedResetTimeoutRef.current);
+    setUserIdCopied(true);
+    copiedResetTimeoutRef.current = setTimeout(() => {
+      setUserIdCopied(false);
+      copiedResetTimeoutRef.current = null;
+    }, COPIED_FEEDBACK_DURATION_MS);
+  }
 
   return (
     <DropdownMenu>
@@ -65,16 +88,18 @@ export function UserNavigationMenu({
                     <Button
                       className="shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground"
                       disabled={!user?.id}
-                      onClick={() => void handleCopyUserId()}
+                      onClick={() => void handleCopyClick()}
                       size="icon-xs"
                       type="button"
                       variant="ghost"
                     />
                   }
                 >
-                  <Copy aria-hidden="true" />
+                  {userIdCopied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
                 </TooltipTrigger>
-                <TooltipContent>Copiar ID do usuário</TooltipContent>
+                <TooltipContent>
+                  {userIdCopied ? "ID copiado" : "Copiar ID do usuário"}
+                </TooltipContent>
               </Tooltip>
             </span>
             <span className="truncate text-muted-foreground text-xs">{user?.email}</span>

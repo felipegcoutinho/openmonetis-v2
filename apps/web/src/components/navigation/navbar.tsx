@@ -56,13 +56,15 @@ export function Navbar() {
   }
 
   async function handleCopyUserId() {
-    if (!user?.id) return;
+    if (!user?.id) return false;
 
     try {
       await navigator.clipboard.writeText(user.id);
       toast.success("ID do usuário copiado");
+      return true;
     } catch {
       toast.error("Não foi possível copiar o ID do usuário.");
+      return false;
     }
   }
 

@@ -104,7 +104,7 @@ export function Calculator({ active = true, initialValue, onSelectValue }: Calcu
   }, [active]);
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-4">
       <CalculatorDisplay
         copied={copied}
         expression={expression}
@@ -125,7 +125,7 @@ export function Calculator({ active = true, initialValue, onSelectValue }: Calcu
       />
       {onSelectValue ? (
         <Button
-          className="h-10 rounded-lg"
+          className="h-11 rounded-lg"
           disabled={!fieldValue}
           onClick={() => {
             if (fieldValue) onSelectValue(fieldValue);

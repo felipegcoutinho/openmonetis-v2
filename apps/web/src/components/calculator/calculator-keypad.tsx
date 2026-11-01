@@ -103,13 +103,13 @@ export function CalculatorKeypad(props: CalculatorKeypadProps) {
             aria-label={button.ariaLabel}
             aria-pressed={button.action === "operator" ? active : undefined}
             className={cn(
-              "h-12 rounded-lg border font-semibold text-base shadow-none [&_svg]:size-4.5",
+              "h-12 rounded-lg border-0 font-medium text-lg shadow-none transition-[background-color,color,scale] active:not-aria-[haspopup]:translate-y-0 active:scale-[0.96] motion-reduce:active:scale-100 [&_svg]:size-5",
               getButtonClassName(button.action, active),
             )}
             key={button.key}
             onClick={() => handleButton(button, props)}
             type="button"
-            variant={getVariant(button.action, active)}
+            variant={active || button.action === "equals" ? "default" : "ghost"}
           >
             {button.label}
           </Button>
@@ -140,28 +140,20 @@ function handleButton(button: (typeof buttons)[number], props: CalculatorKeypadP
   }
 }
 
-function getVariant(action: (typeof buttons)[number]["action"], active: boolean) {
-  if (active || action === "equals") return "default";
-  if (action === "clear") return "destructive";
-  return "secondary";
-}
-
 function getButtonClassName(action: (typeof buttons)[number]["action"], active: boolean) {
-  if (action === "operator" && !active) {
-    return "border-brand/20 bg-brand/12 text-brand-strong hover:border-brand/35 hover:bg-brand/22 dark:border-brand/25 dark:bg-secondary/80 dark:text-brand dark:hover:border-brand/40 dark:hover:bg-secondary";
+  if (active) return "bg-primary text-primary-foreground hover:bg-primary/90";
+
+  switch (action) {
+    case "digit":
+    case "decimal":
+      return "bg-muted/70 text-foreground hover:bg-muted";
+    case "operator":
+      return "bg-brand/10 text-brand-strong hover:bg-brand/20 dark:text-brand";
+    case "clear":
+      return "bg-destructive/10 font-semibold text-base text-destructive hover:bg-destructive/15 hover:text-destructive";
+    case "equals":
+      return undefined;
+    default:
+      return "bg-muted text-foreground hover:bg-foreground/10";
   }
-
-  if (action === "digit" || action === "decimal") {
-    return "border-border/60 bg-background text-foreground hover:border-border hover:bg-secondary dark:border-border dark:bg-secondary/65 dark:hover:bg-secondary";
-  }
-
-  if (action === "delete" || action === "percent" || action === "sign") {
-    return "border-border/60 bg-secondary/70 text-foreground hover:border-border hover:bg-secondary dark:border-border dark:bg-secondary dark:hover:bg-secondary/80";
-  }
-
-  if (action === "equals") return "border-primary";
-
-  if (action === "clear") return "border-destructive/15";
-
-  return undefined;
 }

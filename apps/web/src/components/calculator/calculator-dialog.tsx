@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Calculator } from "@/components/calculator/calculator";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useDraggableDialog } from "./useDraggableDialog";
@@ -104,9 +105,9 @@ function CalculatorDialogContent({
 }) {
   const { contentRef, dragHandleProps } = useDraggableDialog();
   return (
-    <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-[25rem]" ref={contentRef}>
+    <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-[23rem]" ref={contentRef}>
       <DialogHeader
-        className="cursor-grab select-none px-5 pt-5 pr-14 pb-4 active:cursor-grabbing sm:px-6 sm:pt-6 sm:pr-14 sm:pb-5"
+        className="cursor-grab select-none px-5 pt-5 pr-14 pb-4 active:cursor-grabbing sm:px-6 sm:pt-6 sm:pr-14"
         {...dragHandleProps}
       >
         <DialogTitle className="flex items-center gap-2.5 text-lg">
@@ -114,11 +115,23 @@ function CalculatorDialogContent({
           Calculadora
         </DialogTitle>
       </DialogHeader>
-      <div className="px-5 pb-5 sm:px-6 sm:pb-6">
-        <p className="mb-2 text-muted-foreground text-xs">
-          Esc limpa a conta. Use o botão de fechar para sair.
-        </p>
+      <div className="grid gap-4 px-5 pb-5 sm:px-6 sm:pb-6">
         <Calculator initialValue={initialValue} onSelectValue={onSelectValue} />
+        <p className="hidden items-center justify-center gap-3 text-muted-foreground text-xs sm:flex">
+          <span className="inline-flex items-center gap-1.5">
+            <Kbd>Enter</Kbd> calcula
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Kbd>Esc</Kbd> limpa
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>C</Kbd>
+            </KbdGroup>
+            copia
+          </span>
+        </p>
       </div>
     </DialogContent>
   );

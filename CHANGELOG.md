@@ -18,6 +18,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   competir com o item ativo da navegação.
 - No tema claro, listas de busca, calendários e cartões flutuantes dos formulários passam a usar o
   mesmo visual escuro dos seletores e menus, padronizando todas as listas suspensas.
+- Calculadora redesenhada: visor mais limpo, com o histórico da conta ao lado do botão de copiar,
+  teclas mais leves com resposta ao toque e os atalhos de teclado (Enter, Esc e ⌘C) exibidos abaixo
+  do teclado no desktop.
+- O botão de copiar o ID do usuário no menu da conta mostra uma confirmação por alguns segundos
+  depois da cópia.
 
 ## [0.13.1] - 2026-10-30
 
