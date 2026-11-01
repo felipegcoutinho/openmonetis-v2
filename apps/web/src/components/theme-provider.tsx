@@ -16,7 +16,7 @@ type ThemeProviderState = {
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined);
-const browserThemeColors = { dark: "#191919", light: "#fc941d" } as const;
+const browserThemeColors = { dark: "#1b1917", light: "#fc941d" } as const;
 
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
   const key = JSON.stringify(storageKey);

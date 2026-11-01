@@ -52,7 +52,7 @@
 :root {
   --palette-coral: oklch(76.042% 0.16904 61.306);
   --palette-charcoal: oklch(29.182% 0.05685 64.634);
-  --palette-blue: oklch(55.852% 0.22132 266.167);
+  --palette-blue: oklch(59.101% 0.16978 254.626);
   --palette-green: oklch(51.858% 0.10354 157.143);
   --palette-red: oklch(59.505% 0.2301 31.027);
   --background: oklch(96.785% 0.00443 77.988);
@@ -112,38 +112,52 @@
 }
 
 .dark {
-  --background: oklch(20.823% 0.00866 59.154); /* #1b1714 */
-  --foreground: oklch(96.936% 0.00962 72.662); /* #f9f4ee */
-  --card: oklch(24.084% 0.01032 80.604); /* #221f1a */
+  /* Surfaces climb in lightness with elevation; low chroma keeps the warmth without a muddy cast. */
+  --background: oklch(21.5% 0.005 65);
+  --foreground: oklch(93% 0.008 75);
+  --card: oklch(25.5% 0.006 65);
   --card-foreground: var(--foreground);
-  --popover: oklch(26.709% 0.01085 73.458); /* #292520 */
+  --popover: oklch(23.5% 0.006 65);
   --popover-foreground: var(--foreground);
   --primary: var(--brand-strong);
   --primary-foreground: var(--palette-charcoal);
-  --secondary: color-mix(in srgb, var(--foreground) 11%, var(--background));
+  --secondary: oklch(32% 0.007 65);
   --secondary-foreground: var(--foreground);
-  --muted: color-mix(in srgb, var(--foreground) 9%, var(--background));
-  --muted-foreground: oklch(70.256% 0.00728 53.401); /* #a39e9b */
+  --muted: oklch(29.5% 0.006 65);
+  --muted-foreground: oklch(75% 0.008 65);
   --accent: color-mix(in srgb, var(--brand) 14%, var(--popover));
   --accent-foreground: var(--foreground);
-  --destructive: oklch(64.427% 0.14933 30.183); /* #d96554 */
-  --info: oklch(74.732% 0.12972 272.274);
-  --success: oklch(66.632% 0.11324 147.513); /* #61a76b */
-  --warning: oklch(81.758% 0.11763 68.9);
-  --brand-strong: oklch(74.356% 0.14984 57.814); /* #f1913e */
+  --destructive: oklch(69% 0.14 28);
+  --info: oklch(76% 0.11 270);
+  --success: oklch(71% 0.11 150);
+  --warning: oklch(81% 0.105 72);
+  --brand-strong: oklch(74.5% 0.135 58);
   --brand: var(--brand-strong);
   --brand-foreground: var(--palette-charcoal);
-  --border: oklch(30.799% 0.0091 67.48); /* #332f2b */
-  --input: color-mix(in srgb, var(--foreground) 25%, var(--background));
+  --border: oklch(93% 0.008 75 / 0.12);
+  --input: oklch(93% 0.008 75 / 0.22);
   --ring: var(--info);
-  --overlay: color-mix(in srgb, black 58%, transparent);
+  --overlay: color-mix(in srgb, black 62%, transparent);
   --chart-1: var(--brand-strong);
-  --chart-2: oklch(74.537% 0.13059 270.931);
+  --chart-2: oklch(74% 0.115 270);
   --chart-3: var(--success);
-  --chart-4: oklch(74.853% 0.11425 315.196);
-  --chart-5: oklch(82.6% 0.10977 83.736);
+  --chart-4: oklch(74.5% 0.1 315);
+  --chart-5: oklch(82% 0.095 85);
+  --financial-summary-neutral: var(--secondary);
+  --financial-summary-neutral-foreground: var(--foreground);
   --shadow-md: color-mix(in srgb, black 45%, transparent) 0 0 10px;
   --primary-action-shadow-color: var(--primary);
+}
+
+/* Field popups sit darker than dialogs so an open list stands out inside a form. */
+.dark
+:is(
+  [data-slot="select-content"],
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="hover-card-content"]
+) {
+  --popover: oklch(18% 0.005 65);
 }
 
 @utility project-container {
@@ -402,7 +416,7 @@
   height: min(46rem, 70svh);
   background: radial-gradient(
     ellipse 52% 60% at 50% 20%,
-    color-mix(in srgb, var(--primary) 9%, transparent),
+    color-mix(in srgb, var(--primary) 4%, transparent),
     transparent 72%
   );
   mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 100%);
@@ -412,7 +426,7 @@
 .dark .dashboard-atmosphere {
   background: radial-gradient(
     ellipse 52% 60% at 50% 20%,
-    color-mix(in srgb, var(--primary) 8%, transparent),
+    color-mix(in srgb, var(--primary) 5%, transparent),
     transparent 72%
   );
 }

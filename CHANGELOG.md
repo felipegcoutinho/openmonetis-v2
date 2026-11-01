@@ -7,6 +7,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- Tema escuro mais confortável: fundo grafite com menos tom marrom, cartões e menus mais
+  distinguíveis do fundo, bordas e campos mais visíveis, texto principal menos ofuscante e cores de
+  destaque menos saturadas, mantendo contraste AA em textos e valores. Formulários, diálogos, menus
+  e listas de seleção usam uma superfície mais escura, e as listas abertas pelos campos ficam
+  ainda mais escuras para se destacarem dentro dos formulários.
+- O brilho colorido no topo da visão geral ficou mais sutil no tema claro, sem manchar o fundo nem
+  competir com o item ativo da navegação.
+- No tema claro, listas de busca, calendários e cartões flutuantes dos formulários passam a usar o
+  mesmo visual escuro dos seletores e menus, padronizando todas as listas suspensas.
+
 ## [0.13.1] - 2026-10-30
 
 Corrige os seletores que fechavam sozinhos ou ficavam presos ao trocar entre celular e desktop,

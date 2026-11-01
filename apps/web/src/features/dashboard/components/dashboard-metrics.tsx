@@ -169,7 +169,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                   {card.transactionType && primarySlug ? (
                     <Link
                       aria-label={`Ver lançamentos de ${card.label.toLocaleLowerCase("pt-BR")}`}
-                      className="group/metric-link -m-1 grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="group/metric-link -my-1 -mr-1.5 grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       search={{
                         period: metrics.period,
                         type: card.transactionType,
@@ -179,7 +179,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                     >
                       <ArrowRight
                         aria-hidden="true"
-                        className="size-4 transition-transform duration-200 ease-out group-hover/metric-link:translate-x-1 group-focus-visible/metric-link:translate-x-1 motion-reduce:transition-none"
+                        className="size-4 transition-transform duration-200 ease-out group-hover/metric-link:translate-x-0.5 group-focus-visible/metric-link:translate-x-0.5 motion-reduce:transition-none"
                       />
                     </Link>
                   ) : null}

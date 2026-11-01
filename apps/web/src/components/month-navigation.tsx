@@ -135,7 +135,7 @@ export function MonthNavigation({
       {selectedPeriod !== currentPeriod ? (
         <Button
           aria-label="Voltar ao mês atual"
-          className="absolute right-3 md:static md:w-auto md:px-2.5"
+          className="absolute right-3 md:static md:w-auto md:gap-2 md:px-2.5"
           onClick={() => selectPeriod(currentPeriod)}
           size="icon-sm"
           type="button"
