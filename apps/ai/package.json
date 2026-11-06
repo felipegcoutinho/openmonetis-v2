@@ -1,0 +1,27 @@
+{
+  "name": "@openmonetis/ai",
+  "version": "0.14.0",
+  "type": "module",
+  "private": true,
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch --import dotenv/config src/index.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "@openmonetis/domain": "workspace:*",
+    "@openmonetis/shared": "workspace:*",
+    "dotenv": "^17.4.2",
+    "hono": "^4.13.16",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

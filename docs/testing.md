@@ -77,7 +77,7 @@ ou valor de estorno. Eles são regressões de concorrência, não testes de carg
 | Conexões | Token entregue apenas na criação e armazenado como digest, claim único, confirmação, expiração, limite de tentativas, concorrência e revogação bilateral. |
 | Importação | Arquivos OFX e Excel, formatos brasileiros, datas, duplicidades concorrentes por usuário, ownership e desfazimento isolado de lotes. |
 | Ajustes | Confirmação explícita, falha de storage antes de alterar o banco, limpeza de agregados no reset, preservação de outro usuário e revogação da sessão na exclusão. |
-| Ownership | Leitura e alterações de contas, cartões, pessoas, categorias, etiquetas, orçamentos, metas e notas, além dos vínculos usados na criação. |
+| Ownership | Leitura e alterações de contas, cartões, pessoas, categorias, etiquetas, orçamentos, metas e notas, além dos vínculos usados na criação; diagnósticos, conversas, permissões e histórico da IA de outra pessoa (404) e ferramentas da IA restritas à primeira conta (403). |
 | Migrations | Base até a migration 0010 com dados financeiros; upgrade incremental até a atual, preservação de valores, rateios, âncoras e baixas antigas; conversão de regras de vencimento e reaplicação idempotente. |
 | Services adicionais | Notificações, releases, estabelecimentos e conexões: ownership, estados inválidos, expiração, respostas públicas sem segredos, indisponibilidade e falhas de persistência. Notas e inbox incluem versões concorrentes, itens arquivados e transições rejeitadas sem gravação. |
 
@@ -274,4 +274,8 @@ reaplicado proporcionalmente ao total da nova compra pelo domínio.
   identificar falhas e continuar verificando os casos seguintes.
 - O storage real passou nos cenários de URLs assinadas, objetos privados e CORS descritos acima;
   a auditoria completa das políticas do provedor continua fora dessa suíte.
+- O assistente de IA é testado sem as CLIs reais: domain, services, contratos e adaptadores usam
+  saídas gravadas de cada CLI. Login, geração e atualização das CLIs com assinaturas reais são
+  verificados manualmente no container `ai`, e mudanças de formato das CLIs só aparecem nessa
+  verificação ou no teste opcional da atualização em Ajustes.
 - Cobertura de código e testes aprovados não comprovam ausência de bugs em cenários ainda não especificados.

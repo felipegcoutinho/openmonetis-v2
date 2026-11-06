@@ -12,6 +12,7 @@ import {
   NotebookText,
   Paperclip,
   Repeat2,
+  Sparkles,
   Tag,
   Tags,
   Target,
@@ -138,6 +139,13 @@ export const navSections: NavSection[] = [
   {
     label: "Relatórios",
     items: [
+      {
+        href: "/reports/ai-diagnoses",
+        label: "Diagnóstico com IA",
+        description: "Saúde financeira explicada por IA",
+        icon: <Sparkles className="size-4" aria-hidden="true" />,
+        preservePeriod: true,
+      },
       {
         href: "/reports/financial-distribution",
         label: "Distribuição financeira",

@@ -100,7 +100,7 @@ explícitos.
 | Regras financeiras | próximas das features | package domain puro |
 | Banco | Drizzle dentro da aplicação | repositories exclusivos da API |
 | Contratos | principalmente internos ao web | HTTP documentado por OpenAPI |
-| Execução | um processo principal | imagens web, API e migrator; worker diário reutiliza a imagem da API |
+| Execução | um processo principal | imagens web, API e migrator, mais a imagem opcional `ai`; worker diário reutiliza a imagem da API |
 | Schema | migrations e uso histórico de push | migrations versionadas e forward-only |
 
 O repositório original continua sendo referência de produto e fluxo, nunca autoridade de modelagem.
@@ -119,3 +119,16 @@ Cada funcionalidade portada deve ser reavaliada antes de entrar na V2.
   [regras de vencimento](due-date-rules.md).
 - Prévias financeiras também são calculadas pela API. O formulário consulta as opções de parcelas
   por TanStack Query e apenas formata os valores retornados pelo domínio.
+- O assistente de IA (diagnóstico e chat) é opcional e roda em um serviço separado, `apps/ai`, que
+  hospeda as CLIs oficiais de Claude Code, Codex e Antigravity com a assinatura de cada pessoa. Ele
+  não acessa o banco, não recebe o id do usuário e só é alcançado pela API, com um segredo
+  compartilhado. Pontuação, indicadores e gráficos continuam calculados no domain; o modelo só
+  escreve o texto e escolhe itens de listas fechadas, e a API valida a resposta com Zod. Veja
+  [assistente de IA](ai-diagnoses.md).
+
+```text
+apps/web -> API (/ai-diagnoses, /ai-chats, /ai-providers, /ai-data-sharing, /ai-tools)
+              ├─> domain (saúde financeira, permissões, estilos)
+              ├─> repositories -> PostgreSQL (consentimento, histórico, eventos)
+              └─> apps/ai (rede interna) -> CLIs oficiais, uma pasta de login por pessoa
+```

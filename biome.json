@@ -4,6 +4,8 @@
     "includes": [
       "**",
       "!**/node_modules",
+      "!**/.ai-homes",
+      "!**/.ai-tools",
       "!!**/.claude",
       "!**/dist",
       "!**/.output",

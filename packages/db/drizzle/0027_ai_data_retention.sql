@@ -1,0 +1,1 @@
+ALTER TABLE "ai_data_sharing" ADD COLUMN "retention_days" integer DEFAULT 90;

@@ -1,0 +1,2 @@
+CREATE TYPE "public"."ai_diagnosis_voice" AS ENUM('balanced', 'direct', 'encouraging', 'sarcastic', 'stern');--> statement-breakpoint
+ALTER TABLE "ai_diagnoses" ADD COLUMN "voice" "ai_diagnosis_voice" DEFAULT 'balanced' NOT NULL;

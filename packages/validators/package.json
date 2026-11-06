@@ -37,7 +37,12 @@
     "./tags": "./src/tags.ts",
     "./recurring-transactions": "./src/recurring-transactions.ts",
     "./business-calendars": "./src/business-calendars.ts",
-    "./due-date-rules": "./src/due-date-rules.ts"
+    "./due-date-rules": "./src/due-date-rules.ts",
+    "./ai-diagnoses": "./src/ai-diagnoses.ts",
+    "./ai-chats": "./src/ai-chats.ts",
+    "./ai-data-sharing": "./src/ai-data-sharing.ts",
+    "./ai-providers": "./src/ai-providers.ts",
+    "./ai-tools": "./src/ai-tools.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

@@ -16,6 +16,10 @@ export function badRequest(message: string, code: string) {
   return new ApiError(message, code, 400);
 }
 
+export function forbidden(message: string, code: string) {
+  return new ApiError(message, code, 403);
+}
+
 export function conflict(message: string, code: string) {
   return new ApiError(message, code, 409);
 }

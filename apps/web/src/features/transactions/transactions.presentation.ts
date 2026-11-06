@@ -302,6 +302,14 @@ function slugifyUrlValue(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+const transactionsExportFilePrefix = "lancamentos-";
+
+export function labelTransactionExportFileName(fileName: string, label?: string) {
+  const slug = label ? slugifyUrlValue(label) : "";
+  if (!slug || !fileName.startsWith(transactionsExportFilePrefix)) return fileName;
+  return `${transactionsExportFilePrefix}${slug}-${fileName.slice(transactionsExportFilePrefix.length)}`;
+}
+
 export function buildFilterSlugMap(items: Array<{ id: string; name: string }>) {
   const occurrences = new Map<string, number>();
   const idToSlug = new Map<string, string>();

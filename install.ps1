@@ -119,6 +119,8 @@ Set-EnvironmentValue $environmentFile "POSTGRES_PASSWORD" $databasePassword
 Set-EnvironmentValue $environmentFile "BETTER_AUTH_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "DEVICE_TOKEN_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "PERSON_CONNECTION_SECRET" (New-RandomSecret)
+Set-EnvironmentValue $environmentFile "AI_SERVICE_SECRET" (New-RandomSecret)
+Set-EnvironmentValue $environmentFile "AI_HOME_SECRET" (New-RandomSecret)
 Set-EnvironmentValue $environmentFile "OPENMONETIS_URL" $publicUrl
 Set-EnvironmentValue $environmentFile "BETTER_AUTH_URL" $publicUrl
 Set-EnvironmentValue $environmentFile "WEB_URL" $publicUrl

@@ -42,6 +42,7 @@ Padronização é obrigatória e verificada por inspeção — nenhuma feature n
 OpenMonetis/
 ├─ apps/
 │  ├─ api          # Hono backend core
+│  ├─ ai           # serviço interno opcional das CLIs de IA (sem acesso ao banco)
 │  ├─ web          # TanStack Start
 ├─ packages/
 │  ├─ db           # Drizzle schema + client

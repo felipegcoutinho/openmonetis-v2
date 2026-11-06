@@ -119,5 +119,126 @@ test("authenticated users cannot read or mutate foreign financial resources", {
         );
       },
     );
+    await t.test(
+      "AI diagnoses, chats, data sharing and tools stay private to their owner",
+      async () => {
+        const { db, aiChatMessages, aiChats, aiDataSharing, aiDiagnoses } = await import(
+          "@openmonetis/db"
+        );
+        const { calculateFinancialHealth } = await import("@openmonetis/domain/ai-diagnoses");
+        const { eq } = await import("drizzle-orm");
+        const health = calculateFinancialHealth({
+          history: [{ period: "2020-01", income: 1_000, expenses: 700 }],
+          totalBalance: 2_000,
+          expenseCategories: [],
+          attention: { critical: 0, warning: 0 },
+        });
+        const completedAt = new Date();
+        const [diagnosis] = await db
+          .insert(aiDiagnoses)
+          .values({
+            userId: owner.id,
+            period: "2020-01",
+            provider: "claude",
+            voice: "sarcastic",
+            status: "completed",
+            health,
+            result: {
+              headline: "Owned",
+              summary: "Private",
+              sections: [],
+              charts: [],
+              actions: [],
+            },
+            completedAt,
+          })
+          .returning();
+        const [chat] = await db
+          .insert(aiChats)
+          .values({ userId: owner.id, title: "Owned", period: "2020-01", provider: "claude" })
+          .returning();
+        await db.insert(aiChatMessages).values([
+          {
+            chatId: chat.id,
+            userId: owner.id,
+            role: "user",
+            content: "Private question",
+            status: "completed",
+            completedAt,
+          },
+          {
+            chatId: chat.id,
+            userId: owner.id,
+            role: "assistant",
+            content: "Private answer",
+            status: "completed",
+            provider: "claude",
+            completedAt,
+          },
+        ]);
+        await db.insert(aiDataSharing).values({ userId: owner.id, scopes: ["transactions"] });
+
+        const diagnosisPath = `/ai-diagnoses/${diagnosis.id}`;
+        const chatPath = `/ai-chats/${chat.id}`;
+        const ownerDiagnosis = await (await api.request(diagnosisPath, owner)).text();
+        const ownerChat = await (await api.request(chatPath, owner)).text();
+        assert.match(ownerDiagnosis, /Private/);
+        assert.match(ownerChat, /Private answer/);
+
+        await api.error(await api.request(diagnosisPath, stranger), 404);
+        await api.error(await api.request(`${diagnosisPath}/cancel`, stranger, "POST"), 404);
+        await api.error(await api.request(diagnosisPath, stranger, "DELETE"), 404);
+        await api.error(await api.request(chatPath, stranger), 404);
+        await api.error(await api.request(chatPath, stranger, "PATCH", { title: "Stolen" }), 404);
+        await api.error(await api.request(chatPath, stranger, "DELETE"), 404);
+        await api.error(
+          await api.request(`${chatPath}/messages`, stranger, "POST", {
+            content: "Leak it",
+            provider: "claude",
+          }),
+          404,
+        );
+        await api.error(
+          await api.request(`${chatPath}/regenerate`, stranger, "POST", { provider: "claude" }),
+          404,
+        );
+
+        const strangerDiagnoses = await api.data<{ items: Array<{ id: string }> }>(
+          await api.request("/ai-diagnoses", stranger),
+        );
+        const strangerChats = await api.data<{ items: Array<{ id: string }> }>(
+          await api.request("/ai-chats", stranger),
+        );
+        assert.deepEqual(strangerDiagnoses.items, []);
+        assert.deepEqual(strangerChats.items, []);
+
+        // Another person's sharing choices and history deletion never reach the owner's data.
+        const strangerSharing = await api.data<{ scopes: string[] }>(
+          await api.request("/ai-data-sharing", stranger),
+        );
+        assert.deepEqual(strangerSharing.scopes, []);
+        await api.data(await api.request("/ai-data-sharing", stranger, "PUT", { scopes: [] }));
+        await api.data(await api.request("/ai-data-sharing/history", stranger, "DELETE"));
+        const [ownerSharing] = await db
+          .select()
+          .from(aiDataSharing)
+          .where(eq(aiDataSharing.userId, owner.id));
+        assert.deepEqual(ownerSharing?.scopes, ["transactions"]);
+        assert.equal(await (await api.request(diagnosisPath, owner)).text(), ownerDiagnosis);
+        assert.equal(await (await api.request(chatPath, owner)).text(), ownerChat);
+
+        // Only the first account administers the AI service's CLI builds.
+        await api.error(await api.request("/ai-tools/events", stranger), 403, "ai_tools_forbidden");
+        await api.error(
+          await api.request("/ai-tools/claude/installs", stranger, "POST", { version: "9.9.9" }),
+          403,
+          "ai_tools_forbidden",
+        );
+        const strangerTools = await api.data<{ allowed: boolean }>(
+          await api.request("/ai-tools", stranger),
+        );
+        assert.equal(strangerTools.allowed, false);
+      },
+    );
   });
 });

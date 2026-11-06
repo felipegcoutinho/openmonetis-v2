@@ -124,6 +124,22 @@ Configure as duas variáveis juntas ou deixe ambas vazias. O callback autorizado
 Configure as duas variáveis para habilitar completamente a busca e a exibição de logos. Se não usar
 a integração, deixe ambas vazias.
 
+## Assistente de IA
+
+| Variável | Serviço | Descrição |
+| --- | --- | --- |
+| `AI_ENABLED` | API | `true` habilita o assistente de IA (diagnóstico e chat). O padrão é `false`. Aceita apenas `true` ou `false`. |
+| `AI_SERVICE_URL` | API | Endereço interno do serviço `openmonetis-ai`. No Compose, `http://ai:7003`; localmente, `http://localhost:7003`. |
+| `AI_SERVICE_SECRET` | API e `ai` | Segredo compartilhado que autentica a API no serviço de IA. Obrigatório quando `AI_ENABLED=true`. |
+| `AI_HOME_SECRET` | API | Deriva o identificador opaco da pasta de login de cada pessoa. Alterá-lo desvincula todos os logins existentes. |
+| `AI_HOMES_DIR` | `ai` | Pasta dos logins das assinaturas. No container, `/data/homes` (volume `OMv2_ai_homes`). |
+| `AI_TOOLS_DIR` | `ai` | Pasta das versões das CLIs instaladas por quem administra. No container, `/data/tools` (volume `OMv2_ai_tools`); em desenvolvimento, `apps/ai/.ai-tools/`. |
+| `AI_PORT` | `ai` | Porta interna do serviço. O padrão é `7003`. |
+| `CLAUDE_BIN`, `CODEX_BIN`, `ANTIGRAVITY_BIN` | `ai` | Caminho opcional das CLIs da imagem quando não estão no `PATH` (padrões `claude`, `codex` e `agy`). Versões instaladas em Ajustes têm prioridade. |
+
+O serviço `ai` só sobe com `docker compose --profile ai up -d`. Use segredos exclusivos, diferentes
+dos demais. Consulte o [assistente de IA](ai-diagnoses.md) para o fluxo completo.
+
 ## Configurações de execução
 
 | Variável | Serviço | Padrão | Descrição |

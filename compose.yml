@@ -48,6 +48,10 @@ services:
       LOGO_DEV_PUBLISHABLE_KEY: ${LOGO_DEV_PUBLISHABLE_KEY}
       LOGO_DEV_SECRET_KEY: ${LOGO_DEV_SECRET_KEY}
       PERSON_CONNECTION_SECRET: ${PERSON_CONNECTION_SECRET}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_SERVICE_URL: http://ai:7003
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET:-}
+      AI_HOME_SECRET: ${AI_HOME_SECRET:-}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_BUCKET: ${S3_BUCKET}
       S3_ENDPOINT: ${S3_ENDPOINT}
@@ -74,6 +78,22 @@ services:
       migrator:
         condition: service_completed_successfully
 
+  # Optional: hosts the Claude Code, Codex and Antigravity CLIs for the AI assistant. Enable with
+  # `docker compose --profile ai up -d` and AI_ENABLED=true. Not published on any host port.
+  ai:
+    image: ghcr.io/felipegcoutinho/openmonetis-ai:${OPENMONETIS_VERSION}
+    profiles: ["ai"]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET:-}
+    volumes:
+      - OMv2_ai_homes:/data/homes
+      - OMv2_ai_tools:/data/tools
+
   web:
     image: ghcr.io/felipegcoutinho/openmonetis-web:${OPENMONETIS_VERSION}
     restart: unless-stopped
@@ -91,3 +111,5 @@ services:
 
 volumes:
   OMv2_db:
+  OMv2_ai_homes:
+  OMv2_ai_tools:

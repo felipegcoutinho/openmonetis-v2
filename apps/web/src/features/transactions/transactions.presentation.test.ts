@@ -13,6 +13,7 @@ import {
   getTransactionSettlementAction,
   getTransactionSettlementLabel,
   groupTransactionRows,
+  labelTransactionExportFileName,
   selectBulkTransactionIds,
   validateTransactionsSearch,
 } from "./transactions.presentation";
@@ -235,4 +236,19 @@ test("bulk action hints show partial reach and why an action is unavailable", ()
   const unavailable = describeBulkTransactionAction("unsettle", { count: 0, total: 2 });
   assert.equal(unavailable.available, false);
   assert.equal(unavailable.hint, "Marcar em aberto · nenhum selecionado está pago");
+});
+
+test("transaction export file names include the scoped label as a slug", () => {
+  assert.equal(
+    labelTransactionExportFileName("lancamentos-2026-11.xlsx", "João da Silva"),
+    "lancamentos-joao-da-silva-2026-11.xlsx",
+  );
+  assert.equal(
+    labelTransactionExportFileName("lancamentos-2026-11.csv"),
+    "lancamentos-2026-11.csv",
+  );
+  assert.equal(
+    labelTransactionExportFileName("lancamentos-2026-11.csv", "!!!"),
+    "lancamentos-2026-11.csv",
+  );
 });

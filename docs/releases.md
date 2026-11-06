@@ -70,12 +70,12 @@ história da `main`, repete a CI e confere os metadados novamente. Cada imagem �
 separadamente em runners nativos `ubuntu-24.04` (AMD64) e `ubuntu-24.04-arm` (ARM64), sem QEMU,
 com cache independente por imagem e arquitetura.
 
-Os seis builds enviam imagens ao GHCR somente por digest. Depois que todos concluem com sucesso,
+Os oito builds (API, web, migrator e `ai`, em duas arquiteturas) enviam imagens ao GHCR somente por digest. Depois que todos concluem com sucesso,
 o workflow reúne os dois digests de cada imagem em um manifesto, publica as tags `X.Y.Z`, `X.Y`,
 `X`, `sha-<commit>` e `latest` e verifica as duas arquiteturas. Uma falha de build impede a
-atualização das tags de todas as imagens. A publicação dos três manifestos não é uma operação
+atualização das tags de todas as imagens. A publicação dos quatro manifestos não é uma operação
 atômica do registry; falhas nessa etapa precisam ser verificadas antes de atualizar uma instalação.
-A GitHub Release só é criada após os três manifestos serem publicados e verificados, com as notas
+A GitHub Release só é criada após os quatro manifestos serem publicados e verificados, com as notas
 extraídas do changelog.
 
 ```bash

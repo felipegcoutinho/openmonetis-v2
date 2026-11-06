@@ -63,6 +63,7 @@ type TransactionsScope = {
   periodNavigationPlacement?: "afterPageHeader" | "afterSummary";
   contentNavigation?: ReactNode;
   contentOverride?: ReactNode;
+  export?: { fileLabel: string };
 };
 
 export function TransactionsContainer({
@@ -154,10 +155,10 @@ export function TransactionsContainer({
     <>
       <TransactionsScreen
         onExport={
-          !scope
+          !scope || scope.export
             ? (format) =>
                 exportMutation.mutate(
-                  { search: transactionsSearch, format },
+                  { search: transactionsSearch, format, fileLabel: scope?.export?.fileLabel },
                   {
                     onSuccess: () => toast.success("Lançamentos exportados"),
                     onError: () =>

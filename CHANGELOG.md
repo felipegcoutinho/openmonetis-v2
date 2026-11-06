@@ -9,6 +9,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Documentação do assistente de IA: o guia de produção ganha a seção **Assistente de IA
+  (opcional)**, com `COMPOSE_PROFILES=ai`, volumes, segredos e checklist; README, arquitetura,
+  variáveis de ambiente, releases (quatro imagens), testes e contribuição passam a descrever o
+  diagnóstico, o chat, o serviço `apps/ai` e a atualização das CLIs pela interface.
 - Cada item de **Precisa de atenção** mostra, antes do nome, o logo do cartão nas faturas e o
   ícone da categoria em contas a pagar e orçamentos; `GET /dashboard/attention` passa a devolver
   `logo` e `categoryIcon` em cada item.
@@ -20,6 +24,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   campo, operador e valor, o modo **Todas precisam coincidir**/**Basta uma coincidir** fica junto
   das condições com o conector **e**/**ou** entre elas, e **Adicionar condição** passa para o fim
   da lista.
+- Cada assistente de IA conectado em Ajustes mostra o e-mail da conta usada no Claude e no
+  Codex, lido ao vivo da CLI do provedor e sem ser guardado pelo OpenMonetis; o Antigravity
+  continua exibindo apenas o status, pois a CLI não informa a conta.
+- Tela inicial do chat com IA sem barra de rolagem horizontal: as sugestões viram cartões com
+  ícone em grade de duas colunas, o período consultado ganha destaque e o título fica mais
+  evidente.
 - Ajustes do Companion reunidos em uma única seção, **Companion para Android**: a lista de
   aparelhos autorizados fica no topo, os passos de conexão ficam em **Como conectar**, recolhível
   e aberto automaticamente enquanto nenhum aparelho estiver conectado, e os atalhos de ajuda e da
@@ -27,14 +37,37 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Cada aparelho autorizado mostra se já está conectado ou aguardando conexão, separa último uso,
   capturas recentes e validade com ícones, destaca o vencimento próximo como alerta e explica as
   ações de renovar e revogar com dicas ao passar o cursor.
+- Janela de conexão do assistente de IA reorganizada em etapas numeradas: o logo do provedor no
+  título, o tempo restante do login em destaque, o botão de login abaixo da instrução, o campo do
+  código dentro da segunda etapa com botão **Colar**, e as ações **Cancelar** e
+  **Conectar** com o nome do provedor.
 - Resumo dos compromissos com títulos curtos, mês abaixo do valor e status ao lado do percentual
   para manter os indicadores alinhados.
 - Títulos dos cards de Distribuição financeira e Compromissos futuros seguem o padrão do
   dashboard, com fonte, tamanho e peso uniformes e ícones alinhados ao título.
 - Títulos dos cards do dashboard padronizados, com a mesma tipografia, tamanho, peso e ícones.
+- Títulos dos cards do diagnóstico com IA padronizados com a mesma tipografia e ícone à esquerda,
+  incluindo saúde financeira, indicadores, análise, gráficos e próximos passos.
+- Título do progresso do diagnóstico padronizado com os demais cards, com fonte maior e ícone.
 - Fonte mono aplicada a rótulos de campos, cabeçalhos de tabelas, status e metadados da
   interface, incluindo Companion, Ajustes e dashboard; valores e conteúdo principal mantêm
   a tipografia existente.
+- Ajustes do assistente de IA reorganizados em seções próprias: conexões (com status visível,
+  rótulo do modelo padrão e botão **Desconectar** com texto), ferramentas, permissões de dados
+  (em duas colunas, detalhes de privacidade sempre visíveis num card discreto, alerta ao liberar
+  todos os dados e opção de descartar alterações) e histórico de IA no mesmo formato de linhas das demais configurações.
+- Diagnóstico com IA mais claro: o progresso mostra o logo do provedor, os dados realmente
+  enviados conforme as permissões e o tempo esperado de cada provedor (até 4 minutos no
+  Antigravity); seções da análise com ícone e tom escritos, sem depender só da cor; botão
+  **Gerar diagnóstico** também no estado vazio; **Parar análise** só no card de progresso; e
+  **Gerar novo** avisa que o diagnóstico anterior fica no histórico. No celular, os controles do
+  cabeçalho ficam em duas colunas.
+- Chat com IA: conversa aberta mostra o mês dos dados em qualquer tela e esconde a navegação de
+  mês, que vale para novas conversas; atalho de permissões e menu de cada conversa com área de
+  toque maior; erros ao carregar diagnóstico ou conversa oferecem **Tentar novamente**.
+- Títulos longos na lista de conversas truncados com reticências, mantendo o botão de ações visível.
+- Cards de saúde financeira, indicadores e progresso do diagnóstico com IA com espaçamento
+  vertical mais compacto.
 - Seletor de frequência dos lançamentos explica os intervalos bimestral, trimestral, semestral
   e anual com o texto breve “A cada 2/3/6/12 meses”.
 - Node das imagens Docker e do CI atualizado para 22.23.4; TypeScript 7 e `@types/node` 26
@@ -42,6 +75,92 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   menores mais recentes (React 19.3.1, TanStack Query, AWS SDK, Drizzle, Tailwind, Playwright,
   oxlint, lucide-react, Base UI e outras). O Biome fica na linha 2.5 (2.5.15) até a adoção da
   formatação de Markdown/YAML e das novas regras da 2.6.
+
+### Adicionado
+
+- Estilo de escrita no diagnóstico com IA: **Equilibrado** (padrão), **Direto**, **Motivador**,
+  **Sarcástico** e **Bronca**, escolhido ao lado do modelo. O estilo muda só o texto; números,
+  gravidade das seções e botões de ação continuam iguais. O estilo vale em qualquer mês e no texto
+  inteiro (título, resumo, todas as seções e motivos das ações), sempre com o fato e o próximo
+  passo explícitos nos pontos críticos. A tela lembra o último estilo usado. `POST /ai-diagnoses` aceita `voice` opcional e cada diagnóstico guarda
+  o estilo em `voice`.
+- Os mesmos estilos no chat do assistente de IA, escolhidos no compositor ao lado do modelo; as
+  mensagens e "Responder de novo" aceitam `voice` opcional.
+- Atualização das ferramentas do assistente de IA pela interface, em **Ajustes › Integrações ›
+  Assistente de IA**, só para quem administra a instalação (a primeira conta criada): a versão
+  em uso aparece abaixo da conta de cada assistente, com as ações de atualizar e voltar.
+  Versões estáveis do Claude Code, do Codex e do Antigravity vêm das origens oficiais, com pelo
+  menos 3 dias de publicação, assinatura do npm conferida com chave fixada, SHA-512 verificado,
+  teste das opções usadas e, se você quiser, um teste curto com a sua conta antes de ativar.
+  As versões ficam somente leitura no volume `OMv2_ai_tools`; dá para voltar para a anterior ou
+  para a da imagem, nenhuma versão em uso é apagada e cada mudança fica no histórico, aberto pelo
+  botão **Histórico de mudanças** em uma janela com todas as mudanças e o motivo das que falharam.
+- Privacidade do assistente de IA: prévia **Ver dados enviados** com o objeto exato que vai ao
+  provedor, prazo de retenção de conversas e diagnósticos (30 dias, 90 dias, 1 ano ou até apagar;
+  90 dias por padrão) com limpeza automática, botão para apagar todo o histórico de IA e telemetria
+  das CLIs do Claude e do Codex desligada.
+- Antigravity (Google) como terceiro assistente de IA, com a própria conta Google de cada pessoa
+  pela CLI oficial `agy`: login com contador de 1 minuto, escolha de modelo, diagnósticos e chat.
+  As respostas vêm de um agente sem ferramentas, e a imagem Docker fixa a versão da CLI por
+  checksum.
+- Diagnóstico com IA em **Relatórios › Diagnóstico com IA**: pontuação de saúde financeira,
+  indicadores (poupança, reserva, tendência das despesas, concentração por categoria e alertas),
+  texto explicativo, gráficos escolhidos pela IA e atalhos para orçamentos, categorias, faturas,
+  contas a pagar, recorrentes e metas. Os números são calculados pelo OpenMonetis; a IA só escreve a
+  análise e nenhuma sugestão altera dados sozinha. Durante a geração, a página mostra as etapas, o
+  tempo decorrido e o botão **Parar análise**, que encerra a CLI na hora; diagnósticos do
+  histórico podem ser apagados.
+- Permissões de dados da IA em **Ajustes › Integrações › Assistente de IA**. Por padrão o
+  diagnóstico envia só totais, indicadores e valores por categoria, com os nomes das categorias
+  trocados por “Categoria 1”, “Categoria 2”… e restaurados no relatório. Cada caixa libera mais
+  dados (nomes das categorias, lançamentos do mês, pessoas, anotações, contas e cartões,
+  orçamentos e metas), e **Liberar todos os dados** envia tudo, com aviso de privacidade. Cada
+  relatório informa quais dados foram enviados.
+- Aba **Conversar** em **Relatórios › Diagnóstico com IA**: chat com o assistente e o modelo
+  escolhidos sobre os dados do mês, com respostas em streaming e Markdown, raciocínio do modelo
+  recolhível, sugestões de perguntas, parar resposta, copiar, responder de novo e histórico de
+  conversas (renomear e apagar). Segue as mesmas permissões de dados do diagnóstico e foi montado
+  com os componentes AI Elements do shadcn.
+- Relatório do diagnóstico com IA sempre em grade 2×2: novo gráfico **Saldo do mês** (receitas
+  menos despesas, também para diagnósticos antigos) e selo nos gráficos citados pela análise.
+  **Próximos passos** ganhou ícone e destino de cada sugestão, numeração e contagem; seletores de
+  assistente e modelo mostram o logo do provedor, e números, modelos e rótulos usam a fonte mono.
+- Conexão da própria assinatura de Claude (Pro ou Max) ou ChatGPT (Codex) em **Ajustes ›
+  Integrações › Assistente de IA**, com consentimento explícito e login no fluxo oficial de cada
+  fornecedor, sem chave de API. Cada assistente mostra o logo e permite escolher o modelo padrão
+  entre os liberados pela assinatura; o modelo também pode ser trocado a cada diagnóstico, e o
+  relatório e o histórico exibem o assistente e o modelo usados.
+- Serviço opcional `openmonetis-ai` (imagem `ghcr.io/felipegcoutinho/openmonetis-ai`, profile
+  `ai` do Compose), que hospeda as CLIs oficiais com versão fixa e guarda os logins em um volume
+  próprio, em uma pasta por pessoa.
+- Respostas do assistente de IA sempre sem ferramentas: o Codex roda sem terminal, leitura de
+  imagens, navegador, web search e plugins, e qualquer tentativa de ler arquivos, rodar comandos
+  ou chamar ferramentas interrompe a resposta como falha; o chat também avisa ao modelo que ele
+  não tem ferramentas, para recusar esses pedidos em vez de inventar uma saída.
+
+### Notas de atualização
+
+- Migration `0021_ai_diagnoses` cria as tabelas `ai_provider_connections` e `ai_diagnoses`;
+  `0022_ai_models` adiciona o modelo preferido da conexão e o modelo pedido e usado em cada
+  diagnóstico; `0023_ai_diagnosis_cancel` adiciona o motivo de falha `canceled`;
+  `0024_ai_data_sharing` cria a tabela `ai_data_sharing` e guarda as permissões usadas em cada
+  diagnóstico; `0025_ai_chats` cria `ai_chats` e `ai_chat_messages`; `0026_ai_antigravity`
+  adiciona o provedor `antigravity`; `0027_ai_data_retention` adiciona o prazo de retenção
+  (90 dias por padrão); `0028_ai_tool_events` cria o histórico `ai_tool_events` das ferramentas;
+  `0029_ai_diagnosis_voice` adiciona o estilo `voice` de cada diagnóstico.
+- Novas variáveis `AI_ENABLED`, `AI_SERVICE_URL`, `AI_SERVICE_SECRET` e `AI_HOME_SECRET`; o recurso
+  fica desligado até `AI_ENABLED=true` e `docker compose --profile ai up -d`. Instalações existentes
+  devem gerar os dois segredos manualmente (veja `docs/ai-diagnoses.md`).
+- Novos contratos `GET /ai-providers`, `POST /ai-providers/{provider}/logins`,
+  `GET /ai-providers/{provider}/logins/{loginId}`,
+  `POST /ai-providers/{provider}/logins/{loginId}/code`, `PATCH /ai-providers/{provider}`,
+  `DELETE /ai-providers/{provider}`,
+  `GET /ai-diagnoses`, `POST /ai-diagnoses`, `GET /ai-diagnoses/{id}`,
+  `POST /ai-diagnoses/{id}/cancel`, `DELETE /ai-diagnoses/{id}`, `GET /ai-data-sharing`,
+  `PUT /ai-data-sharing`, `GET`/`POST /ai-chats`, `GET`/`PATCH`/`DELETE /ai-chats/{id}` e
+  `POST /ai-chats/{id}/messages` e `/regenerate` (respostas em server-sent events).
+- O serviço de IA ganhou `POST /homes/{homeId}/providers/{provider}/chats` (NDJSON); o Codex
+  responde pelo `codex app-server` para transmitir o texto enquanto é escrito.
 
 ### Corrigido
 
@@ -56,6 +175,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   despesas, evitando duplicar as compras do cartão em **Transf. bancária** e outras formas.
 - Seletor de conta da baixa exibe nome e logo da conta selecionada em vez do UUID,
   incluindo a identificação visual nas opções.
+- Assistente de IA lê todos os lançamentos do mês até o limite de 300, em vez de só os 100
+  primeiros, e entende que compras no cartão contam no mês da fatura.
 
 ### Segurança
 

@@ -148,6 +148,69 @@
       "when": 1793364807361,
       "tag": "0020_user_start_page",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793633566244,
+      "tag": "0021_ai_diagnoses",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793636914365,
+      "tag": "0022_ai_models",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793638027640,
+      "tag": "0023_ai_diagnosis_cancel",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793639208433,
+      "tag": "0024_ai_data_sharing",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793641758465,
+      "tag": "0025_ai_chats",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793649510274,
+      "tag": "0026_ai_antigravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793653883444,
+      "tag": "0027_ai_data_retention",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793731020223,
+      "tag": "0028_ai_tool_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793827528179,
+      "tag": "0029_ai_diagnosis_voice",
+      "breakpoints": true
     }
   ]
 }

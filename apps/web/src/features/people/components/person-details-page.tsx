@@ -132,6 +132,7 @@ function getPersonTransactionsScope(
     personIds: [person.id],
     allowCreate: selectedView === "transactions" && person.status === "active",
     createDefaults: { personId: person.id },
+    export: { fileLabel: person.name },
     header: {
       breadcrumbs: [
         { label: "Visão geral", href: "/dashboard" },

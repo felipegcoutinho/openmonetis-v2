@@ -27,6 +27,10 @@ pnpm db:migrate
 pnpm dev
 ```
 
+`pnpm dev` também sobe o serviço de IA na porta `7003`. Para usar o assistente localmente, instale
+as CLIs `claude`, `codex` ou `agy`, defina `AI_ENABLED=true` no `.env` e veja o
+[guia do assistente de IA](docs/ai-diagnoses.md#desenvolvimento-local).
+
 ## Regras de implementação
 
 - UI não acessa banco nem implementa regra financeira.

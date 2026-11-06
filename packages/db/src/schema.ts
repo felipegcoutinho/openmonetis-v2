@@ -1,3 +1,24 @@
+import {
+  aiChatFailureCodes,
+  aiChatMessageRoles,
+  aiChatMessageStatuses,
+} from "@openmonetis/domain/ai-chats";
+import { aiDataScopes, defaultAiDataRetentionDays } from "@openmonetis/domain/ai-data-sharing";
+import {
+  type AiDiagnosisActionKind,
+  type AiDiagnosisChartKind,
+  type AiDiagnosisSectionTone,
+  aiDiagnosisFailureCodes,
+  aiDiagnosisStatuses,
+  aiDiagnosisVoices,
+  type FinancialHealth,
+} from "@openmonetis/domain/ai-diagnoses";
+import { aiProviders } from "@openmonetis/domain/ai-providers";
+import {
+  aiToolEventActions,
+  aiToolEventStatuses,
+  aiToolFailureCodes,
+} from "@openmonetis/domain/ai-tools";
 import type {
   DueDateAdjustmentDetails,
   DueDateRuleVersion,
@@ -1386,6 +1407,145 @@ export const externalExpenses = pgTable(
   ],
 );
 
+export const aiProvider = pgEnum("ai_provider", aiProviders);
+export const aiDiagnosisStatus = pgEnum("ai_diagnosis_status", aiDiagnosisStatuses);
+export const aiDiagnosisFailureCode = pgEnum("ai_diagnosis_failure_code", aiDiagnosisFailureCodes);
+export const aiDiagnosisVoice = pgEnum("ai_diagnosis_voice", aiDiagnosisVoices);
+export const aiDataScope = pgEnum("ai_data_scope", aiDataScopes);
+export const aiChatMessageRole = pgEnum("ai_chat_message_role", aiChatMessageRoles);
+export const aiChatMessageStatus = pgEnum("ai_chat_message_status", aiChatMessageStatuses);
+export const aiChatFailureCode = pgEnum("ai_chat_failure_code", aiChatFailureCodes);
+export const aiToolEventAction = pgEnum("ai_tool_event_action", aiToolEventActions);
+export const aiToolEventStatus = pgEnum("ai_tool_event_status", aiToolEventStatuses);
+export const aiToolFailureCode = pgEnum("ai_tool_failure_code", aiToolFailureCodes);
+
+export type AiDiagnosisResultRecord = {
+  headline: string;
+  summary: string;
+  sections: Array<{ title: string; body: string; tone: AiDiagnosisSectionTone }>;
+  charts: AiDiagnosisChartKind[];
+  actions: Array<{
+    kind: AiDiagnosisActionKind;
+    label: string;
+    reason: string;
+    categoryId: string | null;
+  }>;
+};
+
+/** Consent and connection record; the vendor sign-in itself lives only in the AI service. */
+export const aiProviderConnections = pgTable(
+  "ai_provider_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: aiProvider("provider").notNull(),
+    consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
+    preferredModel: varchar("preferred_model", { length: 80 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("ai_provider_connections_user_id_provider_unique").on(table.userId, table.provider),
+  ],
+);
+
+/** Data the person allows the AI diagnosis to send beyond the aggregates; none by default. */
+export const aiDataSharing = pgTable("ai_data_sharing", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  scopes: aiDataScope("scopes").array().notNull().default(sql`'{}'`),
+  /** Days AI chats and diagnoses are kept; null keeps them until the person deletes them. */
+  retentionDays: integer("retention_days").default(defaultAiDataRetentionDays),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const aiDiagnoses = pgTable(
+  "ai_diagnoses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    period: varchar("period", { length: 7 }).notNull(),
+    provider: aiProvider("provider").notNull(),
+    requestedModel: varchar("requested_model", { length: 80 }),
+    modelId: varchar("model_id", { length: 120 }),
+    modelName: varchar("model_name", { length: 120 }),
+    /** Permissions in force when the diagnosis was requested, shown with its result. */
+    sharedScopes: aiDataScope("shared_scopes").array().notNull().default(sql`'{}'`),
+    /** Writing style the person asked for; it applies to the whole text. */
+    voice: aiDiagnosisVoice("voice").notNull().default("balanced"),
+    status: aiDiagnosisStatus("status").notNull().default("pending"),
+    failureCode: aiDiagnosisFailureCode("failure_code"),
+    health: jsonb("health").$type<FinancialHealth>().notNull(),
+    result: jsonb("result").$type<AiDiagnosisResultRecord>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("ai_diagnoses_user_id_created_at_idx").on(table.userId, table.createdAt.desc()),
+    check(
+      "ai_diagnoses_status_payload_check",
+      sql`(${table.status} = 'pending' AND ${table.result} IS NULL AND ${table.failureCode} IS NULL AND ${table.completedAt} IS NULL) OR (${table.status} = 'completed' AND ${table.result} IS NOT NULL AND ${table.failureCode} IS NULL AND ${table.completedAt} IS NOT NULL) OR (${table.status} = 'failed' AND ${table.result} IS NULL AND ${table.failureCode} IS NOT NULL AND ${table.completedAt} IS NOT NULL)`,
+    ),
+  ],
+);
+
+/** A conversation about the person's finances; `period` is the month its data context covers. */
+export const aiChats = pgTable(
+  "ai_chats",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 120 }).notNull(),
+    period: varchar("period", { length: 7 }).notNull(),
+    provider: aiProvider("provider").notNull(),
+    model: varchar("model", { length: 80 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("ai_chats_user_id_updated_at_idx").on(table.userId, table.updatedAt.desc())],
+);
+
+export const aiChatMessages = pgTable(
+  "ai_chat_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chatId: uuid("chat_id")
+      .notNull()
+      .references(() => aiChats.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: aiChatMessageRole("role").notNull(),
+    content: text("content").notNull().default(""),
+    reasoning: text("reasoning"),
+    status: aiChatMessageStatus("status").notNull(),
+    failureCode: aiChatFailureCode("failure_code"),
+    provider: aiProvider("provider"),
+    modelId: varchar("model_id", { length: 120 }),
+    modelName: varchar("model_name", { length: 120 }),
+    sharedScopes: aiDataScope("shared_scopes").array().notNull().default(sql`'{}'`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("ai_chat_messages_chat_id_created_at_idx").on(table.chatId, table.createdAt),
+    index("ai_chat_messages_user_id_created_at_idx").on(table.userId, table.createdAt),
+  ],
+);
+
 export const backgroundJobCheckpoints = pgTable("background_job_checkpoints", {
   jobName: varchar("job_name", { length: 120 }).primaryKey(),
   lastCompletedDate: date("last_completed_date", { mode: "date" }).notNull(),
@@ -2383,4 +2543,27 @@ export const dueDateRuleVersions = pgTable(
     primaryKey({ columns: [table.userId, table.revision] }),
     check("due_date_rule_versions_revision_check", sql`${table.revision} > 0`),
   ],
+);
+
+/** Updates of the AI service's vendor CLIs, made by the installation admin. */
+export const aiToolEvents = pgTable(
+  "ai_tool_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: aiProvider("provider").notNull(),
+    action: aiToolEventAction("action").notNull(),
+    /** `null` stands for the version shipped with the image. */
+    fromVersion: varchar("from_version", { length: 32 }),
+    toVersion: varchar("to_version", { length: 32 }),
+    status: aiToolEventStatus("status").notNull(),
+    failureCode: aiToolFailureCode("failure_code"),
+    /** The AI service's install job, while its result is not known yet. */
+    jobId: uuid("job_id").unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [index("ai_tool_events_created_at_idx").on(table.createdAt)],
 );

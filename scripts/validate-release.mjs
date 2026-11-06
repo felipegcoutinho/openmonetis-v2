@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 
 const rootPackage = readJson("package.json");
 const workspacePackageFiles = [
+  "apps/ai/package.json",
   "apps/api/package.json",
   "apps/web/package.json",
   "packages/db/package.json",

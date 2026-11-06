@@ -1,0 +1,1 @@
+ALTER TYPE "public"."ai_diagnosis_failure_code" ADD VALUE 'canceled';

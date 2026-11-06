@@ -54,6 +54,10 @@ PERSON_CONNECTION_SECRET=<segredo-exclusivo>
 POSTGRES_PASSWORD=<senha-forte>
 ```
 
+Para o assistente de IA opcional, os instaladores já geram `AI_SERVICE_SECRET` e `AI_HOME_SECRET`.
+Em uma implantação manual, gere-os com o mesmo comando dos segredos da aplicação antes de definir
+`AI_ENABLED=true`; veja [Assistente de IA em produção](#assistente-de-ia-opcional).
+
 Se usar um PostgreSQL externo, defina `EXTERNAL_DATABASE_URL`. Para anexos, configure juntos
 `S3_BUCKET`, `S3_ACCESS_KEY_ID` e `S3_SECRET_ACCESS_KEY`; `S3_ENDPOINT` é necessário somente para
 serviços compatíveis que não usam o endpoint padrão da AWS.
@@ -126,6 +130,39 @@ vazio: com `DISABLE_SIGNUP=true`, o primeiro cadastro também é bloqueado.
 
 Para adicionar outra conta, reabra temporariamente o cadastro em acesso restrito, crie a conta e
 feche novamente. Não use o seed de dados demonstrativos para criar o primeiro usuário de produção.
+
+A primeira conta criada também é quem administra as ferramentas do assistente de IA: só ela vê e
+atualiza as versões das CLIs em **Ajustes › Integrações**.
+
+## Assistente de IA (opcional)
+
+O serviço `ai` hospeda as CLIs oficiais de Claude Code, Codex e Antigravity. Ele usa o profile `ai`
+do Compose, não publica porta no host e roda com sistema de arquivos somente leitura, gravando
+apenas nos volumes `OMv2_ai_homes` (logins de cada pessoa) e `OMv2_ai_tools` (versões das CLIs
+instaladas pela interface).
+
+1. Confirme que `AI_SERVICE_SECRET` e `AI_HOME_SECRET` estão preenchidos com valores exclusivos.
+2. Defina `AI_ENABLED=true` e `COMPOSE_PROFILES=ai` no `.env`. Com `COMPOSE_PROFILES`, os comandos
+   `docker compose pull` e `up -d` da atualização incluem o serviço sem precisar de `--profile ai`.
+3. Suba os serviços e confira a saúde do `ai`:
+
+```bash
+docker compose up -d
+docker compose ps ai
+docker compose logs ai
+```
+
+Cada pessoa conecta a própria assinatura em **Ajustes › Integrações › Assistente de IA**. Antes de
+liberar o recurso para outras pessoas, leia os termos de uso e a política de dados descritos no
+[guia do assistente de IA](ai-diagnoses.md).
+
+- `OMv2_ai_homes` contém os logins das assinaturas: trate-o como segredo, fora de backups sem
+  criptografia. Perdê-lo só exige que cada pessoa conecte de novo.
+- `OMv2_ai_tools` pode ser apagado a qualquer momento; as CLIs voltam às versões da imagem.
+- Trocar `AI_HOME_SECRET` desconecta todas as pessoas.
+- Para desligar o recurso, volte `AI_ENABLED=false`, remova `ai` de `COMPOSE_PROFILES` e recrie a
+  API. O histórico de diagnósticos e conversas continua no banco, sujeito ao prazo de retenção de
+  cada pessoa.
 
 ## HTTPS e proxy reverso
 
@@ -294,7 +331,9 @@ corretiva ou a restauração consciente de um backup.
 - o `recurring-worker` está em execução e sem falhas recorrentes nos logs;
 - migrations foram concluídas;
 - upload e download funcionam quando S3 está habilitado;
-- uma rotina externa confirma e monitora backups.
+- uma rotina externa confirma e monitora backups;
+- com o assistente de IA habilitado, o serviço `ai` aparece saudável e um assistente conectado
+  gera um diagnóstico.
 
 ## Checklist de produção
 
@@ -308,3 +347,5 @@ corretiva ou a restauração consciente de um backup.
 - [ ] Backup do banco e storage foi testado.
 - [ ] Uma versão explícita das imagens está configurada.
 - [ ] Logs e espaço em disco são monitorados.
+- [ ] Com o assistente de IA, os segredos `AI_*` são exclusivos, o serviço `ai` não tem porta
+      publicada e o volume `OMv2_ai_homes` fica fora de backups sem criptografia.

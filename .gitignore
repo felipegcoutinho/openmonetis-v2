@@ -32,6 +32,10 @@ todos.json
 # pnpm
 /.pnpm-store/
 
+# local AI provider sign-ins
+/apps/ai/.ai-homes/
+/apps/ai/.ai-tools/
+
 # test artifacts
 /coverage/
 /playwright-report/

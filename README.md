@@ -36,7 +36,10 @@
   configurado;
 - relatórios, dashboard mensal e widgets configuráveis;
 - importação por planilha e caixa de entrada do Companion Android com regras configuráveis de
-  categorização e pessoa.
+  categorização e pessoa;
+- assistente de IA opcional, com diagnóstico da saúde financeira do mês e chat sobre os seus dados,
+  usando a própria assinatura de Claude, ChatGPT (Codex) ou a conta Google (Antigravity) de cada
+  pessoa.
 
 ## Instalação rápida
 
@@ -76,6 +79,9 @@ Para publicar a aplicação com HTTPS, storage privado e segredos próprios, con
   fluxo de revisão do Companion.
 - O único cliente implementado neste monorepo é o web. O Companion Android é um projeto externo
   que usa os endpoints de integração documentados e não substitui um aplicativo mobile completo.
+- O assistente de IA vem desligado. Quando habilitado, os dados do mês saem da instalação para o
+  fornecedor da assinatura conectada, conforme as permissões que cada pessoa escolhe; veja o
+  [guia do assistente de IA](docs/ai-diagnoses.md).
 - A recuperação da instalação é operacional: preserve o PostgreSQL com `pg_dump`, o bucket de
   anexos e os segredos da implantação conforme o guia de produção.
 
@@ -140,6 +146,8 @@ detalhes e as convenções no [`guia de arquitetura`](docs/architecture.md).
 - [`docs/recurring-transactions.md`](docs/recurring-transactions.md): séries, versões, ocorrências e ações de recorrência;
 - [`docs/settlements.md`](docs/settlements.md): baixas efetivas, extratos e contas a pagar;
 - [`docs/due-date-rules.md`](docs/due-date-rules.md): calendário compartilhado, ajustes e exceções de vencimento;
+- [`docs/ai-diagnoses.md`](docs/ai-diagnoses.md): assistente de IA, permissões de dados, serviço
+  `openmonetis-ai` e atualização das CLIs;
 - [`docs/companion-api.md`](docs/companion-api.md): contrato do Companion;
 - [`docs/device-token-secret.md`](docs/device-token-secret.md): geração e rotação do segredo do Companion;
 - [`docs/releases.md`](docs/releases.md): preparação, validação e publicação de versões;

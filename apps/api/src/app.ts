@@ -1,4 +1,5 @@
 import { OpenAPIHono, z } from "@hono/zod-openapi";
+import { aiDiagnosisTransactionsLimit } from "@openmonetis/domain/ai-data-sharing";
 import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
 import { ok } from "@openmonetis/shared/api";
 import { ListTransactionsQuerySchema } from "@openmonetis/validators/transactions";
@@ -10,6 +11,11 @@ import { createRequireDeviceToken } from "./middlewares/device-auth";
 import { errorHandler, notFoundHandler } from "./middlewares/errors";
 import { createMutationRateLimit, privateCache, securityHeaders } from "./middlewares/security";
 import { accountsRepository, findAccountByIdForUser } from "./repositories/accounts.repository";
+import { aiChatsRepository } from "./repositories/ai-chats.repository";
+import { aiDataSharingRepository } from "./repositories/ai-data-sharing.repository";
+import { aiDiagnosesRepository } from "./repositories/ai-diagnoses.repository";
+import { aiProvidersRepository } from "./repositories/ai-providers.repository";
+import { aiToolsRepository } from "./repositories/ai-tools.repository";
 import { attachmentsRepository } from "./repositories/attachments.repository";
 import { billsRepository } from "./repositories/bills.repository";
 import { budgetsRepository } from "./repositories/budgets.repository";
@@ -55,6 +61,11 @@ import { settingsRepository } from "./repositories/settings.repository";
 import { listTagsByIdsForUser, tagsRepository } from "./repositories/tags.repository";
 import * as transactionsRepository from "./repositories/transactions.repository";
 import { createAccountsRoute } from "./routes/accounts";
+import { createAiChatsRoute } from "./routes/ai-chats";
+import { createAiDataSharingRoute } from "./routes/ai-data-sharing";
+import { createAiDiagnosesRoute } from "./routes/ai-diagnoses";
+import { createAiProvidersRoute } from "./routes/ai-providers";
+import { createAiToolsRoute } from "./routes/ai-tools";
 import { createAttachmentsRoute } from "./routes/attachments";
 import { createAuthConfigRoute } from "./routes/auth-config";
 import { createBillsRoute } from "./routes/bills";
@@ -87,6 +98,12 @@ import { createSettingsRoute } from "./routes/settings";
 import { createTagsRoute } from "./routes/tags";
 import { createTransactionsRoute } from "./routes/transactions";
 import { createAccountsService } from "./services/accounts.service";
+import { createAiChatsService } from "./services/ai-chats.service";
+import { createAiContextService } from "./services/ai-context.service";
+import { createAiDataSharingService } from "./services/ai-data-sharing.service";
+import { createAiDiagnosesService } from "./services/ai-diagnoses.service";
+import { createAiProvidersService } from "./services/ai-providers.service";
+import { createAiToolsService } from "./services/ai-tools.service";
 import { createAttachmentsService } from "./services/attachments.service";
 import { createAuthConfigService } from "./services/auth-config.service";
 import { createBillsService } from "./services/bills.service";
@@ -125,6 +142,7 @@ import { createSettingsService } from "./services/settings.service";
 import { createTagsService } from "./services/tags.service";
 import { createTransactionsService } from "./services/transactions.service";
 import type { ApiVariables } from "./types/context";
+import { aiServiceGateway } from "./utils/ai-service";
 import { assertProductionSecret, getRequiredProductionEnv, parseCsvEnv } from "./utils/env";
 import { logoDevGateway } from "./utils/logo-dev";
 import { validationHook } from "./utils/openapi";
@@ -151,12 +169,12 @@ app.openAPIRegistry.registerComponent("securitySchemes", "secureSessionCookie", 
 });
 const accountsService = createAccountsService(accountsRepository);
 const accountsRoute = createAccountsRoute(accountsService);
-const cardsRoute = createCardsRoute(
-  createCardsService(cardsRepository, undefined, dueDateRulesRepository),
-);
+const cardsService = createCardsService(cardsRepository, undefined, dueDateRulesRepository);
+const cardsRoute = createCardsRoute(cardsService);
 const budgetsService = createBudgetsService(budgetsRepository, categoriesRepository);
 const budgetsRoute = createBudgetsRoute(budgetsService);
-const goalsRoute = createGoalsRoute(createGoalsService(goalsRepository, accountsService));
+const goalsService = createGoalsService(goalsRepository, accountsService);
+const goalsRoute = createGoalsRoute(goalsService);
 const billsService = createBillsService(billsRepository, undefined, dueDateRulesRepository);
 const billsRoute = createBillsRoute(billsService);
 const categoriesRoute = createCategoriesRoute(createCategoriesService(categoriesRepository));
@@ -302,12 +320,68 @@ const inboxService = createInboxService(inboxRepository, {
   rulesRepository: inboxRulesRepository,
 });
 const inboxRoute = createInboxRoute(inboxService);
-const dashboardRoute = createDashboardRoute(
-  createDashboardService(dashboardRepository, accountsService, {
-    bills: billsService,
-    budgets: budgetsService,
-    inbox: inboxService,
-    invoices: invoicesService,
+const dashboardService = createDashboardService(dashboardRepository, accountsService, {
+  bills: billsService,
+  budgets: budgetsService,
+  inbox: inboxService,
+  invoices: invoicesService,
+});
+const dashboardRoute = createDashboardRoute(dashboardService);
+const aiProvidersService = createAiProvidersService(aiProvidersRepository, aiServiceGateway);
+const aiProvidersRoute = createAiProvidersRoute(aiProvidersService);
+const aiToolsRoute = createAiToolsRoute(createAiToolsService(aiToolsRepository, aiServiceGateway));
+const aiTransactionsPageSize = 100;
+const aiContextService = createAiContextService({
+  snapshots: dashboardService,
+  details: {
+    // Reads pages until the AI limit, so a busy month is not cut at the first page.
+    async listTransactions(userId, period) {
+      const items: Awaited<ReturnType<typeof transactionsService.listTransactions>>["items"] = [];
+      for (let page = 1; items.length < aiDiagnosisTransactionsLimit; page += 1) {
+        const result = await transactionsService.listTransactions(
+          userId,
+          {
+            period,
+            personIds: [],
+            categoryIds: [],
+            accountIds: [],
+            cardIds: [],
+            hasAttachments: false,
+            isDivided: false,
+            page,
+            pageSize: aiTransactionsPageSize,
+          },
+          false,
+        );
+        items.push(...result.items);
+        if (result.items.length < aiTransactionsPageSize || items.length >= result.total) break;
+      }
+      return items;
+    },
+    listAccounts: (userId, period) => accountsService.list(userId, period),
+    listCards: (userId, period) => cardsService.list(userId, period),
+    listBudgets: async (userId, period) => (await budgetsService.list(userId, { period })).items,
+    listGoals: (userId) => goalsService.list(userId),
+  },
+});
+const aiDataSharingService = createAiDataSharingService(aiDataSharingRepository, aiContextService);
+const aiDataSharingRoute = createAiDataSharingRoute(aiDataSharingService);
+const aiChatsRoute = createAiChatsRoute(
+  createAiChatsService({
+    repository: aiChatsRepository,
+    context: aiContextService,
+    providers: aiProvidersService,
+    runner: aiServiceGateway,
+    dataSharing: aiDataSharingService,
+  }),
+);
+const aiDiagnosesRoute = createAiDiagnosesRoute(
+  createAiDiagnosesService({
+    repository: aiDiagnosesRepository,
+    context: aiContextService,
+    providers: aiProvidersService,
+    runner: aiServiceGateway,
+    dataSharing: aiDataSharingService,
   }),
 );
 const inboxRulesRoute = createInboxRulesRoute(createInboxRulesService(inboxRulesRepository));
@@ -441,6 +515,71 @@ app.use("/dashboard", privateCache);
 app.use("/dashboard/*", privateCache);
 app.use("/dashboard", requireAuth);
 app.use("/dashboard/*", requireAuth);
+for (const path of [
+  "/ai-providers",
+  "/ai-providers/*",
+  "/ai-data-sharing",
+  "/ai-data-sharing/*",
+  "/ai-chats",
+  "/ai-chats/*",
+  "/ai-diagnoses",
+  "/ai-diagnoses/*",
+  "/ai-tools",
+  "/ai-tools/*",
+]) {
+  app.use(path, privateCache);
+  app.use(path, requireAuth);
+}
+app.use(
+  "/ai-providers/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 10,
+    key: (context) => `ai-providers:${context.get("userId")}`,
+  }),
+);
+app.use(
+  "/ai-tools/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 10,
+    key: (context) => `ai-tools:${context.get("userId")}`,
+  }),
+);
+app.use(
+  "/ai-chats/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 30,
+    key: (context) => `ai-chats:${context.get("userId")}`,
+  }),
+);
+for (const path of ["/ai-data-sharing", "/ai-data-sharing/*"]) {
+  app.use(
+    path,
+    createMutationRateLimit({
+      windowMs: 60_000,
+      max: 20,
+      key: (context) => `ai-data-sharing:${context.get("userId")}`,
+    }),
+  );
+}
+app.use(
+  "/ai-diagnoses",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 3,
+    key: (context) => `ai-diagnoses:${context.get("userId")}`,
+  }),
+);
+app.use(
+  "/ai-diagnoses/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 20,
+    key: (context) => `ai-diagnoses-changes:${context.get("userId")}`,
+  }),
+);
 app.use("/invoices", privateCache);
 app.use("/invoices/*", privateCache);
 app.use("/invoices", requireAuth);
@@ -625,6 +764,11 @@ app.route("/recurring-transactions", recurringTransactionsRoute);
 app.route("/recurring-expenses", recurringExpensesRoute);
 app.route("/transactions", transactionsRoute);
 app.route("/dashboard", dashboardRoute);
+app.route("/ai-providers", aiProvidersRoute);
+app.route("/ai-tools", aiToolsRoute);
+app.route("/ai-chats", aiChatsRoute);
+app.route("/ai-data-sharing", aiDataSharingRoute);
+app.route("/ai-diagnoses", aiDiagnosesRoute);
 app.route("/invoices", invoicesRoute);
 app.route("/establishments", establishmentsRoute);
 app.route("/attachments", attachmentsRoute);
@@ -724,5 +868,27 @@ app.doc("/openapi.json", {
 
 app.onError(errorHandler);
 app.notFound(notFoundHandler);
+
+const aiDataRetentionIntervalMs = 6 * 60 * 60_000;
+const aiDataRetentionFirstRunMs = 60_000;
+
+/**
+ * Deletes AI chats and diagnoses past each person's retention, shortly after start and every six
+ * hours. Each run is an idempotent delete, so several API instances may run it safely.
+ */
+export function startAiDataRetention() {
+  const purge = async () => {
+    try {
+      const deleted = await aiDataSharingService.purgeExpired(new Date());
+      if (deleted.chats || deleted.diagnoses) {
+        console.log(JSON.stringify({ event: "ai_data_retention_purged", ...deleted }));
+      }
+    } catch (error) {
+      console.error("AI data retention purge failed", error);
+    }
+  };
+  setTimeout(purge, aiDataRetentionFirstRunMs).unref();
+  setInterval(purge, aiDataRetentionIntervalMs).unref();
+}
 
 export { app };

@@ -1,6 +1,6 @@
 import type { ApiFailure, ApiSuccess } from "@openmonetis/shared/api";
 
-const apiUrl = "/api-proxy";
+export const apiUrl = "/api-proxy";
 
 type ApiErrorDetails = {
   code?: string;

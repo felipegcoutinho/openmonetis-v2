@@ -26,19 +26,27 @@ import {
   updateRecurringRule,
   updateTransaction,
 } from "./transactions.api";
-import { downloadTransactionExport } from "./transactions.presentation";
+import {
+  downloadTransactionExport,
+  labelTransactionExportFileName,
+} from "./transactions.presentation";
 
 export function useExportTransactionsMutation() {
   return useMutation({
     mutationFn: async ({
       search,
       format,
+      fileLabel,
     }: {
       search: TransactionsApiSearch;
       format: ExportTransactionsQuery["format"];
+      fileLabel?: string;
     }) => {
       const file = await exportTransactions(search, format);
-      downloadTransactionExport(file);
+      downloadTransactionExport({
+        ...file,
+        fileName: labelTransactionExportFileName(file.fileName, fileLabel),
+      });
       return { rowCount: file.rowCount };
     },
   });
