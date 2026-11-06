@@ -835,6 +835,7 @@ export const dashboardAttentionDueSoonDays = 7;
 export type DashboardAttentionInvoiceCandidate = {
   cardId: string;
   cardName: string;
+  logo?: string | null;
   period: string;
   dueDate: string;
   remainingAmount: number;
@@ -844,6 +845,7 @@ export type DashboardAttentionInvoiceCandidate = {
 export type DashboardAttentionBillCandidate = {
   id: string;
   name: string;
+  categoryIcon?: string | null;
   dueDate: string;
   amount: number;
   isSettled: boolean;
@@ -854,6 +856,7 @@ export type DashboardAttentionBudgetCandidate = {
   id: string;
   categoryId: string;
   categoryName: string;
+  categoryIcon?: string | null;
   usagePercentage: number;
   exceededAmount: number;
   status: "onTrack" | "warning" | "reached" | "exceeded";
@@ -869,6 +872,10 @@ export type DashboardAttentionItem = {
   kind: DashboardAttentionKind;
   severity: DashboardAttentionSeverity;
   title: string | null;
+  /** Card logo for invoices. */
+  logo: string | null;
+  /** Category icon for bills and budgets. */
+  categoryIcon: string | null;
   amount: number | null;
   dueDate: string | null;
   daysUntilDue: number | null;
@@ -924,6 +931,8 @@ export function buildDashboardAttentionItems(input: {
       kind: "invoice",
       severity,
       title: invoice.cardName,
+      logo: invoice.logo ?? null,
+      categoryIcon: null,
       amount: invoice.remainingAmount,
       dueDate: invoice.dueDate,
       daysUntilDue,
@@ -945,6 +954,8 @@ export function buildDashboardAttentionItems(input: {
       kind: "bill",
       severity,
       title: bill.name,
+      logo: null,
+      categoryIcon: bill.categoryIcon ?? null,
       amount: bill.amount,
       dueDate: bill.dueDate,
       daysUntilDue,
@@ -963,6 +974,8 @@ export function buildDashboardAttentionItems(input: {
       kind: "budget",
       severity: budget.status === "exceeded" ? "warning" : "info",
       title: budget.categoryName,
+      logo: null,
+      categoryIcon: budget.categoryIcon ?? null,
       amount: budget.status === "exceeded" ? budget.exceededAmount : null,
       dueDate: null,
       daysUntilDue: null,
@@ -980,6 +993,8 @@ export function buildDashboardAttentionItems(input: {
       kind: "inbox",
       severity: "info",
       title: null,
+      logo: null,
+      categoryIcon: null,
       amount: null,
       dueDate: null,
       daysUntilDue: null,

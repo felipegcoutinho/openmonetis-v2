@@ -106,7 +106,9 @@ function AdjustAccountBalanceForm({
       <form.Field name="balance">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-balance`}>Saldo correto</Label>
+            <Label className="font-mono" htmlFor={`${id}-balance`}>
+              Saldo correto
+            </Label>
             <CurrencyInput
               allowNegative
               id={`${id}-balance`}
@@ -122,7 +124,9 @@ function AdjustAccountBalanceForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
+            <Label className="font-mono" htmlFor={`${id}-date`}>
+              Data do ajuste
+            </Label>
             <DatePicker
               id={`${id}-date`}
               max={getMaximumAdjustmentDate(period)}

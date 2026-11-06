@@ -41,7 +41,7 @@ export function TransactionTypeBadge({ className, label, type }: TransactionType
   return (
     <Badge
       className={cn(
-        "h-6 gap-1.5 rounded-sm! px-2",
+        "h-6 gap-1.5 rounded-sm! px-2 font-mono",
         transactionTypeBadgeStyles[type],
         transactionTypeIconStyles[type],
         className,

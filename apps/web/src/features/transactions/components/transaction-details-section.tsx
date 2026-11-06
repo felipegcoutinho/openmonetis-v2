@@ -44,7 +44,7 @@ export function SectionTitle({
 export function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-4 border-b py-3 last:border-b-0">
-      <dt className="shrink-0 text-muted-foreground text-xs sm:text-sm">{label}</dt>
+      <dt className="font-mono shrink-0 text-muted-foreground text-xs sm:text-sm">{label}</dt>
       <dd className="flex min-w-0 items-center justify-end gap-2 break-words text-right text-xs sm:text-sm">
         {value}
       </dd>

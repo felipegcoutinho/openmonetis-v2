@@ -23,7 +23,7 @@ export function SummaryStrip({
       <dl className="flex flex-wrap items-center gap-x-8 gap-y-3 px-5 py-4">
         {items.map((item) => (
           <div className="grid min-w-0 gap-0.5" key={item.label}>
-            <dt className="text-muted-foreground text-xs">{item.label}</dt>
+            <dt className="font-mono text-muted-foreground text-xs">{item.label}</dt>
             <dd
               className={cn(
                 "font-medium tabular-nums",

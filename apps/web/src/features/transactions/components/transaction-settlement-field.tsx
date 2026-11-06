@@ -109,7 +109,7 @@ export function TransactionSettlementField({
         <form.Field name="boletoPaymentDate">
           {(field) => (
             <div className="grid gap-2">
-              <Label htmlFor={dateId}>
+              <Label className="font-mono" htmlFor={dateId}>
                 {values.type === "income" ? "Data do recebimento" : "Data do pagamento"}
               </Label>
               <MobileDatePicker

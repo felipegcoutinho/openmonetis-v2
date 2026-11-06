@@ -10,13 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
   commitmentStatusClassName,
   commitmentStatusLabel,
   commitmentStatusVariant,
   formatCommitmentPercentage,
-  formatCommitmentPeriod,
 } from "../commitments.presentation";
 
 export function CommitmentsTable({ report }: { report: CommitmentsOutput }) {
@@ -26,22 +26,24 @@ export function CommitmentsTable({ report }: { report: CommitmentsOutput }) {
       <Table aria-label="Compromissos por mês">
         <TableHeader>
           <TableRow>
-            <TableHead>Mês</TableHead>
-            <TableHead className="text-right">Parcelas</TableHead>
-            <TableHead className="text-right">Recorrentes</TableHead>
-            <TableHead className="text-right">Contas avulsas</TableHead>
-            {hasCredits ? <TableHead className="text-right">Estornos e descontos</TableHead> : null}
-            <TableHead className="text-right">Comprometido</TableHead>
-            <TableHead className="text-right">Receita prevista</TableHead>
-            <TableHead className="text-right">Folga</TableHead>
-            <TableHead className="text-right">% da receita</TableHead>
-            <TableHead>Situação</TableHead>
+            <TableHead className="font-mono">Mês</TableHead>
+            <TableHead className="font-mono text-right">Parcelas</TableHead>
+            <TableHead className="font-mono text-right">Recorrentes</TableHead>
+            <TableHead className="font-mono text-right">Contas avulsas</TableHead>
+            {hasCredits ? (
+              <TableHead className="font-mono text-right">Estornos e descontos</TableHead>
+            ) : null}
+            <TableHead className="font-mono text-right">Comprometido</TableHead>
+            <TableHead className="font-mono text-right">Receita prevista</TableHead>
+            <TableHead className="font-mono text-right">Folga</TableHead>
+            <TableHead className="font-mono text-right">% da receita</TableHead>
+            <TableHead className="font-mono">Situação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {report.months.map((month) => (
             <TableRow key={month.period}>
-              <TableHead scope="row">{formatCommitmentPeriod(month.period)}</TableHead>
+              <TableHead scope="row">{formatPeriod(month.period)}</TableHead>
               <TableCell className="text-right">
                 <MoneyValue amount={month.installmentsAmount} />
               </TableCell>

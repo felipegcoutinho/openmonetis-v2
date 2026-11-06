@@ -45,7 +45,7 @@ export function TransactionSplitSummary({
       )}
     >
       <div>
-        <p className="text-muted-foreground text-xs">Total do lançamento</p>
+        <p className="font-mono text-muted-foreground text-xs">Total do lançamento</p>
         <MoneyValue amount={total} className="font-semibold text-lg" />
       </div>
 

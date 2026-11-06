@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CategoryIcon } from "@/features/categories/category-icons";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
   formatInstallmentDate,
-  formatInstallmentPeriod,
   installmentPaymentMethodLabels,
 } from "../installments.presentation";
 
@@ -128,7 +128,7 @@ export function InstallmentDetailsDialog({
                       ) : (
                         <>
                           <CircleDashed aria-hidden="true" className="size-3" />
-                          {formatInstallmentPeriod(installment.period)} · sem vencimento informado
+                          {formatPeriod(installment.period)} · sem vencimento informado
                         </>
                       )}
                     </p>
@@ -150,7 +150,7 @@ export function InstallmentDetailsDialog({
 function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-mono text-muted-foreground text-xs">{label}</p>
       <MoneyValue amount={value} className="kpi-value mt-1" />
     </div>
   );

@@ -73,7 +73,9 @@ export function RecurrenceOccurrenceCountPicker({
       </PopoverTrigger>
       <PopoverContent title="Repetir por quantidade" align="end" className="w-72 gap-3 p-3">
         <div className="grid gap-1.5">
-          <Label htmlFor={`${id}-count`}>Quantidade de ocorrências</Label>
+          <Label className="font-mono" htmlFor={`${id}-count`}>
+            Quantidade de ocorrências
+          </Label>
           <Input
             id={`${id}-count`}
             inputMode="numeric"

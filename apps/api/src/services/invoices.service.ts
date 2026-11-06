@@ -33,6 +33,7 @@ import type {
   InvoicePaymentOutput,
   UpdateInvoiceDatesInput,
 } from "@openmonetis/validators/invoices";
+import { formatCurrency } from "../utils/currency";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
 type InvoiceCardRecord = {
@@ -539,10 +540,6 @@ function createInvoicePaymentNote(input: {
       ? `Saldo restante da fatura: ${formatCurrency(input.remainingAmount)}.`
       : "Fatura quitada integralmente.",
   ].join(" ");
-}
-
-function formatCurrency(amount: number) {
-  return amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function createInvoiceAdjustmentNote(previousAmount: number, currentAmount: number) {

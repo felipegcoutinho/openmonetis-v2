@@ -83,7 +83,7 @@ export function PreferencesDisplaySections({
               <div className="flex min-w-0 items-start gap-3">
                 <div>
                   <Label
-                    className="cursor-pointer normal-case font-sans text-sm tracking-normal"
+                    className="cursor-pointer normal-case font-mono text-sm tracking-normal"
                     htmlFor={privacyId}
                   >
                     Ocultar valores ao entrar

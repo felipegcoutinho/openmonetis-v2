@@ -128,7 +128,9 @@ function AddAccountYieldForm({
             <form.Field name="amount">
               {(field) => (
                 <div className="grid gap-1.5">
-                  <Label htmlFor={`${id}-amount`}>Valor do rendimento</Label>
+                  <Label className="font-mono" htmlFor={`${id}-amount`}>
+                    Valor do rendimento
+                  </Label>
                   <CurrencyInput
                     id={`${id}-amount`}
                     onValueChange={field.handleChange}
@@ -142,7 +144,9 @@ function AddAccountYieldForm({
             <form.Field name="balance">
               {(field) => (
                 <div className="grid gap-1.5">
-                  <Label htmlFor={`${id}-balance`}>Saldo atual na conta real</Label>
+                  <Label className="font-mono" htmlFor={`${id}-balance`}>
+                    Saldo atual na conta real
+                  </Label>
                   <CurrencyInput
                     allowNegative
                     id={`${id}-balance`}
@@ -162,7 +166,9 @@ function AddAccountYieldForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-date`}>Data do rendimento</Label>
+            <Label className="font-mono" htmlFor={`${id}-date`}>
+              Data do rendimento
+            </Label>
             <DatePicker
               id={`${id}-date`}
               max={getPeriodEndDateString(period)}

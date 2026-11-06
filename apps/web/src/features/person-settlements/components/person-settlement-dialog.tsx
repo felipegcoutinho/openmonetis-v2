@@ -103,7 +103,9 @@ function PersonSettlementForm({
       <form.Field name="amount">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-amount`}>Valor recebido</Label>
+            <Label className="font-mono" htmlFor={`${id}-amount`}>
+              Valor recebido
+            </Label>
             <CurrencyInput
               id={`${id}-amount`}
               onValueChange={field.handleChange}
@@ -116,7 +118,9 @@ function PersonSettlementForm({
       <form.Field name="receivedAt">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-date`}>Data do repasse</Label>
+            <Label className="font-mono" htmlFor={`${id}-date`}>
+              Data do repasse
+            </Label>
             <DatePicker
               id={`${id}-date`}
               max={getCurrentDateInBrazil()}
@@ -129,7 +133,9 @@ function PersonSettlementForm({
       <form.Field name="note">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-note`}>Observação (opcional)</Label>
+            <Label className="font-mono" htmlFor={`${id}-note`}>
+              Observação (opcional)
+            </Label>
             <Textarea
               id={`${id}-note`}
               onChange={(event) => field.handleChange(event.target.value)}

@@ -10,13 +10,13 @@ import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialo
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, parseCurrencyInput } from "@/features/accounts/accounts.presentation";
+import { PersonOption } from "@/features/people/components/person-option";
 import { InvoicesApiError } from "../invoices.api";
 
 type Props = {
@@ -131,7 +131,9 @@ function AdjustInvoiceForm({
       <form.Field name="amount">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-amount`}>Novo valor da fatura</Label>
+            <Label className="font-mono" htmlFor={`${id}-amount`}>
+              Novo valor da fatura
+            </Label>
             <CurrencyInput
               id={`${id}-amount`}
               onValueChange={field.handleChange}
@@ -145,14 +147,16 @@ function AdjustInvoiceForm({
           const selectedPerson = people.find((person) => person.id === field.state.value);
           return (
             <div className="grid gap-1.5">
-              <Label htmlFor={`${id}-person`}>Pessoa responsável</Label>
+              <Label className="font-mono" htmlFor={`${id}-person`}>
+                Pessoa responsável
+              </Label>
               <Select
                 onValueChange={(value) => value && field.handleChange(value)}
                 value={field.state.value}
               >
                 <SelectTrigger className="w-full" id={`${id}-person`}>
                   <SelectValue placeholder="Selecione uma pessoa">
-                    <PersonOption person={selectedPerson} />
+                    <PersonOption person={selectedPerson} placeholder="Selecione uma pessoa" />
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -170,7 +174,9 @@ function AdjustInvoiceForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
+            <Label className="font-mono" htmlFor={`${id}-date`}>
+              Data do ajuste
+            </Label>
             <DatePicker
               id={`${id}-date`}
               max={getMaximumEntryDate(period)}
@@ -199,20 +205,6 @@ function AdjustInvoiceForm({
         )}
       </form.Subscribe>
     </form>
-  );
-}
-
-function PersonOption({ person }: { person?: PersonOutput }) {
-  if (!person) return <span>Selecione uma pessoa</span>;
-
-  return (
-    <span className="flex min-w-0 items-center gap-2">
-      <Avatar size="sm">
-        <AvatarImage alt="" src={person.avatarUrl ?? person.providerAvatarUrl ?? undefined} />
-        <AvatarFallback>{person.name.slice(0, 1).toLocaleUpperCase("pt-BR")}</AvatarFallback>
-      </Avatar>
-      <span className="truncate">{person.name}</span>
-    </span>
   );
 }
 

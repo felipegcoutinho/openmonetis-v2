@@ -24,18 +24,18 @@ export function CommitmentsWidgetHelp() {
         </p>
         <dl className="grid gap-2">
           <div>
-            <dt className="font-medium">Comprometido</dt>
+            <dt className="font-mono font-medium">Comprometido</dt>
             <dd className="text-muted-foreground">
               Lançamentos do mês, pagos ou em aberto, parcelas, recorrências previstas e compras no
               cartão pela fatura do mês. Estornos reduzem o valor.
             </dd>
           </div>
           <div>
-            <dt className="font-medium">Receita</dt>
+            <dt className="font-mono font-medium">Receita</dt>
             <dd className="text-muted-foreground">Receitas lançadas e recorrências previstas.</dd>
           </div>
           <div>
-            <dt className="font-medium">Não entram</dt>
+            <dt className="font-mono font-medium">Não entram</dt>
             <dd className="text-muted-foreground">
               Transferências, pagamentos de fatura, valores de outras pessoas e contas marcadas para
               não somar no saldo.

@@ -55,11 +55,11 @@ export function BudgetCard({
             </span>
             <div className="min-w-0">
               <CardTitle className="truncate">{budget.categoryName}</CardTitle>
-              <p className="mt-0.5 text-muted-foreground text-xs">Limite mensal</p>
+              <p className="mt-0.5 font-mono text-muted-foreground text-xs">Limite mensal</p>
             </div>
           </div>
           <Badge
-            className={cn("border-transparent", budgetStatusStyles[budget.status])}
+            className={cn("font-mono border-transparent", budgetStatusStyles[budget.status])}
             variant="outline"
           >
             {budgetStatusLabels[budget.status]}
@@ -69,7 +69,7 @@ export function BudgetCard({
 
       <CardContent className="grid gap-5">
         <div>
-          <p className="text-muted-foreground text-xs">Consumo do limite</p>
+          <p className="font-mono text-muted-foreground text-xs">Consumo do limite</p>
           <p className="mt-1 text-2xl font-medium">
             <MoneyValue amount={budget.committedAmount} />
             <span className="text-sm text-muted-foreground">

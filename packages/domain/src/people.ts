@@ -105,6 +105,11 @@ const personPaymentMethods = [
   "bank_transfer",
 ] as const;
 
+// Invoice payments settle purchases already counted on the card; balance adjustments are not spending.
+function isExcludedFromPersonExpenses(entry: Pick<PersonFinancialEntry, "origin">) {
+  return entry.origin === "invoicePayment" || entry.origin === "accountBalanceAdjustment";
+}
+
 export function calculatePersonFinancialSummary(
   entries: PersonFinancialEntry[],
   periods: string[],
@@ -115,6 +120,7 @@ export function calculatePersonFinancialSummary(
     personPaymentMethods.map((method) => [method, 0]),
   );
   for (const entry of entries) {
+    if (isExcludedFromPersonExpenses(entry)) continue;
     const amount = Math.round(calculateExpenseImpact(entry) * 100);
     if (amount === 0 || !expensesByPeriod.has(entry.period)) continue;
     expensesByPeriod.set(entry.period, (expensesByPeriod.get(entry.period) as number) + amount);

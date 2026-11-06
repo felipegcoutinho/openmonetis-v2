@@ -6,7 +6,7 @@ import type {
 } from "@openmonetis/validators/inbox-rules";
 import type { PersonOutput } from "@openmonetis/validators/people";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, Plus, RefreshCw, Trash2, Workflow } from "lucide-react";
+import { ArrowLeft, Plus, RefreshCw, Workflow } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
@@ -15,16 +15,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import {
   useCreateInboxRuleMutation,
   useDeleteInboxRuleMutation,
   useReplaceInboxRuleMutation,
   useSetInboxRuleActiveMutation,
 } from "../inbox-rules.mutations";
-import { describeInboxRuleActions, formatInboxRuleCondition } from "../inbox-rules.presentation";
+import { formatInboxRuleCount } from "../inbox-rules.presentation";
 import { inboxRulesQueryOptions } from "../inbox-rules.queries";
+import { InboxRuleCard } from "./inbox-rule-card";
 import { InboxRuleForm } from "./inbox-rule-form";
 
 type View = { kind: "list" } | { kind: "form"; rule: InboxRuleOutput | null };
@@ -104,7 +104,10 @@ export function InboxRulesDialog({
     >
       <DialogContent
         guarded
-        className="flex max-h-[min(90vh,52rem)] min-w-0 flex-col overflow-hidden sm:max-w-xl"
+        className={cn(
+          "flex max-h-[min(90vh,52rem)] min-w-0 flex-col overflow-hidden",
+          view.kind === "form" ? "sm:max-w-2xl" : "sm:max-w-xl",
+        )}
       >
         <DialogHeader>
           <div className="flex items-start gap-2">
@@ -129,7 +132,7 @@ export function InboxRulesDialog({
               </DialogTitle>
               <DialogDescription>
                 {view.kind === "list"
-                  ? "Sugira categoria e pessoa conforme os dados capturados. Você sempre revisa antes de confirmar."
+                  ? "Sugira categoria e pessoa a partir das capturas. As regras são avaliadas por prioridade, da menor para a maior, e você sempre revisa antes de confirmar."
                   : "Defina as condições e os campos que serão sugeridos no lançamento."}
               </DialogDescription>
             </div>
@@ -151,8 +154,16 @@ export function InboxRulesDialog({
             />
           ) : (
             <div className="grid gap-4">
-              <div className="flex justify-end">
-                <Button onClick={() => setView({ kind: "form", rule: null })}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-muted-foreground text-sm">
+                  {query.data
+                    ? formatInboxRuleCount(
+                        query.data.items.length,
+                        query.data.items.filter((rule) => rule.isActive).length,
+                      )
+                    : null}
+                </p>
+                <Button onClick={() => setView({ kind: "form", rule: null })} size="sm">
                   <Plus aria-hidden="true" /> Nova regra
                 </Button>
               </div>
@@ -186,108 +197,20 @@ export function InboxRulesDialog({
                   </CardContent>
                 </Card>
               ) : null}
-              {query.data?.items.map((rule) => {
-                const confirmingDelete = confirmDeleteId === rule.id;
-                return (
-                  <Card className="py-0" key={rule.id}>
-                    <CardContent className="grid gap-2.5 p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                          <p className="wrap-break-word font-medium text-sm">{rule.name}</p>
-                          <span className="text-muted-foreground text-2xs">
-                            Prioridade {rule.priority}
-                          </span>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-0.5">
-                          <Tooltip>
-                            <TooltipTrigger
-                              aria-label={`Editar regra ${rule.name}`}
-                              onClick={() => setView({ kind: "form", rule })}
-                              render={
-                                <Button
-                                  className="text-muted-foreground hover:text-foreground"
-                                  size="icon-xs"
-                                  variant="ghost"
-                                />
-                              }
-                            >
-                              <Pencil aria-hidden="true" />
-                            </TooltipTrigger>
-                            <TooltipContent>Editar</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger
-                              aria-label={`Excluir regra ${rule.name}`}
-                              onClick={() => setConfirmDeleteId(rule.id)}
-                              render={
-                                <Button
-                                  className="text-muted-foreground hover:text-destructive"
-                                  size="icon-xs"
-                                  variant="ghost"
-                                />
-                              }
-                            >
-                              <Trash2 aria-hidden="true" />
-                            </TooltipTrigger>
-                            <TooltipContent>Excluir</TooltipContent>
-                          </Tooltip>
-                          <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
-                          <span className="text-muted-foreground text-2xs">
-                            {rule.isActive ? "Ativa" : "Pausada"}
-                          </span>
-                          <Switch
-                            aria-label={`${rule.isActive ? "Pausar" : "Ativar"} regra ${rule.name}`}
-                            checked={rule.isActive}
-                            disabled={activeMutation.isPending}
-                            onCheckedChange={(checked) => void toggle(rule, checked)}
-                          />
-                        </div>
-                      </div>
-                      {confirmingDelete ? (
-                        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2">
-                          <p className="text-sm">Excluir esta regra?</p>
-                          <div className="flex gap-2">
-                            <Button
-                              data-mobile-cancel
-                              onClick={() => setConfirmDeleteId(null)}
-                              size="sm"
-                              variant="outline"
-                            >
-                              Cancelar
-                            </Button>
-                            <Button
-                              disabled={deleteMutation.isPending}
-                              onClick={() => void remove(rule)}
-                              size="sm"
-                              variant="destructive"
-                            >
-                              Excluir
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid gap-1 rounded-md bg-muted/40 px-2.5 py-2 text-xs leading-5">
-                          <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="eyebrow text-muted-foreground">Se</span>
-                            <p className="min-w-0 wrap-break-word">
-                              <span className="text-muted-foreground">
-                                {rule.matchMode === "all" ? "Todas: " : "Qualquer uma: "}
-                              </span>
-                              {rule.conditions.map(formatInboxRuleCondition).join(" · ")}
-                            </p>
-                          </div>
-                          <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2">
-                            <span className="eyebrow text-muted-foreground">Então</span>
-                            <p className="min-w-0 wrap-break-word">
-                              Preencher {describeInboxRuleActions(rule)}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+              {query.data?.items.map((rule) => (
+                <InboxRuleCard
+                  confirmingDelete={confirmDeleteId === rule.id}
+                  deleting={deleteMutation.isPending}
+                  key={rule.id}
+                  onCancelDelete={() => setConfirmDeleteId(null)}
+                  onConfirmDelete={() => void remove(rule)}
+                  onEdit={() => setView({ kind: "form", rule })}
+                  onRequestDelete={() => setConfirmDeleteId(rule.id)}
+                  onToggle={(checked) => void toggle(rule, checked)}
+                  rule={rule}
+                  toggling={activeMutation.isPending}
+                />
+              ))}
             </div>
           )}
         </div>

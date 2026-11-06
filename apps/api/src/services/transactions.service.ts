@@ -194,10 +194,6 @@ function normalizeNullableText(value: string | null | undefined) {
   return normalized ? normalized : null;
 }
 
-function currentPeriod() {
-  return getCurrentPeriodInBrazil();
-}
-
 function assertBoletoPaymentDateIsNotFuture(data: TransactionInput) {
   if (data.boletoPaymentDate && data.boletoPaymentDate > getCurrentDateInBrazil()) {
     throw badRequest("Boleto payment date cannot be in the future", "BOLETO_PAYMENT_DATE_FUTURE");
@@ -1086,7 +1082,7 @@ export function createTransactionsService(
         seriesId: null,
         transferId,
       })) as [TransactionCreateRecord, TransactionCreateRecord];
-      const balancePeriod = currentPeriod();
+      const balancePeriod = getCurrentPeriodInBrazil();
       const balanceSnapshot = base.isSettled
         ? await getAccountBalanceSnapshotForUser(data.sourceAccountId, data.userId, balancePeriod)
         : { displayed: 0, persisted: 0 };
@@ -1301,7 +1297,7 @@ export function createTransactionsService(
       };
     const dueDateVersions = await dueDateRulesReader.listVersions(userId);
     const accountStatement = query.view === "accountStatement";
-    const period = query.period ?? currentPeriod();
+    const period = query.period ?? getCurrentPeriodInBrazil();
     const periodEnd = query.dateEnd ? toDate(query.dateEnd) : getPeriodEndDate(period);
     const periodStart = query.dateStart ? toDate(query.dateStart) : getPeriodStart(period);
     const persistedFilters = {
@@ -1680,7 +1676,7 @@ export function createTransactionsService(
   }
 
   async function exportTransactions(userId: string, query: ExportTransactionsQuery) {
-    const period = query.period ?? currentPeriod();
+    const period = query.period ?? getCurrentPeriodInBrazil();
     const result = await listTransactions(userId, { ...query, period }, false);
     return createTransactionsExport(result.items, { ...query, period });
   }
@@ -2256,7 +2252,7 @@ export function createTransactionsService(
         destinationAccountId: validatedMerged.destinationAccountId as string,
         amount: validatedMerged.amount,
       });
-      const balancePeriod = currentPeriod();
+      const balancePeriod = getCurrentPeriodInBrazil();
       const balanceSnapshot = values.isSettled
         ? await getAccountBalanceSnapshotForUser(outgoing.accountId, userId, balancePeriod)
         : { displayed: 0, persisted: 0 };
@@ -2433,7 +2429,7 @@ export function createTransactionsService(
     }
     if (settledDate && settledDate > getCurrentDateInBrazil())
       throw badRequest("Settlement date cannot be in the future", "SETTLEMENT_DATE_FUTURE");
-    const balancePeriod = currentPeriod();
+    const balancePeriod = getCurrentPeriodInBrazil();
     const balanceSnapshots = isSettled
       ? Object.fromEntries(
           await Promise.all(

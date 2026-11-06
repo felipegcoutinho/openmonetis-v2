@@ -2,11 +2,8 @@ import type { CategoryTrendsOutput } from "@openmonetis/validators/category-tren
 import { MoneyValue } from "@/components/money-value";
 import { Card } from "@/components/ui/card";
 import { getCategoryLabel } from "@/features/categories/categories.presentation";
-import {
-  formatTrendPercentage,
-  formatTrendPeriod,
-  getCategoryTrendsSummary,
-} from "../category-trends.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
+import { formatTrendPercentage, getCategoryTrendsSummary } from "../category-trends.presentation";
 
 export function CategoryTrendsSummary({ report }: { report: CategoryTrendsOutput }) {
   const summary = getCategoryTrendsSummary(report);
@@ -22,7 +19,7 @@ export function CategoryTrendsSummary({ report }: { report: CategoryTrendsOutput
       <SummaryCard
         label={
           summary.latestPeriod
-            ? `Maior alta em ${formatTrendPeriod(summary.latestPeriod, true)}`
+            ? `Maior alta em ${formatPeriod(summary.latestPeriod, true)}`
             : "Maior alta"
         }
       >
@@ -56,7 +53,7 @@ export function CategoryTrendsSummary({ report }: { report: CategoryTrendsOutput
 function SummaryCard({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <Card className="min-w-0 gap-1 px-5 py-4">
-      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-mono text-muted-foreground text-xs">{label}</p>
       {children}
     </Card>
   );

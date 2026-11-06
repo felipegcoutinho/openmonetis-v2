@@ -1,8 +1,4 @@
-import {
-  formatDateInBrazil,
-  getCurrentPeriodInBrazil,
-  periodToSafeInstant,
-} from "@openmonetis/shared/date-time";
+import { getCurrentPeriodInBrazil, periodToSafeInstant } from "@openmonetis/shared/date-time";
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {
@@ -12,6 +8,7 @@ import {
 } from "@/components/forms/mobile-picker";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 
 type PeriodPickerProps = {
@@ -70,9 +67,4 @@ export function PeriodPicker({
       </PopoverContent>
     </Popover>
   );
-}
-
-function formatPeriod(period: string) {
-  const label = formatDateInBrazil(periodToSafeInstant(period), { month: "long", year: "numeric" });
-  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }

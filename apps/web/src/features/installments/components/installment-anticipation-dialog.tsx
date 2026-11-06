@@ -19,12 +19,13 @@ import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/co
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiClientError } from "@/lib/api-client";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
   useAnticipateInstallmentsMutation,
   useUndoInstallmentAnticipationMutation,
 } from "../installments.mutations";
-import { formatInstallmentDate, formatInstallmentPeriod } from "../installments.presentation";
+import { formatInstallmentDate } from "../installments.presentation";
 import { installmentQuoteQueryOptions } from "../installments.queries";
 
 export function InstallmentAnticipationDialog({
@@ -74,7 +75,7 @@ export function InstallmentAnticipationDialog({
           input: parsed.data,
         });
         toast.success("Parcelas antecipadas", {
-          description: `A fatura de ${formatInstallmentPeriod(targetPeriod)} foi atualizada.`,
+          description: `A fatura de ${formatPeriod(targetPeriod)} foi atualizada.`,
           action: {
             label: "Desfazer",
             onClick: async () => {
@@ -119,7 +120,7 @@ export function InstallmentAnticipationDialog({
           <DialogTitle>Antecipar para esta fatura?</DialogTitle>
           <DialogDescription>
             {group
-              ? `Escolha quais parcelas futuras de “${group.name}” serão movidas para ${formatInstallmentPeriod(targetPeriod)}.`
+              ? `Escolha quais parcelas futuras de “${group.name}” serão movidas para ${formatPeriod(targetPeriod)}.`
               : "Confira a seleção antes de continuar."}
           </DialogDescription>
         </DialogHeader>
@@ -203,7 +204,7 @@ export function InstallmentAnticipationDialog({
                         <CalendarDays aria-hidden="true" className="size-3" />
                         {installment.dueDate
                           ? `Vence em ${formatInstallmentDate(installment.dueDate)}`
-                          : formatInstallmentPeriod(installment.period)}
+                          : formatPeriod(installment.period)}
                       </span>
                     </Label>
                     <MoneyValue amount={installment.amount} className="shrink-0 font-medium" />
@@ -215,7 +216,7 @@ export function InstallmentAnticipationDialog({
 
           <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-4">
             <div>
-              <p className="text-muted-foreground text-xs">Total selecionado</p>
+              <p className="font-mono text-muted-foreground text-xs">Total selecionado</p>
               {quoteQuery.isFetching ? (
                 <Skeleton className="mt-1 h-7 w-24" />
               ) : (
@@ -228,7 +229,7 @@ export function InstallmentAnticipationDialog({
             <form.Subscribe selector={(state) => Number(state.values.discount || 0)}>
               {(discount) => (
                 <div className="text-right">
-                  <p className="text-muted-foreground text-xs">Total na fatura</p>
+                  <p className="font-mono text-muted-foreground text-xs">Total na fatura</p>
                   <MoneyValue
                     amount={Math.max(0, (quote?.totalAmount ?? 0) - discount)}
                     className="mt-1 font-semibold text-lg text-brand-strong"
@@ -247,7 +248,9 @@ export function InstallmentAnticipationDialog({
           <form.Field name="discount">
             {(field) => (
               <div className="grid gap-2">
-                <Label htmlFor={`${id}-discount`}>Desconto obtido (opcional)</Label>
+                <Label className="font-mono" htmlFor={`${id}-discount`}>
+                  Desconto obtido (opcional)
+                </Label>
                 <CurrencyInput
                   id={`${id}-discount`}
                   onValueChange={field.handleChange}

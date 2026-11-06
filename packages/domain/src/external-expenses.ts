@@ -69,9 +69,9 @@ export function calculateExternalInstallmentTotal(input: {
   trackedFromInstallment: number;
   trackedAmounts: Array<string | number>;
 }) {
-  const originalCents = toCents(input.originalAmount);
+  const originalCents = parseAbsoluteCents(input.originalAmount);
   const trackedCents = input.trackedAmounts.reduce<number>(
-    (total, amount) => total + toCents(amount),
+    (total, amount) => total + parseAbsoluteCents(amount),
     0,
   );
 
@@ -102,7 +102,7 @@ export function calculateExternalInstallmentAllocationTotal(input: {
   return calculateInstallmentAllocationTotal(input);
 }
 
-function toCents(value: string | number) {
+function parseAbsoluteCents(value: string | number) {
   const amount = Math.abs(Number(value));
   if (!Number.isFinite(amount)) throw new RangeError("invalid_external_expense_amount");
   return Math.round(amount * 100);

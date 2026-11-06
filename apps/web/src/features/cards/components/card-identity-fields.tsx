@@ -31,7 +31,9 @@ export function CardIdentityFields({
       >
         {(field) => (
           <div className="grid content-start gap-1.5">
-            <Label htmlFor={fieldId(field.name)}>Nome do cartão</Label>
+            <Label className="font-mono" htmlFor={fieldId(field.name)}>
+              Nome do cartão
+            </Label>
             <Input
               aria-invalid={field.state.meta.errors.length > 0}
               id={fieldId(field.name)}
@@ -49,7 +51,9 @@ export function CardIdentityFields({
       <form.Field name="brand">
         {(field) => (
           <div className="grid content-start gap-1.5">
-            <Label htmlFor={fieldId(field.name)}>Bandeira</Label>
+            <Label className="font-mono" htmlFor={fieldId(field.name)}>
+              Bandeira
+            </Label>
             <Select
               onValueChange={(value) => {
                 if (value) field.handleChange(value);
@@ -76,7 +80,9 @@ export function CardIdentityFields({
       <form.Field name="status">
         {(field) => (
           <div className="grid content-start gap-1.5">
-            <Label htmlFor={fieldId(field.name)}>Status</Label>
+            <Label className="font-mono" htmlFor={fieldId(field.name)}>
+              Status
+            </Label>
             <Select
               onValueChange={(value) => {
                 if (value) field.handleChange(value);
@@ -112,7 +118,9 @@ export function CardIdentityFields({
       >
         {(field) => (
           <div className="grid content-start gap-1.5">
-            <Label htmlFor={fieldId(field.name)}>Limite</Label>
+            <Label className="font-mono" htmlFor={fieldId(field.name)}>
+              Limite
+            </Label>
             <CurrencyInput
               aria-invalid={field.state.meta.errors.length > 0}
               id={fieldId(field.name)}

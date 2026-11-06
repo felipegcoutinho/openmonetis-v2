@@ -61,7 +61,7 @@ export function NoteDetailsDialog({
                 <span aria-hidden="true">·</span>
                 <span>Atualizada em {formatNoteUpdatedAt(note.updatedAt)}</span>
                 {note.isArchived ? (
-                  <Badge className="ml-1" variant="secondary">
+                  <Badge className="font-mono ml-1" variant="secondary">
                     Arquivada · somente leitura
                   </Badge>
                 ) : null}

@@ -92,7 +92,8 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
       <Card className="relative gap-0 overflow-hidden border py-0 shadow-none md:hidden">
         <div className="grid gap-5 bg-brand/8 py-5">
           <CardHeader className="gap-1 px-5">
-            <CardTitle className="flex items-center gap-2 text-sm">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarClock aria-hidden="true" className="size-4 shrink-0" />
               Saldo previsto
               <MetricHelp
                 help={formatProjectedMetricHelp(metrics.period)}
@@ -155,7 +156,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             <Card className="gap-4 border py-5" key={card.key}>
               <CardHeader className="gap-1 px-5">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex min-w-0 items-center gap-2 text-sm">
+                  <CardTitle className="flex min-w-0 items-center gap-2 text-base">
                     <card.icon
                       aria-hidden="true"
                       className={cn("size-4 shrink-0", card.iconClassName)}
@@ -265,7 +266,7 @@ function MetricComparison({
 
   return (
     <div className="flex min-h-5 flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
-      <span>{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
+      <span className="font-mono">{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
       <MoneyValue amount={previous} className="text-xs" />
       {change.kind === "percent" || change.value !== 0 ? (
         <span

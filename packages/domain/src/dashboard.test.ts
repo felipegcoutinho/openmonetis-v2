@@ -109,6 +109,54 @@ test("an open bill past its due date is critical even before its status is updat
   assert.equal(item?.severity, "critical");
 });
 
+test("attention carries the card logo and the category icon of each item", () => {
+  const items = buildDashboardAttentionItems({
+    today,
+    invoices: [
+      {
+        cardId: "card",
+        cardName: "Nubank",
+        logo: "/logos/nubank.png",
+        period: "2026-10",
+        dueDate: "2026-10-30",
+        remainingAmount: 100,
+        status: "open",
+      },
+    ],
+    bills: [
+      {
+        id: "rent",
+        name: "Aluguel",
+        categoryIcon: "home",
+        dueDate: "2026-10-31",
+        amount: 2800,
+        isSettled: false,
+        status: "due",
+      },
+    ],
+    budgets: [
+      {
+        id: "bars",
+        categoryId: "category",
+        categoryName: "Bares",
+        categoryIcon: null,
+        usagePercentage: 120,
+        exceededAmount: 50,
+        status: "exceeded",
+      },
+    ],
+    pendingInboxCount: 0,
+  });
+  assert.deepEqual(
+    items.map((item) => [item.kind, item.logo, item.categoryIcon]),
+    [
+      ["invoice", "/logos/nubank.png", null],
+      ["bill", null, "home"],
+      ["budget", null, null],
+    ],
+  );
+});
+
 test("nothing needs attention when everything is settled and within budget", () => {
   assert.deepEqual(
     buildDashboardAttentionItems({

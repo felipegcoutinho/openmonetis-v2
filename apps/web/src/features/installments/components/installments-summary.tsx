@@ -2,7 +2,7 @@ import type { InstallmentsReportOutput } from "@openmonetis/validators/installme
 import { CalendarDays, Layers3, ShoppingBag } from "lucide-react";
 import { MoneyValue } from "@/components/money-value";
 import { Card } from "@/components/ui/card";
-import { formatInstallmentPeriod } from "../installments.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 
 type InstallmentsSummaryProps = {
   report: InstallmentsReportOutput;
@@ -48,7 +48,7 @@ export function InstallmentsSummary({ report }: InstallmentsSummaryProps) {
               className="mt-2 text-xl leading-none sm:text-4xl"
             />
             <p className="mt-3 hidden text-muted-foreground text-xs sm:block">
-              Parcelas em aberto de {formatInstallmentPeriod(report.referencePeriod)}.
+              Parcelas em aberto de {formatPeriod(report.referencePeriod)}.
             </p>
           </div>
         </div>

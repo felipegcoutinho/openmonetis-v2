@@ -9,11 +9,53 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Cada item de **Precisa de atenção** mostra, antes do nome, o logo do cartão nas faturas e o
+  ícone da categoria em contas a pagar e orçamentos; `GET /dashboard/attention` passa a devolver
+  `logo` e `categoryIcon` em cada item.
+- Regras da Caixa de entrada mais fáceis de ler: cada condição aparece em uma linha, com o valor
+  procurado em destaque e o conector **e**/**ou** entre elas; categoria e pessoa sugeridas viram
+  etiquetas com ícone, regras pausadas ficam esmaecidas com o selo **Pausada** e o topo da lista
+  mostra quantas regras existem e quantas estão ativas.
+- Formulário de regra da Caixa de entrada mais compacto: cada condição ocupa uma linha com
+  campo, operador e valor, o modo **Todas precisam coincidir**/**Basta uma coincidir** fica junto
+  das condições com o conector **e**/**ou** entre elas, e **Adicionar condição** passa para o fim
+  da lista.
+- Ajustes do Companion reunidos em uma única seção, **Companion para Android**: a lista de
+  aparelhos autorizados fica no topo, os passos de conexão ficam em **Como conectar**, recolhível
+  e aberto automaticamente enquanto nenhum aparelho estiver conectado, e os atalhos de ajuda e da
+  Caixa de entrada continuam sempre visíveis.
+- Cada aparelho autorizado mostra se já está conectado ou aguardando conexão, separa último uso,
+  capturas recentes e validade com ícones, destaca o vencimento próximo como alerta e explica as
+  ações de renovar e revogar com dicas ao passar o cursor.
+- Resumo dos compromissos com títulos curtos, mês abaixo do valor e status ao lado do percentual
+  para manter os indicadores alinhados.
+- Títulos dos cards de Distribuição financeira e Compromissos futuros seguem o padrão do
+  dashboard, com fonte, tamanho e peso uniformes e ícones alinhados ao título.
+- Títulos dos cards do dashboard padronizados, com a mesma tipografia, tamanho, peso e ícones.
+- Fonte mono aplicada a rótulos de campos, cabeçalhos de tabelas, status e metadados da
+  interface, incluindo Companion, Ajustes e dashboard; valores e conteúdo principal mantêm
+  a tipografia existente.
+- Seletor de frequência dos lançamentos explica os intervalos bimestral, trimestral, semestral
+  e anual com o texto breve “A cada 2/3/6/12 meses”.
 - Node das imagens Docker e do CI atualizado para 22.23.4; TypeScript 7 e `@types/node` 26
   passam a valer em todos os pacotes do workspace; dependências atualizadas para as versões
   menores mais recentes (React 19.3.1, TanStack Query, AWS SDK, Drizzle, Tailwind, Playwright,
   oxlint, lucide-react, Base UI e outras). O Biome fica na linha 2.5 (2.5.15) até a adoção da
   formatação de Markdown/YAML e das novas regras da 2.6.
+
+### Corrigido
+
+- Formulários de lançamento e de recorrência não criam mais rolagem horizontal ao informar um
+  vencimento: o botão de remover a data passa a caber ao lado do campo.
+- CSV de **Tendências por categoria** protegido contra fórmulas: nomes de categoria que começam
+  com `=`, `+`, `-` ou `@` são exportados como texto, como já acontecia na distribuição
+  financeira, e valores negativos continuam numéricos.
+- Pessoas nos seletores de ajuste de fatura, regras da Caixa de entrada e lançamentos exibem o
+  mesmo avatar e as mesmas iniciais.
+- Totais do mês da pessoa deixam de contar pagamentos de fatura e ajustes de saldo como
+  despesas, evitando duplicar as compras do cartão em **Transf. bancária** e outras formas.
+- Seletor de conta da baixa exibe nome e logo da conta selecionada em vez do UUID,
+  incluindo a identificação visual nas opções.
 
 ### Segurança
 

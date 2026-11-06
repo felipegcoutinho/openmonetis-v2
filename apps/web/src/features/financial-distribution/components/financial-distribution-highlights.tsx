@@ -23,8 +23,8 @@ type TileProps = {
 function HighlightTile({ label, icon, title, amount, percentage, percentageLabel }: TileProps) {
   return (
     <Card className="min-w-0 gap-1 px-5 py-4">
-      <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
-        <span aria-hidden="true" className="shrink-0">
+      <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
+        <span aria-hidden="true" className="shrink-0 [&>svg]:size-4">
           {icon}
         </span>
         {label}

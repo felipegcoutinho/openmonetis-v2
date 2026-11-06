@@ -251,7 +251,7 @@ function FlowChart({
           />
         </ComposedChart>
       </ChartContainer>
-      <div className="mt-2 flex items-center justify-center gap-4 text-muted-foreground text-xs">
+      <div className="mt-2 flex items-center justify-center gap-4 font-mono text-muted-foreground text-xs">
         <span className="flex items-center gap-1.5">
           <ChartLegendMarker color={chartConfig.income.color} />
           Entradas

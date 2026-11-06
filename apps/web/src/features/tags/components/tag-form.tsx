@@ -58,7 +58,9 @@ export function TagForm({
       <form.Field name="name">
         {(field) => (
           <div className="grid gap-2">
-            <Label htmlFor={id}>Nome</Label>
+            <Label className="font-mono" htmlFor={id}>
+              Nome
+            </Label>
             <Input
               autoFocus
               id={id}

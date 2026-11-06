@@ -136,7 +136,7 @@ export function FinancialSummaryHeader({
                 )}
                 key={metric.key ?? metric.label}
               >
-                <dt className="flex items-center gap-1.5 text-current/70 text-xs">
+                <dt className="font-mono flex items-center gap-1.5 text-current/70 text-xs">
                   {metric.icon}
                   {metric.label}
                 </dt>

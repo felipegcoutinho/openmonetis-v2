@@ -142,7 +142,9 @@ export function BillPaymentDialog({
               <form.Field name="accountId">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label htmlFor={`${id}-account`}>Conta de pagamento</Label>
+                    <Label className="font-mono" htmlFor={`${id}-account`}>
+                      Conta de pagamento
+                    </Label>
                     <Select
                       disabled={payment.isPending}
                       items={accounts.map((account) => ({
@@ -179,7 +181,9 @@ export function BillPaymentDialog({
               <form.Field name="amount">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label htmlFor={`${id}-amount`}>Valor pago</Label>
+                    <Label className="font-mono" htmlFor={`${id}-amount`}>
+                      Valor pago
+                    </Label>
                     <CurrencyInput
                       id={`${id}-amount`}
                       value={field.state.value}
@@ -196,7 +200,9 @@ export function BillPaymentDialog({
               <form.Field name="paidAt">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label htmlFor={`${id}-paid-at`}>Data do pagamento</Label>
+                    <Label className="font-mono" htmlFor={`${id}-paid-at`}>
+                      Data do pagamento
+                    </Label>
                     <DatePicker
                       aria-invalid={field.state.value > currentLocalDate()}
                       disabled={payment.isPending}

@@ -1,6 +1,6 @@
 import type { FinancialDistributionOutput } from "@openmonetis/validators/financial-distribution";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChartPie, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
 import { MoneyValue } from "@/components/money-value";
@@ -157,8 +157,11 @@ export function FinancialDistributionCategories({
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <CardHeader className="gap-4 border-b py-5">
         <div className="grid gap-1">
-          <CardTitle>
-            <h2>{type === "expense" ? "Despesas por categoria" : "Receitas por categoria"}</h2>
+          <CardTitle className="text-base">
+            <h2 className="flex items-center gap-2">
+              <ChartPie aria-hidden="true" className="size-4 shrink-0" />
+              {type === "expense" ? "Despesas por categoria" : "Receitas por categoria"}
+            </h2>
           </CardTitle>
           <CardDescription>
             {type === "expense"
@@ -168,7 +171,7 @@ export function FinancialDistributionCategories({
         </div>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <dl className="grid gap-1">
-            <dt className="text-muted-foreground text-xs">
+            <dt className="font-mono text-muted-foreground text-xs">
               Total de {type === "expense" ? "despesas" : "receitas"}
             </dt>
             <dd>
@@ -207,13 +210,13 @@ export function FinancialDistributionCategories({
               </caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-6" scope="col">
+                  <TableHead className="font-mono pl-6" scope="col">
                     Categoria
                   </TableHead>
-                  <TableHead className="text-right" scope="col">
+                  <TableHead className="font-mono text-right" scope="col">
                     Valor
                   </TableHead>
-                  <TableHead className="pr-6 text-right" scope="col">
+                  <TableHead className="font-mono pr-6 text-right" scope="col">
                     % das {type === "expense" ? "despesas" : "receitas"}
                   </TableHead>
                 </TableRow>

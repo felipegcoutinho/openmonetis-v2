@@ -110,7 +110,7 @@ function TransactionBulkRenameForm({
             <form.Field name="name">
               {(field) => (
                 <div className="grid gap-2">
-                  <Label className="sr-only" htmlFor={id}>
+                  <Label className="font-mono sr-only" htmlFor={id}>
                     Nova descrição
                   </Label>
                   <Input

@@ -35,13 +35,13 @@ export function ExternalExpensesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Estabelecimento</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Condição</TableHead>
-                <TableHead>Forma de pagamento</TableHead>
-                <TableHead>Pessoa</TableHead>
-                <TableHead>Conta/Cartão</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="font-mono">Estabelecimento</TableHead>
+                <TableHead className="font-mono">Valor</TableHead>
+                <TableHead className="font-mono">Condição</TableHead>
+                <TableHead className="font-mono">Forma de pagamento</TableHead>
+                <TableHead className="font-mono">Pessoa</TableHead>
+                <TableHead className="font-mono">Conta/Cartão</TableHead>
+                <TableHead className="font-mono text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

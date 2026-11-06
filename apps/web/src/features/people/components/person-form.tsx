@@ -93,7 +93,9 @@ export function PersonForm({
         >
           {(field) => (
             <div className="grid gap-1.5">
-              <Label htmlFor={`${id}-name`}>Nome</Label>
+              <Label className="font-mono" htmlFor={`${id}-name`}>
+                Nome
+              </Label>
               <Input
                 aria-invalid={field.state.meta.errors.length > 0}
                 id={`${id}-name`}
@@ -111,7 +113,9 @@ export function PersonForm({
         <form.Field name="email">
           {(field) => (
             <div className="grid gap-1.5">
-              <Label htmlFor={`${id}-email`}>E-mail</Label>
+              <Label className="font-mono" htmlFor={`${id}-email`}>
+                E-mail
+              </Label>
               <Input
                 id={`${id}-email`}
                 onChange={(event) => field.handleChange(event.target.value)}
@@ -126,7 +130,9 @@ export function PersonForm({
       <form.Field name="status">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-status`}>Status</Label>
+            <Label className="font-mono" htmlFor={`${id}-status`}>
+              Status
+            </Label>
             <Select
               disabled={isAdmin}
               onValueChange={(value) => {
@@ -159,7 +165,9 @@ export function PersonForm({
       <form.Field name="avatarUrl">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-avatar`}>Avatar</Label>
+            <Label className="font-mono" htmlFor={`${id}-avatar`}>
+              Avatar
+            </Label>
             <AvatarPicker
               id={`${id}-avatar`}
               onChange={field.handleChange}
@@ -173,7 +181,9 @@ export function PersonForm({
       <form.Field name="note">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-note`}>Anotações</Label>
+            <Label className="font-mono" htmlFor={`${id}-note`}>
+              Anotações
+            </Label>
             <Textarea
               id={`${id}-note`}
               maxLength={1000}

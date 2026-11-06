@@ -75,7 +75,9 @@ export function NoteCard({
                   {note.title}
                 </CardTitle>
               </button>
-              <p className="mt-0.5 text-muted-foreground text-xs">{noteKindLabels[note.kind]}</p>
+              <p className="mt-0.5 font-mono text-muted-foreground text-xs">
+                {noteKindLabels[note.kind]}
+              </p>
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-muted-foreground text-xs">

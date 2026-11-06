@@ -109,7 +109,7 @@ export function TransactionRefundDialog({
               <MoneyValue amount={transaction?.displayAmount ?? 0} className="kpi-value mt-1" />
             </div>
             <div className="text-right">
-              <p className="text-muted-foreground text-xs">Disponível para reembolso</p>
+              <p className="font-mono text-muted-foreground text-xs">Disponível para reembolso</p>
               <MoneyValue
                 amount={transaction?.refundableAmount ?? 0}
                 className="mt-1 font-semibold text-success"
@@ -121,7 +121,9 @@ export function TransactionRefundDialog({
             {(field) => (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <Label htmlFor={`${id}-amount`}>Valor recebido</Label>
+                  <Label className="font-mono" htmlFor={`${id}-amount`}>
+                    Valor recebido
+                  </Label>
                   {transaction && field.state.value !== transaction.refundableAmount.toFixed(2) ? (
                     <Button
                       className="h-auto px-0 py-0 text-xs"
@@ -146,7 +148,9 @@ export function TransactionRefundDialog({
           <form.Field name="receivedAt">
             {(field) => (
               <div className="grid gap-2">
-                <Label htmlFor={`${id}-received-at`}>Data do reembolso</Label>
+                <Label className="font-mono" htmlFor={`${id}-received-at`}>
+                  Data do reembolso
+                </Label>
                 <DatePicker
                   id={`${id}-received-at`}
                   onChange={field.handleChange}
@@ -183,7 +187,9 @@ export function TransactionRefundDialog({
           <form.Field name="note">
             {(field) => (
               <div className="grid gap-2">
-                <Label htmlFor={`${id}-note`}>Observação (opcional)</Label>
+                <Label className="font-mono" htmlFor={`${id}-note`}>
+                  Observação (opcional)
+                </Label>
                 <Textarea
                   id={`${id}-note`}
                   maxLength={1000}

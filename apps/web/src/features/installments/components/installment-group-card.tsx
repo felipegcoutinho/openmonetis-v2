@@ -9,10 +9,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
   formatInstallmentDate,
-  formatInstallmentPeriod,
   installmentPaymentMethodLabels,
   installmentSeriesStatusLabels,
 } from "../installments.presentation";
@@ -104,7 +104,7 @@ export function InstallmentGroupCard({
 
         <div className="grid grid-cols-2 gap-4 md:block">
           <div>
-            <p className="text-muted-foreground text-xs">Saldo pendente</p>
+            <p className="font-mono text-muted-foreground text-xs">Saldo pendente</p>
             <MoneyValue amount={group.pendingAmount} className="mt-1 font-medium text-base" />
           </div>
           <div className="md:hidden">
@@ -119,7 +119,7 @@ export function InstallmentGroupCard({
             {group.nextDueDate
               ? formatInstallmentDate(group.nextDueDate)
               : group.nextPeriod
-                ? formatInstallmentPeriod(group.nextPeriod)
+                ? formatPeriod(group.nextPeriod)
                 : "Sem pendências"}
           </p>
         </div>

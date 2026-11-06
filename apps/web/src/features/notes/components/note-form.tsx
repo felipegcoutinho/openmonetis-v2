@@ -67,7 +67,9 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
           {(field) => (
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between gap-3">
-                <Label htmlFor={fieldId(field.name)}>Título</Label>
+                <Label className="font-mono" htmlFor={fieldId(field.name)}>
+                  Título
+                </Label>
                 <NoteCharacterCount
                   length={field.state.value.length}
                   maximum={noteTitleMaximumLength}
@@ -108,7 +110,9 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
                 {(field) => (
                   <div className="grid gap-1.5">
                     <div className="flex items-center justify-between gap-3">
-                      <Label htmlFor={fieldId(field.name)}>Conteúdo</Label>
+                      <Label className="font-mono" htmlFor={fieldId(field.name)}>
+                        Conteúdo
+                      </Label>
                       <NoteCharacterCount
                         length={field.state.value.length}
                         maximum={noteContentMaximumLength}

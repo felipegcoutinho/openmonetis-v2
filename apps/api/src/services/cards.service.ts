@@ -270,20 +270,20 @@ export function createCardsService(
           note: input.note ?? null,
         }),
       );
-      return summarizeCard(card, userId, currentPeriod());
+      return summarizeCard(card, userId, getCurrentPeriodInBrazil());
     },
 
-    async list(userId: string, period = currentPeriod()) {
+    async list(userId: string, period = getCurrentPeriodInBrazil()) {
       return summarizeCards(await repository.listByUser(userId), userId, period);
     },
 
-    async get(id: string, userId: string, period = currentPeriod()) {
+    async get(id: string, userId: string, period = getCurrentPeriodInBrazil()) {
       const card = await repository.findByIdForUser(id, userId);
       if (!card) throw notFound("Card not found", "card_not_found");
       return summarizeCard(card, userId, period);
     },
 
-    async history(id: string, userId: string, period = currentPeriod()) {
+    async history(id: string, userId: string, period = getCurrentPeriodInBrazil()) {
       const card = await repository.findByIdForUser(id, userId);
       if (!card) throw notFound("Card not found", "card_not_found");
       const periods = Array.from({ length: 12 }, (_, index) =>
@@ -336,7 +336,7 @@ export function createCardsService(
         limit: input.limit.toFixed(2),
       });
       if (!card) throw notFound("Card not found", "card_not_found");
-      return summarizeCard(card, userId, currentPeriod());
+      return summarizeCard(card, userId, getCurrentPeriodInBrazil());
     },
 
     async update(id: string, userId: string, input: UpdateCardInput) {
@@ -373,7 +373,7 @@ export function createCardsService(
       if (input.note !== undefined) values.note = input.note?.trim() || null;
       const card = await repository.updateForUser(id, userId, values);
       if (!card) throw notFound("Card not found", "card_not_found");
-      return summarizeCard(card, userId, currentPeriod());
+      return summarizeCard(card, userId, getCurrentPeriodInBrazil());
     },
 
     async remove(id: string, userId: string) {
@@ -413,10 +413,6 @@ function normalizeClosingConfiguration(input: {
 }
 
 export type CardsService = ReturnType<typeof createCardsService>;
-
-function currentPeriod() {
-  return getCurrentPeriodInBrazil();
-}
 
 function expandRecurringInvoiceMovements(
   rules: CardRecurringRuleRecord[],

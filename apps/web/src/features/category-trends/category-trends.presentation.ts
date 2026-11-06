@@ -1,10 +1,7 @@
 import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
-import {
-  formatDateInBrazil,
-  getCurrentPeriodInBrazil,
-  periodToSafeInstant,
-} from "@openmonetis/shared/date-time";
+import { getCurrentPeriodInBrazil, periodToSafeInstant } from "@openmonetis/shared/date-time";
 import type { CategoryTrendsOutput } from "@openmonetis/validators/category-trends";
+import { csvCell } from "../../lib/csv";
 import { getCategoryLabel } from "../categories/categories.presentation";
 
 type CategoryTrendsSearch = {
@@ -62,15 +59,6 @@ export function resolveCategoryTrendsSearch(search: CategoryTrendsSearch) {
   };
 }
 
-export function formatTrendPeriod(period: string, short = false) {
-  let label = formatDateInBrazil(periodToSafeInstant(period), {
-    month: short ? "short" : "long",
-    year: "numeric",
-  }).replaceAll(".", "");
-  if (short) label = label.replace(" de ", " ");
-  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
-}
-
 export function getCategoryTrendsPeriodRange(anchor: "start" | "end", period: string) {
   return anchor === "start"
     ? { startPeriod: period, endPeriod: addMonthsToPeriod(period, categoryTrendsPeriodOffset) }
@@ -126,7 +114,8 @@ export function getCategoryTrendsSummary(report: CategoryTrendsOutput) {
   };
 }
 
-export function downloadCategoryTrendsCsv(report: CategoryTrendsOutput) {
+/** One row per category and month, ready for a PT-BR spreadsheet. */
+export function categoryTrendsCsv(report: CategoryTrendsOutput) {
   const rows = [
     ["Tipo", "Categoria", "Período", "Registrado", "Recorrente", "Total", "Variação"],
     ...report.categories.flatMap((category) =>
@@ -141,8 +130,11 @@ export function downloadCategoryTrendsCsv(report: CategoryTrendsOutput) {
       ]),
     ),
   ];
-  const content = `\uFEFF${rows.map((row) => row.map(csvCell).join(";")).join("\n")}`;
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+  return `\uFEFF${rows.map((row) => row.map(csvCell).join(";")).join("\n")}`;
+}
+
+export function downloadCategoryTrendsCsv(report: CategoryTrendsOutput) {
+  const blob = new Blob([categoryTrendsCsv(report)], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -163,8 +155,4 @@ function normalizeCategoryIds(value: unknown) {
 
 function formatCsvNumber(value: number) {
   return value.toFixed(2).replace(".", ",");
-}
-
-function csvCell(value: string) {
-  return `"${value.replaceAll('"', '""')}"`;
 }

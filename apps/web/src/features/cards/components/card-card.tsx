@@ -19,7 +19,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatPeriod } from "@/features/transactions/transactions.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
 import {
@@ -148,12 +148,12 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
       <CardContent className="flex flex-1 flex-col gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <p className="text-muted-foreground text-xs">
+            <p className="font-mono text-muted-foreground text-xs">
               Fatura de {formatPeriod(card.invoiceSummary.period)}
             </p>
             <span
               className={cn(
-                "rounded-full bg-muted px-2 py-0.5 font-medium text-2xs",
+                "rounded-full bg-muted px-2 py-0.5 font-mono font-medium text-2xs",
                 card.invoiceSummary.status === "paid" && "bg-success/10 text-success",
                 card.invoiceSummary.status === "overdue" && "bg-destructive/10 text-destructive",
               )}
@@ -282,7 +282,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
 function CardMetric({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-mono text-muted-foreground text-xs">{label}</p>
       <p className="mt-0.5 truncate font-medium text-sm tabular-nums">{value}</p>
     </div>
   );

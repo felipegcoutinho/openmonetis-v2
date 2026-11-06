@@ -20,8 +20,8 @@ import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatPeriod } from "@/lib/period-presentation";
 import { useInstallmentQuoteMutation } from "../installments.mutations";
-import { formatInstallmentPeriod } from "../installments.presentation";
 import { installmentsQueryOptions } from "../installments.queries";
 import { InstallmentGroupCard } from "./installment-group-card";
 import { InstallmentScenarioPanel } from "./installment-scenario-panel";
@@ -169,7 +169,7 @@ export function InstallmentsPage({ filters, onStatusChange }: InstallmentsPagePr
               </TooltipContent>
             </Tooltip>
             {report ? (
-              <p>Referência dos compromissos: {formatInstallmentPeriod(report.referencePeriod)}</p>
+              <p>Referência dos compromissos: {formatPeriod(report.referencePeriod)}</p>
             ) : null}
           </div>
 

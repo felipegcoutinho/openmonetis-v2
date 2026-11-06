@@ -14,16 +14,8 @@ import {
 } from "@/components/forms/mobile-picker";
 import { Button } from "@/components/ui/button";
 import { MonthPicker } from "@/components/ui/month-picker";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
-
-function formatPeriod(period: string) {
-  const label = formatDateInBrazil(periodToSafeInstant(period), {
-    month: "long",
-    year: "numeric",
-  });
-
-  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
-}
 
 function formatCompactPeriod(period: string) {
   const label = formatDateInBrazil(periodToSafeInstant(period), {

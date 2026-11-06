@@ -40,7 +40,7 @@ export function TransactionImportReviewTable({
         <Table className="min-w-230">
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
-              <TableHead className="w-10">
+              <TableHead className="font-mono w-10">
                 <Checkbox
                   aria-label="Selecionar todos"
                   checked={allAvailableSelected}
@@ -51,12 +51,12 @@ export function TransactionImportReviewTable({
                   }
                 />
               </TableHead>
-              <TableHead className="w-28">Data</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead className="w-56">Pessoa</TableHead>
-              <TableHead className="w-48">Categoria</TableHead>
-              <TableHead className="w-24">Tipo</TableHead>
-              <TableHead className="w-32 text-right">Valor</TableHead>
+              <TableHead className="font-mono w-28">Data</TableHead>
+              <TableHead className="font-mono">Descrição</TableHead>
+              <TableHead className="font-mono w-56">Pessoa</TableHead>
+              <TableHead className="font-mono w-48">Categoria</TableHead>
+              <TableHead className="font-mono w-24">Tipo</TableHead>
+              <TableHead className="font-mono w-32 text-right">Valor</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

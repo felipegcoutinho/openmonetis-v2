@@ -101,7 +101,7 @@ export function calculateBudgetProgress(
   const remainingAmount = roundMoney(Math.max(normalizedLimit - committedAmount, 0));
   const exceededAmount = roundMoney(Math.max(committedAmount - normalizedLimit, 0));
   const usagePercentage =
-    normalizedLimit > 0 ? roundPercentage((committedAmount / normalizedLimit) * 100) : 0;
+    normalizedLimit > 0 ? roundToOneDecimal((committedAmount / normalizedLimit) * 100) : 0;
   const status = resolveBudgetStatus(normalizedLimit, committedAmount, usagePercentage);
 
   return {
@@ -295,6 +295,6 @@ function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-function roundPercentage(value: number) {
+function roundToOneDecimal(value: number) {
   return Math.round((value + Number.EPSILON) * 10) / 10;
 }

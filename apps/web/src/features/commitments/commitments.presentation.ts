@@ -40,12 +40,6 @@ function capitalize(label: string) {
   return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
 }
 
-export function formatCommitmentPeriod(period: string) {
-  return capitalize(
-    formatDateInBrazil(periodToSafeInstant(period), { month: "long", year: "numeric" }),
-  );
-}
-
 export function formatCommitmentChartPeriod(period: string) {
   return capitalize(
     formatDateInBrazil(periodToSafeInstant(period), { month: "short", year: "numeric" })

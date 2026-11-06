@@ -80,7 +80,7 @@ export function PasskeySettings() {
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="font-medium text-sm">Chaves de acesso cadastradas</p>
+            <p className="font-mono font-medium text-sm">Chaves de acesso cadastradas</p>
             <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-relaxed">
               Entre com sua digital, rosto, PIN ou chave de segurança.
             </p>
@@ -222,7 +222,7 @@ function PasskeyRow({
       </div>
       <div className="min-w-0 grow">
         <p className="truncate font-medium text-sm">{label}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
+        <div className="font-mono mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
           <span>{deviceLabel}</span>
           {passkey.backedUp ? <span>Com backup</span> : null}
           {createdAt ? <span>Criada em {createdAt}</span> : null}

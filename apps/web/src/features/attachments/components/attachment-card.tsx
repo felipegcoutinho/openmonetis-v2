@@ -67,7 +67,7 @@ export function AttachmentCard({ attachment, onPreview, onRemove }: AttachmentCa
             <FileText aria-hidden="true" className="size-14" />
           </div>
         ) : null}
-        <Badge className="absolute top-3 left-3" variant="secondary">
+        <Badge className="absolute top-3 left-3 font-mono" variant="secondary">
           {attachmentTypeLabel(attachment.mimeType)}
         </Badge>
         <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition-all group-hover:bg-foreground/10 group-hover:opacity-100">

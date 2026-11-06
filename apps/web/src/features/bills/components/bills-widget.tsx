@@ -127,7 +127,8 @@ export function BillsWidget({ period }: { period: string }) {
 function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void }) {
   const PaymentIcon = paymentMethodIcons[bill.paymentMethod];
   return (
-    <DashboardWidgetRow>
+    // Name, method and due date may wrap on narrow widgets, so the row grows instead of clipping.
+    <DashboardWidgetRow className="h-auto min-h-16 py-2.5">
       <Link
         className="shrink-0"
         to="/transactions"
@@ -152,7 +153,7 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
         </div>
         <p
           className={cn(
-            "text-muted-foreground text-xs",
+            "mt-0.5 text-muted-foreground text-xs",
             bill.status === "overdue" && "font-medium text-destructive",
             bill.status === "paid" && "text-success",
           )}
@@ -218,7 +219,7 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
           </div>
         ) : null}
       </div>
-      <div className="flex shrink-0 flex-col items-end">
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
         <MoneyValue
           amount={bill.amount}
           className={cn("font-medium text-sm", bill.isSettled && "text-success")}

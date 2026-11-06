@@ -54,11 +54,15 @@ export function DashboardDistributionChart({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-center gap-4 sm:flex-row",
+        "flex w-full flex-col items-center justify-center gap-4 sm:flex-row sm:gap-8",
         isPrivacyModeEnabled && "pointer-events-none blur-sm select-none",
       )}
     >
-      <ChartContainer aria-label={label} className="h-64 min-w-0 flex-1" config={chartConfig}>
+      <ChartContainer
+        aria-label={label}
+        className="aspect-square h-56 shrink-0 overflow-visible [&_.recharts-surface]:overflow-visible"
+        config={chartConfig}
+      >
         <PieChart accessibilityLayer>
           <Pie
             data={chartData}
@@ -94,7 +98,7 @@ export function DashboardDistributionChart({
         </PieChart>
       </ChartContainer>
 
-      <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-35 sm:grid-cols-1">
+      <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:max-w-40 sm:grid-cols-1">
         {chartData.map((entry) => (
           <div className="flex items-center gap-2" key={entry.key}>
             <ChartLegendMarker color={entry.fill} />

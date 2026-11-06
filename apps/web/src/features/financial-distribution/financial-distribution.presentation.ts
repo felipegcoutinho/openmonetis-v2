@@ -3,6 +3,7 @@ import {
   type FinancialDistributionOutput,
   ListFinancialDistributionQuerySchema,
 } from "@openmonetis/validators/financial-distribution";
+import { csvCell } from "../../lib/csv";
 
 export function validateFinancialDistributionSearch(search: Record<string, unknown>) {
   const fields = ListFinancialDistributionQuerySchema.shape;
@@ -36,10 +37,6 @@ export function formatDistributionPercentage(value: number | null) {
   return value === null
     ? "—"
     : `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(value)}%`;
-}
-
-export function formatDistributionMoney(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
 const chartColors = [
@@ -136,14 +133,6 @@ export function financialDistributionCsv(report: FinancialDistributionOutput) {
     "",
   ]);
   return `\uFEFF${rows.map((row) => row.map(csvCell).join(";")).join("\n")}`;
-}
-
-function csvCell(value: string) {
-  const safeValue =
-    /^\s*[=+@]/.test(value) || (/^\s*-/.test(value) && !/^-\d+(,\d+)?$/.test(value))
-      ? `'${value}`
-      : value;
-  return `"${safeValue.replaceAll('"', '""')}"`;
 }
 
 export function downloadFinancialDistributionCsv(report: FinancialDistributionOutput) {

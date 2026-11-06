@@ -184,7 +184,7 @@ export function calculateDashboardInstallmentExpenses(
           pendingInstallmentCount: group.pendingInstallmentCount,
           personAvatarUrl: group.personAvatarUrl,
           personName: group.personName,
-          progressPercentage: roundPercentage(
+          progressPercentage: roundToTwoDecimals(
             (current.installmentNumber / group.totalInstallments) * 100,
           ),
           seriesId: group.seriesId,
@@ -498,7 +498,7 @@ function calculateGroup(
     pendingAmount: centsToMoney(pendingAmountCents),
     progressPercentage:
       trackedInstallmentCount > 0
-        ? roundPercentage((paidInstallmentCount / trackedInstallmentCount) * 100)
+        ? roundToTwoDecimals((paidInstallmentCount / trackedInstallmentCount) * 100)
         : 0,
     nextDueDate: nextInstallment?.dueDate ?? null,
     nextPeriod: nextInstallment?.period ?? null,
@@ -685,6 +685,6 @@ function allocateCentsByKey(weights: Map<string, number>, totalCents: number) {
   );
 }
 
-function roundPercentage(value: number) {
+function roundToTwoDecimals(value: number) {
   return Math.round(value * 100) / 100;
 }

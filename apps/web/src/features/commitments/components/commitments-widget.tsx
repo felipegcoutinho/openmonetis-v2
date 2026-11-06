@@ -111,7 +111,7 @@ export function CommitmentsWidget({ period }: { period: string }) {
                 { label: "Folga", amount: current.freeAmount },
               ].map((item) => (
                 <div className="grid min-w-0 justify-items-center gap-0.5" key={item.label}>
-                  <dt className="text-muted-foreground text-xs">{item.label}</dt>
+                  <dt className="font-mono text-muted-foreground text-xs">{item.label}</dt>
                   <dd className="min-w-0 truncate">
                     <MoneyValue
                       amount={item.amount}

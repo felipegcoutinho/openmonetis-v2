@@ -2,15 +2,14 @@ import { Plus } from "lucide-react";
 import { MobileRecordSelect } from "@/components/forms/mobile-record-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PersonOption } from "@/features/people/components/person-option";
 import type { useTransactionForm } from "../useTransactionForm";
 import { FieldShell } from "./transaction-field-shell";
-
 import {
   getTransactionFormErrorMessage,
   type TransactionFormValues,
 } from "./transaction-form.validation";
 import { createValue, noneValue } from "./transaction-form-options";
-import { PersonOption } from "./transaction-person-option";
 import { TransactionSplitDialog } from "./transaction-split-dialog";
 
 export function TransactionPeopleFields({

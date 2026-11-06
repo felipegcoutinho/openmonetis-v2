@@ -31,6 +31,7 @@ export function TransactionDueDateField({
                 <div className="flex items-center gap-1">
                   <DatePicker
                     id={id}
+                    className="w-auto min-w-0 flex-1 shrink"
                     aria-invalid={field.state.meta.errors.length > 0}
                     disabled={isSubmitting}
                     onChange={field.handleChange}
@@ -71,7 +72,7 @@ export function TransactionDueDateField({
               values.dueDate ? (
                 <form.Field name="dueDateRuleExcluded">
                   {(field) => (
-                    <Label htmlFor={`${id}-exclude`} className="text-sm">
+                    <Label htmlFor={`${id}-exclude`} className="font-mono text-sm">
                       <Checkbox
                         id={`${id}-exclude`}
                         checked={field.state.value}

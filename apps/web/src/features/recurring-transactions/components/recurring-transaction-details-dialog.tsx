@@ -69,7 +69,7 @@ export function RecurringTransactionDetailsDialog({
 
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground text-xs">Repetir até</dt>
+              <dt className="font-mono text-muted-foreground text-xs">Repetir até</dt>
               <dd className="mt-1 font-medium">
                 {item.recurrenceEndDate
                   ? formatRecurringExpenseDate(item.recurrenceEndDate)
@@ -79,7 +79,7 @@ export function RecurringTransactionDetailsDialog({
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-xs">Próxima ocorrência</dt>
+              <dt className="font-mono text-muted-foreground text-xs">Próxima ocorrência</dt>
               <dd className="mt-1 flex items-center gap-1.5 font-medium">
                 <CalendarDays
                   aria-hidden="true"
@@ -95,7 +95,7 @@ export function RecurringTransactionDetailsDialog({
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-xs">
+              <dt className="font-mono text-muted-foreground text-xs">
                 {item.type === "income" ? "Forma de recebimento" : "Forma de pagamento"}
               </dt>
               <dd className="mt-1 flex items-center gap-1.5 font-medium">
@@ -104,20 +104,20 @@ export function RecurringTransactionDetailsDialog({
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-xs">Conta ou cartão</dt>
+              <dt className="font-mono text-muted-foreground text-xs">Conta ou cartão</dt>
               <dd className="mt-1 font-medium">
                 <RecurringDestination item={item} />
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-xs">Categoria</dt>
+              <dt className="font-mono text-muted-foreground text-xs">Categoria</dt>
               <dd className="mt-1 flex items-center gap-1.5 font-medium">
                 <CategoryIcon className="size-4 text-muted-foreground" name={item.categoryIcon} />
                 {item.categoryName ?? "Sem categoria"}
               </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-muted-foreground text-xs">Pessoas</dt>
+              <dt className="font-mono text-muted-foreground text-xs">Pessoas</dt>
               <dd className="mt-1 font-medium">
                 <RecurringPeople item={item} />
               </dd>

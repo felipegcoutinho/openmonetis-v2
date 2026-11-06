@@ -112,7 +112,9 @@ export function BudgetDialog({
           <form.Field name="categoryId">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label htmlFor={`${id}-category`}>Categoria de despesa</Label>
+                <Label className="font-mono" htmlFor={`${id}-category`}>
+                  Categoria de despesa
+                </Label>
                 {editing && budget ? (
                   <output
                     className="flex h-9 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm"
@@ -158,7 +160,9 @@ export function BudgetDialog({
           <form.Field name="period">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label htmlFor={`${id}-period`}>Mês do orçamento</Label>
+                <Label className="font-mono" htmlFor={`${id}-period`}>
+                  Mês do orçamento
+                </Label>
                 <PeriodPicker
                   id={`${id}-period`}
                   onChange={field.handleChange}
@@ -182,7 +186,9 @@ export function BudgetDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label htmlFor={`${id}-amount`}>Limite mensal</Label>
+                <Label className="font-mono" htmlFor={`${id}-amount`}>
+                  Limite mensal
+                </Label>
                 <CurrencyInput
                   aria-invalid={field.state.meta.errors.length > 0}
                   id={`${id}-amount`}

@@ -1,6 +1,6 @@
 import type { FinancialDistributionOutput } from "@openmonetis/validators/financial-distribution";
 import { Link } from "@tanstack/react-router";
-import { Download } from "lucide-react";
+import { Download, Workflow } from "lucide-react";
 import { useRef, useState } from "react";
 import { Sankey } from "recharts";
 import { MoneyValue } from "@/components/money-value";
@@ -16,13 +16,13 @@ import {
 } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
+import { formatCurrency } from "@/lib/money-presentation";
 import { cn } from "@/lib/utils";
 import { useExportFinancialDistributionImageMutation } from "../financial-distribution.mutations";
 import {
   distributionColorMap,
   distributionFlowLabel,
   flowColor,
-  formatDistributionMoney,
   formatDistributionPercentage,
 } from "../financial-distribution.presentation";
 import { FinancialDistributionPercentage } from "./financial-distribution-percentage";
@@ -119,8 +119,10 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
   return (
     <Card className="min-w-0 gap-0 overflow-hidden pt-0">
       <CardHeader className="border-b py-5">
-        <CardTitle>
-          <h2>O caminho do seu dinheiro</h2>
+        <CardTitle className="text-base">
+          <h2 className="flex items-center gap-2">
+            <Workflow aria-hidden="true" className="size-4 shrink-0" />O caminho do seu dinheiro
+          </h2>
         </CardTitle>
         <CardDescription>Das categorias de receita às categorias de despesa.</CardDescription>
       </CardHeader>
@@ -198,7 +200,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                       >
                         <tspan x={x + width / 2}>{node.label}</tspan>
                         <tspan x={x + width / 2} dy={20} className="tabular-nums">
-                          {formatDistributionMoney(node.amount)}
+                          {formatCurrency(node.amount)}
                         </tspan>
                       </text>
                     ) : (
@@ -212,7 +214,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                           {node.label.length > 32 ? `${node.label.slice(0, 31)}…` : node.label}
                         </tspan>
                         <tspan x={labelX} dy={20} className="tabular-nums">
-                          {formatDistributionMoney(node.amount)} ·{" "}
+                          {formatCurrency(node.amount)} ·{" "}
                           {formatDistributionPercentage(node.percentage)}
                         </tspan>
                       </text>
@@ -226,14 +228,14 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                       onMouseEnter={() => node.kind !== "total" && setHoveredKey(node.key)}
                       onMouseLeave={() => setHoveredKey(null)}
                     >
-                      <title>{`${node.label}: ${formatDistributionMoney(node.amount)} · ${formatDistributionPercentage(node.percentage)}`}</title>
+                      <title>{`${node.label}: ${formatCurrency(node.amount)} · ${formatDistributionPercentage(node.percentage)}`}</title>
                       <rect x={x} y={y} width={width} height={nodeHeight} rx={3} fill={color} />
                       {node.categoryId ? (
                         <Link
                           to="/categories/$categoryId"
                           params={{ categoryId: node.categoryId }}
                           search={{ period: report.period, personScope }}
-                          aria-label={`${node.label}: ${formatDistributionMoney(node.amount)}`}
+                          aria-label={`${node.label}: ${formatCurrency(node.amount)}`}
                           className="outline-none hover:underline focus-visible:underline"
                         >
                           {text}

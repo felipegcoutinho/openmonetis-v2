@@ -31,6 +31,7 @@ import type {
   ReplaceAccountInput,
   UpdateAccountInput,
 } from "@openmonetis/validators/accounts";
+import { formatCurrency } from "../utils/currency";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
 type AccountRecord = {
@@ -316,14 +317,14 @@ export function createAccountsService(
           excludeFromBalance: input.excludeFromBalance,
         }),
       );
-      return summarizeAccount(account, userId, currentPeriod());
+      return summarizeAccount(account, userId, getCurrentPeriodInBrazil());
     },
 
-    async list(userId: string, period = currentPeriod()) {
+    async list(userId: string, period = getCurrentPeriodInBrazil()) {
       return summarizeAccounts(await repository.listByUser(userId), userId, period);
     },
 
-    async get(id: string, userId: string, period = currentPeriod()) {
+    async get(id: string, userId: string, period = getCurrentPeriodInBrazil()) {
       const account = await repository.findByIdForUser(id, userId);
 
       if (!account) {
@@ -333,10 +334,10 @@ export function createAccountsService(
       return summarizeAccount(account, userId, period);
     },
 
-    async cashFlow(id: string, userId: string, period = currentPeriod()) {
+    async cashFlow(id: string, userId: string, period = getCurrentPeriodInBrazil()) {
       const account = await repository.findByIdForUser(id, userId);
       if (!account) throw notFound("Account not found", "account_not_found");
-      const presentPeriod = currentPeriod();
+      const presentPeriod = getCurrentPeriodInBrazil();
       const oldestPresentPeriod = addMonthsToPeriod(presentPeriod, -11);
       const historyEndPeriod =
         period >= oldestPresentPeriod && period <= presentPeriod ? presentPeriod : period;
@@ -369,7 +370,7 @@ export function createAccountsService(
         throw notFound("Account not found", "account_not_found");
       }
 
-      return summarizeAccount(account, userId, currentPeriod());
+      return summarizeAccount(account, userId, getCurrentPeriodInBrazil());
     },
 
     async update(id: string, userId: string, input: UpdateAccountInput) {
@@ -390,7 +391,7 @@ export function createAccountsService(
         throw notFound("Account not found", "account_not_found");
       }
 
-      return summarizeAccount(account, userId, currentPeriod());
+      return summarizeAccount(account, userId, getCurrentPeriodInBrazil());
     },
 
     async adjustBalance(id: string, userId: string, input: AdjustAccountBalanceInput) {
@@ -474,16 +475,8 @@ export function createAccountsService(
 
 export type AccountsService = ReturnType<typeof createAccountsService>;
 
-function currentPeriod() {
-  return getCurrentPeriodInBrazil();
-}
-
 function createBalanceChangeNote(label: string, previousBalance: number, currentBalance: number) {
   return `${label}. Saldo anterior: ${formatCurrency(previousBalance)}. Saldo atual: ${formatCurrency(currentBalance)}.`;
-}
-
-function formatCurrency(amount: number) {
-  return amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function expandSettledRecurringPostings(

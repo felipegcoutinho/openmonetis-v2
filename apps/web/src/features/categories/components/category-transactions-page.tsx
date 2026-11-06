@@ -16,10 +16,8 @@ import { formatTrendPercentage } from "@/features/category-trends/category-trend
 import { categoryTrendsQueryOptions } from "@/features/category-trends/category-trends.queries";
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
-import {
-  formatPeriod,
-  type TransactionsSearch,
-} from "@/features/transactions/transactions.presentation";
+import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 import { categoryTypeLabels, getCategoryLabel } from "../categories.presentation";
 import { categoryQueryOptions } from "../categories.queries";
 import { CategoryIcon } from "../category-icons";

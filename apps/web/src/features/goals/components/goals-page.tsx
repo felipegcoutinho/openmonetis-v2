@@ -136,7 +136,7 @@ export function GoalsPage() {
               {goals.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-3">
                   <Card className="gap-1 border p-5">
-                    <p className="text-muted-foreground text-sm">Metas ativas</p>
+                    <p className="font-mono text-muted-foreground text-sm">Metas ativas</p>
                     <p className="kpi-value text-3xl">{activeCount}</p>
                   </Card>
                   <Card className="gap-1 border p-5">
@@ -144,7 +144,7 @@ export function GoalsPage() {
                     <p className="kpi-value text-3xl">{completedCount}</p>
                   </Card>
                   <Card className="gap-1 border p-5">
-                    <p className="text-muted-foreground text-sm">Total de metas</p>
+                    <p className="font-mono text-muted-foreground text-sm">Total de metas</p>
                     <p className="kpi-value text-3xl">{goals.length}</p>
                   </Card>
                 </div>

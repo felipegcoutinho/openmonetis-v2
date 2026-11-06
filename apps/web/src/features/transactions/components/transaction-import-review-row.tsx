@@ -3,13 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { formatCurrency } from "@/lib/money-presentation";
 import { cn } from "@/lib/utils";
 import type { useTransactionImportReview } from "../useTransactionImportReview";
 import { RowCategorySelect } from "./transaction-import-category-select";
 import { RowSelect } from "./transaction-import-person-select";
 import { updateRow } from "./transaction-import-review";
 import type { Props, ReviewRow } from "./transaction-import-screen.types";
-import { formatCurrency, formatDate } from "./transaction-import-screen-options";
+import { formatDate } from "./transaction-import-screen-options";
 import { TransactionTypeBadge } from "./transaction-type-badge";
 
 export function TransactionImportReviewRow({

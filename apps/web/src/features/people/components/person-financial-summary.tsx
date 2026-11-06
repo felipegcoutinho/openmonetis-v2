@@ -20,7 +20,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
-import { formatPeriod } from "@/features/transactions/transactions.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { formatPersonHistoryPeriod, personPaymentMethodLabels } from "../people.presentation";
 
@@ -85,7 +85,7 @@ function MonthlyTotalsCard({ data }: { data: PersonFinancialSummaryOutput }) {
       </CardHeader>
       <CardContent className="grid min-w-0 gap-5">
         <div>
-          <p className="text-muted-foreground text-xs">Total de despesas</p>
+          <p className="font-mono text-muted-foreground text-xs">Total de despesas</p>
           <p className="mt-1 font-medium text-2xl">
             <MoneyValue amount={data.totalExpenses} />
           </p>

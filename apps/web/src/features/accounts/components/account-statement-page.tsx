@@ -22,11 +22,9 @@ import {
 import { MoneyValue } from "@/components/money-value";
 import { Navbar } from "@/components/navigation/navbar";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
-import {
-  formatPeriod,
-  type TransactionsSearch,
-} from "@/features/transactions/transactions.presentation";
+import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
   useAddAccountYieldMutation,

@@ -51,7 +51,7 @@ export function TransactionSummary({ transaction }: { transaction: TransactionOu
         showPositiveSign={transaction.type === "income"}
       />
       <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-        <Badge className={settlement.className} variant="secondary">
+        <Badge className={cn("font-mono", settlement.className)} variant="secondary">
           <SettlementIcon aria-hidden="true" />
           {formatTransactionSettlementSummary(transaction)}
         </Badge>

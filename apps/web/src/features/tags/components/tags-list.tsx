@@ -155,7 +155,7 @@ export function TagsList({
               <dl className="grid gap-2">
                 {reportColumns.map(({ key, label }) => (
                   <div className="flex items-baseline justify-between gap-3" key={key}>
-                    <dt className="text-muted-foreground text-sm">{label}</dt>
+                    <dt className="font-mono text-muted-foreground text-sm">{label}</dt>
                     <dd>{reportValue(tag.id, key)}</dd>
                   </div>
                 ))}
@@ -168,13 +168,13 @@ export function TagsList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Etiqueta</TableHead>
+              <TableHead className="font-mono">Etiqueta</TableHead>
               {reportColumns.map(({ key, label }) => (
-                <TableHead className="text-center" key={key}>
+                <TableHead className="font-mono text-center" key={key}>
                   {label}
                 </TableHead>
               ))}
-              <TableHead className="w-32 text-right">
+              <TableHead className="font-mono w-32 text-right">
                 <span className="sr-only">Ações</span>
               </TableHead>
             </TableRow>

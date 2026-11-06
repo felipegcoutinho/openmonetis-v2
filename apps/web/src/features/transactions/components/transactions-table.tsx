@@ -51,7 +51,7 @@ export function TransactionsTable({
                     <TableHeader>
                       <TableRow>
                         {selectionMode ? (
-                          <TableHead className="w-10">
+                          <TableHead className="font-mono w-10">
                             <Checkbox
                               aria-label="Selecionar lançamentos operacionais desta página"
                               checked={selection.allSelectableSelected}
@@ -60,12 +60,12 @@ export function TransactionsTable({
                             />
                           </TableHead>
                         ) : null}
-                        <TableHead>Descrição</TableHead>
-                        <TableHead className="text-right">Valor</TableHead>
-                        <TableHead className="pl-5">Condição</TableHead>
-                        <TableHead>Forma</TableHead>
-                        <TableHead>Conta/Cartão</TableHead>
-                        <TableHead className="w-24 text-right">Ações</TableHead>
+                        <TableHead className="font-mono">Descrição</TableHead>
+                        <TableHead className="font-mono text-right">Valor</TableHead>
+                        <TableHead className="font-mono pl-5">Condição</TableHead>
+                        <TableHead className="font-mono">Forma</TableHead>
+                        <TableHead className="font-mono">Conta/Cartão</TableHead>
+                        <TableHead className="font-mono w-24 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

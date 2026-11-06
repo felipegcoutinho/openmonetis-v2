@@ -1,4 +1,5 @@
 import type { CommitmentsOutput } from "@openmonetis/validators/commitments";
+import { ChartNoAxesCombined } from "lucide-react";
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
 import { MoneyValue } from "@/components/money-value";
@@ -10,8 +11,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
-import { formatCommitmentChartPeriod, formatCommitmentPeriod } from "../commitments.presentation";
+import { formatCommitmentChartPeriod } from "../commitments.presentation";
 
 const chartConfig = {
   installmentsAmount: { label: "Parcelas", color: "var(--chart-1)" },
@@ -38,7 +40,10 @@ export function CommitmentsChart({
   return (
     <Card className="gap-0 py-0 shadow-none">
       <CardHeader className="p-5 pb-2 sm:p-6 sm:pb-2">
-        <h2 className="section-title">Comprometimento mês a mês</h2>
+        <h2 className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
+          <ChartNoAxesCombined aria-hidden="true" className="size-4 shrink-0" />
+          Comprometimento mês a mês
+        </h2>
         <p className="mt-0.5 text-muted-foreground text-xs sm:text-sm">
           Barras: o que já está contratado. Linha: receita prevista no mês.
         </p>
@@ -75,7 +80,7 @@ export function CommitmentsChart({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => formatCommitmentPeriod(String(value))}
+                  labelFormatter={(value) => formatPeriod(String(value))}
                   formatter={(value, name) => (
                     <div className="flex min-w-40 items-center justify-between gap-4">
                       <span className="flex items-center gap-2 text-muted-foreground">

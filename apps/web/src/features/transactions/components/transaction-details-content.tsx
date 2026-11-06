@@ -15,11 +15,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionAttachments } from "@/features/attachments/components/transaction-attachments";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { TransactionTags } from "@/features/tags/components/transaction-tags";
+import { formatPeriod } from "@/lib/period-presentation";
 import {
   formatDate,
   formatDateTime,
   formatPaymentMethod,
-  formatPeriod,
   recurrenceFrequencyLabels,
   transactionConditionLabels,
   transactionOriginLabels,

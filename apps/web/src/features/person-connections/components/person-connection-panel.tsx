@@ -197,7 +197,9 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor={confirmationCodeId}>Código de confirmação</Label>
+                  <Label className="font-mono" htmlFor={confirmationCodeId}>
+                    Código de confirmação
+                  </Label>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       aria-describedby={confirmationCodeHintId}
@@ -318,7 +320,7 @@ function ConnectionStatusBadge({
 }) {
   if (isLoading) {
     return (
-      <Badge className="bg-background/70 text-muted-foreground" variant="outline">
+      <Badge className="font-mono bg-background/70 text-muted-foreground" variant="outline">
         <Loader2 aria-hidden="true" className="animate-spin" /> Carregando
       </Badge>
     );
@@ -328,7 +330,7 @@ function ConnectionStatusBadge({
 
   if (hasActiveConnection) {
     return (
-      <Badge className="border-success/20 bg-success/10 text-success" variant="outline">
+      <Badge className="font-mono border-success/20 bg-success/10 text-success" variant="outline">
         <CheckCircle2 aria-hidden="true" /> {activePersonConnectionLabel}
       </Badge>
     );
@@ -336,7 +338,10 @@ function ConnectionStatusBadge({
 
   if (invitationStatus === "claimed") {
     return (
-      <Badge className="border-warning/30 bg-warning/10 text-foreground" variant="outline">
+      <Badge
+        className="font-mono border-warning/30 bg-warning/10 text-foreground"
+        variant="outline"
+      >
         <KeyRound aria-hidden="true" /> {claimedPersonConnectionInvitationLabel}
       </Badge>
     );
@@ -344,14 +349,14 @@ function ConnectionStatusBadge({
 
   if (invitationStatus === "pending") {
     return (
-      <Badge className="border-info/20 bg-info/10 text-info" variant="outline">
+      <Badge className="font-mono border-info/20 bg-info/10 text-info" variant="outline">
         <Clock3 aria-hidden="true" /> {pendingPersonConnectionInvitationLabel}
       </Badge>
     );
   }
 
   return (
-    <Badge className="bg-background/70 text-muted-foreground" variant="outline">
+    <Badge className="font-mono bg-background/70 text-muted-foreground" variant="outline">
       Não conectada
     </Badge>
   );

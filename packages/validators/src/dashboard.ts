@@ -184,6 +184,8 @@ export const DashboardAttentionItemOutputSchema = z
     kind: z.enum(dashboardAttentionKinds),
     severity: z.enum(dashboardAttentionSeverities),
     title: z.string().nullable(),
+    logo: z.string().nullable(),
+    categoryIcon: z.string().nullable(),
     amount: z.number().nonnegative().nullable(),
     dueDate: z.iso.date().nullable(),
     daysUntilDue: z.number().int().nullable(),

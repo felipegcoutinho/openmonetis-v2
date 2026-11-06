@@ -17,8 +17,9 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getCategoryLabel } from "@/features/categories/categories.presentation";
 import { CategoryIcon } from "@/features/categories/category-icons";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
-import { formatTrendPercentage, formatTrendPeriod } from "../category-trends.presentation";
+import { formatTrendPercentage } from "../category-trends.presentation";
 
 type CategoryTrendsListProps = {
   categories: CategoryTrendsOutput["categories"];
@@ -169,7 +170,7 @@ function CategorySection({
           </caption>
           <TableHeader className="sticky top-0 z-20 bg-card">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="sticky left-0 z-30 border-r bg-card px-5" scope="col">
+              <TableHead className="font-mono sticky left-0 z-30 border-r bg-card px-5" scope="col">
                 Categoria
               </TableHead>
               {periods.map((period) => (
@@ -181,11 +182,11 @@ function CategorySection({
                   key={period.period}
                   scope="col"
                 >
-                  {formatTrendPeriod(period.period, true)}
+                  {formatPeriod(period.period, true)}
                 </TableHead>
               ))}
               <TableHead
-                className="sticky right-[128px] z-30 overflow-hidden border-l bg-card px-4 text-right text-xs"
+                className="font-mono sticky right-[128px] z-30 overflow-hidden border-l bg-card px-4 text-right text-xs"
                 aria-sort={sortKey === "averageAmount" ? "descending" : "none"}
                 scope="col"
               >
@@ -208,7 +209,7 @@ function CategorySection({
                 </span>
               </TableHead>
               <TableHead
-                className="sticky right-0 z-30 overflow-hidden bg-card px-4 text-right text-xs"
+                className="font-mono sticky right-0 z-30 overflow-hidden bg-card px-4 text-right text-xs"
                 aria-sort={sortKey === "totalAmount" ? "descending" : "none"}
                 scope="col"
               >
@@ -347,7 +348,7 @@ function CategorySection({
                   key={value.period}
                 >
                   <span className="text-muted-foreground text-xs">
-                    {formatTrendPeriod(value.period, true)}
+                    {formatPeriod(value.period, true)}
                   </span>
                   <TrendValueCell
                     detail={category.isDetail}

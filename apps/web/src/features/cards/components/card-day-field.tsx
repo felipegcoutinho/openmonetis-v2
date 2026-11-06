@@ -26,7 +26,9 @@ export function DayField({
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center gap-1.5">
-        <Label htmlFor={fieldId}>{label}</Label>
+        <Label className="font-mono" htmlFor={fieldId}>
+          {label}
+        </Label>
         {help ? (
           <Tooltip>
             <TooltipTrigger

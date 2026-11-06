@@ -372,10 +372,10 @@ function buildSummary(
 ): CategoryTrendsSummary {
   const totals = periods.reduce(
     (result, period) => {
-      result.incomeCents += toCents(period.incomeAmount);
-      result.expenseCents += toCents(period.expenseAmount);
-      result.actualCents += toCents(period.actualAmount);
-      result.recurringCents += toCents(period.recurringAmount);
+      result.incomeCents += toAbsoluteCents(period.incomeAmount);
+      result.expenseCents += toAbsoluteCents(period.expenseAmount);
+      result.actualCents += toAbsoluteCents(period.actualAmount);
+      result.recurringCents += toAbsoluteCents(period.recurringAmount);
       return result;
     },
     { incomeCents: 0, expenseCents: 0, actualCents: 0, recurringCents: 0 },
@@ -406,7 +406,7 @@ function calculateChange(
   if (previousCents === 0 && currentCents !== 0) return { kind: "started", percentage: null };
   if (currentCents === previousCents) return { kind: "stable", percentage: 0 };
 
-  const percentage = roundPercentage(((currentCents - previousCents) / previousCents) * 100);
+  const percentage = roundToTwoDecimals(((currentCents - previousCents) / previousCents) * 100);
   return { kind: currentCents > previousCents ? "increase" : "decrease", percentage };
 }
 
@@ -420,7 +420,7 @@ function addCategoryAmount(
 ) {
   const amountsByPeriod = amountsByCategory.get(categoryId) ?? new Map();
   const amounts = amountsByPeriod.get(period) ?? emptyCategoryPeriodAmounts();
-  amounts[field] += signed ? toSignedCents(amount) : toCents(amount);
+  amounts[field] += signed ? toSignedCents(amount) : toAbsoluteCents(amount);
   amountsByPeriod.set(period, amounts);
   amountsByCategory.set(categoryId, amountsByPeriod);
 }
@@ -469,7 +469,7 @@ function emptyPeriodAmounts(): PeriodAmounts {
   return { ...emptyCategoryPeriodAmounts(), incomeCents: 0, expenseCents: 0 };
 }
 
-function toCents(amount: string | number) {
+function toAbsoluteCents(amount: string | number) {
   const numericAmount = Math.abs(Number(amount));
   return Number.isFinite(numericAmount) ? Math.round(numericAmount * 100) : 0;
 }
@@ -479,6 +479,6 @@ function toSignedCents(amount: string | number) {
   return Number.isFinite(numericAmount) ? Math.round(numericAmount * 100) : 0;
 }
 
-function roundPercentage(value: number) {
+function roundToTwoDecimals(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }

@@ -81,12 +81,14 @@ export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardPro
               </p>
             </div>
           </div>
-          <Badge variant="secondary">{goalStatusLabels[goal.status]}</Badge>
+          <Badge className="font-mono" variant="secondary">
+            {goalStatusLabels[goal.status]}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="grid flex-1 content-start gap-5">
         <div>
-          <p className="text-muted-foreground text-xs">Valor economizado</p>
+          <p className="font-mono text-muted-foreground text-xs">Valor economizado</p>
           <p className="mt-1 text-2xl font-medium">
             <MoneyValue amount={goal.currentAmount} />{" "}
             <span className="text-sm text-muted-foreground">

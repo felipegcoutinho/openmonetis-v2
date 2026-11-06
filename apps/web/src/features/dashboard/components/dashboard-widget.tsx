@@ -28,20 +28,20 @@ export function DashboardWidget({
     <Card className={cn("h-115 gap-0 border py-0", className)}>
       <div className="border-b">
         <CardHeader className="flex flex-row items-center justify-between gap-3 px-4 py-4">
-          <div className="flex min-w-0 items-center gap-2">
-            {icon ? (
-              <span className="grid size-7 shrink-0 place-items-center text-muted-foreground [&>svg]:size-4.5">
-                {icon}
-              </span>
-            ) : null}
-            <div className="min-w-0">
-              <CardTitle className="truncate text-sm leading-tight">{title}</CardTitle>
-              {description ? (
-                <CardDescription className="mt-0.5 text-xs leading-tight">
-                  {description}
-                </CardDescription>
+          <div className="min-w-0">
+            <CardTitle className="flex min-w-0 items-center gap-2 text-base">
+              {icon ? (
+                <span className="grid size-4 shrink-0 place-items-center [&>svg]:size-4">
+                  {icon}
+                </span>
               ) : null}
-            </div>
+              <span className="truncate">{title}</span>
+            </CardTitle>
+            {description ? (
+              <CardDescription className="mt-0.5 text-xs leading-tight">
+                {description}
+              </CardDescription>
+            ) : null}
           </div>
           {action || controls ? (
             <div className="flex shrink-0 items-center gap-1">

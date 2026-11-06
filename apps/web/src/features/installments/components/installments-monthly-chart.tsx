@@ -12,11 +12,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
-import {
-  formatInstallmentChartPeriod,
-  formatInstallmentPeriod,
-} from "../installments.presentation";
+import { formatInstallmentChartPeriod } from "../installments.presentation";
 
 const chartConfig = {
   totalAmount: { label: "Parcelas", color: "var(--brand)" },
@@ -109,7 +107,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(value) => formatInstallmentPeriod(String(value))}
+                    labelFormatter={(value) => formatPeriod(String(value))}
                     formatter={(value, name, item) => (
                       <div className="grid min-w-40 gap-1">
                         <div className="flex items-center justify-between gap-4">
@@ -175,7 +173,7 @@ export function InstallmentsMonthlyChart({ report, isFetching }: InstallmentsMon
               <tbody>
                 {report.monthlyHistory.map((item) => (
                   <tr key={item.period}>
-                    <th scope="row">{formatInstallmentPeriod(item.period)}</th>
+                    <th scope="row">{formatPeriod(item.period)}</th>
                     <td>
                       <MoneyValue amount={item.totalAmount} />
                     </td>

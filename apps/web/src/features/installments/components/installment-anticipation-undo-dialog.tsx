@@ -12,9 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { useUndoInstallmentAnticipationMutation } from "../installments.mutations";
-import { formatInstallmentPeriod } from "../installments.presentation";
 import { installmentAnticipationQueryOptions } from "../installments.queries";
 
 export function InstallmentAnticipationUndoDialog({
@@ -155,7 +155,7 @@ export function InstallmentAnticipationUndoDialog({
                         </span>
                         <span className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                           <CalendarDays aria-hidden="true" className="size-3" />
-                          Voltar para {formatInstallmentPeriod(installment.originalPeriod)}
+                          Voltar para {formatPeriod(installment.originalPeriod)}
                         </span>
                       </Label>
                       <MoneyValue amount={installment.amount} className="shrink-0 font-medium" />

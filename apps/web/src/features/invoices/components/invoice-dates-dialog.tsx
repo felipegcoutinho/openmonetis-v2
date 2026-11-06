@@ -82,7 +82,9 @@ export function InvoiceDatesDialog({
           <form.Field name="closingDate">
             {(field) => (
               <div className="grid w-full gap-2">
-                <Label htmlFor={`${id}-closing-date`}>Data de fechamento</Label>
+                <Label className="font-mono" htmlFor={`${id}-closing-date`}>
+                  Data de fechamento
+                </Label>
                 <DatePicker
                   id={`${id}-closing-date`}
                   value={field.state.value}
@@ -94,7 +96,9 @@ export function InvoiceDatesDialog({
           <form.Field name="dueDate">
             {(field) => (
               <div className="grid w-full gap-2">
-                <Label htmlFor={`${id}-due-date`}>Data de vencimento</Label>
+                <Label className="font-mono" htmlFor={`${id}-due-date`}>
+                  Data de vencimento
+                </Label>
                 <DatePicker
                   id={`${id}-due-date`}
                   value={field.state.value}

@@ -82,7 +82,9 @@ export function MyAccountsWidget({ period }: { period: string }) {
           {accounts.length > 0 ? (
             <div className="flex items-end justify-between gap-4 pb-4 pt-2">
               <div>
-                <p className="text-muted-foreground text-xs">Saldo das contas incluídas</p>
+                <p className="font-mono text-muted-foreground text-xs">
+                  Saldo das contas incluídas
+                </p>
                 <MoneyValue
                   amount={accountsQuery.data.totalBalance}
                   className={cn(

@@ -184,3 +184,43 @@ test("invoice reduction lowers the selected person's expenses", () => {
   assert.equal(summary.totalExpenses, 75);
   assert.equal(summary.paymentMethods[0]?.amount, 75);
 });
+
+test("invoice payments and balance adjustments do not count as the person's expenses", () => {
+  const summary = calculatePersonFinancialSummary(
+    [
+      {
+        amount: -100,
+        origin: "regular",
+        paymentMethod: "credit_card",
+        period: "2026-08",
+        type: "expense",
+      },
+      {
+        amount: -100,
+        origin: "invoicePayment",
+        paymentMethod: "bank_transfer",
+        period: "2026-08",
+        type: "expense",
+      },
+      {
+        amount: -30,
+        origin: "accountBalanceAdjustment",
+        paymentMethod: "bank_transfer",
+        period: "2026-08",
+        type: "expense",
+      },
+    ],
+    ["2026-08"],
+    "2026-08",
+  );
+
+  assert.equal(summary.totalExpenses, 100);
+  assert.equal(
+    summary.paymentMethods.find((item) => item.paymentMethod === "credit_card")?.amount,
+    100,
+  );
+  assert.equal(
+    summary.paymentMethods.find((item) => item.paymentMethod === "bank_transfer")?.amount,
+    0,
+  );
+});

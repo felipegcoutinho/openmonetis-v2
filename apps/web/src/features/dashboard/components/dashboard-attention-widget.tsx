@@ -2,13 +2,22 @@ import type { DashboardAttentionSeverity } from "@openmonetis/domain/dashboard";
 import type { DashboardAttentionItemOutput } from "@openmonetis/validators/dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, ChevronRight, RefreshCw } from "lucide-react";
+import { Image } from "@unpic/react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  CircleAlert,
+  CreditCard,
+  Inbox,
+  RefreshCw,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CategoryIcon } from "@/features/categories/category-icons";
 import { cn } from "@/lib/utils";
 import {
   attentionActionLabels,
@@ -80,7 +89,11 @@ export function DashboardAttentionWidget({
   return (
     <Card aria-labelledby={`attention-${variant}-title`} className="gap-3 border p-4" role="region">
       <div className="flex items-center gap-2">
-        <h2 className="font-medium text-sm" id={`attention-${variant}-title`}>
+        <h2
+          className="flex items-center gap-2 font-heading font-medium text-base leading-normal"
+          id={`attention-${variant}-title`}
+        >
+          <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
           Precisa de atenção
         </h2>
         {items.length > 0 ? <Badge variant="secondary">{items.length}</Badge> : null}
@@ -177,7 +190,10 @@ function AttentionItem({
         <span className="truncate">{getAttentionKindLabel(item)}</span>
       </span>
       <span className="flex min-w-0 items-baseline justify-between gap-2">
-        <span className="truncate font-medium text-sm">{getAttentionTitle(item)}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <AttentionItemVisual item={item} />
+          <span className="truncate font-medium text-sm">{getAttentionTitle(item)}</span>
+        </span>
         {item.amount !== null ? (
           <MoneyValue amount={item.amount} className="shrink-0 font-medium text-sm" />
         ) : null}
@@ -213,6 +229,35 @@ function AttentionItem({
     >
       {content}
     </AttentionLink>
+  );
+}
+
+function AttentionItemVisual({ item }: { item: DashboardAttentionItemOutput }) {
+  if (item.kind === "invoice" && item.logo) {
+    return (
+      <Image
+        alt=""
+        className="size-5 shrink-0 rounded-full object-contain"
+        height={20}
+        layout="fixed"
+        src={item.logo}
+        width={20}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+    >
+      {item.kind === "invoice" ? (
+        <CreditCard className="size-3" />
+      ) : item.kind === "inbox" ? (
+        <Inbox className="size-3" />
+      ) : (
+        <CategoryIcon className="size-3" name={item.categoryIcon} />
+      )}
+    </span>
   );
 }
 

@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import {
   formatInstallmentOption,
-  recurrenceFrequencyLabels,
+  recurrenceFrequencyOptionLabels,
   transactionConditionLabels,
 } from "../transactions.presentation";
 import { installmentOptionsQueryOptions } from "../transactions.queries";
@@ -207,13 +207,15 @@ export function TransactionScheduleFields({
                       aria-invalid={field.state.meta.errors.length > 0}
                     >
                       <SelectValue placeholder="Selecione">
-                        {recurrenceFrequencyLabels[field.state.value]}
+                        <RecurrenceFrequencyLabel
+                          label={recurrenceFrequencyOptionLabels[field.state.value]}
+                        />
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(recurrenceFrequencyLabels).map(([value, label]) => (
+                      {Object.entries(recurrenceFrequencyOptionLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
-                          {label}
+                          <RecurrenceFrequencyLabel label={label} />
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -294,5 +296,17 @@ export function TransactionScheduleFields({
         </form.Field>
       ) : null}
     </>
+  );
+}
+
+function RecurrenceFrequencyLabel({ label }: { label: string }) {
+  const descriptionStart = label.indexOf(" (");
+  if (descriptionStart === -1) return label;
+
+  return (
+    <span>
+      {label.slice(0, descriptionStart)}{" "}
+      <span className="text-muted-foreground opacity-80">{label.slice(descriptionStart + 1)}</span>
+    </span>
   );
 }

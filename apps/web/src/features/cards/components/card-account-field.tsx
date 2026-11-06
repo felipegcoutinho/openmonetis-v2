@@ -19,7 +19,9 @@ export function CardAccountField({
     <form.Field name="accountId">
       {(field) => (
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={fieldId(field.name)}>Conta vinculada</Label>
+          <Label className="font-mono" htmlFor={fieldId(field.name)}>
+            Conta vinculada
+          </Label>
           <Select
             disabled={accounts.length === 0}
             onValueChange={(value) => {

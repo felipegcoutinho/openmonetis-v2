@@ -9,6 +9,7 @@ import {
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import type { CardOutput } from "@openmonetis/validators/cards";
 import type { InboxItemSummaryOutput } from "@openmonetis/validators/inbox";
+import { formatCurrency } from "../../lib/money-presentation";
 
 export type InboxSourceMatch = {
   id: string;
@@ -31,7 +32,7 @@ export const inboxStatusLabels = {
 
 export function formatInboxAmount(value: number | null) {
   if (value === null) return null;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  return formatCurrency(value);
 }
 
 export function formatInboxTimestamp(value: string) {

@@ -31,14 +31,6 @@ export function resolveInstallmentsSearch(search: InstallmentsSearch): ListInsta
   };
 }
 
-export function formatInstallmentPeriod(period: string) {
-  const label = formatDateInBrazil(periodToSafeInstant(period), {
-    month: "long",
-    year: "numeric",
-  });
-  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
-}
-
 export function formatInstallmentChartPeriod(period: string) {
   const label = formatDateInBrazil(periodToSafeInstant(period), {
     month: "short",

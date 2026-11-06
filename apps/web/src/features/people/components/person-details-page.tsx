@@ -23,10 +23,8 @@ import { PersonConnectionsManager } from "@/features/person-connections/componen
 import { personConnectionsQueryOptions } from "@/features/person-connections/person-connections.queries";
 import { PersonSettlementsCard } from "@/features/person-settlements/components/person-settlements-card";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
-import {
-  formatPeriod,
-  type TransactionsSearch,
-} from "@/features/transactions/transactions.presentation";
+import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { useReplacePersonMutation } from "../people.mutations";
 import {
@@ -224,7 +222,7 @@ function PersonSummary({
                 <Pencil aria-hidden="true" />
               </Button>
               {isAdmin ? <CurrentUserBadge /> : null}
-              <Badge variant={isInactive ? "outline" : "secondary"}>
+              <Badge className="font-mono" variant={isInactive ? "outline" : "secondary"}>
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -297,7 +295,7 @@ function PersonDetail({
     <div className="flex items-start gap-2.5">
       <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="font-mono text-muted-foreground text-xs">{label}</p>
         <p className="wrap-break-word font-medium text-sm">{value}</p>
       </div>
     </div>

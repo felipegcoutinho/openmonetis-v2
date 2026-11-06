@@ -15,6 +15,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EntityOption } from "./transaction-entity-option";
 export type SettlementTarget = {
   ids?: string[];
   recurringRuleId?: string;
@@ -114,7 +115,9 @@ export function TransactionSettlementDialog({
             <form.Field name="amount">
               {(field) => (
                 <div className="grid gap-2">
-                  <Label htmlFor={`${id}-amount`}>{income ? "Valor recebido" : "Valor pago"}</Label>
+                  <Label className="font-mono" htmlFor={`${id}-amount`}>
+                    {income ? "Valor recebido" : "Valor pago"}
+                  </Label>
                   <CurrencyInput
                     id={`${id}-amount`}
                     value={field.state.value}
@@ -127,7 +130,7 @@ export function TransactionSettlementDialog({
           <form.Field name="settledDate">
             {(field) => (
               <div className="grid gap-2">
-                <Label htmlFor={`${id}-date`}>
+                <Label className="font-mono" htmlFor={`${id}-date`}>
                   {income ? "Data do recebimento" : "Data do pagamento"}
                 </Label>
                 <MobileDatePicker
@@ -142,7 +145,7 @@ export function TransactionSettlementDialog({
           <form.Field name="accountId">
             {(field) => (
               <div className="grid gap-2">
-                <Label htmlFor={`${id}-account`}>
+                <Label className="font-mono" htmlFor={`${id}-account`}>
                   {multiple ? "Conta para todos os lançamentos" : "Conta da baixa"}
                 </Label>
                 <Select
@@ -150,14 +153,18 @@ export function TransactionSettlementDialog({
                   onValueChange={(value) => value && field.handleChange(value)}
                 >
                   <SelectTrigger id={`${id}-account`} className="w-full">
-                    <SelectValue placeholder="Selecione a conta" />
+                    <SelectValue placeholder="Selecione a conta">
+                      <EntityOption
+                        entity={accounts.find((account) => account.id === field.state.value)}
+                      />
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {accounts
                       .filter((account) => !account.isArchived)
                       .map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name}
+                          <EntityOption entity={account} />
                         </SelectItem>
                       ))}
                   </SelectContent>

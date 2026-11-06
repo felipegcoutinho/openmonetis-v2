@@ -154,7 +154,7 @@ function FinancialHistoryChart({
         </ComposedChart>
       </ChartContainer>
 
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-muted-foreground text-xs">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 font-mono text-muted-foreground text-xs">
         {Object.values(chartConfig).map((item) => (
           <ChartLegendItem color={item.color} key={item.label} label={item.label} />
         ))}

@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/chart";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCategoryLabel } from "@/features/categories/categories.presentation";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
-import { formatTrendPeriod } from "../category-trends.presentation";
 
 const chartColors = [
   "var(--chart-1)",
@@ -72,8 +72,8 @@ export function CategoryTrendsChart({ categories, periods }: CategoryTrendsChart
   const periodLabel =
     firstPeriod && lastPeriod
       ? firstPeriod === lastPeriod
-        ? formatTrendPeriod(firstPeriod)
-        : `${formatTrendPeriod(firstPeriod)} – ${formatTrendPeriod(lastPeriod)}`
+        ? formatPeriod(firstPeriod)
+        : `${formatPeriod(firstPeriod)} – ${formatPeriod(lastPeriod)}`
       : "";
 
   return (
@@ -116,14 +116,14 @@ export function CategoryTrendsChart({ categories, periods }: CategoryTrendsChart
               axisLine={false}
               dataKey="period"
               minTickGap={32}
-              tickFormatter={(value) => formatTrendPeriod(String(value), true)}
+              tickFormatter={(value) => formatPeriod(String(value), true)}
               tickLine={false}
               tickMargin={8}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => formatTrendPeriod(String(value))}
+                  labelFormatter={(value) => formatPeriod(String(value))}
                   formatter={(value, name) =>
                     Number(value) > 0 ? (
                       <div className="flex min-w-44 items-center justify-between gap-5">

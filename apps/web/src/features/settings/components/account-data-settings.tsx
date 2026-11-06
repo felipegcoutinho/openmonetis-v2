@@ -244,7 +244,7 @@ function DangerousActionDialog({
               return (
                 <div className="grid gap-2">
                   <Label
-                    className="normal-case font-sans text-sm tracking-normal"
+                    className="normal-case font-mono text-sm tracking-normal"
                     htmlFor={inputId}
                   >
                     Digite <strong>{content.confirmation}</strong> para confirmar

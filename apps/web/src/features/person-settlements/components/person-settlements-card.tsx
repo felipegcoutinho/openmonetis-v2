@@ -210,7 +210,7 @@ function BalanceMetric({
 }) {
   return (
     <div className="rounded-lg border bg-muted/20 p-3">
-      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-mono text-muted-foreground text-xs">{label}</p>
       <p className={emphasized ? "mt-1 font-semibold text-lg" : "mt-1 font-medium text-sm"}>
         {value}
       </p>

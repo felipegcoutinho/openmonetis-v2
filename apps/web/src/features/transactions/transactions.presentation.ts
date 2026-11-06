@@ -1,9 +1,5 @@
 import type { BulkTransactionTarget } from "@openmonetis/domain/transactions";
-import {
-  dateOnlyToSafeInstant,
-  formatDateInBrazil,
-  periodToSafeInstant,
-} from "@openmonetis/shared/date-time";
+import { dateOnlyToSafeInstant, formatDateInBrazil } from "@openmonetis/shared/date-time";
 import type {
   InstallmentOptionOutput,
   TransactionInput,
@@ -252,14 +248,13 @@ export const recurrenceFrequencyLabels: Record<RecurrenceFrequency, string> = {
   annual: "Anual",
 };
 
-export function formatPeriod(period: string) {
-  const label = formatDateInBrazil(periodToSafeInstant(period), {
-    month: "long",
-    year: "numeric",
-  });
-
-  return `${label.charAt(0).toLocaleUpperCase("pt-BR")}${label.slice(1)}`;
-}
+export const recurrenceFrequencyOptionLabels: Record<RecurrenceFrequency, string> = {
+  ...recurrenceFrequencyLabels,
+  bimonthly: "Bimestral (A cada 2 meses)",
+  quarterly: "Trimestral (A cada 3 meses)",
+  semiannual: "Semestral (A cada 6 meses)",
+  annual: "Anual (A cada 12 meses)",
+};
 
 export function formatInstallmentOption(count: number, option?: InstallmentOptionOutput) {
   if (!Number.isInteger(count) || count < 2) return "Selecione";

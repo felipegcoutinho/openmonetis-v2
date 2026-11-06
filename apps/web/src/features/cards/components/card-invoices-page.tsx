@@ -60,11 +60,9 @@ import { formatInvoicePaymentOption } from "@/features/invoices/invoices.present
 import { invoicesQueryOptions } from "@/features/invoices/invoices.queries";
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
-import {
-  formatPeriod,
-  type TransactionsSearch,
-} from "@/features/transactions/transactions.presentation";
+import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
 import { useReplaceCardMutation } from "../cards.mutations";

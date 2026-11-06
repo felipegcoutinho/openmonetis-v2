@@ -265,7 +265,7 @@ function PasswordField({
 
   return (
     <div className="grid gap-2">
-      <Label className="font-sans text-sm tracking-normal" htmlFor={id}>
+      <Label className="font-mono text-sm tracking-normal" htmlFor={id}>
         {label}
       </Label>
       <PasswordInput

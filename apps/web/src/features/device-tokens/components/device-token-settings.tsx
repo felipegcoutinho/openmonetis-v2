@@ -4,15 +4,7 @@ import {
 } from "@openmonetis/validators/device-tokens";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
-import {
-  CircleCheck,
-  Clipboard,
-  LoaderCircle,
-  Plus,
-  RefreshCw,
-  Smartphone,
-  Unplug,
-} from "lucide-react";
+import { CircleCheck, Clipboard, LoaderCircle, Plus, Smartphone } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
@@ -30,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -42,12 +33,9 @@ import {
   useRevokeDeviceTokenMutation,
   useRotateDeviceTokenMutation,
 } from "../device-tokens.mutations";
-import {
-  formatDeviceTokenDate,
-  formatDeviceTokenLastUsed,
-  formatDeviceTokenRecentCaptures,
-} from "../device-tokens.presentation";
 import { deviceTokensQueryOptions } from "../device-tokens.queries";
+import { CompanionGuide } from "./companion-guide";
+import { DeviceTokenItem } from "./device-token-item";
 import { DeviceTokenQrCode } from "./device-token-qr-code";
 
 const connectionCheckIntervalMs = 3_000;
@@ -134,17 +122,12 @@ export function DeviceTokenSettings() {
   return (
     <SettingsSection
       contentClassName="grid gap-5"
-      description="Autorize cada Android que pode enviar capturas para sua conta."
+      description="Conecte o Android que recebe as notificações do banco e revise as capturas antes de criar lançamentos."
       icon={Smartphone}
-      title="Aparelhos do Companion"
+      title="Companion para Android"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="font-medium text-sm">Aparelhos autorizados</p>
-          <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-relaxed">
-            Gerencie os aparelhos conectados e remova os acessos que não utiliza mais.
-          </p>
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-mono font-medium text-sm">Aparelhos autorizados</p>
         <Button className="w-full sm:w-auto" onClick={() => setCreateOpen(true)} type="button">
           <Plus aria-hidden="true" /> Conectar aparelho
         </Button>
@@ -167,60 +150,31 @@ export function DeviceTokenSettings() {
         query.data.length ? (
           <ul className="divide-y divide-border rounded-lg border border-border">
             {query.data.map((token) => (
-              <li className="flex items-center gap-2 p-4 sm:gap-3" key={token.id}>
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-foreground">
-                  <Smartphone aria-hidden="true" className="size-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <p className="truncate font-medium text-sm" title={token.name}>
-                      {token.name}
-                    </p>
-                    {token.expiresSoon ? (
-                      <Badge className="shrink-0" variant="destructive">
-                        Expira em breve
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-muted-foreground text-xs">
-                    <span>{formatDeviceTokenLastUsed(token.lastUsedAt)}</span>
-                    <span>{formatDeviceTokenRecentCaptures(token.recentCaptureCount)}</span>
-                    <span>Expira em {formatDeviceTokenDate(token.expiresAt)}</span>
-                  </div>
-                </div>
-                <Button
-                  aria-label={`Renovar token de ${token.name}`}
-                  className="text-muted-foreground"
-                  disabled={rotateMutation.isPending || revokeMutation.isPending}
-                  onClick={() => setRotateId(token.id)}
-                  size="icon"
-                  title="Renovar token"
-                  type="button"
-                  variant="ghost"
-                >
-                  <RefreshCw aria-hidden="true" />
-                </Button>
-                <Button
-                  aria-label={`Revogar acesso de ${token.name}`}
-                  className="text-muted-foreground hover:text-destructive"
-                  disabled={revokeMutation.isPending || rotateMutation.isPending}
-                  onClick={() => setRevokeId(token.id)}
-                  size="icon"
-                  title="Revogar acesso"
-                  type="button"
-                  variant="ghost"
-                >
-                  <Unplug aria-hidden="true" />
-                </Button>
-              </li>
+              <DeviceTokenItem
+                actionsDisabled={rotateMutation.isPending || revokeMutation.isPending}
+                key={token.id}
+                onRevoke={() => setRevokeId(token.id)}
+                onRotate={() => setRotateId(token.id)}
+                token={token}
+              />
             ))}
           </ul>
         ) : (
           <div className="flex items-center gap-3 rounded-lg border border-dashed border-border p-5 text-muted-foreground">
             <Smartphone aria-hidden="true" className="size-5 shrink-0" />
-            <p className="text-sm">Você ainda não conectou um aparelho ao Companion.</p>
+            <p className="text-sm">
+              Nenhum aparelho conectado. Siga os passos abaixo para conectar o primeiro.
+            </p>
           </div>
         )
+      ) : null}
+
+      {query.data || query.isError ? (
+        <CompanionGuide
+          // Reopen the guide whenever the account goes back to having no authorized device.
+          defaultOpen={!query.data?.length}
+          key={query.data?.length ? "connected" : "empty"}
+        />
       ) : null}
 
       <Dialog onOpenChange={changeCreateOpen} open={createOpen}>
@@ -243,8 +197,8 @@ export function DeviceTokenSettings() {
                   aria-live="polite"
                   className={
                     createdTokenConnected
-                      ? "flex items-center gap-1.5 font-medium text-sm text-success"
-                      : "flex items-center gap-1.5 text-muted-foreground text-sm"
+                      ? "flex items-center gap-1.5 font-mono font-medium text-sm text-success"
+                      : "flex items-center gap-1.5 font-mono text-muted-foreground text-sm"
                   }
                 >
                   {createdTokenConnected ? (
@@ -302,7 +256,9 @@ export function DeviceTokenSettings() {
               <form.Field name="name">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label htmlFor={nameId}>Nome do aparelho</Label>
+                    <Label className="font-mono" htmlFor={nameId}>
+                      Nome do aparelho
+                    </Label>
                     <Input
                       aria-invalid={field.state.meta.errors.length > 0}
                       aria-describedby={
