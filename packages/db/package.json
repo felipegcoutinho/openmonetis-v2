@@ -18,13 +18,13 @@
   "dependencies": {
     "@openmonetis/domain": "workspace:*",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.23.0"
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@types/node": "^22.19.19",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.10",
-    "typescript": "^6"
+    "drizzle-kit": "^0.31.11",
+    "typescript": "^7.0.2"
   }
 }

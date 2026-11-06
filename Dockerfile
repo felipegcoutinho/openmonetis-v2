@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_VERSION=22.16.0
+ARG NODE_VERSION=22.23.4
 
 FROM node:${NODE_VERSION}-bookworm-slim AS workspace
 

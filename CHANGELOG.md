@@ -7,6 +7,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- Node das imagens Docker e do CI atualizado para 22.23.4; TypeScript 7 e `@types/node` 26
+  passam a valer em todos os pacotes do workspace; dependências atualizadas para as versões
+  menores mais recentes (React 19.3.1, TanStack Query, AWS SDK, Drizzle, Tailwind, Playwright,
+  oxlint, lucide-react, Base UI e outras). O Biome fica na linha 2.5 (2.5.15) até a adoção da
+  formatação de Markdown/YAML e das novas regras da 2.6.
+
+### Segurança
+
+- Dependências atualizadas para corrigir vulnerabilidades conhecidas: `better-auth`,
+  `@better-auth/passkey` e `@better-auth/drizzle-adapter` 1.7.16 (login como outro usuário via
+  state do OAuth e OAuth Proxy), `@tanstack/react-start` 1.169.4 e `@tanstack/react-router`
+  1.170.46 (XSS refletido em respostas de server functions e falhas do `seroval`), `zod` 4.6.7,
+  `hono` 4.13.16 e `@hono/node-server` 2.1.6 (bypass de middleware no `serveStatic`),
+  `better-call` 1.4.5, `vite` 8.3.5 e `shadcn` 4.23.0.
+- Dependências transitivas vulneráveis atualizadas no lockfile (`undici`, `fast-uri`,
+  `brace-expansion`, `ip-address`, `launch-editor`, `shell-quote`, `browserslist`,
+  `source-map-js`, `systeminformation`) e `js-yaml` fixado em 4.3.2 via override.
+
 ## [0.14.0] - 2026-10-31
 
 Suaviza o tema escuro, padroniza as listas suspensas nos dois temas e redesenha a calculadora, além
