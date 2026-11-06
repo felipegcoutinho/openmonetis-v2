@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-06
+
+Adiciona o diagnóstico financeiro e o chat com assistentes de IA usando a assinatura de cada
+pessoa no Claude, no ChatGPT (Codex) ou no Google (Antigravity), com permissões de dados,
+retenção do histórico e um serviço opcional no Compose. Padroniza títulos e rótulos da
+interface, redesenha as regras da Caixa de entrada e os ajustes do Companion, corrige seletores,
+totais da pessoa e a exportação de tendências e atualiza dependências com vulnerabilidades.
+
 ### Alterado
 
 - Documentação do assistente de IA: o guia de produção ganha a seção **Assistente de IA
@@ -1096,7 +1104,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.12.0...v0.13.0
