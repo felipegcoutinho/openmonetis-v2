@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { app, startAiDataRetention } from "./app";
+import { app, startAiDataRetention, startPersonReportSchedule } from "./app";
 
 const port = Number(process.env.API_PORT ?? process.env.PORT ?? 7001);
 
@@ -14,5 +14,6 @@ serve(
 );
 
 startAiDataRetention();
+startPersonReportSchedule();
 
 export { app };

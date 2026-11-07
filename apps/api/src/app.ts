@@ -49,6 +49,11 @@ import {
   peopleRepository,
 } from "./repositories/people.repository";
 import { personConnectionsRepository } from "./repositories/person-connections.repository";
+import {
+  personReportSchedulesRepository,
+  personReportsRepository,
+  runPersonReportScheduleExclusively,
+} from "./repositories/person-reports.repository";
 import { personSettlementsRepository } from "./repositories/person-settlements.repository";
 import { preferencesRepository } from "./repositories/preferences.repository";
 import { recurringExpensesRepository } from "./repositories/recurring-expenses.repository";
@@ -89,6 +94,7 @@ import { createNotesRoute } from "./routes/notes";
 import { createNotificationsRoute } from "./routes/notifications";
 import { createPeopleRoute } from "./routes/people";
 import { createPersonConnectionsRoute } from "./routes/person-connections";
+import { createPersonReportsRoute } from "./routes/person-reports";
 import { createPersonSettlementsRoute } from "./routes/person-settlements";
 import { createPreferencesRoute } from "./routes/preferences";
 import { createRecurringExpensesRoute } from "./routes/recurring-expenses";
@@ -133,6 +139,7 @@ import { createNotesService } from "./services/notes.service";
 import { createNotificationsService } from "./services/notifications.service";
 import { createPeopleService } from "./services/people.service";
 import { createPersonConnectionsService } from "./services/person-connections.service";
+import { createPersonReportsService } from "./services/person-reports.service";
 import { createPersonSettlementsService } from "./services/person-settlements.service";
 import { createPreferencesService } from "./services/preferences.service";
 import { createRecurringExpensesService } from "./services/recurring-expenses.service";
@@ -143,9 +150,11 @@ import { createTagsService } from "./services/tags.service";
 import { createTransactionsService } from "./services/transactions.service";
 import type { ApiVariables } from "./types/context";
 import { aiServiceGateway } from "./utils/ai-service";
+import { createEmailAssetReader, readEmailAssetsDirectory } from "./utils/email-assets";
 import { assertProductionSecret, getRequiredProductionEnv, parseCsvEnv } from "./utils/env";
 import { logoDevGateway } from "./utils/logo-dev";
 import { validationHook } from "./utils/openapi";
+import { createResendEmailSender, readEmailEnvironment } from "./utils/resend";
 import { attachmentStorage } from "./utils/storage";
 
 const app = new OpenAPIHono<{ Variables: ApiVariables }>({ defaultHook: validationHook });
@@ -237,9 +246,25 @@ const personConnectionsService = createPersonConnectionsService(personConnection
     synchronizeRecurringExternalExpenses(externalExpensesRepository, { ownerUserId, period }),
 });
 const personConnectionsRoute = createPersonConnectionsRoute(personConnectionsService);
-const personSettlementsRoute = createPersonSettlementsRoute(
-  createPersonSettlementsService(personSettlementsRepository),
-);
+const personSettlementsService = createPersonSettlementsService(personSettlementsRepository);
+const personSettlementsRoute = createPersonSettlementsRoute(personSettlementsService);
+const personReportsService = createPersonReportsService({
+  findPerson: (personId, userId) => peopleRepository.findByIdForUser(personId, userId),
+  findAccountOwner: (userId) => peopleRepository.findAdminByUserId(userId),
+  listPersonTransactions: async (userId, query) =>
+    (await transactionsService.listTransactions(userId, query, false)).items,
+  listPersonSettlements: async (personId, userId, period) =>
+    (await personSettlementsService.getSnapshot(personId, userId, period)).settlements,
+  listCardDueDates: async (userId, period) =>
+    (await invoicesService.get(period, userId)).items.flatMap((invoice) =>
+      invoice.dueDate ? [{ cardId: invoice.cardId, dueDate: invoice.dueDate }] : [],
+    ),
+  deliveries: personReportsRepository,
+  schedules: personReportSchedulesRepository,
+  emailSender: createResendEmailSender(readEmailEnvironment()),
+  emailAssets: createEmailAssetReader(readEmailAssetsDirectory()),
+});
+const personReportsRoute = createPersonReportsRoute(personReportsService);
 const externalExpensesService = createExternalExpensesService(externalExpensesRepository, {
   transactionCreator: transactionsService,
   buildEstablishmentLogoUrl: logoDevGateway.buildLogoUrl,
@@ -453,6 +478,19 @@ app.use("/people", privateCache);
 app.use("/people/*", privateCache);
 app.use("/people", requireAuth);
 app.use("/people/*", requireAuth);
+app.use("/person-reports/*", privateCache);
+app.use("/person-reports/*", requireAuth);
+app.use(
+  "/person-reports/*",
+  createMutationRateLimit({
+    windowMs: 10 * 60_000,
+    max: 10,
+    // Emails sent and schedule changes have separate budgets, so editing the rules never uses up
+    // the deliveries.
+    key: (context) =>
+      `${context.req.path.endsWith("/schedule") ? "person-report-schedule" : "person-report-delivery"}:${context.get("userId")}`,
+  }),
+);
 app.use("/person-settlements", privateCache);
 app.use("/person-settlements/*", privateCache);
 app.use("/person-settlements", requireAuth);
@@ -757,6 +795,7 @@ app.route("/categories", categoriesRoute);
 app.route("/tags", tagsRoute);
 app.route("/people", peopleRoute);
 app.route("/person-connections", personConnectionsRoute);
+app.route("/person-reports", personReportsRoute);
 app.route("/person-settlements", personSettlementsRoute);
 app.route("/external-expenses", externalExpensesRoute);
 app.route("/notes", notesRoute);
@@ -889,6 +928,28 @@ export function startAiDataRetention() {
   };
   setTimeout(purge, aiDataRetentionFirstRunMs).unref();
   setInterval(purge, aiDataRetentionIntervalMs).unref();
+}
+
+const personReportScheduleIntervalMs = 5 * 60_000;
+const personReportScheduleFirstRunMs = 30_000;
+
+/**
+ * Sends the scheduled person reports, checking shortly after start and every five minutes. Only
+ * one API instance runs at a time, and each run is idempotent per person and date.
+ */
+export function startPersonReportSchedule() {
+  const run = async () => {
+    try {
+      const summary = await runPersonReportScheduleExclusively(() =>
+        personReportsService.runScheduledDeliveries(),
+      );
+      if (summary) console.log(JSON.stringify({ event: "person_report_schedule_ran", ...summary }));
+    } catch (error) {
+      console.error("Person report schedule failed", error);
+    }
+  };
+  setTimeout(run, personReportScheduleFirstRunMs).unref();
+  setInterval(run, personReportScheduleIntervalMs).unref();
 }
 
 export { app };

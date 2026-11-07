@@ -36,12 +36,11 @@ function validatePersonDetailsSearch(search: Record<string, unknown>): PersonDet
   return {
     ...detailsSearch,
     view:
-      search.view === "external"
-        ? "external"
-        : search.view === "transactions"
-          ? "transactions"
-          : search.view === "panel"
-            ? "panel"
-            : undefined,
+      search.view === "external" ||
+      search.view === "transactions" ||
+      search.view === "report" ||
+      search.view === "panel"
+        ? search.view
+        : undefined,
   };
 }

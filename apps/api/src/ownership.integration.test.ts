@@ -85,6 +85,68 @@ test("authenticated users cannot read or mutate foreign financial resources", {
           if (beforeText) assert.equal(await (await api.request(path, owner)).text(), beforeText);
         },
       );
+    await t.test("person reports and their email deliveries stay private", async () => {
+      const { db, personReportDeliveries } = await import("@openmonetis/db");
+      const person = await api.data<{ id: string }>(
+        await api.request("/people", owner, "POST", {
+          name: "Report guest",
+          email: "guest@example.com",
+        }),
+        201,
+      );
+      await db.insert(personReportDeliveries).values({
+        userId: owner.id,
+        personId: person.id,
+        period: "2020-01",
+        trigger: "manual",
+        status: "sent",
+        recipientEmail: "guest@example.com",
+        sentAt: new Date(),
+      });
+      const reportPath = `/person-reports/${person.id}`;
+
+      const report = await api.data<{ person: { name: string } }>(
+        await api.request(`${reportPath}?period=2020-01`, owner),
+      );
+      assert.equal(report.person.name, "Report guest");
+      const history = await api.data<{ deliveries: { recipientEmail: string }[] }>(
+        await api.request(`${reportPath}/deliveries`, owner),
+      );
+      assert.deepEqual(
+        history.deliveries.map((delivery) => delivery.recipientEmail),
+        ["guest@example.com"],
+      );
+
+      await api.error(await api.request(`${reportPath}?period=2020-01`, stranger), 404);
+      await api.error(await api.request(`${reportPath}/deliveries`, stranger), 404);
+      await api.error(await api.request(`${reportPath}/document?period=2020-01`, stranger), 404);
+      await api.error(
+        await api.request(`${reportPath}/deliveries`, stranger, "POST", { period: "2020-01" }),
+        404,
+      );
+      const disabledSchedule = {
+        enabled: false,
+        frequency: "monthly",
+        weekday: null,
+        monthDays: [1],
+        reportPeriod: "previous",
+        includeSpreadsheet: false,
+      };
+      const saved = await api.data<{ schedule: { monthDays: number[] } }>(
+        await api.request(`${reportPath}/schedule`, owner, "PUT", disabledSchedule),
+      );
+      assert.deepEqual(saved.schedule.monthDays, [1]);
+      await api.error(await api.request(`${reportPath}/schedule`, stranger), 404);
+      await api.error(
+        await api.request(`${reportPath}/schedule`, stranger, "PUT", disabledSchedule),
+        404,
+      );
+      await api.error(
+        await api.request(`/person-reports/${owner.personId}?period=2020-01`, owner),
+        400,
+        "person_report_admin_not_allowed",
+      );
+    });
     await t.test(
       "foreign accounts and categories cannot be linked to cards, goals or budgets",
       async () => {

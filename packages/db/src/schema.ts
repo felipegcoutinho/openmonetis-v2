@@ -23,6 +23,12 @@ import type {
   DueDateAdjustmentDetails,
   DueDateRuleVersion,
 } from "@openmonetis/domain/due-date-rules";
+import {
+  personReportDeliveryStatuses,
+  personReportDeliveryTriggers,
+  personReportScheduleFrequencies,
+  personReportSchedulePeriods,
+} from "@openmonetis/domain/person-reports";
 import { tagColors, tagStatuses } from "@openmonetis/domain/tags";
 import { relations, sql } from "drizzle-orm";
 import {
@@ -1989,6 +1995,117 @@ export const personSettlements = pgTable(
     check(
       "person_settlements_note_not_blank_check",
       sql`${table.note} IS NULL OR btrim(${table.note}) <> ''`,
+    ),
+  ],
+);
+
+export const personReportDeliveryTrigger = pgEnum(
+  "person_report_delivery_trigger",
+  personReportDeliveryTriggers,
+);
+export const personReportDeliveryStatus = pgEnum(
+  "person_report_delivery_status",
+  personReportDeliveryStatuses,
+);
+
+export const personReportDeliveries = pgTable(
+  "person_report_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    period: varchar("period", { length: 7 }).notNull(),
+    trigger: personReportDeliveryTrigger("trigger").notNull(),
+    status: personReportDeliveryStatus("status").notNull().default("pending"),
+    recipientEmail: varchar("recipient_email", { length: 320 }).notNull(),
+    includesSpreadsheet: boolean("includes_spreadsheet").notNull().default(false),
+    attempts: integer("attempts").notNull().default(0),
+    providerMessageId: varchar("provider_message_id", { length: 255 }),
+    errorCode: varchar("error_code", { length: 64 }),
+    scheduledFor: date("scheduled_for", { mode: "string" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    sentAt: timestamp("sent_at"),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("person_report_deliveries_user_person_created_idx").on(
+      table.userId,
+      table.personId,
+      table.createdAt.desc(),
+    ),
+    foreignKey({
+      name: "person_report_deliveries_person_user_fk",
+      columns: [table.personId, table.userId],
+      foreignColumns: [people.id, people.userId],
+    }).onDelete("cascade"),
+    check(
+      "person_report_deliveries_period_check",
+      sql`${table.period} ~ '^[1-9][0-9]{3}-(0[1-9]|1[0-2])$'`,
+    ),
+    check("person_report_deliveries_attempts_check", sql`${table.attempts} >= 0`),
+    uniqueIndex("person_report_deliveries_person_scheduled_for_unique")
+      .on(table.personId, table.scheduledFor)
+      .where(sql`${table.scheduledFor} IS NOT NULL`),
+    check(
+      "person_report_deliveries_scheduled_for_check",
+      sql`(${table.trigger} = 'scheduled') = (${table.scheduledFor} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export const personReportScheduleFrequency = pgEnum(
+  "person_report_schedule_frequency",
+  personReportScheduleFrequencies,
+);
+export const personReportSchedulePeriod = pgEnum(
+  "person_report_schedule_period",
+  personReportSchedulePeriods,
+);
+
+export const personReportSchedules = pgTable(
+  "person_report_schedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    frequency: personReportScheduleFrequency("frequency").notNull(),
+    weekday: integer("weekday"),
+    monthDays: integer("month_days").array().notNull().default(sql`'{}'::integer[]`),
+    reportPeriod: personReportSchedulePeriod("report_period").notNull(),
+    includeSpreadsheet: boolean("include_spreadsheet").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("person_report_schedules_person_id_unique").on(table.personId),
+    index("person_report_schedules_enabled_idx").on(table.enabled).where(sql`${table.enabled}`),
+    foreignKey({
+      name: "person_report_schedules_person_user_fk",
+      columns: [table.personId, table.userId],
+      foreignColumns: [people.id, people.userId],
+    }).onDelete("cascade"),
+    check(
+      "person_report_schedules_weekday_check",
+      sql`${table.weekday} IS NULL OR ${table.weekday} BETWEEN 0 AND 6`,
+    ),
+    check(
+      "person_report_schedules_rule_check",
+      sql`(${table.frequency} = 'weekly' AND ${table.weekday} IS NOT NULL) OR (${table.frequency} <> 'weekly' AND cardinality(${table.monthDays}) >= 1)`,
     ),
   ],
 );

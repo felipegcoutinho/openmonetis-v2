@@ -7,7 +7,7 @@ import ExcelJS from "exceljs";
 
 const typeLabels = { income: "Receita", expense: "Despesa", transfer: "Transferência" };
 const conditionLabels = { single: "Única", installment: "Parcelada", recurring: "Recorrente" };
-const paymentLabels = {
+export const paymentMethodLabels = {
   credit_card: "Cartão de crédito",
   debit_card: "Cartão de débito",
   pix: "Pix",
@@ -47,7 +47,7 @@ function transactionRow(item: TransactionOutput): Array<string | number | null> 
     item.allocation?.personName ?? item.personName,
     item.accountName,
     item.cardName,
-    item.paymentMethod ? paymentLabels[item.paymentMethod] : "Não se aplica",
+    item.paymentMethod ? paymentMethodLabels[item.paymentMethod] : "Não se aplica",
     conditionLabels[item.isRecurring ? "recurring" : item.condition],
     item.currentInstallment && item.installmentCount
       ? `${item.currentInstallment}/${item.installmentCount}`

@@ -18,6 +18,7 @@ const financialQueryRoots = new Set([
   "invoices",
   "notifications",
   "people",
+  "person-reports",
   "person-settlements",
   "recurring-expenses",
   "recurring-transactions",

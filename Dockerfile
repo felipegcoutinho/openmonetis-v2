@@ -71,6 +71,10 @@ WORKDIR /app
 
 COPY --from=api-deployment --chown=node:node /opt/openmonetis/api ./
 COPY --chown=node:node CHANGELOG.md /CHANGELOG.md
+# Bank logos and the app icon embedded in the report emails, from the web's public folder.
+COPY --chown=node:node apps/web/public/logos ./email-assets/logos
+COPY --chown=node:node apps/web/public/icon-192.png ./email-assets/icon-192.png
+ENV EMAIL_ASSETS_DIR=/app/email-assets
 
 USER node
 

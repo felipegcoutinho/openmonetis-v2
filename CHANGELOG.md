@@ -7,6 +7,43 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Extrato da pessoa: a página de cada pessoa ganha a aba **Extrato**, com o total do mês, os
+  repasses recebidos e o saldo, as despesas agrupadas por cartão ou forma de pagamento (com
+  parcela, recorrência e estornos). Considera só a parte da pessoa nas
+  despesas divididas e não mostra contas nem observações. Novo endpoint
+  `GET /person-reports/{personId}?period=`, disponível apenas para pessoas externas.
+- Envio do extrato por e-mail pelo Resend: o botão **Enviar por e-mail** abre um diálogo com
+  mensagem opcional e planilha `.xlsx` opcional, e o card **Envios por e-mail** mostra o histórico
+  com status. O e-mail tem como `Reply-To` o e-mail do dono da conta. Só envia para pessoas ativas,
+  com e-mail e com despesas no mês, com limite de 10 envios a cada 10 minutos. Novas rotas
+  `GET` e `POST /person-reports/{personId}/deliveries` e variáveis opcionais `RESEND_API_KEY` e
+  `EMAIL_FROM`. O e-mail segue as cores do app e tem formato de extrato: logo do OpenMonetis,
+  dados do extrato, saldo com o cálculo dos repasses e os lançamentos de cada cartão ou forma de
+  pagamento com o logo correspondente, embutidos no próprio e-mail.
+- Envio automático do extrato por pessoa, desligado por padrão: semanal, quinzenal, mensal ou em
+  dias específicos do mês, sempre às 8h (horário de Brasília), com o mês anterior fechado ou o mês
+  atual parcial e planilha opcional. Cada pessoa recebe no máximo um envio automático por dia, com
+  novas tentativas em caso de falha; a própria API faz os envios, sem serviço extra. O e-mail de um
+  mês em aberto sai como **Extrato parcial**. Novas rotas `GET` e `PUT
+  /person-reports/{personId}/schedule`.
+- O extrato compara o total do mês com o mês anterior, mostra o vencimento da fatura de cada
+  cartão e lista os **próximos meses** com o que já está lançado para a pessoa (parcelas,
+  recorrências e outras despesas), na aba e no e-mail.
+- Botão **Salvar PDF** na aba **Extrato**: abre a impressão do navegador com o mesmo extrato do
+  e-mail, pronto para **Salvar como PDF**, sem enviar nada nem exigir o Resend. Nova rota `GET
+  /person-reports/{personId}/document`.
+- A aba **Extrato** foi reorganizada no padrão das demais abas: resumo do mês com os botões
+  **Envio automático** e **Enviar por e-mail** lado a lado, a regra ativa e o próximo envio no
+  resumo, histórico de envios em linha do tempo e lançamentos com o logo de cada cartão.
+
+### Notas de atualização
+
+- As migrations `0030_person_report_deliveries.sql` e `0031_person_report_schedules.sql` criam as
+  tabelas `person_report_deliveries` e `person_report_schedules`. Para
+  enviar extratos, configure `RESEND_API_KEY` e `EMAIL_FROM` com um domínio verificado no Resend.
+
 ## [0.15.0] - 2026-11-06
 
 Adiciona o diagnóstico financeiro e o chat com assistentes de IA usando a assinatura de cada

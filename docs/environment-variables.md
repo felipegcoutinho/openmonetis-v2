@@ -124,6 +124,19 @@ Configure as duas variáveis juntas ou deixe ambas vazias. O callback autorizado
 Configure as duas variáveis para habilitar completamente a busca e a exibição de logos. Se não usar
 a integração, deixe ambas vazias.
 
+## E-mail (Resend)
+
+| Variável | Descrição |
+| --- | --- |
+| `RESEND_API_KEY` | Chave da API do Resend usada para enviar o extrato das pessoas por e-mail. |
+| `EMAIL_FROM` | Remetente, como `OpenMonetis <extratos@seudominio.com>`, em um domínio verificado no Resend. |
+| `EMAIL_ASSETS_DIR` | Pasta com `logos/` e `icon-192.png` embutidos no e-mail. A imagem Docker já define; em desenvolvimento usa `apps/web/public`. |
+
+As duas variáveis são opcionais e andam juntas: com `RESEND_API_KEY` preenchida, a API não inicia
+sem um `EMAIL_FROM` válido. Sem elas, o botão **Enviar por e-mail** do extrato fica desativado com
+uma explicação. As respostas da pessoa vão para o e-mail do dono da conta (`Reply-To`). Veja
+[extrato da pessoa](person-reports.md).
+
 ## Assistente de IA
 
 | Variável | Serviço | Descrição |

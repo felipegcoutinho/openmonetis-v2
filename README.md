@@ -145,6 +145,7 @@ detalhes e as convenções no [`guia de arquitetura`](docs/architecture.md).
 - [`docs/environment-variables.md`](docs/environment-variables.md): configuração dos serviços e integrações;
 - [`docs/recurring-transactions.md`](docs/recurring-transactions.md): séries, versões, ocorrências e ações de recorrência;
 - [`docs/settlements.md`](docs/settlements.md): baixas efetivas, extratos e contas a pagar;
+- [`docs/person-reports.md`](docs/person-reports.md): extrato mensal de cada pessoa externa;
 - [`docs/due-date-rules.md`](docs/due-date-rules.md): calendário compartilhado, ajustes e exceções de vencimento;
 - [`docs/ai-diagnoses.md`](docs/ai-diagnoses.md): assistente de IA, permissões de dados, serviço
   `openmonetis-ai` e atualização das CLIs;

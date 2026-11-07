@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { personReportKeys } from "../person-reports/person-reports.queries";
 import { createPersonSettlement, deletePersonSettlement } from "./person-settlements.api";
 import { personSettlementKeys } from "./person-settlements.queries";
 
@@ -9,7 +10,10 @@ function useSettlementMutation<TVariables, TData>(
   return useMutation({
     mutationFn,
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: personSettlementKeys.all });
+      await Promise.all([
+        client.invalidateQueries({ queryKey: personSettlementKeys.all }),
+        client.invalidateQueries({ queryKey: personReportKeys.all }),
+      ]);
     },
   });
 }

@@ -21,6 +21,7 @@ import { ExternalExpensesSection } from "@/features/external-expenses/components
 import { PersonConnectionPanel } from "@/features/person-connections/components/person-connection-panel";
 import { PersonConnectionsManager } from "@/features/person-connections/components/person-connections-manager";
 import { personConnectionsQueryOptions } from "@/features/person-connections/person-connections.queries";
+import { PersonReportPanel } from "@/features/person-reports/components/person-report-panel";
 import { PersonSettlementsCard } from "@/features/person-settlements/components/person-settlements-card";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
@@ -43,7 +44,7 @@ type PersonDetailsPageProps = {
 };
 
 export type PersonDetailsSearch = TransactionsSearch & {
-  view?: "panel" | "transactions" | "external";
+  view?: "panel" | "transactions" | "report" | "external";
 };
 
 export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDetailsPageProps) {
@@ -63,7 +64,11 @@ export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDe
   const hasExternalExpenses = Boolean(
     personQuery.data?.role === "admin" && recipientConnections.length > 0,
   );
-  const selectedView = search.view ?? "panel";
+  // The report tab only exists for external people; the account owner falls back to the panel.
+  const selectedView =
+    search.view === "report" && personQuery.data?.role !== "external"
+      ? "panel"
+      : (search.view ?? "panel");
 
   async function updatePerson(input: ReplacePersonInput) {
     if (!resolvedPersonId) return;
@@ -149,7 +154,9 @@ function getPersonTransactionsScope(
         className="min-w-0 max-w-full gap-0"
         onValueChange={(value) =>
           onViewChange(
-            value === "external" ? "external" : value === "transactions" ? "transactions" : "panel",
+            value === "external" || value === "transactions" || value === "report"
+              ? value
+              : "panel",
           )
         }
         value={selectedView}
@@ -158,6 +165,7 @@ function getPersonTransactionsScope(
           <TabsList className="min-w-max" variant="line">
             <TabsTrigger value="panel">Painel</TabsTrigger>
             <TabsTrigger value="transactions">Lançamentos</TabsTrigger>
+            {person.role === "external" ? <TabsTrigger value="report">Extrato</TabsTrigger> : null}
             {person.role === "admin" ? (
               <TabsTrigger value="external">Despesas compartilhadas</TabsTrigger>
             ) : null}
@@ -172,6 +180,8 @@ function getPersonTransactionsScope(
           <PersonSettlementsCard period={period} person={person} />
           <PersonConnectionPanel person={person} />
         </div>
+      ) : selectedView === "report" ? (
+        <PersonReportPanel period={period} person={person} />
       ) : selectedView === "external" ? (
         <div className="grid gap-4">
           <PersonConnectionsManager />
