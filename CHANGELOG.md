@@ -38,6 +38,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   **Envio automático** e **Enviar por e-mail** lado a lado, a regra ativa e o próximo envio no
   resumo, histórico de envios em linha do tempo e lançamentos com o logo de cada cartão.
 
+### Alterado
+
+- Os widgets do dashboard ficam em colunas fixas (três em telas largas, duas em telas médias) e
+  mantêm sempre a mesma largura. Um widget sozinho na última linha não se estica mais pela linha
+  inteira; o gráfico **Receitas, despesas e resultado** continua ocupando duas colunas.
+
 ### Notas de atualização
 
 - As migrations `0030_person_report_deliveries.sql` e `0031_person_report_schedules.sql` criam as

@@ -19,16 +19,16 @@ import {
 } from "./dashboard-widget-registry";
 
 /**
- * Widgets wrap in rows of up to three (two on medium screens) and grow to share what is left of
- * their row, so a section never ends with an empty gap. A wide widget counts as two.
+ * Widgets sit on fixed columns (three on wide screens, two on medium ones) so each keeps the same
+ * width wherever it lands; a trailing gap in the last row is preferred over stretching a widget.
+ * A wide widget spans two columns.
  */
-const widgetSlotClassName =
-  "min-w-0 grow basis-full md:basis-[calc((100%-1rem)/2)] xl:basis-[calc((100%-2rem)/3)]";
-const wideWidgetSlotClassName = "min-w-0 grow basis-full xl:basis-[calc((100%-2rem)/3*2+1rem)]";
+const widgetSlotClassName = "min-w-0";
+const wideWidgetSlotClassName = "min-w-0 md:col-span-2";
 
 /** Swap the widget row for a short notice when every widget collapsed for lack of data. */
 const widgetRowClassName =
-  "flex flex-wrap gap-4 [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:hidden";
+  "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:hidden";
 const collapsedNoticeClassName =
   "hidden rounded-card border border-dashed px-4 py-3 text-muted-foreground text-sm [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:block";
 
