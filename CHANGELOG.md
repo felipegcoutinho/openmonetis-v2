@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-07
+
+Adiciona o extrato mensal de cada pessoa externa, com envio por e-mail pelo Resend, envio
+automático agendado pela própria API e opção de salvar em PDF. O dashboard passa a manter os
+widgets em colunas fixas, sem esticar um widget sozinho na última linha.
+
 ### Adicionado
 
 - Extrato da pessoa: a página de cada pessoa ganha a aba **Extrato**, com o total do mês, os
@@ -46,9 +52,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Notas de atualização
 
-- As migrations `0030_person_report_deliveries.sql` e `0031_person_report_schedules.sql` criam as
-  tabelas `person_report_deliveries` e `person_report_schedules`. Para
-  enviar extratos, configure `RESEND_API_KEY` e `EMAIL_FROM` com um domínio verificado no Resend.
+- Banco: as migrations `0030_person_report_deliveries.sql` e `0031_person_report_schedules.sql`
+  criam as tabelas `person_report_deliveries` e `person_report_schedules`, sem alterar dados
+  existentes. Faça backup antes de atualizar e acompanhe `docker compose logs migrator`.
+- API: novas rotas `GET /person-reports/{personId}`, `GET /person-reports/{personId}/document`,
+  `GET`/`POST /person-reports/{personId}/deliveries` e `GET`/`PUT
+  /person-reports/{personId}/schedule`, disponíveis apenas para pessoas externas. Nenhuma rota
+  existente mudou.
+- Ambiente: variáveis opcionais `RESEND_API_KEY` e `EMAIL_FROM` (vazias por padrão). Para enviar
+  extratos, configure as duas com um domínio verificado no Resend; com `RESEND_API_KEY`
+  preenchida, a API não inicia sem um `EMAIL_FROM` válido. Sem elas, o envio por e-mail fica
+  desativado e o **Salvar PDF** continua disponível.
+- Compose: o serviço `api` passa a receber `RESEND_API_KEY` e `EMAIL_FROM`; depois de configurá-las,
+  recrie a API com `docker compose up -d api`.
 
 ## [0.15.0] - 2026-11-06
 
@@ -1147,7 +1163,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.0...v0.13.1
