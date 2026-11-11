@@ -42,6 +42,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -339,28 +340,30 @@ function CardInvoiceSummary({
           {
             icon:
               summary.status === "overdue" ? (
-                <CircleAlert aria-hidden="true" className="size-3.5" />
+                <CircleAlert aria-hidden="true" />
               ) : (
-                <CircleCheck aria-hidden="true" className="size-3.5" />
+                <CircleCheck aria-hidden="true" />
               ),
             label: "Status",
-            value: (
-              <span
-                className={cn(
-                  (summary.status === "overdue" || summary.status === "paid") && "font-medium",
-                )}
-              >
-                {cardInvoiceStatusLabels[summary.status]}
-              </span>
-            ),
+            value:
+              summary.status === "overdue" ? (
+                // A solid chip keeps the alert legible over any card-logo background.
+                <Badge className="h-6 bg-destructive px-2.5 text-background text-sm">
+                  {cardInvoiceStatusLabels[summary.status]}
+                </Badge>
+              ) : (
+                <span className={cn(summary.status === "paid" && "font-medium")}>
+                  {cardInvoiceStatusLabels[summary.status]}
+                </span>
+              ),
           },
           {
-            icon: <CalendarDays aria-hidden="true" className="size-3.5" />,
+            icon: <CalendarDays aria-hidden="true" />,
             label: "Fecha",
             value: formatInvoiceDate(summary.closingDate),
           },
           {
-            icon: <CalendarDays aria-hidden="true" className="size-3.5" />,
+            icon: <CalendarDays aria-hidden="true" />,
             label: "Vence",
             value: (
               <DueDateIndicator
@@ -409,6 +412,7 @@ function CardInvoiceSummary({
           </>
         }
         title={card.name}
+        titleAs="h1"
         titleAction={
           <FinancialSummaryTitleAction
             aria-label={`Editar cartão ${card.name}`}
@@ -497,10 +501,10 @@ function CardLimitUsage({ summary }: { summary: CardOutput["invoiceSummary"] }) 
   return (
     <div className="grid gap-3 p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
-        <span className="text-current/70">Limite disponível</span>
+        <span className="text-current/85">Limite disponível</span>
         <span className="flex flex-wrap items-baseline gap-1">
           <MoneyValue amount={summary.availableLimit} className="font-medium" />
-          <span className="text-current/70">
+          <span className="text-current/85">
             de <MoneyValue amount={summary.totalLimit} />
           </span>
         </span>
@@ -511,7 +515,7 @@ function CardLimitUsage({ summary }: { summary: CardOutput["invoiceSummary"] }) 
         trackClassName="bg-current/20"
         value={Math.min(100, summary.usagePercentage)}
       />
-      <p className="text-current/70 text-xs">
+      <p className="text-current/85 text-xs">
         {usage}% utilizado · parcelas futuras também ocupam o limite.
       </p>
     </div>

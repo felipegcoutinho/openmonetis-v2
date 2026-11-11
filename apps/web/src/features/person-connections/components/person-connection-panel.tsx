@@ -9,7 +9,6 @@ import {
   Link2,
   Loader2,
   LockKeyhole,
-  ReceiptText,
   RefreshCw,
   ShieldCheck,
   Unlink,
@@ -29,7 +28,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -154,30 +161,27 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
 
   return (
     <>
-      <Card className="gap-0 overflow-hidden py-0">
-        <div className="flex flex-col gap-3 border-b bg-linear-to-br from-brand/10 via-card to-card px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand-strong ring-1 ring-brand-strong/15">
-              <ShieldCheck aria-hidden="true" className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="font-heading font-semibold tracking-tight">Conexão da conta</h2>
-              <p className="mt-0.5 max-w-2xl text-muted-foreground text-sm leading-relaxed">
-                Compartilhe os gastos de {person.name} para revisão sem abrir seus dados
-                financeiros.
-              </p>
-            </div>
-          </div>
-          <ConnectionStatusBadge
-            hasActiveConnection={connection?.status === "active"}
-            invitationStatus={invitation?.status}
-            isError={isError}
-            isLoading={isLoading}
-          />
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck aria-hidden="true" className="size-4 text-muted-foreground" />
+            Conexão da conta
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Envie os gastos de {person.name} para revisão em outra conta.
+          </CardDescription>
+          <CardAction>
+            <ConnectionStatusBadge
+              hasActiveConnection={connection?.status === "active"}
+              invitationStatus={invitation?.status}
+              isError={isError}
+              isLoading={isLoading}
+            />
+          </CardAction>
+        </CardHeader>
 
-        <CardContent className="grid gap-4 p-4">
-          <section className="grid gap-3" aria-live="polite">
+        <CardContent>
+          <section className="rounded-lg bg-muted/40 p-4" aria-live="polite">
             {isLoading ? <ConnectionLoading /> : null}
             {isError && !isLoading ? <ConnectionError onRetry={retryQueries} /> : null}
             {!isLoading && !isError && connection?.status === "active" ? (
@@ -185,6 +189,7 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
                 counterpartName={connection.counterpartName}
                 isPending={revokeConnection.isPending}
                 onDisconnect={() => setDestructiveAction("revokeConnection")}
+                personName={person.name}
               />
             ) : null}
             {!isLoading && !isError && !connection && invitation?.status === "claimed" ? (
@@ -204,7 +209,7 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
                     <Input
                       aria-describedby={confirmationCodeHintId}
                       autoComplete="one-time-code"
-                      className="h-10 font-mono text-base tracking-[0.3em] sm:max-w-48"
+                      className="h-10 bg-background font-mono text-base tracking-[0.3em] sm:max-w-48"
                       id={confirmationCodeId}
                       inputMode="numeric"
                       maxLength={6}
@@ -251,24 +256,15 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
               />
             ) : null}
           </section>
-
-          <Card className="grid gap-3 bg-muted/25 p-4">
-            <div>
-              <p className="font-medium text-sm">Privacidade preservada</p>
-              <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-                A outra conta recebe apenas o necessário para revisar despesas atribuídas.
-              </p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <PrivacyItem icon={ReceiptText}>
-                Gastos atribuídos a {person.name} podem ser enviados.
-              </PrivacyItem>
-              <PrivacyItem icon={LockKeyhole}>
-                Contas, cartões, saldos e histórico continuam privados.
-              </PrivacyItem>
-            </div>
-          </Card>
         </CardContent>
+
+        <CardFooter className="gap-2 text-muted-foreground text-xs leading-relaxed">
+          <LockKeyhole aria-hidden="true" className="size-3.5 shrink-0" />
+          <p>
+            Só os gastos atribuídos a {person.name} são enviados. Contas, cartões, saldos e
+            histórico continuam privados.
+          </p>
+        </CardFooter>
       </Card>
 
       <AlertDialog
@@ -362,23 +358,6 @@ function ConnectionStatusBadge({
   );
 }
 
-function PrivacyItem({
-  children,
-  icon: Icon,
-}: {
-  children: React.ReactNode;
-  icon: typeof ReceiptText;
-}) {
-  return (
-    <div className="flex items-start gap-2.5 text-sm">
-      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-background text-brand-strong shadow-xs ring-1 ring-border">
-        <Icon aria-hidden="true" className="size-4" />
-      </span>
-      <p className="pt-0.5 text-muted-foreground leading-relaxed">{children}</p>
-    </div>
-  );
-}
-
 function ConnectionLoading() {
   return (
     <div className="flex items-center gap-3 text-muted-foreground text-sm">
@@ -408,10 +387,12 @@ function ActiveConnection({
   counterpartName,
   isPending,
   onDisconnect,
+  personName,
 }: {
   counterpartName: string;
   isPending: boolean;
   onDisconnect: () => void;
+  personName: string;
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -420,13 +401,19 @@ function ActiveConnection({
           <Link2 aria-hidden="true" className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="font-semibold">Conectada com {counterpartName}</p>
-          <p className="mt-0.5 text-muted-foreground text-sm">
-            Os gastos atribuídos já podem ser enviados para revisão.
+          <p className="truncate font-medium text-sm">{counterpartName}</p>
+          <p className="mt-0.5 text-muted-foreground text-xs">
+            Recebe os gastos atribuídos a {personName} para revisão.
           </p>
         </div>
       </div>
-      <Button disabled={isPending} onClick={onDisconnect} size="sm" variant="outline">
+      <Button
+        className="self-start bg-background sm:self-auto"
+        disabled={isPending}
+        onClick={onDisconnect}
+        size="sm"
+        variant="outline"
+      >
         <Unlink aria-hidden="true" /> Desconectar
       </Button>
     </div>

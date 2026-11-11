@@ -96,7 +96,7 @@ export function PersonConnectionAcceptPage() {
       <Card className="gap-0 overflow-hidden py-0">
         <div className="flex flex-col gap-4 border-b bg-gradient-to-br from-brand/10 via-card to-card px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand-strong ring-1 ring-brand-strong/15">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand/10 border border-brand-strong/15 text-brand-strong">
               {result ? (
                 <CheckCircle2 aria-hidden="true" className="size-5" />
               ) : (
@@ -194,7 +194,7 @@ function PrivacyItem({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-background text-brand-strong shadow-xs ring-1 ring-border">
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg border bg-background text-brand-strong">
         <Icon aria-hidden="true" className="size-4" />
       </span>
       <div className="pt-0.5">

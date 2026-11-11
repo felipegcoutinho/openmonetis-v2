@@ -197,17 +197,17 @@ function CategoryTransactionsSummary({
       }
       metrics={[
         {
-          icon: <Tags aria-hidden="true" className="size-3.5" />,
+          icon: <Tags aria-hidden="true" />,
           label: "Tipo",
           value: categoryTypeLabels[category.type],
         },
         {
-          icon: <CalendarDays aria-hidden="true" className="size-3.5" />,
+          icon: <CalendarDays aria-hidden="true" />,
           label: "Mês",
           value: periodLabel,
         },
         {
-          icon: <ChartNoAxesCombined aria-hidden="true" className="size-3.5" />,
+          icon: <ChartNoAxesCombined aria-hidden="true" />,
           label: "Comparado ao mês anterior",
           value: trendsQuery.isLoading
             ? "Carregando..."
@@ -234,6 +234,7 @@ function CategoryTransactionsSummary({
       }
       subtitle={`${category.parentId ? "Subcategoria" : "Categoria e suas subcategorias"} de ${categoryTypeLabels[category.type].toLocaleLowerCase("pt-BR")} · ${selected?.label ?? "Pessoa indisponível"}`}
       title={getCategoryLabel(category)}
+      titleAs="h1"
       variant="soft"
     />
   );

@@ -1,4 +1,5 @@
 import type { CommitmentsOutput } from "@openmonetis/validators/commitments";
+import { useId } from "react";
 import {
   commitmentGaugeBands,
   describeCommitmentGauge,
@@ -14,18 +15,19 @@ const statusColors: Record<CommitmentStatus, string> = {
 };
 
 const center = { x: 100, y: 100 };
-const radius = 80;
-const strokeWidth = 14;
-const needleLength = radius - 24;
+const radius = 88;
+const strokeWidth = 8;
 /** Gap between bands, in percentage points of the 0–100% track. */
 const bandGap = 1.5;
+/** How far the outer bands run past the track ends, so the mask can round them off. */
+const endOverrun = 6;
 
 /** Point on the half circle for a position from 0% (left end) to 100% (right end). */
-function pointAt(position: number, distance = radius) {
+function pointAt(position: number) {
   const angle = Math.PI - (position / 100) * Math.PI;
   return {
-    x: center.x + distance * Math.cos(angle),
-    y: center.y - distance * Math.sin(angle),
+    x: center.x + radius * Math.cos(angle),
+    y: center.y - radius * Math.sin(angle),
   };
 }
 
@@ -35,7 +37,10 @@ function arcPath(from: number, to: number) {
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`;
 }
 
-/** Half-circle gauge of the share of the expected income already committed in a month. */
+/**
+ * Half-circle gauge of the share of the expected income already committed in a month. The centre
+ * is left empty so the caller can place the value inside the arc.
+ */
 export function CommitmentGauge({
   percentage,
   status,
@@ -43,50 +48,52 @@ export function CommitmentGauge({
   percentage: number | null;
   status: CommitmentStatus;
 }) {
+  const maskId = useId();
   const position = getCommitmentGaugePosition(percentage);
-  const needleEnd = position === null ? null : pointAt(position, needleLength);
+  const marker = position === null ? null : pointAt(position);
+  const lastBand = commitmentGaugeBands.length - 1;
 
   return (
     <svg
       aria-label={describeCommitmentGauge(percentage, status)}
-      className="h-auto w-full max-w-64"
+      className="h-auto w-full"
       role="img"
-      viewBox="0 0 200 112"
+      viewBox="0 0 200 110"
     >
-      {commitmentGaugeBands.map((band, index) => (
+      {/* Bands meet with flat edges; one rounded track masks them so only the two ends are round. */}
+      <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={200} height={110}>
         <path
-          d={arcPath(
-            band.from + (index === 0 ? 0 : bandGap / 2),
-            band.to - (index === commitmentGaugeBands.length - 1 ? 0 : bandGap / 2),
-          )}
+          d={arcPath(0, 100)}
           fill="none"
-          key={band.status}
-          opacity={band.status === status ? 1 : 0.25}
-          stroke={statusColors[band.status]}
+          stroke="white"
           strokeLinecap="round"
           strokeWidth={strokeWidth}
         />
-      ))}
-      {needleEnd ? (
-        <g>
-          <line
-            stroke="var(--foreground)"
-            strokeLinecap="round"
-            strokeWidth={3}
-            x1={center.x}
-            x2={needleEnd.x}
-            y1={center.y}
-            y2={needleEnd.y}
+      </mask>
+      <g mask={`url(#${maskId})`}>
+        {commitmentGaugeBands.map((band, index) => (
+          <path
+            d={arcPath(
+              index === 0 ? -endOverrun : band.from + bandGap / 2,
+              index === lastBand ? 100 + endOverrun : band.to - bandGap / 2,
+            )}
+            fill="none"
+            key={band.status}
+            opacity={band.status === status ? 1 : 0.22}
+            stroke={statusColors[band.status]}
+            strokeWidth={strokeWidth}
           />
-          <circle
-            cx={center.x}
-            cy={center.y}
-            fill="var(--card)"
-            r={6}
-            stroke="var(--foreground)"
-            strokeWidth={3}
-          />
-        </g>
+        ))}
+      </g>
+      {marker ? (
+        <circle
+          cx={marker.x}
+          cy={marker.y}
+          fill={statusColors[status]}
+          r={7}
+          stroke="var(--card)"
+          strokeWidth={3.5}
+        />
       ) : null}
     </svg>
   );

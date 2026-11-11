@@ -137,7 +137,7 @@ function PaymentStatusSection({
         </div>
         <div className="min-w-0 text-right">
           <span className="flex items-center justify-end gap-1.5 text-muted-foreground">
-            <ChartLegendMarker className="text-warning" />
+            <ChartLegendMarker className="text-warning/25" />
             {pendingLabel}
           </span>
           {adminPersonSlug ? (

@@ -247,17 +247,17 @@ function AccountStatementSummary({
         identity={<AccountStatementIcon account={account} />}
         metrics={[
           {
-            icon: <History aria-hidden="true" className="size-3.5" />,
+            icon: <History aria-hidden="true" />,
             label: "Saldo anterior",
             value: <MoneyValue amount={summary.openingBalance} />,
           },
           {
-            icon: <ArrowDownLeft aria-hidden="true" className="size-3.5" />,
+            icon: <ArrowDownLeft aria-hidden="true" />,
             label: "Entradas",
             value: <MoneyValue amount={summary.income} />,
           },
           {
-            icon: <ArrowUpRight aria-hidden="true" className="size-3.5" />,
+            icon: <ArrowUpRight aria-hidden="true" />,
             label: "Saídas",
             value: <MoneyValue amount={summary.expenses} />,
           },
@@ -277,6 +277,7 @@ function AccountStatementSummary({
           </>
         }
         title={account.name}
+        titleAs="h1"
         titleAction={
           <FinancialSummaryTitleAction
             aria-label={`Editar conta ${account.name}`}

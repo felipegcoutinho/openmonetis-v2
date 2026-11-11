@@ -5,6 +5,7 @@ import {
   calculateCardCycleSpending,
   calculateCardInvoiceHistory,
   calculateCardInvoiceSummary,
+  compareCardCycleSpending,
   getInvoiceDates,
 } from "./cards";
 import { deriveTransactionPeriod } from "./transactions";
@@ -154,6 +155,8 @@ test("card cycle spending groups net movements by purchase day across month boun
     startDate: "2026-08-31",
     endDate: "2026-09-03",
     openingAmount: 140,
+    totalAmount: 215.3,
+    peakDay: { date: "2026-08-31", amount: 75.1 },
     daily: [
       { date: "2026-08-31", amount: 75.1, cumulativeAmount: 215.1 },
       { date: "2026-09-01", amount: 0, cumulativeAmount: 215.1 },
@@ -171,8 +174,110 @@ test("older installments remain in the opening amount without inventing a purcha
   });
 
   assert.equal(result.openingAmount, 40);
+  assert.equal(result.totalAmount, 40);
+  assert.equal(result.peakDay, null);
   assert.equal(result.daily.length, 28);
   assert.ok(result.daily.every((day) => day.amount === 0 && day.cumulativeAmount === 40));
+});
+
+test("cycle comparison matches the same day of the cycle, including the opening amount", () => {
+  const previous = calculateCardCycleSpending({
+    previousClosingDate: "2026-07-31",
+    closingDate: "2026-08-05",
+    movements: [
+      { purchaseDate: "2026-06-10", amount: -10 },
+      { purchaseDate: "2026-08-01", amount: -100 },
+      { purchaseDate: "2026-08-03", amount: -50.5 },
+    ],
+  });
+  const current = calculateCardCycleSpending({
+    previousClosingDate: "2026-08-31",
+    closingDate: "2026-09-04",
+    movements: [
+      { purchaseDate: "2026-09-01", amount: -40 },
+      { purchaseDate: "2026-09-02", amount: -300.25 },
+    ],
+  });
+
+  const { daily, comparison } = compareCardCycleSpending({
+    current,
+    previous,
+    today: "2026-09-03",
+  });
+
+  assert.deepEqual(
+    daily.map((entry) => entry.previousCumulativeAmount),
+    [110, 110, 160.5, 160.5],
+  );
+  assert.deepEqual(comparison, {
+    isClosed: false,
+    dayOfCycle: 3,
+    currentAmount: 340.25,
+    previousAmount: 160.5,
+    differenceAmount: 179.75,
+    trend: "above",
+  });
+});
+
+test("cycle comparison holds the previous total when the current cycle is longer", () => {
+  const previous = calculateCardCycleSpending({
+    previousClosingDate: "2026-01-31",
+    closingDate: "2026-02-02",
+    movements: [{ purchaseDate: "2026-02-01", amount: -80 }],
+  });
+  const current = calculateCardCycleSpending({
+    previousClosingDate: "2026-02-28",
+    closingDate: "2026-03-04",
+    movements: [{ purchaseDate: "2026-03-01", amount: -30 }],
+  });
+
+  const { daily, comparison } = compareCardCycleSpending({
+    current,
+    previous,
+    today: "2026-03-04",
+  });
+
+  assert.equal(daily.at(-1)?.previousCumulativeAmount, 80);
+  assert.equal(comparison?.trend, "below");
+  assert.equal(comparison?.differenceAmount, 50);
+});
+
+test("closed cycles compare final totals and cycles without a reference are skipped", () => {
+  const previous = calculateCardCycleSpending({
+    previousClosingDate: "2026-04-30",
+    closingDate: "2026-05-02",
+    movements: [{ purchaseDate: "2026-05-01", amount: -20 }],
+  });
+  const current = calculateCardCycleSpending({
+    previousClosingDate: "2026-05-31",
+    closingDate: "2026-06-02",
+    movements: [{ purchaseDate: "2026-06-02", amount: -20 }],
+  });
+  const empty = calculateCardCycleSpending({
+    previousClosingDate: "2026-04-30",
+    closingDate: "2026-05-02",
+    movements: [],
+  });
+
+  assert.deepEqual(
+    compareCardCycleSpending({ current, previous, today: "2026-07-10" }).comparison,
+    {
+      isClosed: true,
+      dayOfCycle: 2,
+      currentAmount: 20,
+      previousAmount: 20,
+      differenceAmount: 0,
+      trend: "equal",
+    },
+  );
+  assert.equal(
+    compareCardCycleSpending({ current, previous, today: "2026-05-20" }).comparison,
+    null,
+  );
+  assert.equal(
+    compareCardCycleSpending({ current, previous: empty, today: "2026-06-01" }).comparison,
+    null,
+  );
 });
 
 test("invoice history groups movements by invoice period and offsets credits", () => {

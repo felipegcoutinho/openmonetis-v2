@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { MoneyValue } from "@/components/money-value";
 import {
   Accordion,
   AccordionContent,
@@ -21,8 +22,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getCategoryGroups, getCategoryLabel } from "../categories.presentation";
+import {
+  budgetProgressStyles,
+  formatBudgetPercentage,
+} from "@/features/budgets/budgets.presentation";
+import {
+  type CategoryMonthSummary,
+  getCategoryGroups,
+  getCategoryLabel,
+} from "../categories.presentation";
 import { CategoryIcon } from "../category-icons";
 import { SubcategoryForm } from "./subcategory-form";
 
@@ -33,8 +43,11 @@ export function CategoriesTable({
   onRemove,
   onCreateSubcategory,
   pendingId,
+  monthSummaries,
 }: {
   categories: CategoryOutput[];
+  /** Month totals by root category; omitted while they load. */
+  monthSummaries?: ReadonlyMap<string, CategoryMonthSummary>;
   search?: string;
   onEdit: (category: CategoryOutput) => void;
   onRemove: (category: CategoryOutput) => Promise<void>;
@@ -87,6 +100,9 @@ export function CategoriesTable({
                 </AccordionTrigger>
               ) : null}
             </div>
+            {monthSummaries ? (
+              <CategoryMonthValue name={parent.name} summary={monthSummaries.get(parent.id)} />
+            ) : null}
             <CategoryActions
               category={parent}
               onAddSubcategory={() => {
@@ -141,6 +157,43 @@ export function CategoriesTable({
         </AccordionItem>
       ))}
     </Accordion>
+  );
+}
+
+function CategoryMonthValue({
+  name,
+  summary,
+}: {
+  name: string;
+  summary: CategoryMonthSummary | undefined;
+}) {
+  const budget = summary?.budget;
+  if (budget)
+    return (
+      <div className="grid w-28 shrink-0 gap-1.5 text-right sm:w-44">
+        <p className="text-sm tabular-nums">
+          <MoneyValue amount={budget.committedAmount} />
+          <span className="text-muted-foreground text-xs">
+            {" "}
+            de <MoneyValue amount={budget.amount} />
+          </span>
+        </p>
+        <Progress
+          aria-label={`${formatBudgetPercentage(budget.usagePercentage)}% do orçamento de ${name} comprometido`}
+          indicatorClassName={budgetProgressStyles[budget.status]}
+          trackClassName="h-1.5"
+          value={Math.min(budget.usagePercentage, 100)}
+        />
+      </div>
+    );
+  return (
+    <p className="w-28 shrink-0 text-right text-sm tabular-nums sm:w-44">
+      {summary?.amount ? (
+        <MoneyValue amount={summary.amount} />
+      ) : (
+        <span className="text-muted-foreground">Sem movimento</span>
+      )}
+    </p>
   );
 }
 

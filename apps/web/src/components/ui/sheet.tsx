@@ -2,7 +2,6 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -22,11 +21,10 @@ function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
 }
 
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
-  const isMobile = useIsMobile();
-
   return (
     <SheetPrimitive.Backdrop
-      forceRender={isMobile === true}
+      // Nested dialogs render their own backdrop so the dialog underneath is dimmed too.
+      forceRender
       data-slot="sheet-overlay"
       className={cn(
         "fixed inset-0 isolate z-50 bg-overlay transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0",
@@ -54,7 +52,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-0 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg outline-none transition duration-300 ease-out data-ending-style:duration-200 data-ending-style:ease-in motion-reduce:transition-none",
+          "material fixed z-50 flex flex-col gap-0 bg-clip-padding text-sm text-popover-foreground shadow-xl outline-none transition-[translate,opacity] duration-300 ease-(--ease-drawer) data-ending-style:duration-200 data-ending-style:ease-out motion-reduce:transition-opacity",
           "data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-full data-[side=bottom]:data-starting-style:translate-y-full",
           "data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=top]:data-ending-style:-translate-y-full data-[side=top]:data-starting-style:-translate-y-full",
           "data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-full data-[side=left]:border-r data-[side=left]:data-ending-style:-translate-x-full data-[side=left]:data-starting-style:-translate-x-full data-[side=left]:sm:max-w-lg",
@@ -103,7 +101,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sheet-footer"
       className={cn(
-        "mt-auto grid shrink-0 auto-cols-fr grid-flow-col gap-2 border-t bg-popover p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex sm:items-center sm:justify-end",
+        "mt-auto grid shrink-0 auto-cols-fr grid-flow-col gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex sm:items-center sm:justify-end",
         className,
       )}
       {...props}

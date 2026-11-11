@@ -80,7 +80,7 @@ export function PasskeySettings() {
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="font-mono font-medium text-sm">Chaves de acesso cadastradas</p>
+            <p className="font-medium text-sm">Chaves de acesso cadastradas</p>
             <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-relaxed">
               Entre com sua digital, rosto, PIN ou chave de segurança.
             </p>

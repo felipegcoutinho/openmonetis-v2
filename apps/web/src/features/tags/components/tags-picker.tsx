@@ -85,7 +85,7 @@ export function TagsPicker({
           <div className="grid max-h-56 gap-1 overflow-y-auto">
             {visible.map((tag) => (
               <label
-                className="flex items-center gap-2 rounded-md p-2 hover:bg-accent"
+                className="flex items-center gap-2 rounded-md p-2 hover:bg-info/10 hover:text-info"
                 htmlFor={`${id}-${tag.id}`}
                 key={tag.id}
               >

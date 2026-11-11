@@ -127,7 +127,7 @@ export function DeviceTokenSettings() {
       title="Companion para Android"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-mono font-medium text-sm">Aparelhos autorizados</p>
+        <p className="font-medium text-sm">Aparelhos autorizados</p>
         <Button className="w-full sm:w-auto" onClick={() => setCreateOpen(true)} type="button">
           <Plus aria-hidden="true" /> Conectar aparelho
         </Button>

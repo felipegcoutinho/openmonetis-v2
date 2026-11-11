@@ -2,6 +2,8 @@ import type { ReleaseOutput } from "@openmonetis/validators/releases";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+export const openMonetisRepositoryUrl = "https://github.com/felipegcoutinho/openmonetis-v2";
+
 export const releaseSectionLabels: Record<ReleaseOutput["sections"][number]["type"], string> = {
   added: "Novidades",
   changed: "Melhorias",

@@ -108,14 +108,6 @@ export function formatPersonReportDeliveryDate(value: string) {
   return `${day} às ${time}`;
 }
 
-export const personReportDeliveryTriggerLabels: Record<
-  PersonReportDeliveryOutput["trigger"],
-  string
-> = {
-  manual: "Manual",
-  scheduled: "Automático",
-};
-
 /** A report of the current month can still change until the month closes. */
 export function isPersonReportPartial(period: string, now = new Date()) {
   return isPersonReportPeriodOpen(period, getCurrentDateInBrazil(now));
@@ -126,16 +118,6 @@ export const personReportScheduleFrequencyLabels: Record<PersonReportScheduleFre
   semimonthly: "Quinzenal",
   monthly: "Mensal",
   monthDays: "Dias específicos",
-};
-
-export const personReportScheduleFrequencyDescriptions: Record<
-  PersonReportScheduleFrequency,
-  string
-> = {
-  weekly: "Uma vez por semana",
-  semimonthly: "Duas vezes por mês",
-  monthly: "Uma vez por mês",
-  monthDays: "Nos dias que você escolher",
 };
 
 export const personReportWeekdayLabels = [

@@ -1,25 +1,20 @@
-import { ArrowUpDown, Search, X } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/search-input";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import type { TransactionsSearch } from "../transactions.presentation";
-
 import type { TransactionsScreenProps } from "./transactions-screen.types";
 import { transactionSortLabels } from "./transactions-screen-options";
 
 export function TransactionsSearchControls({
   urlSearch,
   onSearchChange,
-  isMobile,
   search,
   setSearch,
 }: {
   urlSearch: TransactionsSearch;
   onSearchChange: TransactionsScreenProps["onSearchChange"];
-  isMobile: boolean | null;
   search: string;
   setSearch: (value: string) => void;
 }) {
@@ -48,29 +43,14 @@ export function TransactionsSearchControls({
           </SelectContent>
         </Select>
       </div>
-      <div className="relative order-1 w-full md:order-4 md:w-64">
-        <Search
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          aria-label="Buscar lançamentos"
-          className="pr-9 pl-9 placeholder:text-muted-foreground"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={isMobile === true ? "Buscar" : "Buscar descrição, pessoa ou categoria"}
-          value={search}
-        />
-        {search ? (
-          <button
-            aria-label="Limpar busca"
-            className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => setSearch("")}
-            type="button"
-          >
-            <X aria-hidden="true" className="size-4" />
-          </button>
-        ) : null}
-      </div>
+      <SearchInput
+        aria-label="Buscar lançamentos"
+        containerClassName="order-1 md:order-4 md:w-64"
+        onValueChange={setSearch}
+        placeholder="Buscar lançamentos"
+        title="Busca por descrição, pessoa ou categoria"
+        value={search}
+      />
     </>
   );
 }

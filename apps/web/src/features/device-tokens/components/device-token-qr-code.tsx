@@ -10,7 +10,7 @@ export function DeviceTokenQrCode({ token }: DeviceTokenQrCodeProps) {
     <div className="grid justify-items-center gap-2 text-center">
       <div
         aria-label="QR Code do token do Companion"
-        className="overflow-hidden rounded-xl border bg-background p-2 shadow-sm"
+        className="overflow-hidden rounded-xl border bg-background p-2"
         role="img"
       >
         <QRCodeSVG

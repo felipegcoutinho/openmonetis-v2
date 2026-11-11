@@ -208,7 +208,7 @@ export function NoteCard({
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
         {!note.isArchived ? (
           <button
-            className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
             disabled={pendingAction}
             onClick={() => onEdit(note)}
             type="button"

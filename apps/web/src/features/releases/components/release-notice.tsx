@@ -24,7 +24,7 @@ export function ReleaseNotice({ enabled }: { enabled: boolean }) {
 
   return (
     <aside className="border-brand/20 border-b bg-brand/10" aria-label="Novidades da versão">
-      <div className="project-container flex items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] py-2">
+      <div className="project-container flex items-center gap-3 px-[clamp(1rem,3.5vw,3rem)] py-1.5">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-strong">
           <Megaphone aria-hidden="true" className="size-3.5" />
         </span>

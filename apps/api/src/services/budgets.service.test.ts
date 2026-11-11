@@ -109,6 +109,7 @@ test("budget overview nets refunds, ignores transfers and invoice payments, and 
   assert.equal(result.projectedAmount, 20);
   assert.equal(result.committedAmount, 90);
   assert.equal(result.availableAmount, 10);
+  assert.equal(result.usagePercentage, 90);
   assert.equal(result.warningCount, 1);
   assert.equal(result.unbudgetedCommittedAmount, 20);
   assert.equal(result.items[0].status, "warning");

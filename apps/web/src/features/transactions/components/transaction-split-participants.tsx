@@ -1,8 +1,8 @@
-import { Badge } from "@/components/ui/badge";
-
 import type { useTransactionSplitEditor } from "../useTransactionSplitEditor";
 import type { TransactionSplitDialogProps } from "./transaction-split-dialog.types";
 import { TransactionSplitShareRow } from "./transaction-split-share-row";
+
+type SplitEditor = ReturnType<typeof useTransactionSplitEditor>;
 
 export function TransactionSplitParticipants({
   draft,
@@ -15,43 +15,38 @@ export function TransactionSplitParticipants({
   people,
   primaryPersonId,
 }: {
-  draft: ReturnType<typeof useTransactionSplitEditor>["draft"];
-  percentageDraft: ReturnType<typeof useTransactionSplitEditor>["percentageDraft"];
-  splitMode: ReturnType<typeof useTransactionSplitEditor>["splitMode"];
-  activeConnectedPersonIds: ReturnType<
-    typeof useTransactionSplitEditor
-  >["activeConnectedPersonIds"];
-  togglePerson: ReturnType<typeof useTransactionSplitEditor>["togglePerson"];
-  updateAmount: ReturnType<typeof useTransactionSplitEditor>["updateAmount"];
-  updatePercentage: ReturnType<typeof useTransactionSplitEditor>["updatePercentage"];
+  draft: SplitEditor["draft"];
+  percentageDraft: SplitEditor["percentageDraft"];
+  splitMode: SplitEditor["splitMode"];
+  activeConnectedPersonIds: SplitEditor["activeConnectedPersonIds"];
+  togglePerson: SplitEditor["togglePerson"];
+  updateAmount: SplitEditor["updateAmount"];
+  updatePercentage: SplitEditor["updatePercentage"];
   people: TransactionSplitDialogProps["people"];
   primaryPersonId: TransactionSplitDialogProps["primaryPersonId"];
 }) {
   return (
-    <section className="space-y-2" aria-labelledby="split-people-title">
+    <section className="grid gap-2" aria-labelledby="split-people-title">
       <div className="flex items-end justify-between gap-3">
         <div>
           <h3 className="font-medium text-sm" id="split-people-title">
             Pessoas
           </h3>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-pretty text-muted-foreground text-xs">
             {splitMode === "percentage"
-              ? "Selecione pelo menos duas pessoas. A soma dos percentuais deve ser 100%."
-              : "Selecione pelo menos duas pessoas. O valor é dividido igualmente ao selecionar."}
+              ? "Ao marcar alguém, os percentuais são refeitos em partes iguais."
+              : "Ao marcar alguém, o valor é refeito em partes iguais."}
           </p>
         </div>
-        <Badge variant="secondary">
-          {draft.length} {draft.length === 1 ? "selecionada" : "selecionadas"}
-        </Badge>
+        <p className="shrink-0 text-muted-foreground text-xs tabular-nums">
+          {draft.length} de {people.length}
+        </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="divide-y overflow-hidden rounded-lg border">
         {people.map((person) => {
           const share = draft.find((item) => item.personId === person.id);
           const percentageShare = percentageDraft.find((item) => item.personId === person.id);
-          const percentageValue = percentageShare?.percentage ?? "";
-          const isPrimary = person.id === primaryPersonId;
-          const isSelected = Boolean(share);
 
           return (
             <TransactionSplitShareRow
@@ -63,9 +58,9 @@ export function TransactionSplitParticipants({
               updatePercentage={updatePercentage}
               person={person}
               share={share}
-              percentageValue={percentageValue}
-              isPrimary={isPrimary}
-              isSelected={isSelected}
+              percentageValue={percentageShare?.percentage ?? ""}
+              isPrimary={person.id === primaryPersonId}
+              isSelected={Boolean(share)}
             />
           );
         })}

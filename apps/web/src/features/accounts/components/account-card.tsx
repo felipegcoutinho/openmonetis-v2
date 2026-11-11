@@ -120,7 +120,7 @@ export function AccountCard({
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           params={{ accountId: account.id }}
           to="/accounts/$accountId"
         >
@@ -128,7 +128,7 @@ export function AccountCard({
           Extrato
         </Link>
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           onClick={() => onEdit(account)}
           type="button"
         >

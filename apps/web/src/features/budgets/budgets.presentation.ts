@@ -26,6 +26,16 @@ export function formatBudgetPercentage(value: number) {
   return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
 }
 
+export function formatBudgetAttention(count: number) {
+  return count === 1
+    ? "1 categoria está perto ou acima do limite."
+    : `${count} categorias estão perto ou acima do limite.`;
+}
+
+export function formatBudgetCategoryCount(count: number) {
+  return count === 1 ? "1 categoria com limite" : `${count} categorias com limite`;
+}
+
 export function formatBudgetPeriod(period: string) {
   const label = formatDateInBrazil(periodToSafeInstant(period), {
     month: "long",

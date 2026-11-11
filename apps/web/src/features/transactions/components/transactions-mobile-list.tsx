@@ -7,7 +7,15 @@ import { dateOnlyToSafeInstant, formatDateInBrazil } from "@openmonetis/shared/d
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { ChevronLeft, ChevronRight, Circle, CreditCard, FileUp, Landmark } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  CircleCheck,
+  CreditCard,
+  FileUp,
+  Landmark,
+} from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
@@ -16,7 +24,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { TransactionTags } from "@/features/tags/components/transaction-tags";
 import { cn } from "@/lib/utils";
-import { formatCompactDate } from "../transactions.presentation";
+import {
+  formatCompactDate,
+  getTransactionSettlementShortLabel,
+} from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
 import { TransactionBulkActionDock } from "./transaction-bulk-action-dock";
 import { TransactionDueDate } from "./transaction-due-date";
@@ -70,7 +81,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <div className="flex min-h-8 items-center justify-between gap-2">
         {selectionMode ? (
           <>
@@ -107,12 +118,25 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
           </>
         )}
       </div>
-      {[...groups.entries()].map(([date, transactions]) => (
-        <section aria-labelledby={`transactions-${date}`} className="grid gap-2" key={date}>
-          <h2 className="eyebrow px-1 text-muted-foreground" id={`transactions-${date}`}>
-            {formatGroupDate(date)}
-          </h2>
-          <Card className="gap-0 overflow-hidden py-0">
+      {/* One continuous list; `overflow-clip` keeps the rounded corners without breaking sticky.
+          Date headers stick right below the sticky month navigation. */}
+      <Card className="min-w-0 gap-0 overflow-clip py-0">
+        {[...groups.entries()].map(([date, transactions]) => (
+          <section
+            aria-labelledby={`transactions-${date}`}
+            className="border-t first:border-t-0"
+            key={date}
+          >
+            <h2
+              className="eyebrow sticky top-[calc(var(--page-sticky-top)+3.5rem)] z-10 flex items-center justify-between gap-2 border-b bg-card/95 px-3 py-2 text-muted-foreground backdrop-blur-sm"
+              id={`transactions-${date}`}
+            >
+              {formatGroupDate(date)}
+              <span className="font-normal tabular-nums">
+                {transactions.length}
+                <span className="sr-only"> lançamentos</span>
+              </span>
+            </h2>
             <ul className="divide-y">
               {transactions.map((transaction) => (
                 <MobileTransactionRow
@@ -126,9 +150,9 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
                 />
               ))}
             </ul>
-          </Card>
-        </section>
-      ))}
+          </section>
+        ))}
+      </Card>
       <TransactionBulkActionDock
         onClear={selection.clear}
         summary={selection.summary}
@@ -207,7 +231,7 @@ function MobileTransactionRow({
   return (
     <li
       className={cn(
-        "flex min-h-20 items-center gap-3 px-3 py-3",
+        "flex min-h-16 items-center gap-3 px-3 py-2.5",
         isInvoicePayment && "bg-success/5",
         selected && "bg-brand/5",
       )}
@@ -309,6 +333,21 @@ function MobileTransactionRow({
               )}
               showPositiveSign={transaction.type === "income" || visibleAmount > 0}
             />
+            {transaction.paymentMethod !== "credit_card" && transaction.isSettled !== null ? (
+              <span
+                className={cn(
+                  "mt-0.5 inline-flex items-center justify-end gap-1 text-xs",
+                  transaction.isSettled ? "text-success" : "text-muted-foreground",
+                )}
+              >
+                {transaction.isSettled ? (
+                  <CircleCheck aria-hidden="true" className="size-3" />
+                ) : (
+                  <Circle aria-hidden="true" className="size-3" />
+                )}
+                {getTransactionSettlementShortLabel(transaction)}
+              </span>
+            ) : null}
             {transaction.settledAmount != null &&
             transaction.plannedAmount != null &&
             transaction.settledAmount !== transaction.plannedAmount ? (

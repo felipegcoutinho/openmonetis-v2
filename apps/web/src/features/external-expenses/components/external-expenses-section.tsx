@@ -1,24 +1,20 @@
 import type { ExternalExpenseOutput } from "@openmonetis/validators/external-expenses";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw, Search, X } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
-
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
-
 import {
   useImportExternalExpenseMutation,
   useReviewExternalExpenseMutation,
@@ -128,36 +124,17 @@ export function ExternalExpensesSection({ period }: { period: string }) {
             </SelectContent>
           </Select>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            aria-label="Buscar despesas compartilhadas"
-            className="pr-9 pl-9"
-            maxLength={160}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPagination({ period, page: 1 });
-            }}
-            placeholder="Buscar estabelecimento, pessoa ou conta/cartão"
-            value={search}
-          />
-          {search ? (
-            <button
-              aria-label="Limpar busca"
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => {
-                setSearch("");
-                setPagination({ period, page: 1 });
-              }}
-              type="button"
-            >
-              <X aria-hidden="true" className="size-4" />
-            </button>
-          ) : null}
-        </div>
+        <SearchInput
+          aria-label="Buscar despesas compartilhadas"
+          containerClassName="sm:w-72"
+          maxLength={160}
+          onValueChange={(value) => {
+            setSearch(value);
+            setPagination({ period, page: 1 });
+          }}
+          placeholder="Buscar estabelecimento ou pessoa"
+          value={search}
+        />
       </div>
 
       {query.isLoading ? <ExternalExpensesLoading /> : null}

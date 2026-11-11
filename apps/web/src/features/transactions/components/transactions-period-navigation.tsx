@@ -18,7 +18,7 @@ export function TransactionsPeriodNavigation({
   period: string;
 }) {
   return urlSearch.dateStart || urlSearch.dateEnd ? (
-    <div className="sticky top-20 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-3">
+    <div className="material sticky top-(--page-sticky-top) z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border py-1 pr-1 pl-4">
       <p className="text-sm font-medium">
         Intervalo:{" "}
         {urlSearch.dateStart ? formatTransactionFilterDate(urlSearch.dateStart) : "desde o início"}{" "}
@@ -36,7 +36,6 @@ export function TransactionsPeriodNavigation({
     </div>
   ) : (
     <MonthNavigation
-      className="sticky top-20 z-20"
       onPeriodChange={(nextPeriod) => {
         onPeriodChange?.(nextPeriod);
       }}

@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { isDefaultDashboardWidgetPreferences } from "../dashboard.presentation";
 import { useDashboardWidgetEditor } from "../useDashboardWidgetEditor";
 
-export function DashboardRestoreDefaultButton() {
+export function DashboardRestoreDefaultButton({ labeled = false }: { labeled?: boolean }) {
   const { canEdit, preferences, update } = useDashboardWidgetEditor();
   const [open, setOpen] = useState(false);
   const isDefault = isDefaultDashboardWidgetPreferences(preferences);
@@ -37,7 +37,11 @@ export function DashboardRestoreDefaultButton() {
           onClick={() => setOpen(true)}
           render={
             <Button
-              className="max-md:size-11 text-muted-foreground hover:text-foreground lg:w-auto lg:gap-1.5 lg:px-2.5"
+              className={
+                labeled
+                  ? "w-auto gap-1.5 px-2.5 text-muted-foreground hover:text-foreground"
+                  : "max-md:size-11 text-muted-foreground hover:text-foreground"
+              }
               size="icon-sm"
               type="button"
               variant="ghost"
@@ -45,7 +49,7 @@ export function DashboardRestoreDefaultButton() {
           }
         >
           <RotateCcw aria-hidden="true" />
-          <span className="hidden lg:inline">Restaurar padrão</span>
+          {labeled ? <span>Restaurar organização padrão</span> : null}
         </TooltipTrigger>
         <TooltipContent>Restaurar dashboard padrão</TooltipContent>
       </Tooltip>

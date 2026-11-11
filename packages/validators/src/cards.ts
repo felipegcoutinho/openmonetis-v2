@@ -3,6 +3,7 @@ import {
   cardBrands,
   cardClosingOffsetModes,
   cardClosingRuleTypes,
+  cardCycleComparisonTrends,
   cardInvoiceStatuses,
   cardStatuses,
 } from "@openmonetis/domain/cards";
@@ -177,11 +178,24 @@ export const CardOutputSchema = z
       startDate: z.iso.date(),
       endDate: z.iso.date(),
       openingAmount: z.number(),
+      totalAmount: z.number(),
+      peakDay: z.object({ date: z.iso.date(), amount: z.number() }).nullable(),
+      comparison: z
+        .object({
+          isClosed: z.boolean(),
+          dayOfCycle: z.number().int().positive(),
+          currentAmount: z.number(),
+          previousAmount: z.number(),
+          differenceAmount: z.number().nonnegative(),
+          trend: z.enum(cardCycleComparisonTrends),
+        })
+        .nullable(),
       daily: z.array(
         z.object({
           date: z.iso.date(),
           amount: z.number(),
           cumulativeAmount: z.number(),
+          previousCumulativeAmount: z.number().nullable(),
         }),
       ),
     }),

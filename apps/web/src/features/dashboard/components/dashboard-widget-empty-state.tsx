@@ -19,11 +19,11 @@ export function DashboardWidgetEmptyState({
       className="grid flex-1 place-items-center py-6 text-center"
       data-dashboard-widget-collapse={collapseWidget ? "" : undefined}
     >
-      <div className="-translate-y-4 max-w-xs fill-mode-both animate-in fade-in-0 zoom-in-95 duration-300 motion-reduce:animate-none">
-        <span className="mx-auto grid size-11 place-items-center rounded-full bg-muted text-muted-foreground [&>svg]:size-5">
+      <div className="max-w-xs fill-mode-both animate-in fade-in-0 duration-200">
+        <span className="mx-auto grid size-10 place-items-center text-muted-foreground/70 [&>svg]:size-6 [&>svg]:stroke-[1.5]">
           {icon}
         </span>
-        <p className="mt-3 font-medium text-sm">{title}</p>
+        <p className="mt-2 font-medium text-sm">{title}</p>
         <p className="mt-1 line-clamp-1 text-muted-foreground text-xs">{description}</p>
       </div>
     </div>

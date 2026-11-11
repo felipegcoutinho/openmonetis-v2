@@ -51,7 +51,7 @@ export function CommitmentsWidget({ period }: { period: string }) {
           className="grid flex-1 place-items-center gap-4"
           role="status"
         >
-          <Skeleton className="h-32 w-64 rounded-t-full" />
+          <Skeleton className="h-30 w-60 rounded-t-full" />
           <Skeleton className="h-6 w-40" />
         </div>
       ) : null}
@@ -79,15 +79,17 @@ export function CommitmentsWidget({ period }: { period: string }) {
             title="Nenhuma movimentação no mês"
           />
         ) : (
-          <div
-            aria-busy={query.isFetching}
-            className="flex flex-1 flex-col items-center justify-center gap-4 py-2 text-center"
-          >
-            <CommitmentGauge percentage={current.commitmentPercentage} status={current.status} />
-            <div className="grid justify-items-center gap-1">
-              <span className="kpi-value text-4xl leading-none">
-                {formatCommitmentPercentage(current.commitmentPercentage)}
-              </span>
+          <div aria-busy={query.isFetching} className="flex flex-1 flex-col gap-5 pt-3">
+            <div className="grid justify-items-center gap-3 text-center">
+              <div className="relative w-full max-w-60">
+                <CommitmentGauge
+                  percentage={current.commitmentPercentage}
+                  status={current.status}
+                />
+                <span className="kpi-value absolute inset-x-0 bottom-1.5 text-4xl leading-none">
+                  {formatCommitmentPercentage(current.commitmentPercentage)}
+                </span>
+              </div>
               <p className="text-muted-foreground text-xs">
                 <span className={cn("font-medium", commitmentStatusTextClassName(current.status))}>
                   {current.commitmentPercentage === null
@@ -104,18 +106,23 @@ export function CommitmentsWidget({ period }: { period: string }) {
                   : null}
               </p>
             </div>
-            <dl className="grid w-full grid-cols-3 border-t pt-3 text-left">
+            <dl className="mt-auto grid gap-2 border-t pt-4 text-sm">
               {[
-                { label: "Comprometido", amount: current.committedAmount },
-                { label: "Receita", amount: current.incomeAmount },
-                { label: "Folga", amount: current.freeAmount },
+                { label: "Receita", amount: current.incomeAmount, emphasis: false },
+                { label: "Comprometido", amount: current.committedAmount, emphasis: false },
+                { label: "Folga", amount: current.freeAmount, emphasis: true },
               ].map((item) => (
-                <div className="grid min-w-0 justify-items-center gap-0.5" key={item.label}>
-                  <dt className="font-mono text-muted-foreground text-xs">{item.label}</dt>
+                <div className="flex items-baseline justify-between gap-3" key={item.label}>
+                  <dt className={item.emphasis ? "font-medium" : "text-muted-foreground"}>
+                    {item.label}
+                  </dt>
                   <dd className="min-w-0 truncate">
                     <MoneyValue
                       amount={item.amount}
-                      className={cn("text-sm", item.amount < 0 && "text-destructive")}
+                      className={cn(
+                        item.emphasis && "font-medium",
+                        item.amount < 0 && "text-destructive",
+                      )}
                     />
                   </dd>
                 </div>

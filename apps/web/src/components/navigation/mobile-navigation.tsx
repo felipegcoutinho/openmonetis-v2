@@ -26,7 +26,7 @@ export function MobileNavigation({
     <nav
       aria-label="Navegação principal mobile"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t bg-popover/80 px-2 pt-1 pb-[max(0.3rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-18px_rgb(0_0_0/0.5)] backdrop-blur-sm transition-transform duration-300 ease-out motion-reduce:transition-none md:hidden",
+        "fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.25fr_0.75fr_1fr_1fr] material border-t px-2 pt-1 pb-[max(0.3rem,env(safe-area-inset-bottom))] transition-transform duration-300 ease-(--ease-drawer) motion-reduce:transition-none md:hidden",
         isMobile && mobileNavigationHidden && "pointer-events-none translate-y-full",
       )}
       inert={Boolean(isMobile && mobileNavigationHidden)}

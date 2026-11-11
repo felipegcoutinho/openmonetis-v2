@@ -14,13 +14,13 @@ export function DashboardWelcome({
   return (
     <header className="space-y-1 md:space-y-2">
       <p
-        className="text-muted-foreground text-xs md:text-brand-strong md:uppercase"
+        className="text-muted-foreground text-xs md:text-sm md:text-brand-strong"
         suppressHydrationWarning
       >
         {formatDashboardDate()}
       </p>
       {displayName ? (
-        <h1 className="font-heading font-normal text-xl tracking-tight sm:text-2xl">
+        <h1 className="page-title">
           <span className="text-muted-foreground" suppressHydrationWarning>
             {getDashboardGreeting()},
           </span>{" "}
@@ -28,10 +28,7 @@ export function DashboardWelcome({
         </h1>
       ) : (
         <div className="flex items-center gap-2">
-          <h1
-            className="font-heading text-xl tracking-tight text-muted-foreground sm:text-2xl"
-            suppressHydrationWarning
-          >
+          <h1 className="page-title text-muted-foreground" suppressHydrationWarning>
             {getDashboardGreeting()},
           </h1>
           <Skeleton className="h-7 w-48" />

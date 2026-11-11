@@ -26,13 +26,6 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
       data-mobile-page-form
       className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
       noValidate
-      onKeyDown={(event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-          event.preventDefault();
-          if (form.state.isSubmitting) return;
-          void form.handleSubmit();
-        }
-      }}
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();

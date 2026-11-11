@@ -39,14 +39,14 @@ import {
 } from "../ai-diagnoses.presentation";
 
 const historyConfig = {
-  income: { label: "Receita", color: "var(--success)" },
-  expenses: { label: "Despesa", color: "var(--destructive)" },
+  income: { label: "Receita", color: "var(--chart-income)" },
+  expenses: { label: "Despesa", color: "var(--chart-expense)" },
 } satisfies ChartConfig;
 const savingsConfig = {
   savingsRate: { label: "Taxa de poupança", color: "var(--brand)" },
 } satisfies ChartConfig;
 const balanceConfig = {
-  balance: { label: "Saldo", color: "var(--success)" },
+  balance: { label: "Saldo", color: "var(--chart-balance)" },
 } satisfies ChartConfig;
 const categoriesConfig = {
   amount: { label: "Mês atual", color: "var(--chart-1)" },

@@ -32,6 +32,7 @@
 :root {
   --font-aeonik: "Aeonik Fono", ui-monospace, monospace;
   --font-geist: "Geist Variable", system-ui, sans-serif;
+  --font-code: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   --font-app-sans: var(--font-geist);
   --font-app-mono: var(--font-aeonik);

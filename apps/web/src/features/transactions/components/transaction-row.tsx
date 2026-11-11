@@ -15,6 +15,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import {
   formatPaymentMethodTable,
+  getTransactionSettlementAction,
+  getTransactionSettlementShortLabel,
   paymentMethodIcons,
   transactionConditionIcons,
   transactionConditionLabels,
@@ -109,6 +111,7 @@ export function TransactionRow({
     transaction.isDivided ||
     (adminPersonId !== null && transaction.personId !== adminPersonId);
   const showPurchaseDate = transaction.paymentMethod !== "boleto" || accountStatement;
+  const settlementLabel = getTransactionSettlementShortLabel(transaction);
   const settlementTooltip = isBalanceAdjustment
     ? "Ajustes de saldo são sempre confirmados."
     : isInvoicePayment
@@ -214,66 +217,68 @@ export function TransactionRow({
       <TableCell>
         <TransactionRelation transaction={transaction} />
       </TableCell>
+      <TableCell className="whitespace-nowrap">
+        {isPaymentControlledByInvoice ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="inline-flex items-center gap-2 text-muted-foreground text-sm" />
+              }
+            >
+              <CreditCard aria-hidden="true" className="size-4" />
+              {settlementLabel}
+            </TooltipTrigger>
+            <TooltipContent>O pagamento é controlado pela fatura do cartão.</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger render={<span className="inline-flex" />}>
+              <Button
+                aria-label={
+                  isBalanceAdjustment || isInvoicePayment || isGenerated
+                    ? settlementLabel
+                    : `${settlementLabel}. ${getTransactionSettlementAction(transaction)}`
+                }
+                className={cn(
+                  "-ml-2 gap-2 px-2 font-normal",
+                  transaction.isSettled
+                    ? "text-success hover:bg-success/10 hover:text-success"
+                    : "text-muted-foreground hover:text-success",
+                )}
+                disabled={
+                  isInvoicePayment || isBalanceAdjustment || isGenerated || settlementPending
+                }
+                onClick={() => {
+                  if (transaction.recordId) {
+                    onSettle([transaction.recordId], !transaction.isSettled);
+                  } else if (transaction.recurringRuleId) {
+                    onSettleRecurringOccurrence(
+                      transaction.recurringRuleId,
+                      transaction.purchaseDate,
+                      !transaction.isSettled,
+                    );
+                  }
+                }}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {settlementPending ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : transaction.isSettled ? (
+                  <CircleCheck aria-hidden="true" className="size-4" />
+                ) : (
+                  <Circle aria-hidden="true" className="size-4" />
+                )}
+                {settlementLabel}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{settlementTooltip}</TooltipContent>
+          </Tooltip>
+        )}
+      </TableCell>
       <TableCell>
         <div className="flex items-center justify-end gap-1">
-          {isPaymentControlledByInvoice ? (
-            <Tooltip>
-              <TooltipTrigger
-                aria-label="Pagamento conciliado pela fatura"
-                render={
-                  <span className="inline-flex size-8 items-center justify-center text-muted-foreground" />
-                }
-              >
-                <CreditCard aria-hidden="true" className="size-4" />
-              </TooltipTrigger>
-              <TooltipContent>O pagamento é controlado pela fatura do cartão.</TooltipContent>
-            </Tooltip>
-          ) : transaction.isSettled !== null ? (
-            <Tooltip>
-              <TooltipTrigger render={<span className="inline-flex" />}>
-                <Button
-                  aria-label={
-                    isBalanceAdjustment
-                      ? "Ajuste de saldo sempre confirmado"
-                      : transaction.isSettled
-                        ? "Marcar em aberto"
-                        : "Marcar como pago"
-                  }
-                  disabled={
-                    isInvoicePayment || isBalanceAdjustment || isGenerated || settlementPending
-                  }
-                  onClick={() => {
-                    if (transaction.recordId) {
-                      onSettle([transaction.recordId], !transaction.isSettled);
-                    } else if (transaction.recurringRuleId) {
-                      onSettleRecurringOccurrence(
-                        transaction.recurringRuleId,
-                        transaction.purchaseDate,
-                        !transaction.isSettled,
-                      );
-                    }
-                  }}
-                  size="icon"
-                  type="button"
-                  className={
-                    transaction.isSettled
-                      ? "bg-success/10 text-success"
-                      : "text-muted-foreground hover:text-success"
-                  }
-                  variant="ghost"
-                >
-                  {settlementPending ? (
-                    <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                  ) : transaction.isSettled ? (
-                    <CircleCheck aria-hidden="true" className="size-4" />
-                  ) : (
-                    <Circle aria-hidden="true" className="size-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{settlementTooltip}</TooltipContent>
-            </Tooltip>
-          ) : null}
           <TransactionRowActions
             transaction={transaction}
             pending={pending}

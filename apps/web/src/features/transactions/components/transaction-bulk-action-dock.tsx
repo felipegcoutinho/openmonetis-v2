@@ -131,7 +131,7 @@ export function TransactionBulkActionDock({
         className="dark sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mx-auto w-full md:bottom-4 md:max-w-max"
         role="toolbar"
       >
-        <div className="flex animate-in flex-wrap items-center justify-center gap-x-1 gap-y-1.5 rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-2xl ring-1 ring-foreground/15 duration-300 ease-out fade-in-0 slide-in-from-bottom-4 zoom-in-95 motion-reduce:animate-none md:flex-nowrap md:rounded-full">
+        <div className="flex animate-in flex-wrap items-center justify-center gap-x-1 gap-y-1.5 rounded-2xl border border-foreground/15 bg-popover p-1.5 text-popover-foreground shadow-2xl duration-300 ease-out fade-in-0 slide-in-from-bottom-4 zoom-in-95 motion-reduce:animate-none md:flex-nowrap md:rounded-full">
           <div
             aria-live="polite"
             className="flex items-center gap-2 pr-2 max-md:w-full max-md:border-b max-md:pb-1.5"

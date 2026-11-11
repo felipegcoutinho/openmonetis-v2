@@ -203,7 +203,7 @@ export function AiChatPanel({
             !(chatId && (chatQuery.isLoading || chatQuery.isError)) ? (
               <ConversationEmptyState className="gap-4 sm:gap-6">
                 <div className="grid justify-items-center gap-3">
-                  <span className="hidden size-12 place-items-center rounded-2xl sm:grid bg-brand/10 text-brand-strong ring-1 ring-brand/15">
+                  <span className="hidden size-12 place-items-center rounded-2xl sm:grid bg-brand/10 border border-brand/15 text-brand-strong">
                     <Sparkles aria-hidden="true" className="size-5" />
                   </span>
                   <div className="grid max-w-md gap-1.5">

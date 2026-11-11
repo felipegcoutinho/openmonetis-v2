@@ -7,6 +7,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
 import {
+  ArrowDownLeft,
   CalendarClock,
   CalendarRange,
   CreditCard,
@@ -19,13 +20,18 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
+import { StatCard } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { personBalanceLabel } from "@/features/person-settlements/person-settlements.presentation";
+import { PersonBalanceIcon } from "@/features/person-settlements/components/person-balance-icon";
+import {
+  getPersonBalanceAmount,
+  personBalanceLabel,
+} from "@/features/person-settlements/person-settlements.presentation";
 import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import {
@@ -153,8 +159,6 @@ function PersonReportSummary({
   const activeSchedule = schedule?.schedule?.enabled ? schedule.schedule : null;
   const nextDelivery = schedule?.nextDeliveryDates[0];
   const { balance } = report;
-  const balanceAmount =
-    balance.status === "credit" ? balance.creditAmount : balance.receivableAmount;
   const partial = isPersonReportPartial(report.period);
 
   return (
@@ -195,17 +199,25 @@ function PersonReportSummary({
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid gap-2 sm:grid-cols-3">
-          <SummaryMetric
-            amount={balance.dueAmount}
-            detail={<PersonReportComparison comparison={report.comparison} />}
+        <div className="grid gap-3 sm:grid-cols-3">
+          <StatCard
+            className="shadow-none"
+            description={<PersonReportComparison comparison={report.comparison} />}
+            icon={<CalendarRange />}
             label="Total do mês"
+            value={<MoneyValue amount={balance.dueAmount} />}
           />
-          <SummaryMetric amount={balance.settledAmount} label="Repasses recebidos" />
-          <SummaryMetric
-            amount={balanceAmount}
-            emphasized
+          <StatCard
+            className="shadow-none"
+            icon={<ArrowDownLeft />}
+            label="Repasses recebidos"
+            value={<MoneyValue amount={balance.settledAmount} />}
+          />
+          <StatCard
+            className="shadow-none"
+            icon={<PersonBalanceIcon status={balance.status} />}
             label={personBalanceLabel(balance.status)}
+            value={<MoneyValue amount={getPersonBalanceAmount(balance)} />}
           />
         </div>
         {partial || notice || activeSchedule ? (
@@ -241,28 +253,6 @@ function PersonReportSummary({
   );
 }
 
-function SummaryMetric({
-  amount,
-  detail,
-  emphasized = false,
-  label,
-}: {
-  amount: number;
-  detail?: ReactNode;
-  emphasized?: boolean;
-  label: string;
-}) {
-  return (
-    <div className="rounded-lg border bg-muted/20 p-3">
-      <p className="font-mono text-muted-foreground text-xs">{label}</p>
-      <p className={emphasized ? "mt-1 font-semibold text-lg" : "mt-1 font-medium text-sm"}>
-        <MoneyValue amount={amount} />
-      </p>
-      {detail}
-    </div>
-  );
-}
-
 const comparisonIcons = {
   up: TrendingUp,
   down: TrendingDown,
@@ -274,10 +264,10 @@ function PersonReportComparison({ comparison }: { comparison: PersonReportOutput
   const { trend, text } = describePersonReportComparison(comparison);
   const TrendIcon = comparisonIcons[trend];
   return (
-    <p className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
+    <span className="flex items-center gap-1">
       <TrendIcon aria-hidden="true" className="size-3.5 shrink-0" />
       {text}
-    </p>
+    </span>
   );
 }
 

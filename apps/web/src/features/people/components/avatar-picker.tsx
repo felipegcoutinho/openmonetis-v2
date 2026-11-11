@@ -110,7 +110,7 @@ export function AvatarPicker({
           )}
         </button>
       </div>
-      <p className="text-muted-foreground text-xs">JPG, PNG ou WebP de até 5 MB.</p>
+      <p className="font-mono text-muted-foreground text-xs">JPG, PNG ou WebP de até 5 MB.</p>
     </div>
   );
 }

@@ -98,13 +98,13 @@ export function DashboardQuickActions({ period }: { period: string }) {
   return (
     <section
       aria-label="Ações rápidas"
-      className="grid grid-cols-4 gap-1 md:gap-0.5 md:rounded-card md:border md:bg-card/75 md:p-1 md:shadow-xs md:backdrop-blur-sm"
+      className="grid grid-cols-4 gap-1 md:gap-0.5 md:rounded-lg md:border md:bg-card md:p-1"
     >
       {transactionActions.map((action) => (
         <Button
           aria-label={action.label}
           className={cn(
-            "group/quick-action h-auto min-h-16 flex-col justify-center gap-2 rounded-lg bg-muted/40 px-1 py-3 text-foreground text-xs md:h-10 md:min-h-0 md:flex-row md:bg-transparent md:px-3 md:py-0 md:text-sm hover:text-foreground sm:justify-center",
+            "group/quick-action h-auto min-h-16 flex-col justify-center gap-2 rounded-lg bg-card px-1 py-3 text-foreground text-xs border-border md:h-9 md:min-h-0 md:flex-row md:rounded-md md:border-transparent md:bg-transparent md:px-3.5 md:py-0 md:text-sm hover:text-foreground sm:justify-center",
             action.hoverClassName,
           )}
           aria-busy={preparingAction === action.type}
@@ -136,7 +136,7 @@ export function DashboardQuickActions({ period }: { period: string }) {
 
       <Button
         aria-label="Nova anotação"
-        className="group/quick-action h-auto min-h-16 flex-col justify-center gap-2 rounded-lg bg-muted/40 px-1 py-3 text-foreground text-xs md:h-10 md:min-h-0 md:flex-row md:bg-transparent md:px-3 md:py-0 md:text-sm hover:bg-warning/10 hover:text-foreground sm:justify-center"
+        className="group/quick-action h-auto min-h-16 flex-col justify-center gap-2 rounded-lg bg-card px-1 py-3 text-foreground text-xs border-border md:h-9 md:min-h-0 md:flex-row md:rounded-md md:border-transparent md:bg-transparent md:px-3.5 md:py-0 md:text-sm hover:bg-warning/10 hover:text-foreground sm:justify-center"
         onClick={() => setNoteOpen(true)}
         size="sm"
         type="button"

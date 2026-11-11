@@ -39,6 +39,7 @@ export function ReleaseMenuItems({ enabled }: { enabled: boolean }) {
       </DropdownMenuItem>
       {releases.updateAvailable && releases.latestVersion && releases.latestReleaseUrl ? (
         <DropdownMenuItem
+          className="text-success focus:bg-success/10 focus:text-success not-data-[variant=destructive]:focus:**:text-success"
           onClick={() =>
             window.open(releases.latestReleaseUrl as string, "_blank", "noopener,noreferrer")
           }

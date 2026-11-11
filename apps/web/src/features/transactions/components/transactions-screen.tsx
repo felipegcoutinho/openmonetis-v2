@@ -13,7 +13,6 @@ import {
   type TransactionsSearch,
 } from "../transactions.presentation";
 import { useTransactionsDialogs } from "../useTransactionsDialogs";
-import { transactionTypeIcons } from "./transaction-type-badge";
 import { TransactionsActiveFilters } from "./transactions-active-filters";
 import { TransactionsCreateActions } from "./transactions-create-actions";
 import { TransactionsDialogs } from "./transactions-dialogs";
@@ -23,7 +22,7 @@ import { TransactionsLoading } from "./transactions-loading";
 import { TransactionsMobileList } from "./transactions-mobile-list";
 import { TransactionsPeriodNavigation } from "./transactions-period-navigation";
 import type { TransactionsScreenProps } from "./transactions-screen.types";
-import { createTransactionLabels, defaultCreateTypes } from "./transactions-screen-options";
+import { defaultCreateTypes } from "./transactions-screen-options";
 import { TransactionsSearchControls } from "./transactions-search-controls";
 import { TransactionsTable } from "./transactions-table";
 
@@ -161,7 +160,7 @@ export function TransactionsScreen({
       pageHeader.summary
     );
   const contextNavigationSection = contentNavigation ? (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       {summarySection}
       {contentNavigation}
     </div>
@@ -284,24 +283,13 @@ export function TransactionsScreen({
               showInlineCreateButtons || (onExport && isMobile !== true) ? "flex" : "hidden",
             )}
           >
-            {showInlineCreateButtons
-              ? createTypes.map((type) => {
-                  const Icon = transactionTypeIcons[type];
-
-                  return (
-                    <Button
-                      className="w-full sm:w-auto"
-                      key={type}
-                      onClick={() => openCreateDialog(type)}
-                    >
-                      <Icon aria-hidden="true" />
-                      {type === "income" && createDefaults?.paymentMethod === "credit_card"
-                        ? "Novo crédito na fatura"
-                        : createTransactionLabels[type]}
-                    </Button>
-                  );
-                })
-              : null}
+            {showInlineCreateButtons ? (
+              <TransactionsCreateActions
+                createTypes={createTypes}
+                createDefaults={createDefaults}
+                openCreateDialog={openCreateDialog}
+              />
+            ) : null}
             {allowImport && isMobile !== true ? (
               <Button asChild className="!normal-case" variant="outline">
                 <Link to="/transactions/import">
@@ -337,7 +325,6 @@ export function TransactionsScreen({
           <TransactionsSearchControls
             urlSearch={urlSearch}
             onSearchChange={onSearchChange}
-            isMobile={isMobile}
             search={search}
             setSearch={setSearch}
           />{" "}

@@ -21,6 +21,7 @@ test("keeps category excess separate from remaining limits", () => {
   assert.equal(result.availableAmount, 200);
   assert.equal(result.exceededAmount, 100);
   assert.equal(result.committedAmount, 300);
+  assert.equal(result.usagePercentage, 75);
 });
 
 test("breaks down unbudgeted expenses including recurrence-only and uncategorized entries", () => {

@@ -19,26 +19,26 @@ export function UnbudgetedExpenses({ overview, categories, onCreate }: Unbudgete
   if (overview.unbudgetedCommittedAmount <= 0) return null;
 
   return (
-    <Card className="gap-3 p-5">
+    <Card className="gap-3 border-dashed bg-transparent p-5 shadow-none">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-medium">
-            <MoneyValue amount={overview.unbudgetedCommittedAmount} /> em despesas sem orçamento
+          <h2 className="font-medium text-sm">
+            <MoneyValue amount={overview.unbudgetedCommittedAmount} /> em categorias sem limite
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Veja as categorias e escolha onde definir limites.
+          <p className="mt-1 text-muted-foreground text-xs">
+            Despesas do mês que nenhum orçamento acompanha.
           </p>
         </div>
-        <Button onClick={() => setOpen(true)} variant="outline">
+        <Button onClick={() => setOpen(true)} size="sm" variant="outline">
           Ver categorias
         </Button>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent data-mobile-details>
           <DialogHeader>
-            <DialogTitle>Despesas sem orçamento</DialogTitle>
+            <DialogTitle>Categorias sem limite</DialogTitle>
             <DialogDescription>
-              Lançamentos e recorrências previstas no mês, fora das categorias acompanhadas.
+              Despesas lançadas e previstas no mês em categorias que ainda não têm limite.
             </DialogDescription>
           </DialogHeader>
           <div className="contents" data-mobile-detail-body>

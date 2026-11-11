@@ -4,7 +4,7 @@ import {
   maxCommitmentMonths,
 } from "@openmonetis/validators/commitments";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarClock } from "lucide-react";
+import { Gauge } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EntityLoadError } from "@/components/entity-load-error";
 import { Navbar } from "@/components/navigation/navbar";
@@ -32,7 +32,7 @@ export function CommitmentsPage({ filters, onChange }: Props) {
           <PageHeader
             title="Compromissos futuros"
             description="Quanto da sua renda já está comprometido nos próximos meses."
-            icon={<CalendarClock aria-hidden="true" className="size-5" />}
+            icon={<Gauge aria-hidden="true" className="size-5" />}
             breadcrumbs={[
               { label: "Visão geral", href: "/dashboard" },
               { label: "Relatórios" },

@@ -78,6 +78,7 @@ export function TransactionSplitDialog({
         openEditor={openEditor}
         disabledReason={disabledReason}
         people={people}
+        primaryPersonId={primaryPersonId}
       />
 
       <TransactionSplitRemoveDialog
@@ -89,9 +90,7 @@ export function TransactionSplitDialog({
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Dividir lançamento</DialogTitle>
-          <DialogDescription>
-            Selecione os participantes e distribua o valor total do lançamento.
-          </DialogDescription>
+          <DialogDescription>Escolha quem participa e quanto cabe a cada pessoa.</DialogDescription>
         </DialogHeader>
 
         <div data-mobile-form-body className="min-h-0 -mt-4 space-y-4 overflow-y-auto pr-1">
@@ -106,6 +105,29 @@ export function TransactionSplitDialog({
               <TabsTrigger value="percentage">Percentual (%)</TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <TransactionSplitParticipants
+            draft={draft}
+            percentageDraft={percentageDraft}
+            splitMode={splitMode}
+            activeConnectedPersonIds={activeConnectedPersonIds}
+            togglePerson={togglePerson}
+            updateAmount={updateAmount}
+            updatePercentage={updatePercentage}
+            people={people}
+            primaryPersonId={primaryPersonId}
+          />
+
+          <TransactionSplitRedistribution
+            setRedistributionSelection={setRedistributionSelection}
+            redistributeDifference={redistributeDifference}
+            allocation={allocation}
+            redistributionCandidates={redistributionCandidates}
+            showRedistribution={showRedistribution}
+            selectedRedistributionPersonId={selectedRedistributionPersonId}
+            selectedRedistributionPerson={selectedRedistributionPerson}
+            people={people}
+          />
 
           {connectedDraftShares.length > 0 ? (
             <section aria-label="Envios para revisão" className="grid gap-2">
@@ -125,7 +147,9 @@ export function TransactionSplitDialog({
               })}
             </section>
           ) : null}
+        </div>
 
+        <div className="shrink-0 md:-mb-3">
           <TransactionSplitSummary
             draft={draft}
             splitMode={splitMode}
@@ -138,29 +162,6 @@ export function TransactionSplitDialog({
             hasAllocationIssue={hasAllocationIssue}
             hasInvalidAllocation={hasInvalidAllocation}
             percentageDifferenceBasisPoints={percentageDifferenceBasisPoints}
-          />
-
-          <TransactionSplitRedistribution
-            setRedistributionSelection={setRedistributionSelection}
-            redistributeDifference={redistributeDifference}
-            allocation={allocation}
-            redistributionCandidates={redistributionCandidates}
-            showRedistribution={showRedistribution}
-            selectedRedistributionPersonId={selectedRedistributionPersonId}
-            selectedRedistributionPerson={selectedRedistributionPerson}
-            people={people}
-          />
-
-          <TransactionSplitParticipants
-            draft={draft}
-            percentageDraft={percentageDraft}
-            splitMode={splitMode}
-            activeConnectedPersonIds={activeConnectedPersonIds}
-            togglePerson={togglePerson}
-            updateAmount={updateAmount}
-            updatePercentage={updatePercentage}
-            people={people}
-            primaryPersonId={primaryPersonId}
           />
         </div>
 

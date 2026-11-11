@@ -2,8 +2,8 @@ import type { PaginatedAttachmentsOutput } from "@openmonetis/validators/attachm
 import { FileImage, FileText, Paperclip, UserRound, X } from "lucide-react";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AttachmentsSearch } from "../attachments.presentation";
 
@@ -31,14 +31,12 @@ export function AttachmentLibraryFilters({
 
   return (
     <fieldset aria-label="Filtros de anexos" className="flex min-w-0 flex-wrap items-center gap-2">
-      <Input
-        className="w-full sm:w-64"
+      <SearchInput
+        containerClassName="sm:w-64"
         aria-label="Buscar anexos"
         placeholder="Buscar arquivo ou lançamento"
         value={search.q ?? ""}
-        onChange={(event) =>
-          onSearchChange({ q: event.target.value || undefined, page: undefined })
-        }
+        onValueChange={(q) => onSearchChange({ q: q || undefined, page: undefined })}
       />
       <Select
         onValueChange={(value) =>

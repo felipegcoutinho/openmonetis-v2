@@ -45,25 +45,18 @@ export function InboxItemActions({
       </Tooltip>
       {status === "pending" ? (
         <>
-          <Tooltip>
-            <TooltipTrigger
-              aria-label="Descartar captura"
-              disabled={processing}
-              onClick={onDiscard}
-              render={
-                <Button
-                  className="text-muted-foreground hover:text-destructive max-md:size-11"
-                  size="icon"
-                  variant="outline"
-                />
-              }
-            >
-              <ArchiveX aria-hidden="true" className="size-4 max-md:size-5" />
-            </TooltipTrigger>
-            <TooltipContent>Descartar</TooltipContent>
-          </Tooltip>
+          {/* Labelled and kept apart from "Revisar" so a slip never discards a capture. */}
           <Button
-            className="max-md:min-h-11 max-md:min-w-28"
+            className="text-muted-foreground hover:text-destructive max-md:min-h-11"
+            disabled={processing}
+            onClick={onDiscard}
+            size="default"
+            variant="ghost"
+          >
+            <ArchiveX aria-hidden="true" /> Descartar
+          </Button>
+          <Button
+            className="ms-2 max-md:min-h-11 max-md:min-w-28"
             disabled={processing}
             onClick={onProcess}
             size="default"

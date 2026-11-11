@@ -14,7 +14,7 @@ export function PeopleGrid({ people, onEdit, onRemove }: PeopleGridProps) {
   });
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="stagger-children grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {orderedPeople.map((person) => (
         <PersonCard
           key={person.id}

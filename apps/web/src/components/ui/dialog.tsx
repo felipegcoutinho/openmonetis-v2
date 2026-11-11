@@ -1,8 +1,8 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { cva, type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -14,14 +14,13 @@ function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
 }
 
 function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {
-  const isMobile = useIsMobile();
-
   return (
     <DialogPrimitive.Backdrop
-      forceRender={isMobile === true}
+      // Nested dialogs render their own backdrop so the dialog underneath is dimmed too.
+      forceRender
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-overlay duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-overlay duration-200 data-closed:duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
@@ -43,7 +42,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100svh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 overflow-y-auto rounded-xl bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100svh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 overflow-y-auto rounded-2xl border bg-popover p-6 text-sm text-popover-foreground shadow-xl duration-200 ease-out outline-none data-closed:duration-150 sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.97] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]",
           className,
         )}
         {...props}
@@ -66,6 +65,37 @@ function DialogContent({
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div data-slot="dialog-header" className={cn("flex flex-col gap-2", className)} {...props} />
+  );
+}
+
+const dialogMediaVariants = cva(
+  "mb-1 grid size-10 shrink-0 place-items-center rounded-full *:[svg:not([class*='size-'])]:size-5",
+  {
+    variants: {
+      tone: {
+        brand: "bg-brand/10 text-brand-strong",
+        success: "bg-success/10 text-success",
+        muted: "bg-muted text-muted-foreground",
+      },
+    },
+    defaultVariants: {
+      tone: "brand",
+    },
+  },
+);
+
+function DialogMedia({
+  className,
+  tone,
+  ...props
+}: React.ComponentProps<"span"> & VariantProps<typeof dialogMediaVariants>) {
+  return (
+    <span
+      aria-hidden="true"
+      data-slot="dialog-media"
+      className={cn(dialogMediaVariants({ tone }), className)}
+      {...props}
+    />
   );
 }
 
@@ -117,4 +147,12 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
   );
 }
 
-export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle };
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogMedia,
+  DialogTitle,
+};

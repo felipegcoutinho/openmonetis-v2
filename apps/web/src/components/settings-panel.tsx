@@ -4,9 +4,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function SettingsPanel({ className, ...props }: ComponentProps<typeof Card>) {
-  return (
-    <Card className={cn("gap-0 py-0 dark:ring-1 dark:ring-border/60", className)} {...props} />
-  );
+  return <Card className={cn("gap-0 py-0", className)} {...props} />;
 }
 
 export function SettingsSection({

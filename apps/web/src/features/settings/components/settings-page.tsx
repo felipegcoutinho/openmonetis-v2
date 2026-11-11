@@ -29,6 +29,17 @@ const tabItems = [
   { value: "account-data", label: "Dados da conta", icon: Database },
 ] as const satisfies ReadonlyArray<{ value: SettingsTab; label: string; icon: typeof Settings }>;
 
+/** Keeps the active tab visible when the strip scrolls sideways on narrow screens. */
+function revealInTabScroller(trigger: HTMLElement | null) {
+  const scroller = trigger?.closest<HTMLElement>("[data-tab-scroller]");
+  if (!trigger || !scroller || scroller.scrollWidth <= scroller.clientWidth) return;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  scroller.scrollTo({
+    left: trigger.offsetLeft - (scroller.clientWidth - trigger.offsetWidth) / 2,
+    behavior: reduceMotion ? "auto" : "smooth",
+  });
+}
+
 export function SettingsPage() {
   const search = useSearch({ from: "/settings" });
   const navigate = useNavigate({ from: "/settings" });
@@ -59,10 +70,18 @@ export function SettingsPage() {
 
           <Tabs className="min-w-0 gap-0" onValueChange={changeTab} value={activeTab}>
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+              <div
+                className="snap-x overflow-x-auto scroll-px-4 scrollbar-none [&::-webkit-scrollbar]:hidden"
+                data-tab-scroller
+              >
                 <TabsList className="min-w-max" variant="line">
                   {tabItems.map(({ value, label, icon: Icon }) => (
-                    <TabsTrigger key={value} value={value}>
+                    <TabsTrigger
+                      className="snap-start"
+                      key={value}
+                      ref={value === activeTab ? revealInTabScroller : undefined}
+                      value={value}
+                    >
                       <Icon aria-hidden="true" />
                       {label}
                     </TabsTrigger>
@@ -71,7 +90,7 @@ export function SettingsPage() {
               </div>
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-linear-to-l from-background to-transparent sm:hidden"
+                className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-linear-to-l from-background via-background/70 to-transparent sm:hidden"
               />
             </div>
 

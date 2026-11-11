@@ -1,9 +1,8 @@
 import type { PersonBalanceOutput } from "@openmonetis/validators/person-settlements";
-import { formatCurrency } from "../../lib/money-presentation";
 
-export function formatPersonBalance(balance: PersonBalanceOutput) {
-  const amount = balance.status === "credit" ? balance.creditAmount : balance.receivableAmount;
-  return formatCurrency(amount);
+/** Amount shown next to the balance label: the person's credit, or what is still receivable. */
+export function getPersonBalanceAmount(balance: PersonBalanceOutput) {
+  return balance.status === "credit" ? balance.creditAmount : balance.receivableAmount;
 }
 
 export function personBalanceLabel(status: PersonBalanceOutput["status"]) {

@@ -91,7 +91,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
 
           {report && !reportQuery.isError ? (
             report.categories.length ? (
-              <div className="grid gap-6" aria-busy={reportQuery.isFetching}>
+              <div className="grid grid-cols-1 gap-6" aria-busy={reportQuery.isFetching}>
                 <CategoryTrendsSummary report={report} />
                 <Tabs className="gap-0" defaultValue={defaultView} key={defaultView}>
                   <TabsList variant="line">
@@ -112,7 +112,11 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
                         ? " Expanda a categoria para ver as subcategorias."
                         : null}
                     </p>
-                    <CategoryTrendsList categories={report.categories} periods={report.periods} />
+                    <CategoryTrendsList
+                      categories={report.categories}
+                      periods={report.periods}
+                      summary={report.summary}
+                    />
                   </TabsContent>
                   <TabsContent className="pt-5" value="chart">
                     <CategoryTrendsChart categories={report.categories} periods={report.periods} />

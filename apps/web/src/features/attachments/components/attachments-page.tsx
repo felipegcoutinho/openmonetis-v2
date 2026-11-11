@@ -94,7 +94,6 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
           />
 
           <MonthNavigation
-            className="sticky top-20 z-20"
             onPeriodChange={(nextPeriod) => onSearchChange({ period: nextPeriod, page: undefined })}
             period={period}
           />

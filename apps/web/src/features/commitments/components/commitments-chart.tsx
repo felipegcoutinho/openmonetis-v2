@@ -19,7 +19,7 @@ const chartConfig = {
   installmentsAmount: { label: "Parcelas", color: "var(--chart-1)" },
   recurringAmount: { label: "Recorrentes", color: "var(--chart-2)" },
   billsAmount: { label: "Contas avulsas", color: "var(--chart-4)" },
-  incomeAmount: { label: "Receita prevista", color: "var(--success)" },
+  incomeAmount: { label: "Receita prevista", color: "var(--chart-income)" },
 } satisfies ChartConfig;
 const axisNumberFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 

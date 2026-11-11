@@ -6,6 +6,7 @@ import {
   calculateCardCycleSpending,
   calculateCardInvoiceHistory,
   calculateCardInvoiceSummary,
+  compareCardCycleSpending,
   createCardDraft,
   resolveCardClosingRule,
 } from "@openmonetis/domain/cards";
@@ -234,21 +235,42 @@ export function createCardsService(
         ...summarizeInvoice(period),
         payments: toInvoicePaymentSummaries(payments, period),
       };
-      const previousInvoiceSummary = summarizeInvoice(addMonthsToPeriod(period, -1));
-      return toCardOutput(
-        card,
-        invoiceSummary,
-        calculateCardCycleSpending({
-          previousClosingDate: previousInvoiceSummary.closingDate,
-          closingDate: invoiceSummary.closingDate,
-          movements: cardMovements
-            .filter((movement) => movement.period === period)
-            .map((movement) => ({
-              purchaseDate: movement.purchaseDate,
-              amount: Number(movement.amount),
-            })),
-        }),
-      );
+      const previousPeriod = addMonthsToPeriod(period, -1);
+      const previousInvoiceSummary = summarizeInvoice(previousPeriod);
+      const toCycleMovements = (invoiceMovements: CardMovementRecord[], invoicePeriod: string) =>
+        invoiceMovements
+          .filter((movement) => movement.period === invoicePeriod)
+          .map((movement) => ({
+            purchaseDate: movement.purchaseDate,
+            amount: Number(movement.amount),
+          }));
+      const currentCycle = calculateCardCycleSpending({
+        previousClosingDate: previousInvoiceSummary.closingDate,
+        closingDate: invoiceSummary.closingDate,
+        movements: toCycleMovements(cardMovements, period),
+      });
+      // Recurring purchases are expanded apart so the previous cycle never leaks into the
+      // current invoice's limit and summary.
+      const previousCycle = calculateCardCycleSpending({
+        previousClosingDate: summarizeInvoice(addMonthsToPeriod(period, -2)).closingDate,
+        closingDate: previousInvoiceSummary.closingDate,
+        movements: toCycleMovements(
+          [
+            ...persistedMovements.filter((movement) => movement.cardId === card.id),
+            ...expandRecurringInvoiceMovements(
+              recurringRules.filter((rule) => rule.cardId === card.id),
+              [previousPeriod],
+            ),
+          ],
+          previousPeriod,
+        ),
+      });
+      const { daily, comparison } = compareCardCycleSpending({
+        current: currentCycle,
+        previous: previousCycle,
+        today: getToday(),
+      });
+      return toCardOutput(card, invoiceSummary, { ...currentCycle, comparison, daily });
     });
   }
 

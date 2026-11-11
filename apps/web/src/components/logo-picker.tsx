@@ -1,6 +1,6 @@
 import { Image } from "@unpic/react";
-import { Check, ImageOff, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Check, ChevronsUpDown, Landmark, Search, X } from "lucide-react";
+import { type KeyboardEvent, useMemo, useRef, useState } from "react";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,6 +22,26 @@ type LogoPickerProps = {
   onChange: (option: string | null) => void;
 };
 
+const OPTION_SELECTOR = "[data-logo-option]";
+const ARROW_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+
+const tileClassName =
+  "relative flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-xs border border-input bg-popover shadow-xs outline-none transition-[color,background-color,border-color,box-shadow,scale] duration-150 hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] aria-pressed:border-brand aria-pressed:bg-accent aria-pressed:font-medium";
+
+/** Accent- and case-insensitive, so "itau" finds "Itaú". */
+function normalizeSearch(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+}
+
+// Stable identity: runs only when the selected option mounts, not on every render.
+function revealSelectedOption(node: HTMLButtonElement | null) {
+  node?.scrollIntoView({ block: "nearest" });
+}
+
 export function LogoPicker({
   options,
   value,
@@ -37,31 +57,85 @@ export function LogoPicker({
   const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const selectedLabel = options.find((option) => option.src === value)?.label ?? "";
+  const query = normalizeSearch(search);
 
   const visibleOptions = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase("pt-BR");
+    if (!query) return options;
+    return options.filter((option) => normalizeSearch(option.label).includes(query));
+  }, [options, query]);
 
-    if (!query) {
-      return options;
-    }
+  const featuredOptions = visibleOptions.filter((option) => option.featured);
+  const remainingOptions = visibleOptions.filter((option) => !option.featured);
 
-    return options.filter((option) => option.label.toLocaleLowerCase("pt-BR").includes(query));
-  }, [options, search]);
-
-  const featuredVisibleOptions = visibleOptions.filter((option) => option.featured);
-  const remainingVisibleOptions = visibleOptions.filter((option) => !option.featured);
+  function changeOpen(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen) setSearch("");
+  }
 
   function selectLogo(option: string | null) {
     onChange(option);
-    setOpen(false);
+    changeOpen(false);
+  }
+
+  function clearSearch() {
     setSearch("");
+    searchRef.current?.focus();
+  }
+
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      listRef.current?.querySelector<HTMLButtonElement>(OPTION_SELECTOR)?.focus();
+    } else if (event.key === "Enter" && query && visibleOptions.length > 0) {
+      event.preventDefault();
+      selectLogo(visibleOptions[0].src);
+    }
+  }
+
+  function handleListKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!ARROW_KEYS.includes(event.key)) return;
+    const items = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>(OPTION_SELECTOR),
+    );
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (index === -1) return;
+    event.preventDefault();
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      items[index + (event.key === "ArrowRight" ? 1 : -1)]?.focus();
+      return;
+    }
+
+    // Vertical moves follow the rendered grid, whatever the column count is.
+    const down = event.key === "ArrowDown";
+    const current = items[index].getBoundingClientRect();
+    const beyond = items
+      .map((item) => ({ item, rect: item.getBoundingClientRect() }))
+      .filter(({ rect }) => (down ? rect.top > current.top + 1 : rect.top < current.top - 1));
+    if (beyond.length === 0) {
+      if (!down) searchRef.current?.focus();
+      return;
+    }
+    const rowTop = down
+      ? Math.min(...beyond.map(({ rect }) => rect.top))
+      : Math.max(...beyond.map(({ rect }) => rect.top));
+    const row = beyond.filter(({ rect }) => Math.abs(rect.top - rowTop) < 1);
+    const target = row.reduce((best, entry) =>
+      Math.abs(entry.rect.left - current.left) < Math.abs(best.rect.left - current.left)
+        ? entry
+        : best,
+    );
+    target.item.focus();
   }
 
   return (
     <>
       <Button
-        className="h-auto w-full justify-start border-input bg-popover px-2.5 py-2 text-left shadow-xs"
+        aria-haspopup="dialog"
+        className="h-auto w-full justify-start gap-3 border-input bg-popover px-2.5 py-2 text-left shadow-xs"
         disabled={disabled}
         onClick={() => setOpen(true)}
         type="button"
@@ -70,26 +144,32 @@ export function LogoPicker({
         {value ? (
           <Image
             alt=""
-            className="size-11 shrink-0 rounded-full object-contain"
-            height={44}
+            className="size-10 shrink-0 rounded-full object-contain"
+            height={40}
             layout="fixed"
             src={value}
-            width={44}
+            width={40}
           />
         ) : (
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-            <ImageOff aria-hidden="true" className="size-4" />
+          <span className="grid size-10 shrink-0 place-items-center rounded-full border border-dashed border-input text-muted-foreground">
+            <Landmark aria-hidden="true" className="size-4" />
           </span>
         )}
-        <span className="min-w-0">
-          <span className="block font-medium text-sm">{label}</span>
-          <span className="block truncate text-muted-foreground text-xs">
+        <span className="min-w-0 flex-1">
+          <span className="block text-muted-foreground text-xs">{label}</span>
+          <span
+            className={cn(
+              "block truncate text-sm",
+              selectedLabel ? "font-medium" : "font-normal text-muted-foreground",
+            )}
+          >
             {selectedLabel || emptyLabel}
           </span>
         </span>
+        <ChevronsUpDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={changeOpen}>
         <DialogContent mobileLayout="sheet" className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{dialogTitle}</DialogTitle>
@@ -100,40 +180,82 @@ export function LogoPicker({
               className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             />
             <Input
+              autoComplete="off"
               autoFocus={!mobile}
               aria-label={searchPlaceholder}
-              className="pl-9"
+              className="px-9"
+              enterKeyHint="search"
               onChange={(event) => setSearch(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder={searchPlaceholder}
+              ref={searchRef}
+              spellCheck={false}
               value={search}
             />
+            {search ? (
+              <Button
+                aria-label="Limpar busca"
+                className="absolute top-1/2 right-1 size-7 -translate-y-1/2 text-muted-foreground"
+                onClick={clearSearch}
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </Button>
+            ) : null}
           </div>
-          <div data-mobile-form-body className="grid max-h-80 gap-5 overflow-y-auto pr-1">
-            {(featuredVisibleOptions.length > 0 || allowEmpty) && !search.trim() ? (
-              <LogoGrid
-                allowEmpty={allowEmpty}
-                emptyOptionLabel={emptyOptionLabel}
-                heading="Mais usadas"
-                onSelect={selectLogo}
-                options={featuredVisibleOptions}
-                value={value}
-              />
-            ) : null}
-
-            {(search.trim() ? visibleOptions.length > 0 : remainingVisibleOptions.length > 0) ? (
-              <LogoGrid
-                heading={search.trim() ? "Resultados" : "Todas as instituições"}
-                onSelect={selectLogo}
-                options={search.trim() ? visibleOptions : remainingVisibleOptions}
-                value={value}
-              />
-            ) : null}
-
-            {visibleOptions.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground text-sm">
-                Nenhuma instituição encontrada.
-              </p>
-            ) : null}
+          {/* Fixed height: the dialog must not resize while the results change. */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: delegated arrow-key navigation between the option buttons. */}
+          <div
+            data-mobile-form-body
+            className="flex h-[min(26rem,55dvh)] flex-col gap-5 overflow-y-auto p-1"
+            onKeyDown={handleListKeyDown}
+            ref={listRef}
+          >
+            {query ? (
+              visibleOptions.length > 0 ? (
+                <LogoGrid
+                  heading={
+                    visibleOptions.length === 1
+                      ? "1 resultado"
+                      : `${visibleOptions.length} resultados`
+                  }
+                  onSelect={selectLogo}
+                  options={visibleOptions}
+                  value={value}
+                />
+              ) : (
+                <div className="grid flex-1 place-content-center justify-items-center gap-3 text-center">
+                  <p aria-live="polite" className="text-muted-foreground text-sm">
+                    Nenhuma instituição encontrada para “{search.trim()}”.
+                  </p>
+                  <Button onClick={clearSearch} size="sm" type="button" variant="outline">
+                    Limpar busca
+                  </Button>
+                </div>
+              )
+            ) : (
+              <>
+                {featuredOptions.length > 0 || allowEmpty ? (
+                  <LogoGrid
+                    emptyOptionLabel={allowEmpty ? emptyOptionLabel : undefined}
+                    heading="Mais usadas"
+                    onSelect={selectLogo}
+                    options={featuredOptions}
+                    value={value}
+                  />
+                ) : null}
+                {remainingOptions.length > 0 ? (
+                  <LogoGrid
+                    heading="Todas as instituições"
+                    onSelect={selectLogo}
+                    options={remainingOptions}
+                    value={value}
+                  />
+                ) : null}
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -142,7 +264,7 @@ export function LogoPicker({
 }
 
 type LogoGridProps = {
-  allowEmpty?: boolean;
+  /** When set, renders the "no logo" tile as the first option of the grid. */
   emptyOptionLabel?: string;
   heading: string;
   options: readonly LogoCatalogItem[];
@@ -150,31 +272,22 @@ type LogoGridProps = {
   onSelect: (option: string | null) => void;
 };
 
-function LogoGrid({
-  allowEmpty = false,
-  emptyOptionLabel = "Sem instituição",
-  heading,
-  options,
-  value,
-  onSelect,
-}: LogoGridProps) {
+function LogoGrid({ emptyOptionLabel, heading, options, value, onSelect }: LogoGridProps) {
   return (
-    <section className="grid gap-2">
-      <h3 className="text-muted-foreground text-xs font-medium">{heading}</h3>
+    <section className="grid shrink-0 gap-2">
+      <h3 className="font-medium text-muted-foreground text-xs">{heading}</h3>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {allowEmpty ? (
+        {emptyOptionLabel ? (
           <button
-            aria-label={emptyOptionLabel}
-            className={cn(
-              "relative flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-md border border-input bg-popover p-2 text-center text-xs shadow-xs transition-[color,box-shadow] hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-              value === null && "bg-accent text-brand-strong",
-            )}
+            aria-pressed={value == null}
+            className={tileClassName}
+            data-logo-option
             onClick={() => onSelect(null)}
             type="button"
           >
-            {value === null ? <SelectedIndicator /> : null}
-            <span className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground">
-              <ImageOff aria-hidden="true" className="size-5" />
+            {value == null ? <SelectedIndicator /> : null}
+            <span className="grid size-11 place-items-center rounded-full border border-dashed border-input text-muted-foreground">
+              <Landmark aria-hidden="true" className="size-4" />
             </span>
             <span className="line-clamp-2 leading-tight">{emptyOptionLabel}</span>
           </button>
@@ -185,17 +298,17 @@ function LogoGrid({
           return (
             <button
               aria-label={`Selecionar ${option.label}`}
-              className={cn(
-                "relative flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-md border border-input bg-popover p-2 text-center text-xs shadow-xs transition-[color,box-shadow] hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                selected && "bg-accent text-brand-strong",
-              )}
+              aria-pressed={selected}
+              className={tileClassName}
+              data-logo-option
               key={option.src}
               onClick={() => onSelect(option.src)}
+              ref={selected ? revealSelectedOption : undefined}
               type="button"
             >
               {selected ? <SelectedIndicator /> : null}
               <Image
-                alt={option.label}
+                alt=""
                 className="size-11 rounded-full object-contain"
                 height={44}
                 layout="fixed"
@@ -213,7 +326,7 @@ function LogoGrid({
 
 function SelectedIndicator() {
   return (
-    <span className="absolute top-1.5 right-1.5 grid size-5 place-items-center rounded-sm bg-brand text-brand-foreground">
+    <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-brand text-brand-foreground">
       <Check aria-hidden="true" className="size-3" />
     </span>
   );

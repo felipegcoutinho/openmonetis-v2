@@ -12,7 +12,7 @@ export function SplitAvatarStack({
   shares: SplitFormShare[];
 }) {
   return (
-    <span className="inline-flex shrink-0 -space-x-2 transition-transform group-hover:scale-105">
+    <span className="inline-flex shrink-0 -space-x-2 *:ring-2 *:ring-card">
       {shares.slice(0, 3).map((share) => {
         const person = people.find((item) => item.id === share.personId);
         return person ? (

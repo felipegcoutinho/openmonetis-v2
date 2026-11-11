@@ -4,9 +4,9 @@ import { Image } from "@unpic/react";
 import { MessageSquare, Pencil, Trash2, UserRound } from "lucide-react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
 import { CurrentUserBadge } from "@/components/current-user-badge";
+import { NotePopover } from "@/components/note-popover";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type PersonCardProps = {
@@ -51,15 +51,12 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
                 </CardTitle>
                 {isAdmin ? <CurrentUserBadge /> : null}
                 {person.note ? (
-                  <Tooltip>
-                    <TooltipTrigger
-                      aria-label={`Observação sobre ${person.name}`}
-                      render={<button type="button" />}
-                    >
-                      <MessageSquare aria-hidden="true" className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">{person.note}</TooltipContent>
-                  </Tooltip>
+                  <NotePopover
+                    icon={<MessageSquare aria-hidden="true" className="size-3.5" />}
+                    label={`Observação sobre ${person.name}`}
+                  >
+                    {person.note}
+                  </NotePopover>
                 ) : null}
               </div>
               <p className="mt-0.5 text-muted-foreground text-xs">{isAdmin ? "Você" : "Pessoa"}</p>
@@ -85,7 +82,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           params={{ personId: person.id }}
           to="/people/$personId"
         >
@@ -93,7 +90,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
           Ver painel
         </Link>
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           onClick={() => onEdit(person)}
           type="button"
         >

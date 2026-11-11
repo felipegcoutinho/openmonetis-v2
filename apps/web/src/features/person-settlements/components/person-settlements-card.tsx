@@ -1,9 +1,11 @@
 import type { PersonOutput } from "@openmonetis/validators/people";
 import type { PersonSettlementOutput } from "@openmonetis/validators/person-settlements";
 import { useQuery } from "@tanstack/react-query";
-import { HandCoins, Trash2 } from "lucide-react";
+import { ArrowDownLeft, HandCoins, ReceiptText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MoneyValue } from "@/components/money-value";
+import { StatCard } from "@/components/stat-card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,8 +31,9 @@ import {
   useCreatePersonSettlementMutation,
   useDeletePersonSettlementMutation,
 } from "../person-settlements.mutations";
-import { formatPersonBalance, personBalanceLabel } from "../person-settlements.presentation";
+import { getPersonBalanceAmount, personBalanceLabel } from "../person-settlements.presentation";
 import { personSettlementQueryOptions } from "../person-settlements.queries";
+import { PersonBalanceIcon } from "./person-balance-icon";
 import { PersonSettlementDialog } from "./person-settlement-dialog";
 
 export function PersonSettlementsCard({
@@ -96,13 +99,24 @@ export function PersonSettlementsCard({
             </p>
           ) : null}
           {balance ? (
-            <div className="grid gap-2 sm:grid-cols-3">
-              <BalanceMetric label="Atribuído" value={formatCurrency(balance.assignedAmount)} />
-              <BalanceMetric label="Recebido" value={formatCurrency(balance.settledAmount)} />
-              <BalanceMetric
+            <div className="grid gap-3 sm:grid-cols-3">
+              <StatCard
+                className="shadow-none"
+                icon={<ReceiptText />}
+                label="Atribuído"
+                value={<MoneyValue amount={balance.assignedAmount} />}
+              />
+              <StatCard
+                className="shadow-none"
+                icon={<ArrowDownLeft />}
+                label="Recebido"
+                value={<MoneyValue amount={balance.settledAmount} />}
+              />
+              <StatCard
+                className="shadow-none"
+                icon={<PersonBalanceIcon status={balance.status} />}
                 label={personBalanceLabel(balance.status)}
-                value={formatPersonBalance(balance)}
-                emphasized
+                value={<MoneyValue amount={getPersonBalanceAmount(balance)} />}
               />
             </div>
           ) : null}
@@ -196,25 +210,6 @@ export function PersonSettlementsCard({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-}
-
-function BalanceMetric({
-  emphasized = false,
-  label,
-  value,
-}: {
-  emphasized?: boolean;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-lg border bg-muted/20 p-3">
-      <p className="font-mono text-muted-foreground text-xs">{label}</p>
-      <p className={emphasized ? "mt-1 font-semibold text-lg" : "mt-1 font-medium text-sm"}>
-        {value}
-      </p>
-    </div>
   );
 }
 

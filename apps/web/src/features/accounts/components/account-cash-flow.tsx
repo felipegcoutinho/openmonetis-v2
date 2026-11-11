@@ -30,9 +30,9 @@ import { formatAccountChartDate, formatAccountHistoryPeriod } from "../accounts.
 import { accountCashFlowQueryOptions } from "../accounts.queries";
 
 const chartConfig = {
-  income: { label: "Entradas", color: "var(--chart-3)" },
-  expenses: { label: "Saídas", color: "var(--chart-1)" },
-  balance: { label: "Saldo", color: "var(--chart-2)" },
+  income: { label: "Entradas", color: "var(--chart-income)" },
+  expenses: { label: "Saídas", color: "var(--chart-expense)" },
+  balance: { label: "Saldo", color: "var(--chart-balance)" },
 } satisfies ChartConfig;
 
 const BAR_OPACITY = 0.65;

@@ -101,9 +101,9 @@ test("distribution renders a balanced Sankey, monthly filters, CSV, privacy and 
   await expect(
     page
       .getByRole("region", { name: "Gráfico de distribuição financeira" })
-      .locator("path[stroke-width]"),
+      .locator("path[fill-opacity]"),
   ).toHaveCount(9);
-  const summary = page.locator("[data-mobile-financial-summary]");
+  const summary = page.getByRole("region", { name: /^Resultado do mês/ });
   await expect(summary).toContainText(/1\.800,00/);
   await page.getByRole("tab", { name: "Com previsões" }).click();
   await expect(page).toHaveURL(/mode=forecast/);

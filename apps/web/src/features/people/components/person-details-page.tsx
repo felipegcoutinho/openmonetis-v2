@@ -2,16 +2,11 @@ import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type { PersonOutput, ReplacePersonInput } from "@openmonetis/validators/people";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "@unpic/react";
-import { CalendarDays, Mail, MessageSquareText, Pencil, UserRound } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { CalendarDays, type LucideIcon, Mail, MessageSquareText, Pencil } from "lucide-react";
+import { type CSSProperties, type ReactNode, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { EntityLoadError } from "@/components/entity-load-error";
-import {
-  MobilePicker as Popover,
-  MobilePickerContent as PopoverContent,
-  MobilePickerTrigger as PopoverTrigger,
-} from "@/components/forms/mobile-picker";
 import { Navbar } from "@/components/navigation/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,14 +20,10 @@ import { PersonReportPanel } from "@/features/person-reports/components/person-r
 import { PersonSettlementsCard } from "@/features/person-settlements/components/person-settlements-card";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
-import { formatPeriod } from "@/lib/period-presentation";
+import { useLogoColors } from "@/hooks/useLogoColors";
 import { cn } from "@/lib/utils";
 import { useReplacePersonMutation } from "../people.mutations";
-import {
-  formatPersonCreatedAt,
-  personRoleLabels,
-  personStatusLabels,
-} from "../people.presentation";
+import { formatPersonCreatedAt, personStatusLabels } from "../people.presentation";
 import { personFinancialSummaryQueryOptions, personQueryOptions } from "../people.queries";
 import { PersonDialog } from "./person-dialog";
 import { PersonFinancialSummary } from "./person-financial-summary";
@@ -131,8 +122,6 @@ function getPersonTransactionsScope(
   hasExternalExpenses: boolean,
   onViewChange: (view: PersonDetailsSearch["view"]) => void,
 ) {
-  const periodLabel = formatPeriod(period);
-
   return {
     personIds: [person.id],
     allowCreate: selectedView === "transactions" && person.status === "active",
@@ -145,9 +134,9 @@ function getPersonTransactionsScope(
         { label: "Pessoas", href: "/people" },
         { label: person.name },
       ],
-      summary: <PersonSummary onEdit={onEdit} periodLabel={periodLabel} person={person} />,
+      summary: <PersonSummary onEdit={onEdit} person={person} />,
     },
-    periodNavigationPlacement: "afterSummary" as const,
+    periodNavigationPlacement: "afterPageHeader" as const,
     hiddenFilters: ["person"] as const,
     contentNavigation: (
       <Tabs
@@ -201,114 +190,85 @@ function getPersonTransactionsScope(
   };
 }
 
-function PersonSummary({
-  person,
-  periodLabel,
-  onEdit,
-}: {
-  person: PersonOutput;
-  periodLabel: string;
-  onEdit: () => void;
-}) {
+function PersonSummary({ person, onEdit }: { person: PersonOutput; onEdit: () => void }) {
   const isAdmin = person.role === "admin";
   const isInactive = person.status === "inactive";
+  const avatarColors = useLogoColors(person.avatarUrl);
+  const accentStyle = avatarColors
+    ? ({ "--person-accent": avatarColors.backgroundColor } as CSSProperties)
+    : undefined;
 
   return (
-    <Card className="min-w-0 overflow-hidden py-0">
-      <CardContent className="grid min-w-0 gap-4 p-4 sm:gap-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">
-        <div className="flex min-w-0 items-start gap-4">
-          <PersonAvatar person={person} />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="min-w-0 truncate font-medium text-xl tracking-tight sm:text-2xl">
-                {person.name}
-              </h1>
-              <Button
-                aria-label={`Editar ${person.name}`}
-                className="text-muted-foreground hover:text-foreground"
-                onClick={onEdit}
-                size="icon-xs"
-                variant="ghost"
-              >
-                <Pencil aria-hidden="true" />
-              </Button>
-              {isAdmin ? <CurrentUserBadge /> : null}
-              <Badge className="font-mono" variant={isInactive ? "outline" : "secondary"}>
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    isInactive ? "bg-muted-foreground" : "bg-emerald-500",
-                  )}
-                />
-                {personStatusLabels[person.status]}
-              </Badge>
-            </div>
-            <p className="mt-1 break-words text-muted-foreground text-sm">
-              Lançamentos de {periodLabel}
-            </p>
-            {person.note ? (
-              <p className="mt-3 flex max-w-xl items-start gap-2 text-muted-foreground text-sm leading-relaxed">
-                <MessageSquareText aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                <span>{person.note}</span>
-              </p>
-            ) : null}
+    <Card className="relative min-w-0 overflow-hidden py-0" style={accentStyle}>
+      <span
+        aria-hidden="true"
+        className="person-accent-wash pointer-events-none absolute inset-0 rounded-[inherit]"
+      />
+      <CardContent className="relative flex min-w-0 items-center gap-4 p-5 sm:p-6">
+        <PersonAvatar person={person} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="min-w-0 truncate font-heading font-semibold text-xl tracking-tight sm:text-2xl">
+              {person.name}
+            </h1>
+            <Button
+              aria-label={`Editar ${person.name}`}
+              className="relative text-muted-foreground after:absolute after:-inset-2 after:content-[''] hover:text-foreground max-md:after:-inset-2.5"
+              onClick={onEdit}
+              size="icon-xs"
+              variant="ghost"
+            >
+              <Pencil aria-hidden="true" />
+            </Button>
+            {isAdmin ? <CurrentUserBadge /> : null}
+            <Badge variant={isInactive ? "outline" : "secondary"}>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-1.5 rounded-full",
+                  isInactive ? "bg-muted-foreground" : "bg-success",
+                )}
+              />
+              {personStatusLabels[person.status]}
+            </Badge>
           </div>
+          <dl className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-6 gap-y-1 text-muted-foreground text-sm">
+            <PersonDetail icon={Mail} label="E-mail">
+              {person.email ?? "Sem e-mail"}
+            </PersonDetail>
+            <PersonDetail icon={CalendarDays} label="Cadastro">
+              Cadastro em {formatPersonCreatedAt(person.createdAt)}
+            </PersonDetail>
+          </dl>
+          {person.note ? (
+            <p className="mt-2 flex max-w-2xl items-start gap-1.5 text-pretty text-muted-foreground text-sm">
+              <MessageSquareText aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              <span className="sr-only">Observação: </span>
+              <span className="min-w-0 wrap-break-word">{person.note}</span>
+            </p>
+          ) : null}
         </div>
-
-        <PersonDetailsPopover person={person} />
       </CardContent>
     </Card>
   );
 }
 
-function PersonDetailsPopover({ person }: { person: PersonOutput }) {
-  return (
-    <Popover>
-      <PopoverTrigger render={<Button size="sm" type="button" variant="ghost" />}>
-        <UserRound aria-hidden="true" />
-        Detalhes
-      </PopoverTrigger>
-      <PopoverContent title="Dados da pessoa" align="end" className="w-80">
-        <div>
-          <p className="font-medium">Dados da pessoa</p>
-          <p className="mt-1 text-muted-foreground text-xs">
-            Informações cadastrais e observações.
-          </p>
-        </div>
-        <div className="grid gap-3">
-          <PersonDetail icon={UserRound} label="Papel" value={personRoleLabels[person.role]} />
-          <PersonDetail icon={Mail} label="E-mail" value={person.email ?? "Não informado"} />
-          <PersonDetail
-            icon={CalendarDays}
-            label="Cadastro"
-            value={formatPersonCreatedAt(person.createdAt)}
-          />
-          {person.note ? (
-            <PersonDetail icon={MessageSquareText} label="Observação" value={person.note} />
-          ) : null}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function PersonDetail({
+  children,
   icon: Icon,
   label,
-  value,
 }: {
-  icon: typeof UserRound;
+  children: ReactNode;
+  icon: LucideIcon;
   label: string;
-  value: string;
 }) {
   return (
-    <div className="flex items-start gap-2.5">
-      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-      <div className="min-w-0">
-        <p className="font-mono text-muted-foreground text-xs">{label}</p>
-        <p className="wrap-break-word font-medium text-sm">{value}</p>
-      </div>
+    <div className="flex min-w-0 items-center gap-1.5">
+      <dt className="shrink-0">
+        <Icon aria-hidden="true" className="size-4" />
+        <span className="sr-only">{label}</span>
+      </dt>
+      <dd className="min-w-0 truncate">{children}</dd>
     </div>
   );
 }

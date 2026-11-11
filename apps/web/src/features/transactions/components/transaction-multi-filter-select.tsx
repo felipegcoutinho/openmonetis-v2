@@ -1,4 +1,5 @@
 import { Image } from "@unpic/react";
+import { ChevronDown } from "lucide-react";
 
 import { useId, useState } from "react";
 
@@ -53,7 +54,12 @@ export function MultiFilterSelect({
 
   return (
     <div className={cn("grid min-w-0 gap-2", className)}>
-      <span className={cn("font-medium text-muted-foreground text-xs", hideLabel && "sr-only")}>
+      <span
+        className={cn(
+          "font-mono font-medium text-muted-foreground text-xs",
+          hideLabel && "sr-only",
+        )}
+      >
         {label}
       </span>
       <Popover>
@@ -80,6 +86,7 @@ export function MultiFilterSelect({
               placeholder
             )}
           </span>
+          <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent
           title={label}
@@ -93,11 +100,11 @@ export function MultiFilterSelect({
             placeholder={`Buscar ${label.toLocaleLowerCase("pt-BR")}...`}
             value={query}
           />
-          <div className="max-h-56 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto">
             {groups.map((group) => (
-              <div className="grid gap-1 py-1" key={group || "all"}>
+              <div className="grid py-1" key={group || "all"}>
                 {group ? (
-                  <span className="px-2 pt-1 font-medium text-muted-foreground text-xs">
+                  <span className="px-2 py-1.5 font-medium text-muted-foreground text-xs">
                     {group}
                   </span>
                 ) : null}
@@ -107,7 +114,7 @@ export function MultiFilterSelect({
                     const checked = selectedSet.has(option.value);
                     return (
                       <label
-                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-accent"
+                        className="flex min-h-11 cursor-pointer items-center gap-2.5 group/option rounded-md px-2 hover:bg-info/10 hover:text-info has-focus-visible:bg-info/10 has-focus-visible:text-info md:min-h-9"
                         htmlFor={`${id}-${option.value}`}
                         key={option.value}
                       >
@@ -183,9 +190,11 @@ export function FilterOptionContent({
   if (option.categoryIcon !== undefined) {
     return (
       <span className="flex min-w-0 items-center gap-2">
-        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-          <CategoryIcon className="size-3.5" name={option.categoryIcon} />
-        </span>
+        <CategoryIcon
+          aria-hidden="true"
+          className="size-4 shrink-0 text-muted-foreground group-hover/option:text-info group-has-focus-visible/option:text-info"
+          name={option.categoryIcon}
+        />
         <span className="truncate text-sm">{option.label}</span>
       </span>
     );

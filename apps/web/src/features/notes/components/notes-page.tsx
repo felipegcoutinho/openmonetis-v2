@@ -1,20 +1,12 @@
 import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import {
-  Eye,
-  EyeOff,
-  FileSearch,
-  ListChecks,
-  NotebookPen,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { Eye, EyeOff, FileSearch, ListChecks, NotebookPen, Plus, RefreshCw } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +19,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotesApiError } from "../notes.api";
@@ -216,21 +207,15 @@ export function NotesPage() {
                   {hideCompleted ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
                   {hideCompleted ? "Mostrar concluídas" : "Ocultar concluídas"}
                 </Button>
-                <div className="relative min-w-0 sm:w-72">
-                  <Search
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <Input
-                    aria-label="Buscar anotações"
-                    className="h-8 pl-9"
-                    maxLength={120}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar título, conteúdo ou item"
-                    type="search"
-                    value={search}
-                  />
-                </div>
+                <SearchInput
+                  aria-label="Buscar anotações"
+                  className="h-8"
+                  containerClassName="sm:w-72"
+                  maxLength={120}
+                  onValueChange={setSearch}
+                  placeholder="Buscar título, conteúdo ou item"
+                  value={search}
+                />
               </div>
             </div>
 
@@ -293,7 +278,7 @@ export function NotesPage() {
                       vê-las.
                     </p>
                   ) : null}
-                  <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="stagger-children grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {notes
                       .filter((note) => !hideCompleted || note.kind !== "task" || !note.isCompleted)
                       .map((note) => (

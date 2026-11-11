@@ -18,12 +18,15 @@ import { formatCardHistoryPeriod, getCardHistoryWindowEnd } from "../cards.prese
 import { cardInvoiceHistoryQueryOptions } from "../cards.queries";
 
 const chartConfig = {
-  amount: { label: "Valor da fatura", color: "var(--brand)" },
+  amount: {
+    label: "Valor da fatura",
+    color: "var(--brand)",
+  },
 } satisfies ChartConfig;
 
 type HistoryItem = CardInvoiceHistoryOutput["items"][number];
 
-const HISTORY_BAR_OPACITY = 0.45;
+const HISTORY_BAR_OPACITY = 0.6;
 
 export function CardInvoiceHistoryChart({
   cardId,
@@ -42,7 +45,7 @@ export function CardInvoiceHistoryChart({
 
   return (
     <CardContent className="py-5">
-      <p className="mb-4 text-muted-foreground text-sm">
+      <p className="mb-4 text-muted-foreground text-xs">
         Últimas 12 faturas até {formatCardHistoryPeriod(historyEndPeriod)}. Selecione uma barra ou
         um mês para abrir a fatura.
       </p>

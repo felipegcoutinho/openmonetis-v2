@@ -1,5 +1,6 @@
 import { Ellipsis } from "lucide-react";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { statLabelClassName, statValueClassName } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,12 @@ type FinancialSummaryMetric = {
   value: ReactNode;
 };
 
+const metricGridClassNames: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-2 xl:grid-cols-4",
+};
+
 type FinancialSummaryHeaderProps = {
   accentImage?: string | null;
   actions?: ReactNode;
@@ -31,6 +38,8 @@ type FinancialSummaryHeaderProps = {
   primaryValue?: ReactNode;
   subtitle: ReactNode;
   title: string;
+  /** Use `h1` when the summary is the page title (detail pages without a PageHeader). */
+  titleAs?: "h1" | "h2";
   titleAction?: ReactNode;
   variant?: "solid" | "soft";
 };
@@ -47,6 +56,7 @@ export function FinancialSummaryHeader({
   primaryValue,
   subtitle,
   title,
+  titleAs: TitleTag = "h2",
   titleAction,
   variant = "solid",
 }: FinancialSummaryHeaderProps) {
@@ -83,12 +93,14 @@ export function FinancialSummaryHeader({
             <div className="flex min-w-0 items-center gap-4">
               {identity}
               <div className="min-w-0">
-                {eyebrow ? <p className="text-current/70 text-sm">{eyebrow}</p> : null}
+                {eyebrow ? <p className="text-current/85 text-sm">{eyebrow}</p> : null}
                 <div className="flex min-w-0 items-center gap-1">
-                  <h2 className="truncate font-heading text-2xl font-medium">{title}</h2>
+                  <TitleTag className="truncate font-heading font-semibold text-2xl tracking-tight">
+                    {title}
+                  </TitleTag>
                   {titleAction}
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-current/70 text-xs">
+                <div className="mt-1 flex items-center gap-2 text-current/85 text-xs">
                   {subtitle}
                 </div>
               </div>
@@ -105,53 +117,40 @@ export function FinancialSummaryHeader({
 
           {hasPrimaryValue ? (
             <div data-mobile-primary-value className="mt-8">
-              <p className="eyebrow text-current/70">{primaryLabel}</p>
-              <div className="mt-2 font-heading text-4xl font-normal leading-none tracking-tight sm:text-5xl">
-                {primaryValue}
-              </div>
+              <p className="font-heading font-medium text-base text-current/85 leading-normal">
+                {primaryLabel}
+              </p>
+              <div className="kpi-value mt-1 text-4xl sm:text-5xl">{primaryValue}</div>
               {primaryDescription ? (
-                <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-current/70 text-sm">
+                <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-current/85 text-sm">
                   {primaryDescription}
                 </p>
               ) : null}
             </div>
           ) : null}
-        </div>
 
-        {metrics.length ? (
-          <dl
-            className={cn(
-              "grid border-current/20 border-t",
-              metrics.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3",
-            )}
-          >
-            {metrics.map((metric, index) => (
-              <div
-                className={cn(
-                  "min-w-0 p-5 sm:p-6",
-                  index > 0 && "border-current/20 border-t",
-                  metrics.length === 2
-                    ? index > 0 && "sm:border-t-0 sm:border-l"
-                    : [index > 0 && index < 3 && "sm:border-t-0", index % 3 !== 0 && "sm:border-l"],
-                )}
-                key={metric.key ?? metric.label}
-              >
-                <dt className="font-mono flex items-center gap-1.5 text-current/70 text-xs">
-                  {metric.icon}
-                  {metric.label}
-                </dt>
-                <dd className="mt-2 truncate font-heading text-xl font-normal leading-none">
-                  {metric.value}
-                </dd>
-                {metric.description ? (
-                  <dd className="mt-2 text-current/70 text-xs leading-relaxed">
-                    {metric.description}
-                  </dd>
-                ) : null}
-              </div>
-            ))}
-          </dl>
-        ) : null}
+          {metrics.length ? (
+            <dl className={cn("mt-6 grid gap-3", metricGridClassNames[metrics.length] ?? "")}>
+              {metrics.map((metric) => (
+                <div
+                  className="grid min-w-0 content-start gap-1 rounded-xl border border-current/15 bg-current/8 px-5 py-4"
+                  key={metric.key ?? metric.label}
+                >
+                  <dt className={statLabelClassName}>
+                    {metric.icon}
+                    <span className="min-w-0 truncate">{metric.label}</span>
+                  </dt>
+                  <dd className={cn(statValueClassName, "truncate")}>{metric.value}</dd>
+                  {metric.description ? (
+                    <dd className="text-current/85 text-xs leading-relaxed">
+                      {metric.description}
+                    </dd>
+                  ) : null}
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </div>
 
         {details ? <div className="border-current/20 border-t">{details}</div> : null}
       </CardContent>

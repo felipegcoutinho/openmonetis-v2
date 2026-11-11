@@ -65,7 +65,8 @@ export function TransactionsTable({
                         <TableHead className="font-mono pl-5">Condição</TableHead>
                         <TableHead className="font-mono">Forma</TableHead>
                         <TableHead className="font-mono">Conta/Cartão</TableHead>
-                        <TableHead className="font-mono w-24 text-right">Ações</TableHead>
+                        <TableHead className="font-mono">Situação</TableHead>
+                        <TableHead className="font-mono w-14 text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

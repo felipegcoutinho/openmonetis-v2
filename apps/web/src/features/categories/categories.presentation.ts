@@ -1,3 +1,4 @@
+import type { BudgetOutput } from "@openmonetis/validators/budgets";
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { ApiClientError } from "../../lib/api-client";
 
@@ -20,6 +21,25 @@ export function getCategoryGroups(categories: readonly CategoryOutput[], search 
         .sort(compareCategories),
     }))
     .filter((group) => matches(group.parent.name) || group.children.length > 0);
+}
+
+export type CategoryMonthSummary = { amount: number; budget: BudgetOutput | null };
+
+/** Indexes the month totals and budgets the API already computed by category id. */
+export function getCategoryMonthSummaries(
+  totals: readonly { categoryId: string; amount: number }[],
+  budgets: readonly BudgetOutput[],
+) {
+  const summaries = new Map<string, CategoryMonthSummary>();
+  for (const total of totals)
+    summaries.set(total.categoryId, { amount: total.amount, budget: null });
+  for (const budget of budgets) {
+    summaries.set(budget.categoryId, {
+      amount: summaries.get(budget.categoryId)?.amount ?? 0,
+      budget,
+    });
+  }
+  return summaries;
 }
 
 export function sortCategoryOptions<

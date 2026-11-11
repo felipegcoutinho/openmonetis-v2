@@ -92,7 +92,7 @@ export function PersonForm({
           }}
         >
           {(field) => (
-            <div className="grid gap-1.5">
+            <div className="grid content-start gap-1.5">
               <Label className="font-mono" htmlFor={`${id}-name`}>
                 Nome
               </Label>
@@ -112,7 +112,7 @@ export function PersonForm({
         </form.Field>
         <form.Field name="email">
           {(field) => (
-            <div className="grid gap-1.5">
+            <div className="grid content-start gap-1.5">
               <Label className="font-mono" htmlFor={`${id}-email`}>
                 E-mail
               </Label>

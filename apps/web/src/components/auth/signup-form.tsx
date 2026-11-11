@@ -72,7 +72,6 @@ export function SignupForm() {
         if (result.error) {
           const message = getSignupErrorMessage(result.error);
           setError(message);
-          toast.error(message);
           return;
         }
 
@@ -81,7 +80,6 @@ export function SignupForm() {
       } catch {
         const message = "Não foi possível conectar ao servidor. Tente novamente em instantes.";
         setError(message);
-        toast.error(message);
       }
     },
   });
@@ -102,13 +100,11 @@ export function SignupForm() {
         const message = "Não foi possível criar sua conta com o Google. Tente novamente.";
         setError(message);
         setIsGoogleSubmitting(false);
-        toast.error(message);
       }
     } catch {
       const message = "Não foi possível conectar ao Google. Tente novamente em instantes.";
       setError(message);
       setIsGoogleSubmitting(false);
-      toast.error(message);
     }
   }
 

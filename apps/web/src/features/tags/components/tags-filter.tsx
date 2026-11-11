@@ -48,7 +48,7 @@ export function TagsFilter({
     );
   return (
     <div className="grid gap-2 sm:col-span-2">
-      <span className="font-medium text-muted-foreground text-xs">Etiquetas</span>
+      <span className="font-mono font-medium text-muted-foreground text-xs">Etiquetas</span>
       <FilterToggle
         checked={Boolean(search.withoutTags)}
         label="Sem etiquetas"

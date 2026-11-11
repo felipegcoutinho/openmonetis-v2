@@ -70,7 +70,7 @@ export function AttachmentCard({ attachment, onPreview, onRemove }: AttachmentCa
         <Badge className="absolute top-3 left-3 font-mono" variant="secondary">
           {attachmentTypeLabel(attachment.mimeType)}
         </Badge>
-        <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition-all group-hover:bg-foreground/10 group-hover:opacity-100">
+        <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition-[color,background-color,border-color,box-shadow,opacity] group-hover:bg-foreground/10 group-hover:opacity-100">
           <span className="grid size-9 place-items-center rounded-full bg-background/90 text-foreground shadow-sm">
             <Eye aria-hidden="true" className="size-4" />
           </span>

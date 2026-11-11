@@ -51,7 +51,6 @@ export function LoginForm() {
               ? "O serviço está indisponível. Tente novamente em instantes."
               : "E-mail ou senha inválidos.";
         setError(message);
-        toast.error("Não foi possível entrar.", { description: message });
         return;
       }
 
@@ -69,7 +68,6 @@ export function LoginForm() {
       if (result.error) {
         const message = "Não foi possível entrar com a chave de acesso. Tente novamente.";
         setError(message);
-        toast.error(message);
         return;
       }
 
@@ -78,7 +76,6 @@ export function LoginForm() {
     } catch {
       const message = "A confirmação da chave de acesso foi cancelada ou não pôde ser concluída.";
       setError(message);
-      toast.error(message);
     } finally {
       setIsPasskeySubmitting(false);
     }
@@ -100,13 +97,11 @@ export function LoginForm() {
         const message = "Não foi possível entrar com o Google. Tente novamente.";
         setError(message);
         setIsGoogleSubmitting(false);
-        toast.error(message);
       }
     } catch {
       const message = "Não foi possível conectar ao Google. Tente novamente em instantes.";
       setError(message);
       setIsGoogleSubmitting(false);
-      toast.error(message);
     }
   }
 

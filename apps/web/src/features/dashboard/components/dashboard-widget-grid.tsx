@@ -28,7 +28,7 @@ const wideWidgetSlotClassName = "min-w-0 md:col-span-2";
 
 /** Swap the widget row for a short notice when every widget collapsed for lack of data. */
 const widgetRowClassName =
-  "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:hidden";
+  "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:hidden";
 const collapsedNoticeClassName =
   "hidden rounded-card border border-dashed px-4 py-3 text-muted-foreground text-sm [section[data-dashboard-section]:not(:has([data-dashboard-widget-slot]:not(:has([data-dashboard-widget-collapse]))))_&]:block";
 
@@ -99,7 +99,7 @@ export function DashboardWidgetGrid({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-(--section-gap)">
         {dashboardWidgetSections.map((section) => {
           const sectionWidgets = visibleWidgets.filter((widget) => widget.section === section.id);
           const availableWidgets = dashboardWidgetRegistry.filter(
@@ -113,15 +113,12 @@ export function DashboardWidgetGrid({
           return (
             <section
               aria-labelledby={titleId}
-              className="grid grid-cols-1 gap-3"
+              className="grid grid-cols-1 gap-4"
               data-dashboard-section
               key={section.id}
             >
               <div className="flex items-center gap-2">
-                <SectionHeading
-                  className="font-heading font-medium text-muted-foreground text-sm"
-                  id={titleId}
-                >
+                <SectionHeading className="eyebrow text-muted-foreground" id={titleId}>
                   {section.title}
                 </SectionHeading>
                 <DashboardAddWidgetDialog

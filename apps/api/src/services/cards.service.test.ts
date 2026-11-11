@@ -191,7 +191,9 @@ test("card cycle spending includes recurring purchases on their day in the selec
   assert.equal(result.cycleSpending.endDate, "2026-03-20");
   assert.equal(result.cycleSpending.openingAmount, 10);
   assert.deepEqual(
-    result.cycleSpending.daily.filter((day) => day.amount > 0),
+    result.cycleSpending.daily
+      .filter((day) => day.amount > 0)
+      .map(({ date, amount, cumulativeAmount }) => ({ date, amount, cumulativeAmount })),
     [
       { date: "2026-03-05", amount: 50, cumulativeAmount: 60 },
       { date: "2026-03-08", amount: 20, cumulativeAmount: 80 },
@@ -199,6 +201,14 @@ test("card cycle spending includes recurring purchases on their day in the selec
   );
   assert.equal(result.invoiceSummary.amount, 80);
   assert.equal(result.cycleSpending.daily.at(-1)?.cumulativeAmount, result.invoiceSummary.amount);
+  assert.deepEqual(result.cycleSpending.comparison, {
+    isClosed: true,
+    dayOfCycle: 28,
+    currentAmount: 80,
+    previousAmount: 50,
+    differenceAmount: 30,
+    trend: "above",
+  });
 
   const history = await service.history(cardId, "user-1", "2026-04");
   assert.equal(history.items.length, 12);

@@ -48,7 +48,7 @@ export function DesktopNavigation({
         }}
         popupClassName={
           navigationPopupVariant === "preview"
-            ? "bg-transparent shadow-none ring-0"
+            ? "border-0 bg-transparent shadow-none"
             : desktopNavigationPopupClassName
         }
       >

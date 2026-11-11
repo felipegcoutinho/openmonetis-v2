@@ -54,11 +54,11 @@ export function MonthNavigation({
       <PopoverTrigger
         aria-label={`Selecionar mês. Mês selecionado: ${periodLabel}`}
         className={cn(
-          "inline-flex min-w-0 items-center gap-1 rounded-md px-2 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
-          compact ? "h-9 border bg-card shadow-xs" : "h-8",
+          "inline-flex min-w-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums outline-none transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring",
+          compact ? "h-9 border bg-card" : "h-8",
         )}
       >
-        <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-brand-strong" />
+        <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         <span className="truncate">
           {compact ? (
             formatCompactPeriod(selectedPeriod)
@@ -76,7 +76,7 @@ export function MonthNavigation({
       <PopoverContent
         title="Selecionar mês"
         align={compact ? "end" : "center"}
-        className="w-auto bg-popover/80 p-0 backdrop-blur-sm"
+        className="w-auto p-0"
       >
         <MonthPicker
           key={selectedPeriod}
@@ -96,7 +96,7 @@ export function MonthNavigation({
       data-mobile-month-navigation
       aria-label="Navegação por mês"
       className={cn(
-        "relative flex w-full items-center justify-center rounded-lg border bg-card px-3 py-3 md:justify-between md:gap-2",
+        "material sticky top-(--page-sticky-top) z-20 flex w-full items-center justify-center rounded-lg border px-1 py-1 md:w-fit md:justify-start md:gap-1",
         className,
       )}
     >
@@ -127,7 +127,7 @@ export function MonthNavigation({
       {selectedPeriod !== currentPeriod ? (
         <Button
           aria-label="Voltar ao mês atual"
-          className="absolute right-3 md:static md:w-auto md:gap-2 md:px-2.5"
+          className="absolute right-1.5 md:static md:w-auto md:gap-2 md:px-3"
           onClick={() => selectPeriod(currentPeriod)}
           size="icon-sm"
           type="button"

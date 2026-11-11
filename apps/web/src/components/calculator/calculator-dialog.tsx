@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Calculator } from "@/components/calculator/calculator";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useDraggableDialog } from "./useDraggableDialog";
@@ -117,21 +116,6 @@ function CalculatorDialogContent({
       </DialogHeader>
       <div className="grid gap-4 px-5 pb-5 sm:px-6 sm:pb-6">
         <Calculator initialValue={initialValue} onSelectValue={onSelectValue} />
-        <p className="hidden items-center justify-center gap-3 text-muted-foreground text-xs sm:flex">
-          <span className="inline-flex items-center gap-1.5">
-            <Kbd>Enter</Kbd> calcula
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Kbd>Esc</Kbd> limpa
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <KbdGroup>
-              <Kbd>⌘</Kbd>
-              <Kbd>C</Kbd>
-            </KbdGroup>
-            copia
-          </span>
-        </p>
       </div>
     </DialogContent>
   );

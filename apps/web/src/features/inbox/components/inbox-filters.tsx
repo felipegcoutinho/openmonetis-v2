@@ -35,7 +35,7 @@ export function InboxFilters({
   const activeMatch = getInboxSourceMatch(sourceAppName ?? null, accounts, cards);
 
   return (
-    <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3">
+    <div className="grid min-w-0 w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2">
       <Select
         onValueChange={(value) =>
           onSourceChange(typeof value === "string" && value !== "all" ? value : undefined)
@@ -44,7 +44,7 @@ export function InboxFilters({
       >
         <SelectTrigger
           aria-label="Filtrar por app de origem"
-          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-52 sm:w-auto"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-40 sm:w-auto"
         >
           <SelectValue>
             {sourceAppName ? (
@@ -82,7 +82,7 @@ export function InboxFilters({
       >
         <SelectTrigger
           aria-label="Filtrar por regra"
-          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-48 sm:max-w-64 sm:w-auto"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-44 sm:max-w-64 sm:w-auto"
         >
           <SelectValue>
             {ruleId ? (
@@ -115,7 +115,7 @@ export function InboxFilters({
       >
         <SelectTrigger
           aria-label="Filtrar por data da captura"
-          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-44 sm:w-auto"
+          className="min-w-0 w-full *:data-[slot=select-value]:min-w-0 sm:min-w-40 sm:w-auto"
         >
           <SelectValue>
             {notificationDate ? (

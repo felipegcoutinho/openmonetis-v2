@@ -81,12 +81,10 @@ export function InboxItemCard({
   return (
     <Card
       className={cn(
-        "min-w-0 animate-list-item gap-0 py-0 outline-none transition-[opacity,scale] duration-300 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none",
-        selection?.checked && "border-brand/50 bg-brand/5",
-        processing && "scale-[0.98] opacity-50",
+        "min-w-0 animate-list-item gap-0 py-0 transition-opacity duration-150 motion-reduce:transition-none",
+        selection?.checked && "bg-brand/5 ring-1 ring-brand-strong/40",
+        processing && "opacity-50",
       )}
-      data-inbox-item-id={item.id}
-      tabIndex={selection ? 0 : -1}
     >
       <CardContent className="min-w-0 p-0 md:hidden">
         <div className="grid min-w-0 gap-3 p-4">

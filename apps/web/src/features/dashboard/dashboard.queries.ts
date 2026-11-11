@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import {
   getDashboardAttention,
+  getDashboardCategoryBreakdown,
   getDashboardSnapshot,
   getDashboardWidgetPreferences,
 } from "./dashboard.api";
@@ -64,6 +65,14 @@ export function dashboardCategoryBreakdownQueryOptions(period: string) {
     queryKey: dashboardKeys.snapshot(period),
     queryFn: () => getDashboardSnapshot(period),
     select: (snapshot) => snapshot.categoryBreakdown,
+  });
+}
+
+/** Loads only the category totals, for pages that do not need the whole dashboard snapshot. */
+export function categoryMonthBreakdownQueryOptions(period: string) {
+  return queryOptions({
+    queryKey: dashboardKeys.categoryBreakdown(period),
+    queryFn: () => getDashboardCategoryBreakdown(period),
   });
 }
 

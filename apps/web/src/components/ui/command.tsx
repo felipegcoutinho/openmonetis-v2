@@ -9,7 +9,7 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   return (
     <CommandPrimitive
       className={cn(
-        "flex size-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+        "flex size-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground in-data-[slot=popover-content]:bg-transparent",
         className,
       )}
       data-slot="command"
@@ -84,7 +84,7 @@ function CommandItem({
   return (
     <CommandPrimitive.Item
       className={cn(
-        "group/command-item relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "group/command-item relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-info/10 data-[selected=true]:text-info data-[selected=true]:**:text-info [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className,
       )}
       data-slot="command-item"

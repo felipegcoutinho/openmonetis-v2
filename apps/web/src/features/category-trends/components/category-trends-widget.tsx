@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowDown, ArrowRight, ArrowUp, LineChart, Minus, RefreshCw, Repeat2 } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, LineChart, Minus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,7 @@ function CategoryTrendRow({ item, period }: { item: TrendItem; period: string })
                 aria-label="Inclui recorrências previstas"
                 className="shrink-0 rounded-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <Repeat2 aria-hidden="true" className="size-3" />
+                <RefreshCw aria-hidden="true" className="size-3" />
               </TooltipTrigger>
               <TooltipContent>
                 Inclui <MoneyValue amount={value.recurringAmount} /> em recorrências previstas

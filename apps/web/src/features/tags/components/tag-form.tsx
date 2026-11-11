@@ -4,6 +4,7 @@ import {
   type TagOutput,
 } from "@openmonetis/validators/tags";
 import { useForm } from "@tanstack/react-form";
+import { Check } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
@@ -11,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showInvalidFormToast } from "@/lib/form-feedback";
-import { cn } from "@/lib/utils";
 import { getTagErrorMessage, tagColorOptions, tagColorTokens } from "../tags.presentation";
 import { TagColorIcon } from "./tag-color-icon";
 export function TagForm({
@@ -105,15 +105,21 @@ export function TagForm({
                     <span className="sr-only">{option.label}</span>
                     <span
                       aria-hidden="true"
-                      className={cn(
-                        "grid size-8 place-items-center rounded-full ring-offset-2 ring-offset-background transition-shadow peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
-                        selected && "ring-2 ring-foreground/70",
-                      )}
+                      className="grid size-8 place-items-center rounded-full ring-offset-2 ring-offset-background transition-[background-color,box-shadow] peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50"
                       style={{
-                        backgroundColor: `color-mix(in srgb, ${tagColorTokens[option.value]} 18%, transparent)`,
+                        backgroundColor: `color-mix(in srgb, ${tagColorTokens[option.value]} ${selected ? 32 : 18}%, transparent)`,
                       }}
                     >
-                      <TagColorIcon color={option.value} />
+                      {selected ? (
+                        <Check
+                          aria-hidden="true"
+                          className="size-4"
+                          strokeWidth={2.5}
+                          style={{ color: tagColorTokens[option.value] }}
+                        />
+                      ) : (
+                        <TagColorIcon color={option.value} />
+                      )}
                     </span>
                   </label>
                 );

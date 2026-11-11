@@ -1,4 +1,4 @@
-import { ChevronRight, Link2, Trash2, Users } from "lucide-react";
+import { ChevronRight, CircleAlert, Link2, Trash2, Users } from "lucide-react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +18,7 @@ export function TransactionSplitTrigger({
   openEditor,
   disabledReason,
   people,
+  primaryPersonId,
   value,
 }: {
   open: ReturnType<typeof useTransactionSplitEditor>["open"];
@@ -29,12 +30,22 @@ export function TransactionSplitTrigger({
   openEditor: ReturnType<typeof useTransactionSplitEditor>["openEditor"];
   disabledReason: ReturnType<typeof useTransactionSplitEditor>["disabledReason"];
   people: TransactionSplitDialogProps["people"];
+  primaryPersonId: TransactionSplitDialogProps["primaryPersonId"];
   value: TransactionSplitDialogProps["value"];
 }) {
+  const primaryShare = value.find((share) => share.personId === primaryPersonId);
+  const primaryPerson = people.find((person) => person.id === primaryPersonId);
+  const primaryShareLabel =
+    primaryPerson?.role === "admin"
+      ? "Sua parte"
+      : `Parte de ${primaryPerson?.name ?? "quem lançou"}`;
+  // Shares saved for a different amount: the split still exists but no longer adds up.
+  const needsReview = value.length > 0 && !isDivided && !cardDisabled;
+  const hasSplit = isDivided || needsReview;
   return (
     <section
       className={cn(
-        "group rounded-lg border border-input bg-popover transition-all focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30",
+        "group rounded-lg border border-input bg-card transition-[color,background-color,border-color,box-shadow,opacity] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30",
         !cardDisabled && "hover:border-brand-strong/40 hover:bg-accent/40",
         isDivided && "border-brand-strong/20 bg-brand/5",
         cardDisabled && "bg-muted/30",
@@ -52,26 +63,44 @@ export function TransactionSplitTrigger({
           onClick={openEditor}
           type="button"
         >
-          {isDivided ? (
+          {hasSplit ? (
             <SplitAvatarStack people={people} shares={value} />
           ) : (
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-strong transition-transform group-hover:scale-105">
-              <Users className="size-4" />
+            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-strong">
+              <Users aria-hidden="true" className="size-4" />
             </span>
           )}
           <span className="min-w-0 flex-1 space-y-1">
             <span className="block truncate font-medium text-sm">
-              {isDivided ? "Divisão do lançamento" : "Dividir lançamento"}
+              {hasSplit ? "Divisão do lançamento" : "Dividir lançamento"}
             </span>
-            {isDivided ? (
+            {needsReview ? (
+              <span className="flex items-center gap-1 text-muted-foreground text-xs">
+                <CircleAlert aria-hidden="true" className="size-3.5 shrink-0 text-warning" />
+                <span className="truncate">O valor mudou. Revise a divisão.</span>
+              </span>
+            ) : isDivided ? (
               <span className="block truncate text-muted-foreground text-xs">
-                Total distribuído: <MoneyValue amount={committedAllocation.allocatedCents / 100} />
-                <span aria-hidden="true"> · </span>
                 {value.length} pessoas
+                {primaryShare ? (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    {primaryShareLabel}:{" "}
+                    <MoneyValue
+                      amount={Number(primaryShare.amount) || 0}
+                      className="font-medium text-foreground"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <MoneyValue amount={committedAllocation.allocatedCents / 100} />
+                  </>
+                )}
               </span>
             ) : (
               <span className="block text-muted-foreground text-xs">
-                {disabledReason ?? "Atribua partes do valor a duas ou mais pessoas."}
+                {disabledReason ?? "Reparta o valor entre duas ou mais pessoas."}
               </span>
             )}
           </span>
@@ -80,7 +109,7 @@ export function TransactionSplitTrigger({
             className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
           />
         </button>
-        {isDivided ? (
+        {hasSplit ? (
           <>
             <span aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
             <Tooltip>

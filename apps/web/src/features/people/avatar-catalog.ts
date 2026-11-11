@@ -20,4 +20,13 @@ export const avatarOptions = [
   "/avatars/4825108.png",
   "/avatars/4825112.png",
   "/avatars/4825123.png",
+  "/avatars/beanie.svg",
+  "/avatars/bearded-glasses.svg",
+  "/avatars/box-braids.svg",
+  "/avatars/cap.svg",
+  "/avatars/grey-bun.svg",
+  "/avatars/headphones.svg",
+  "/avatars/mustache-bowtie.svg",
+  "/avatars/ponytail.svg",
+  "/avatars/red-pigtails.svg",
 ] as const;

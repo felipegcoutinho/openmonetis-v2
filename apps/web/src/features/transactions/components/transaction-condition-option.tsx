@@ -1,4 +1,4 @@
-import { CalendarClock, Check, Repeat2 } from "lucide-react";
+import { CalendarClock, Check, RefreshCw } from "lucide-react";
 
 import { transactionConditionLabels } from "../transactions.presentation";
 
@@ -10,7 +10,7 @@ export function TransactionConditionOption({
   condition: TransactionFormValues["condition"];
 }) {
   const Icon =
-    condition === "recurring" ? Repeat2 : condition === "installment" ? CalendarClock : Check;
+    condition === "recurring" ? RefreshCw : condition === "installment" ? CalendarClock : Check;
 
   return (
     <span className="flex items-center gap-2">

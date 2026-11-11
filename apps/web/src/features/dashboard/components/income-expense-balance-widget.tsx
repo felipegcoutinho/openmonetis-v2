@@ -23,9 +23,9 @@ import { DashboardWidgetEmptyState } from "./dashboard-widget-empty-state";
 import { dashboardWidgetFooterNavigationLinkClassName } from "./dashboard-widget-footer-link";
 
 const chartConfig = {
-  income: { label: "Receita", color: "var(--success)" },
-  expenses: { label: "Despesa", color: "var(--destructive)" },
-  balance: { label: "Resultado", color: "var(--brand)" },
+  income: { label: "Receita", color: "var(--chart-income)" },
+  expenses: { label: "Despesa", color: "var(--chart-expense)" },
+  balance: { label: "Resultado", color: "var(--chart-balance)" },
 } satisfies ChartConfig;
 
 type HistoryEntry = DashboardMetricsOutput["history"][number];
@@ -106,8 +106,14 @@ function FinancialHistoryChart({
         )}
         config={chartConfig}
       >
-        <ComposedChart accessibilityLayer data={history} margin={{ left: 2, right: 2, top: 12 }}>
-          <CartesianGrid vertical={false} />
+        <ComposedChart
+          accessibilityLayer
+          barCategoryGap="28%"
+          barGap={3}
+          data={history}
+          margin={{ left: 2, right: 2, top: 12 }}
+        >
+          <CartesianGrid strokeOpacity={0.6} vertical={false} />
           <ReferenceLine stroke="var(--border)" y={0} />
           <XAxis
             axisLine={false}
@@ -133,28 +139,27 @@ function FinancialHistoryChart({
                 )}
               />
             }
-            cursor={{ fill: "var(--muted)", opacity: 0.35 }}
+            cursor={{ fill: "var(--foreground)", opacity: 0.04 }}
           />
-          <Bar dataKey="income" fill="var(--color-income)" maxBarSize={46} stackId="history" />
+          <Bar dataKey="income" fill="var(--color-income)" maxBarSize={18} radius={[4, 4, 4, 4]} />
           <Bar
             dataKey="expenses"
             fill="var(--color-expenses)"
-            maxBarSize={46}
-            radius={[4, 4, 0, 0]}
-            stackId="history"
+            maxBarSize={18}
+            radius={[4, 4, 4, 4]}
           />
           <Line
-            activeDot={{ r: 4 }}
+            activeDot={{ r: 3.5 }}
             dataKey="balance"
-            dot={{ r: 2.5 }}
+            dot={false}
             stroke="var(--color-balance)"
-            strokeWidth={2}
-            type="linear"
+            strokeWidth={1.5}
+            type="monotone"
           />
         </ComposedChart>
       </ChartContainer>
 
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 font-mono text-muted-foreground text-xs">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-muted-foreground text-xs">
         {Object.values(chartConfig).map((item) => (
           <ChartLegendItem color={item.color} key={item.label} label={item.label} />
         ))}

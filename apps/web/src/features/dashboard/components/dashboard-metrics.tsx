@@ -89,10 +89,10 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
       <h2 className="sr-only" id="dashboard-metrics-title">
         Principais métricas financeiras
       </h2>
-      <Card className="relative gap-0 overflow-hidden border py-0 shadow-none md:hidden">
-        <div className="grid gap-5 bg-brand/8 py-5">
+      <Card className="relative gap-0 overflow-hidden py-0 md:hidden">
+        <div className="grid gap-4 bg-brand/8 py-5">
           <CardHeader className="gap-1 px-5">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
               <CalendarClock aria-hidden="true" className="size-4 shrink-0" />
               Saldo previsto
               <MetricHelp
@@ -104,10 +104,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
           </CardHeader>
           <CardContent className="px-5">
             <div className="grid gap-3">
-              <MoneyValue
-                amount={metrics.projected.current}
-                className="font-medium text-3xl leading-none tracking-tight"
-              />
+              <MoneyValue amount={metrics.projected.current} className="kpi-value text-[2.5rem]" />
               <MetricComparison
                 subtle
                 hasPreviousData={metrics.projected.hasPreviousData}
@@ -118,7 +115,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             </div>
           </CardContent>
         </div>
-        <CardContent className="border-t bg-card px-5 py-4">
+        <CardContent className="border-t px-5 py-3">
           <div className="grid gap-1">
             <MobileMetric
               amount={metrics.income.current}
@@ -145,7 +142,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
         </CardContent>
       </Card>
 
-      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
           const metric = metrics[card.key];
           const comparison = compareDashboardMetric(metric.current, metric.previous);
@@ -153,10 +150,10 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             card.key === "projected" ? formatProjectedMetricHelp(metrics.period) : card.help;
 
           return (
-            <Card className="gap-4 border py-5" key={card.key}>
+            <Card className="gap-5 py-5" key={card.key}>
               <CardHeader className="gap-1 px-5">
                 <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex min-w-0 items-center gap-2 text-base">
+                  <CardTitle className="flex min-w-0 items-center gap-2 font-medium text-muted-foreground text-sm">
                     <card.icon
                       aria-hidden="true"
                       className={cn("size-4 shrink-0", card.iconClassName)}
@@ -190,7 +187,7 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
                 </CardDescription>
               </CardHeader>
               <CardContent className="mt-auto grid gap-3 px-5">
-                <MoneyValue amount={metric.current} className="font-medium text-2xl leading-none" />
+                <MoneyValue amount={metric.current} className="kpi-value text-[1.875rem]" />
                 <MetricComparison
                   hasPreviousData={metric.hasPreviousData}
                   invertTrend={card.invertTrend}
@@ -266,7 +263,7 @@ function MetricComparison({
 
   return (
     <div className="flex min-h-5 flex-wrap items-center gap-1.5 text-muted-foreground text-xs">
-      <span className="font-mono">{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
+      <span>{subtle ? "Mês anterior ·" : "Mês anterior:"}</span>
       <MoneyValue amount={previous} className="text-xs" />
       {change.kind === "percent" || change.value !== 0 ? (
         <span
@@ -292,8 +289,8 @@ function MetricComparison({
 export function DashboardMetricsSkeleton() {
   return (
     <div aria-label="Carregando métricas" role="status">
-      <Card className="gap-0 border py-0 shadow-none md:hidden">
-        <div className="grid gap-5 bg-brand/8 py-5">
+      <Card className="gap-0 py-0 md:hidden">
+        <div className="grid gap-4 bg-brand/8 py-5">
           <CardHeader className="gap-1 px-5">
             <Skeleton className="h-5 w-24" />
             <Skeleton className="h-4 w-36" />
@@ -303,21 +300,21 @@ export function DashboardMetricsSkeleton() {
             <Skeleton className="h-5 w-44" />
           </CardContent>
         </div>
-        <CardContent className="grid gap-1 border-t bg-card px-5 py-4">
+        <CardContent className="grid gap-1 border-t px-5 py-3">
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-8 w-full" />
         </CardContent>
       </Card>
-      <div className="hidden gap-3 md:grid md:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <Card className="gap-5 border py-5" key={card.key}>
+          <Card className="gap-5 py-5" key={card.key}>
             <CardHeader className="px-5">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-3 w-36" />
             </CardHeader>
             <CardContent className="grid gap-3 px-5">
-              <Skeleton className="h-7 w-36" />
+              <Skeleton className="h-8 w-40" />
               <Skeleton className="h-4 w-44" />
             </CardContent>
           </Card>
@@ -330,7 +327,7 @@ export function DashboardMetricsSkeleton() {
 
 export function DashboardMetricsError({ onRetry }: { onRetry: () => void }) {
   return (
-    <Card className="grid min-h-48 place-items-center border p-6 text-center">
+    <Card className="grid min-h-48 place-items-center p-6 text-center">
       <div>
         <p className="font-medium">Não foi possível carregar as métricas</p>
         <p className="mt-1 text-muted-foreground text-sm">

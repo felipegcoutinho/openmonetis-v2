@@ -58,15 +58,13 @@ function field(page: Page, legend: string) {
 
 async function expenseForm(page: Page, name: string) {
   await page.goto("/transactions");
-  const trigger = page.getByRole("button", { name: "Criar novo lançamento", exact: true });
-  const choice = page.getByRole("menuitem", { name: "Nova despesa", exact: true });
+  const dialog = page.getByRole("dialog", { name: "Nova despesa" });
+  // Retry until hydration wires the button, but never click again once a dialog is open.
   await expect(async () => {
-    await trigger.focus();
-    await trigger.press("ArrowDown");
-    await expect(choice).toBeVisible({ timeout: 1000 });
+    if (!(await dialog.isVisible()))
+      await page.getByRole("button", { name: "Nova despesa", exact: true }).click();
+    await expect(dialog).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 15_000 });
-  await choice.click();
-  await expect(page.getByRole("dialog", { name: "Nova despesa" })).toBeVisible();
   await field(page, "Descrição").getByRole("combobox").fill(name);
   await field(page, "Valor").getByRole("textbox").fill("25,50");
   await field(page, "Categoria").getByRole("combobox").click();

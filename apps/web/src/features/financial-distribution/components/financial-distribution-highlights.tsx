@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, Layers, TrendingDown, TrendingUp } from "lucide-react";
 import type { ReactNode } from "react";
 import { MoneyValue } from "@/components/money-value";
+import { StatCard } from "@/components/stat-card";
 import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { distributionCategoryLabel } from "../financial-distribution.presentation";
@@ -22,19 +23,17 @@ type TileProps = {
 
 function HighlightTile({ label, icon, title, amount, percentage, percentageLabel }: TileProps) {
   return (
-    <Card className="min-w-0 gap-1 px-5 py-4">
-      <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
-        <span aria-hidden="true" className="shrink-0 [&>svg]:size-4">
-          {icon}
-        </span>
-        {label}
-      </p>
-      <div className="min-w-0 py-1 font-medium text-sm leading-snug">{title}</div>
-      <MoneyValue amount={amount} className="font-semibold text-xl" />
-      <span className="text-muted-foreground text-xs">
-        <FinancialDistributionPercentage value={percentage} /> {percentageLabel}
-      </span>
-    </Card>
+    <StatCard
+      description={
+        <>
+          <FinancialDistributionPercentage value={percentage} /> {percentageLabel}
+        </>
+      }
+      icon={icon}
+      label={label}
+      subject={title}
+      value={<MoneyValue amount={amount} />}
+    />
   );
 }
 
@@ -93,7 +92,7 @@ export function FinancialDistributionHighlights({ report, personScope }: Props) 
           {largestExpense ? (
             <HighlightTile
               label="Maior categoria de despesa"
-              icon={<TrendingDown className="size-3.5" />}
+              icon={<TrendingDown />}
               title={
                 <CategoryTitle
                   category={largestExpense}
@@ -109,7 +108,7 @@ export function FinancialDistributionHighlights({ report, personScope }: Props) 
           {leadingExpenses.length > 1 ? (
             <HighlightTile
               label="Duas maiores despesas juntas"
-              icon={<Layers className="size-3.5" />}
+              icon={<Layers />}
               title={
                 <p className="line-clamp-2">
                   {leadingExpenses.map(distributionCategoryLabel).join(" e ")}
@@ -123,7 +122,7 @@ export function FinancialDistributionHighlights({ report, personScope }: Props) 
           {largestIncome ? (
             <HighlightTile
               label="Maior fonte de receita"
-              icon={<TrendingUp className="size-3.5" />}
+              icon={<TrendingUp />}
               title={
                 <CategoryTitle
                   category={largestIncome}

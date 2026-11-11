@@ -24,12 +24,12 @@ import {
   useDeleteBudgetMutation,
   useUpdateBudgetMutation,
 } from "../budgets.mutations";
+import { formatBudgetCategoryCount, getBudgetWidgetItems } from "../budgets.presentation";
 import { budgetsQueryOptions } from "../budgets.queries";
 import { BudgetCard } from "./budget-card";
 import { BudgetDialog } from "./budget-dialog";
 import { BudgetsSummary } from "./budgets-summary";
 import { CopyBudgetsDialog } from "./copy-budgets-dialog";
-
 import { UnbudgetedExpenses } from "./unbudgeted-expenses";
 
 const cardSkeletonKeys = ["first", "second", "third"] as const;
@@ -121,16 +121,12 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
               { label: "Finanças" },
               { label: "Orçamentos" },
             ]}
-            description="Defina limites mensais e acompanhe o consumo por categoria."
+            description="Defina quanto pode gastar em cada categoria e acompanhe o que já usou no mês."
             icon={<Target aria-hidden="true" className="size-5" />}
             title="Orçamentos"
           />
 
-          <MonthNavigation
-            className="sticky top-20 z-20"
-            onPeriodChange={onPeriodChange}
-            period={period}
-          />
+          <MonthNavigation onPeriodChange={onPeriodChange} period={period} />
 
           {loading ? <BudgetsSkeleton /> : null}
 
@@ -161,16 +157,6 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
           {!loading && !failed && overview ? (
             <>
               {overview.items.length ? <BudgetsSummary overview={overview} /> : null}
-              <UnbudgetedExpenses
-                key={period}
-                overview={overview}
-                categories={categoriesQuery.data ?? []}
-                onCreate={(categoryId) => {
-                  setInitialCategoryId(categoryId);
-                  setEditingBudget(null);
-                  setDialogOpen(true);
-                }}
-              />
               <section aria-labelledby="budget-list-title" className="grid gap-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -178,9 +164,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
                       Limites por categoria
                     </h2>
                     <p className="text-muted-foreground text-sm">
-                      {overview.items.length === 1
-                        ? "1 categoria acompanhada"
-                        : `${overview.items.length} categorias acompanhadas`}
+                      {formatBudgetCategoryCount(overview.items.length)}
                     </p>
                   </div>
                   <Button onClick={() => setCopyOpen(true)} type="button" variant="outline">
@@ -189,8 +173,8 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
                   </Button>
                 </div>
                 {overview.items.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {overview.items.map((budget) => (
+                  <div className="stagger-children grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {getBudgetWidgetItems(overview.items).map((budget) => (
                       <BudgetCard
                         budget={budget}
                         categorySlug={categorySlugs.idToSlug.get(budget.categoryId)}
@@ -210,6 +194,16 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
                   <BudgetsEmptyState expenseCategories={expenseCategories} onCreate={openCreate} />
                 )}
               </section>
+              <UnbudgetedExpenses
+                key={period}
+                overview={overview}
+                categories={categoriesQuery.data ?? []}
+                onCreate={(categoryId) => {
+                  setInitialCategoryId(categoryId);
+                  setEditingBudget(null);
+                  setDialogOpen(true);
+                }}
+              />
             </>
           ) : null}
         </section>

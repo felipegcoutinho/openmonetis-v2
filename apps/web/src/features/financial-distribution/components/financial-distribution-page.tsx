@@ -8,16 +8,17 @@ import {
   PiggyBank,
   RefreshCw,
   RotateCcw,
+  Scale,
   Tags,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { FinancialSummaryHeader } from "@/components/financial-summary-header";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { MonthNavigation } from "@/components/month-navigation";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -185,7 +186,7 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
               aria-label="Carregando distribuição financeira"
               className="grid gap-6"
             >
-              <Skeleton className="h-64" />
+              <Skeleton className="h-28" />
               <Skeleton className="h-96" />
               <span className="sr-only">Carregando relatório…</span>
             </div>
@@ -218,72 +219,61 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
               )}
               aria-busy={reportQuery.isFetching}
             >
-              <FinancialSummaryHeader
-                title={
+              <section
+                aria-label={
                   filters.mode === "forecast"
                     ? "Resultado do mês com previsões"
                     : "Resultado do mês lançado"
                 }
-                subtitle={
-                  filters.mode === "forecast"
-                    ? "Inclui recorrências previstas, como na Visão geral. Não representa o saldo das contas."
-                    : "Só o que já foi lançado; a Visão geral inclui também as previsões. Não representa o saldo das contas."
-                }
-                variant="soft"
-                identity={
-                  <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-current/10">
-                    <GitFork aria-hidden="true" className="size-6" />
-                  </span>
-                }
-                primaryLabel="Saldo do período"
-                primaryValue={
-                  <MoneyValue
-                    amount={report.balanceAmount}
-                    className={cn(report.balanceAmount < 0 && "text-destructive")}
-                  />
-                }
-                metrics={[
-                  {
-                    label: "Receitas",
-                    icon: <ArrowDownLeft aria-hidden="true" className="size-3.5" />,
-                    value: <MoneyValue amount={report.incomeAmount} />,
-                    description: (
-                      <>
-                        <FinancialDistributionPercentage
-                          value={report.comparison.incomeChangePercentage}
-                          signed
-                        />{" "}
-                        vs. mês anterior
-                      </>
-                    ),
-                  },
-                  {
-                    label: "Despesas",
-                    icon: <ArrowUpRight aria-hidden="true" className="size-3.5" />,
-                    value: <MoneyValue amount={report.expenseAmount} />,
-                    description: (
-                      <>
-                        <FinancialDistributionPercentage
-                          value={report.comparison.expenseChangePercentage}
-                          signed
-                        />{" "}
-                        vs. mês anterior
-                      </>
-                    ),
-                  },
-                  {
-                    label: "Taxa de poupança",
-                    icon: <PiggyBank aria-hidden="true" className="size-3.5" />,
-                    value: (
+                className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+              >
+                <StatCard
+                  description="Não representa o saldo das contas."
+                  icon={<Scale />}
+                  label="Saldo do período"
+                  value={<MoneyValue amount={report.balanceAmount} />}
+                  valueClassName={cn(report.balanceAmount < 0 && "text-destructive")}
+                />
+                <StatCard
+                  description={
+                    <>
                       <FinancialDistributionPercentage
-                        value={report.savingsRatePercentage}
-                        className="text-current text-xl"
-                      />
-                    ),
-                    description: "Parte das receitas que sobrou no período.",
-                  },
-                ]}
-              />
+                        value={report.comparison.incomeChangePercentage}
+                        signed
+                      />{" "}
+                      vs. mês anterior
+                    </>
+                  }
+                  icon={<ArrowDownLeft />}
+                  label="Receitas"
+                  value={<MoneyValue amount={report.incomeAmount} />}
+                />
+                <StatCard
+                  description={
+                    <>
+                      <FinancialDistributionPercentage
+                        value={report.comparison.expenseChangePercentage}
+                        signed
+                      />{" "}
+                      vs. mês anterior
+                    </>
+                  }
+                  icon={<ArrowUpRight />}
+                  label="Despesas"
+                  value={<MoneyValue amount={report.expenseAmount} />}
+                />
+                <StatCard
+                  description="Parte das receitas que sobrou no período."
+                  icon={<PiggyBank />}
+                  label="Taxa de poupança"
+                  value={
+                    <FinancialDistributionPercentage
+                      value={report.savingsRatePercentage}
+                      className="text-foreground text-xl"
+                    />
+                  }
+                />
+              </section>
               {report.flowAmount > 0 ? (
                 <FinancialDistributionChart report={report} personScope={filters.personScope} />
               ) : (

@@ -1,12 +1,13 @@
 import type { CreateTagInput, TagOutput } from "@openmonetis/validators/tags";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Tag } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -135,20 +135,14 @@ export function TagsPage({
                       {statusCounts.inactive ? `Inativas (${statusCounts.inactive})` : "Inativas"}
                     </TabsTrigger>
                   </TabsList>
-                  <div className="relative min-w-0 sm:w-72">
-                    <Search
-                      aria-hidden="true"
-                      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                    />
-                    <Input
-                      className="h-8 pl-9"
-                      aria-label="Buscar etiquetas"
-                      placeholder="Buscar etiqueta"
-                      type="search"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                    />
-                  </div>
+                  <SearchInput
+                    aria-label="Buscar etiquetas"
+                    className="h-8"
+                    containerClassName="sm:w-72"
+                    placeholder="Buscar etiqueta"
+                    value={search}
+                    onValueChange={setSearch}
+                  />
                 </div>
               </Tabs>
             </>

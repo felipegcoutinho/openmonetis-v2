@@ -5,6 +5,7 @@ import { Archive, CalendarDays, FileText, Info, Pencil, Trash2 } from "lucide-re
 import { type ReactNode, useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
 import { MoneyValue } from "@/components/money-value";
+import { NotePopover } from "@/components/note-popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,20 +75,12 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
                   </Link>
                 </CardTitle>
                 {card.note ? (
-                  <Tooltip>
-                    <TooltipTrigger
-                      aria-label={`Observação de ${card.name}`}
-                      render={
-                        <button
-                          className="text-muted-foreground hover:text-foreground"
-                          type="button"
-                        />
-                      }
-                    >
-                      <Info aria-hidden="true" className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">{card.note}</TooltipContent>
-                  </Tooltip>
+                  <NotePopover
+                    icon={<Info aria-hidden="true" className="size-3.5" />}
+                    label={`Observação de ${card.name}`}
+                  >
+                    {card.note}
+                  </NotePopover>
                 ) : null}
               </div>
               <p className="mt-0.5 text-muted-foreground text-xs">
@@ -153,7 +146,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             </p>
             <span
               className={cn(
-                "rounded-full bg-muted px-2 py-0.5 font-mono font-medium text-2xs",
+                "inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-2xs before:size-1.5 before:rounded-full before:bg-current before:opacity-70",
                 card.invoiceSummary.status === "paid" && "bg-success/10 text-success",
                 card.invoiceSummary.status === "overdue" && "bg-destructive/10 text-destructive",
               )}
@@ -165,15 +158,15 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
         </div>
         <div className="grid grid-cols-3 gap-2">
           <CardMetric
-            label="Limite total"
+            label="Total"
             value={<MoneyValue amount={card.invoiceSummary.totalLimit} />}
           />
           <CardMetric
-            label="Limite utilizado"
+            label="Utilizado"
             value={<MoneyValue amount={card.invoiceSummary.usedLimit} />}
           />
           <CardMetric
-            label="Limite disponível"
+            label="Disponível"
             value={<MoneyValue amount={card.invoiceSummary.availableLimit} />}
           />
         </div>
@@ -195,7 +188,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
 
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           params={{ cardId: card.id }}
           to="/cards/$cardId"
         >
@@ -203,7 +196,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
           Fatura
         </Link>
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           onClick={() => onEdit(card)}
           type="button"
         >
@@ -282,7 +275,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
 function CardMetric({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="font-mono text-muted-foreground text-xs">{label}</p>
+      <p className="truncate font-mono text-muted-foreground text-xs">{label}</p>
       <p className="mt-0.5 truncate font-medium text-sm tabular-nums">{value}</p>
     </div>
   );

@@ -7,12 +7,119 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Botão **Pular para o conteúdo** no cabeçalho: é o primeiro item ao navegar com Tab e leva o
+  foco direto ao título da página.
+- Teste e2e que abre as telas principais em 390px e falha se alguma rolar na horizontal.
+- Lançamentos: nova coluna **Situação** com ícone e texto (Pago, Recebido, Em aberto, Na fatura),
+  que continua dando baixa com um clique. A lista do celular passa a mostrar a situação abaixo do
+  valor.
+- No celular, a trilha de navegação vira um link de voltar para a página anterior da hierarquia.
+- Caixa de entrada: o aviso de captura descartada oferece **Desfazer**, que devolve o item aos
+  pendentes.
+- Categorias mostram o gasto (ou recebimento) do mês atual de cada categoria e, quando há
+  orçamento, quanto do limite já foi usado, com barra de progresso.
+- Pessoas: nove novos avatares ilustrados para escolher, no mesmo estilo dos atuais.
+
 ### Alterado
 
 - **Diagnóstico com IA** abre mais rápido: a situação da conexão com cada assistente de IA é
   reaproveitada por alguns minutos em vez de consultada nas ferramentas a cada visita, e um
   diagnóstico já salvo aparece sem esperar essa verificação. O histórico e o relatório do mês
   começam a carregar assim que o ponteiro passa pelo link da página.
+- Os resumos dos relatórios (Evolução por categoria, Compromissos futuros, Despesas parceladas,
+  Lançamentos recorrentes e Distribuição financeira), da Caixa de entrada e de Metas usam o mesmo
+  card de indicador: ícone e rótulo, valor e uma linha de contexto. Na Distribuição financeira, o
+  bloco destacado do resultado do mês vira quatro cards: saldo, receitas, despesas e taxa de
+  poupança. Na Caixa de entrada, a lista **Por origem** fica num card próprio abaixo dos
+  indicadores.
+- Na página da pessoa, os indicadores de **Acertos** e do extrato mensal seguem o mesmo card, com
+  ícone por situação do saldo (a receber, acertado ou crédito). Os valores de **Acertos** passam a
+  respeitar o modo privacidade.
+- Página da pessoa: o cartão ganha um degradê suave na cor predominante do avatar, e e-mail, data
+  de cadastro e observação ficam visíveis logo abaixo do nome, sem o popover **Detalhes**. O botão
+  de editar ganha uma área de toque maior. A navegação de mês passa para logo abaixo da trilha,
+  como no extrato da conta e na fatura do cartão, deixando o cartão junto das abas.
+- O cabeçalho colorido do extrato da conta, da fatura do cartão, da página da categoria e dos
+  orçamentos mantém a cor em destaque, mas os indicadores secundários viram cards translúcidos com
+  o mesmo ícone, rótulo e tamanho de valor dos resumos dos relatórios, no lugar das colunas
+  separadas por linhas com rótulo em caixa alta.
+- Evolução por categoria: a tabela abre já mostrando o mês mais recente ao lado das colunas
+  fixas **Média** e **Total**, e a linha **Total mensal** passa a exibir média e total.
+- A média mensal do resumo de Evolução por categoria considera só os meses com movimento, a
+  mesma regra da média de cada categoria.
+- Extrato da conta, fatura do cartão e página da categoria passam a ter o nome como título
+  principal da página (`h1`), o que melhora a navegação por leitores de tela.
+- Botão **Novo lançamento** passa a ser dividido: o lado principal abre **Nova despesa** direto e
+  a seta lista os demais tipos. O menu não abre mais ao passar o mouse.
+- Mais contraste nas abas inativas, nas células sem movimento e nos textos sobre a cor do banco em
+  contas e cartões.
+- Os centavos dos indicadores do dashboard usam a mesma cor do restante do valor.
+- Dividir lançamento: as pessoas vêm logo depois da forma de divisão, numa lista única, e o
+  resumo do que falta distribuir fica fixo acima dos botões, sempre à vista. O cartão da divisão
+  mostra quantas pessoas participam e a parte de quem lançou. Se o valor do lançamento mudar
+  depois de dividir, o cartão avisa que a divisão precisa ser revista.
+- Cartões: **Gastos do cartão** mostra o total do ciclo em destaque, quando a fatura fecha e o
+  dia de maior gasto. O acumulado sobe em degraus, para no dia de hoje e tem escala própria, então
+  os gastos pequenos do dia continuam visíveis. As abas viram **Por dia** e **Por fatura** e
+  ficam ao lado do título.
+- Cartões: **Gastos do cartão** compara a fatura com a anterior no mesmo dia do ciclo, por
+  exemplo "R$ 300,00 acima da fatura anterior no mesmo dia", e desenha a fatura anterior como uma
+  linha tracejada no gráfico. Faturas já fechadas comparam os totais finais.
+- Orçamentos: o resumo responde primeiro quanto dos limites do mês já foi usado, com barra e
+  percentual, e separa **Lançado**, **Previsto**, **Disponível** e **Acima do limite**. Os cards
+  de categoria mostram selo só quando pedem atenção, aparecem em ordem de uso e dizem quanto resta
+  ou passou. As despesas em categorias sem limite vão para o fim da página.
+- Quando um modal abre por cima de outro, o modal de baixo também fica escurecido, como já
+  acontecia no celular.
+- Observações de cartões e pessoas abrem num popover, que funciona com toque e teclado, e o ícone
+  ganha uma área de toque maior.
+- Ajustes: no celular, a aba ativa fica sempre visível na faixa de abas.
+- A barra inferior do celular dá mais espaço a **Lançamentos**, que não é mais cortado.
+- Gráficos usam as mesmas cores para receita (verde), despesa (vermelho) e saldo (azul) em todas
+  as telas. O fluxo de caixa da conta deixa de pintar as saídas de laranja.
+- Fatura vencida aparece como um selo vermelho no cabeçalho do cartão.
+- Todas as buscas de lista usam o mesmo campo, com ícone, botão de limpar e textos curtos. A
+  busca de Categorias ganha o ícone que faltava.
+- Painel de filtros de lançamentos agrupado em **Tipo e pagamento**, **Pessoas e contas**,
+  **Datas e valores** e **Outros**. Todos os seletores mostram a seta, o checkbox fica ao lado do
+  texto, o botão **Filtros** mostra quantos estão ativos e o rodapé passa a ter **Fechar**, já que
+  os filtros se aplicam sozinhos.
+- Visão geral: **Restaurar organização padrão** sai de perto das ações rápidas e vai para o fim
+  dos widgets. O aviso de novidades aparece só na Visão geral; nas demais páginas fica no menu do
+  usuário.
+- Caixa de entrada: **Descartar** passa a ter texto visível e fica afastado de **Revisar**.
+- Lançamentos no celular: uma lista contínua, com o cabeçalho de cada dia fixo logo abaixo do
+  seletor de mês e linhas mais baixas.
+- Orçamentos no celular: cards mais compactos, com o detalhamento atrás de **Detalhes**.
+- Chaves de acesso e tokens de dispositivo usam a fonte padrão nos subtítulos, como o resto da
+  página.
+- Animações revisadas: as abas ganham um indicador que desliza até a aba escolhida; páginas e
+  grids de contas, cartões, pessoas, metas, orçamentos e anotações entram com um fade em cascata;
+  no celular, os formulários em tela cheia deslizam ao abrir e fechar; checkbox, switch, tooltip,
+  accordion e blocos recolhíveis têm transições mais curtas e consistentes. Tudo respeita a
+  preferência de movimento reduzido.
+
+### Removido
+
+- Atalhos de teclado da caixa de entrada (J/K, Enter, D e X), o ⌘ Enter para salvar anotações
+  e as dicas de atalhos exibidas na caixa de entrada, nas anotações e na calculadora.
+
+### Corrigido
+
+- Rolagem horizontal no celular em Evolução por categoria, Despesas parceladas, Novidades e nos
+  extratos de contas, cartões e categorias com nome longo.
+- Erros no console ao abrir Distribuição financeira, causados por alturas negativas no primeiro
+  desenho do gráfico.
+- Login e cadastro deixam de repetir o erro num aviso flutuante; a mensagem aparece só no
+  formulário.
+- Rótulos sobrepostos no gráfico de Distribuição financeira quando há várias categorias com
+  valores pequenos.
+- Faixas largas do gráfico de Distribuição financeira, como o saldo do período, deixam de se
+  dobrar e invadir as faixas vizinhas.
+- As setas de rolagem dos seletores deixam de cobrir as opções com uma faixa de outra cor; agora
+  só esmaecem a borda da lista.
 
 ## [0.16.0] - 2026-11-07
 

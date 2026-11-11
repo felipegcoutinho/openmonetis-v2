@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { useTransactionSplitEditor } from "../useTransactionSplitEditor";
 import type { SplitFormShare } from "./transaction-split-dialog.types";
 import { parsePercentage } from "./transaction-split-input";
+
 export function TransactionSplitShareRow({
   splitMode,
   activeConnectedPersonIds,
@@ -39,15 +40,12 @@ export function TransactionSplitShareRow({
   return (
     <div
       className={cn(
-        "grid items-center gap-3 rounded-lg border p-3 transition-colors sm:grid-cols-[minmax(0,1fr)_9rem]",
-        isSelected
-          ? "border-brand-strong/20 bg-brand/5"
-          : "border-border bg-muted/20 hover:bg-muted/40",
+        "grid min-h-14 items-center gap-x-3 gap-y-2 px-3 py-2 transition-colors sm:grid-cols-[minmax(0,1fr)_9rem]",
+        isSelected ? "bg-brand/5" : "hover:bg-muted/40",
       )}
-      key={person.id}
     >
       <label
-        className="flex min-w-0 cursor-pointer items-center gap-2.5"
+        className="flex min-h-10 min-w-0 cursor-pointer items-center gap-2.5"
         htmlFor={`split-person-${person.id}`}
       >
         <Checkbox
@@ -109,9 +107,7 @@ export function TransactionSplitShareRow({
             value={share.amount}
           />
         )
-      ) : (
-        <div className="hidden h-9 sm:block" />
-      )}
+      ) : null}
     </div>
   );
 }

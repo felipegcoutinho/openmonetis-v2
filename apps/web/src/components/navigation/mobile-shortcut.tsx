@@ -158,7 +158,7 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
           >
             <span
               className={cn(
-                "block size-full origin-left scale-x-0 bg-primary transition-transform duration-500 ease-linear motion-reduce:transition-none",
+                "block size-full origin-left scale-x-0 bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none",
                 holding && "scale-x-100",
               )}
             />

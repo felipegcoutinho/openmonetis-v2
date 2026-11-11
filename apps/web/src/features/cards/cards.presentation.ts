@@ -1,7 +1,9 @@
 import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
 import {
   dateOnlyToSafeInstant,
+  differenceInCalendarDaysFromTodayInBrazil,
   formatDateInBrazil,
+  getCurrentDateInBrazil,
   getCurrentPeriodInBrazil,
 } from "@openmonetis/shared/date-time";
 import type { CardOutput } from "@openmonetis/validators/cards";
@@ -73,6 +75,38 @@ export function formatCardCycleDate(date: string) {
     month: "long",
     year: "numeric",
   });
+}
+
+export function formatCardCycleRange(startDate: string, endDate: string) {
+  return `${formatInvoiceDate(startDate)} – ${formatInvoiceDate(endDate)}`;
+}
+
+/** Today's date when it falls inside the cycle, so the chart can stop the running total there. */
+export function getCardCycleToday(startDate: string, endDate: string, now: Date = new Date()) {
+  const today = getCurrentDateInBrazil(now);
+  return today >= startDate && today <= endDate ? today : null;
+}
+
+export function formatCardCycleClosing(endDate: string, now: Date = new Date()) {
+  const days = differenceInCalendarDaysFromTodayInBrazil(endDate, now);
+  if (days < 0) return `Fechou em ${formatInvoiceDate(endDate)}`;
+  if (days === 0) return "Fecha hoje";
+  if (days === 1) return "Fecha amanhã";
+  return `Fecha em ${days} dias`;
+}
+
+type CardCycleComparison = NonNullable<CardOutput["cycleSpending"]["comparison"]>;
+
+const cardCycleComparisonTrendLabels: Record<CardCycleComparison["trend"], string> = {
+  above: "acima da",
+  below: "abaixo da",
+  equal: "Igual à",
+};
+
+/** Text that follows the difference amount, e.g. "acima da fatura anterior no mesmo dia". */
+export function formatCardCycleComparison(comparison: CardCycleComparison) {
+  const reference = comparison.isClosed ? "fatura anterior" : "fatura anterior no mesmo dia";
+  return `${cardCycleComparisonTrendLabels[comparison.trend]} ${reference}`;
 }
 
 export function formatCardHistoryPeriod(period: string) {

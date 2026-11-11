@@ -27,6 +27,8 @@ import {
 } from "../financial-distribution.presentation";
 import { FinancialDistributionPercentage } from "./financial-distribution-percentage";
 
+const NODE_PADDING = 46;
+
 type Props = { report: FinancialDistributionOutput; personScope: string };
 type Flow = FinancialDistributionOutput["sources"][number];
 
@@ -112,9 +114,10 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
       value: flow.amount,
     })),
   ];
+  // Each side label is two lines (~36px); the padding alone must keep tiny neighbours apart.
   const height = Math.max(
     360,
-    Math.max(report.sources.length, report.destinations.length) * 64 + 80,
+    Math.max(report.sources.length, report.destinations.length) * (NODE_PADDING + 30) + 90,
   );
   return (
     <Card className="min-w-0 gap-0 overflow-hidden pt-0">
@@ -176,7 +179,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                 accessibilityLayer
                 data={{ nodes, links }}
                 margin={{ left: 220, right: 295, top: 60, bottom: 30 }}
-                nodePadding={34}
+                nodePadding={NODE_PADDING}
                 nodeWidth={12}
                 iterations={0}
                 sort={false}
@@ -229,7 +232,15 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                       onMouseLeave={() => setHoveredKey(null)}
                     >
                       <title>{`${node.label}: ${formatCurrency(node.amount)} · ${formatDistributionPercentage(node.percentage)}`}</title>
-                      <rect x={x} y={y} width={width} height={nodeHeight} rx={3} fill={color} />
+                      {/* Recharts lays nodes out once before measuring the container, yielding negative heights. */}
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={Math.max(nodeHeight, 0)}
+                        rx={3}
+                        fill={color}
+                      />
                       {node.categoryId ? (
                         <Link
                           to="/categories/$categoryId"
@@ -265,16 +276,21 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
                       ? "var(--muted-foreground)"
                       : flowColor(colors, flow.key, flow.kind);
                   const active = hoveredKey !== null && flow?.key === hoveredKey;
+                  // A thick stroke folds over itself on steep curves (large flows such as the
+                  // period balance), so each flow is drawn as a filled ribbon of constant
+                  // vertical thickness instead.
+                  const half = Math.max(linkWidth, 0) / 2;
+                  const top = `M${sourceX},${sourceY - half} C${sourceControlX},${sourceY - half} ${targetControlX},${targetY - half} ${targetX},${targetY - half}`;
+                  const bottom = `L${targetX},${targetY + half} C${targetControlX},${targetY + half} ${sourceControlX},${sourceY + half} ${sourceX},${sourceY + half} Z`;
                   return (
                     // biome-ignore lint/a11y/noStaticElementInteractions: hover decorativo do gráfico
                     <path
                       onMouseEnter={() => flow && setHoveredKey(flow.key)}
                       onMouseLeave={() => setHoveredKey(null)}
-                      d={`M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
-                      fill="none"
-                      stroke={color}
-                      strokeOpacity={active ? 0.55 : hoveredKey !== null ? 0.1 : 0.25}
-                      strokeWidth={linkWidth}
+                      d={`${top} ${bottom}`}
+                      fill={color}
+                      fillOpacity={active ? 0.55 : hoveredKey !== null ? 0.1 : 0.25}
+                      stroke="none"
                     />
                   );
                 }}

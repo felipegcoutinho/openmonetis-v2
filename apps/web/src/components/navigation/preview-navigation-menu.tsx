@@ -51,7 +51,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       }}
       onPointerLeave={() => setPreview(null)}
     >
-      <div className="grid content-start gap-1 rounded-sm bg-popover/95 p-2 shadow-xl ring-1 ring-border/80 backdrop-blur-sm">
+      <div className="grid content-start gap-1 material rounded-lg border shadow-menu p-1.5">
         {items.map((item) => {
           const itemPreview = previewByHref[item.href];
           const active = !item.isShortcut && isPathActive(pathname, item.href);
@@ -89,7 +89,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       </div>
 
       {preview ? (
-        <div className="rounded-sm bg-popover/95 p-2 shadow-xl ring-1 ring-border/80 backdrop-blur-sm">
+        <div className="material rounded-lg border shadow-menu p-1.5">
           {preview === "cards" ? <CardsPreview enabled={isOpen} /> : null}
           {preview === "accounts" ? <AccountsPreview enabled={isOpen} /> : null}
           {preview === "people" ? <PeoplePreview enabled={isOpen} /> : null}
@@ -213,7 +213,7 @@ function PreviewPanel({
       </div>
       <div className="grid content-start gap-1">{children}</div>
       <Link
-        className="mt-auto flex items-center justify-between rounded-sm px-2 py-2 font-medium text-brand-strong text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="mt-auto flex items-center justify-between rounded-md px-2 py-2 font-medium text-brand-strong text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         to={footerHref}
       >
         {footerLabel}
@@ -242,7 +242,7 @@ function PreviewQueryState({
 }) {
   if (isLoading) {
     return previewSkeletonIds.map((id) => (
-      <div className="flex items-center gap-3 rounded-sm px-2 py-2" key={id}>
+      <div className="flex items-center gap-3 rounded-md px-2 py-2" key={id}>
         <Skeleton className="size-8 shrink-0 rounded-full" />
         <div className="grid flex-1 gap-2">
           <Skeleton className="h-3.5 w-28" />
@@ -289,7 +289,7 @@ function PreviewQueryState({
 function CardPreviewItem({ card }: { card: CardOutput }) {
   return (
     <Link
-      className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       params={{ cardId: card.id }}
       to="/cards/$cardId"
     >
@@ -308,7 +308,7 @@ function CardPreviewItem({ card }: { card: CardOutput }) {
 function AccountPreviewItem({ account }: { account: AccountOutput }) {
   return (
     <Link
-      className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       params={{ accountId: account.id }}
       to="/accounts/$accountId"
     >
@@ -327,7 +327,7 @@ function AccountPreviewItem({ account }: { account: AccountOutput }) {
 function PersonPreviewItem({ person }: { person: PersonOutput }) {
   return (
     <Link
-      className="flex items-center gap-3 rounded-sm px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       params={{ personId: person.id }}
       to="/people/$personId"
     >

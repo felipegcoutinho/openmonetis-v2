@@ -11,6 +11,8 @@ export const cardClosingRuleTypes = ["fixedDay", "daysBeforeDue"] as const;
 export type CardClosingRuleType = (typeof cardClosingRuleTypes)[number];
 export const cardClosingOffsetModes = ["calendarDays", "weekdays"] as const;
 export type CardClosingOffsetMode = (typeof cardClosingOffsetModes)[number];
+export const cardCycleComparisonTrends = ["above", "below", "equal"] as const;
+export type CardCycleComparisonTrend = (typeof cardCycleComparisonTrends)[number];
 
 export type CardClosingRule = (
   | { type: "fixedDay"; closingDay: number }
@@ -88,11 +90,71 @@ export function calculateCardCycleSpending(input: {
       cumulativeAmount: fromCents(cumulativeCents),
     });
   }
+  let peakDay: { date: string; amount: number } | null = null;
+  for (const [date, amountCents] of centsByDate) {
+    if (amountCents <= 0) continue;
+    if (!peakDay || amountCents > toCents(peakDay.amount)) {
+      peakDay = { date, amount: fromCents(amountCents) };
+    }
+  }
   return {
     startDate,
     endDate: input.closingDate,
     openingAmount: fromCents(openingCents),
+    totalAmount: fromCents(cumulativeCents),
+    peakDay,
     daily,
+  };
+}
+
+export type CardCycleSpending = ReturnType<typeof calculateCardCycleSpending>;
+
+/**
+ * Compares the current cycle with the previous one at the same position of the cycle (day N
+ * against day N), since cycles differ in length. Running totals include the invoice's opening
+ * amount, so both sides reflect what each invoice had accumulated. A closed cycle compares its
+ * final total; a cycle that has not started yet, or a previous cycle without spending, has no
+ * comparison.
+ */
+export function compareCardCycleSpending(input: {
+  current: CardCycleSpending;
+  previous: CardCycleSpending;
+  today: string;
+}) {
+  const { current, previous } = input;
+  const previousAt = (index: number) =>
+    previous.daily[Math.min(index, previous.daily.length - 1)]?.cumulativeAmount ??
+    previous.openingAmount;
+  const previousHasSpending =
+    previous.openingAmount !== 0 || previous.daily.some((entry) => entry.amount !== 0);
+  const daily = current.daily.map((entry, index) => ({
+    ...entry,
+    previousCumulativeAmount: previousHasSpending ? previousAt(index) : null,
+  }));
+  const isClosed = input.today > current.endDate;
+  const referenceIndex = isClosed
+    ? current.daily.length - 1
+    : current.daily.findIndex((entry) => entry.date === input.today);
+  const reference = current.daily[referenceIndex];
+
+  if (!previousHasSpending || !reference) {
+    return { daily, comparison: null };
+  }
+
+  const previousAmount = isClosed ? previous.totalAmount : previousAt(referenceIndex);
+  const differenceCents = toCents(reference.cumulativeAmount) - toCents(previousAmount);
+  const trend: CardCycleComparisonTrend =
+    differenceCents > 0 ? "above" : differenceCents < 0 ? "below" : "equal";
+  return {
+    daily,
+    comparison: {
+      isClosed,
+      dayOfCycle: referenceIndex + 1,
+      currentAmount: reference.cumulativeAmount,
+      previousAmount,
+      differenceAmount: fromCents(Math.abs(differenceCents)),
+      trend,
+    },
   };
 }
 

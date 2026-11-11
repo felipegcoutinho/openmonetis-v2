@@ -15,7 +15,7 @@ import {
   type LucideIcon,
   PieChart,
   ReceiptText,
-  RefreshCcw,
+  RefreshCw,
   Tags,
   Target,
   Users,
@@ -226,7 +226,7 @@ export const dashboardWidgetRegistry: readonly DashboardWidgetDefinition[] = [
     section: "obligations",
     title: "Lançamentos recorrentes",
     description: "Compromissos recorrentes do período",
-    icon: RefreshCcw,
+    icon: RefreshCw,
     render: (period) => <RecurringExpensesWidget period={period} />,
   },
   {

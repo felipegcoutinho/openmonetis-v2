@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export function FilterToggle({
@@ -9,10 +10,12 @@ export function FilterToggle({
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
+  const id = useId();
   return (
-    <div className="flex items-center justify-between gap-3 text-sm font-medium">
+    // The whole row is the hit target and the box sits right next to its text.
+    <label className="flex min-h-9 cursor-pointer items-center gap-3 text-sm" htmlFor={id}>
+      <Checkbox checked={checked} id={id} onCheckedChange={onChange} />
       {label}
-      <Checkbox aria-label={label} checked={checked} onCheckedChange={onChange} />
-    </div>
+    </label>
   );
 }

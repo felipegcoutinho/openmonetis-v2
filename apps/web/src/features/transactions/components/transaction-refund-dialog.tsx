@@ -15,7 +15,13 @@ import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogMedia,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRefundTransactionMutation } from "../transactions.mutations";
@@ -76,9 +82,9 @@ export function TransactionRefundDialog({
     <Dialog onOpenChange={(next) => !mutation.isPending && onOpenChange(next)} open={open}>
       <DialogContent guarded className="sm:max-w-lg">
         <DialogHeader>
-          <span className="mb-1 grid size-10 place-items-center rounded-full bg-success/10 text-success">
-            <BadgeDollarSign aria-hidden="true" className="size-5" />
-          </span>
+          <DialogMedia tone="success">
+            <BadgeDollarSign />
+          </DialogMedia>
           <DialogTitle>Registrar reembolso</DialogTitle>
           <DialogDescription>
             {transaction

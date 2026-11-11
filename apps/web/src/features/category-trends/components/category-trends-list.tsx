@@ -24,27 +24,44 @@ import { formatTrendPercentage } from "../category-trends.presentation";
 type CategoryTrendsListProps = {
   categories: CategoryTrendsOutput["categories"];
   periods: CategoryTrendsOutput["periods"];
+  summary: CategoryTrendsOutput["summary"];
 };
 
-export function CategoryTrendsList({ categories, periods }: CategoryTrendsListProps) {
+export function CategoryTrendsList({ categories, periods, summary }: CategoryTrendsListProps) {
   const expenses = categories.filter((category) => category.type === "expense");
   const incomes = categories.filter((category) => category.type === "income");
 
   return (
     <div className="grid gap-6">
-      <CategorySection categories={expenses} periods={periods} type="expense" />
-      <CategorySection categories={incomes} periods={periods} type="income" />
+      <CategorySection
+        averageAmount={summary.averageMonthlyExpenseAmount}
+        categories={expenses}
+        periods={periods}
+        totalAmount={summary.expenseAmount}
+        type="expense"
+      />
+      <CategorySection
+        averageAmount={summary.averageMonthlyIncomeAmount}
+        categories={incomes}
+        periods={periods}
+        totalAmount={summary.incomeAmount}
+        type="income"
+      />
     </div>
   );
 }
 
 function CategorySection({
+  averageAmount,
   categories,
   periods,
+  totalAmount,
   type,
 }: {
+  averageAmount: number;
   categories: CategoryTrendsOutput["categories"];
   periods: CategoryTrendsOutput["periods"];
+  totalAmount: number;
   type: "income" | "expense";
 }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
@@ -155,7 +172,12 @@ function CategorySection({
   return (
     <section className="grid min-w-0 gap-3">
       <h2 className="font-semibold text-base">{type === "expense" ? "Despesas" : "Receitas"}</h2>
-      <Card className="isolate hidden min-w-0 overflow-hidden py-0 xl:block">
+      <Card
+        className="isolate hidden min-w-0 overflow-hidden py-0 xl:block"
+        // Remount per range so the newest month starts visible beside the pinned totals.
+        key={`${periods[0]?.period}-${latestPeriod}`}
+        ref={revealLatestPeriod}
+      >
         <Table className="table-fixed" style={{ minWidth: tableMinWidth }}>
           <colgroup>
             <col style={{ width: 288 }} />
@@ -308,8 +330,12 @@ function CategorySection({
                   />
                 </TableCell>
               ))}
-              <TableCell className="sticky right-[128px] z-10 border-l bg-muted" />
-              <TableCell className="sticky right-0 z-10 bg-muted" />
+              <TableCell className="sticky right-[128px] z-10 border-l bg-muted px-4 py-3 text-right">
+                <MoneyValue amount={averageAmount} className="font-normal" />
+              </TableCell>
+              <TableCell className="sticky right-0 z-10 bg-muted px-4 py-3 text-right">
+                <MoneyValue amount={totalAmount} className="font-normal" />
+              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>
@@ -366,6 +392,11 @@ function CategorySection({
   );
 }
 
+function revealLatestPeriod(card: HTMLDivElement | null) {
+  const container = card?.querySelector<HTMLElement>('[data-slot="table-container"]');
+  if (container) container.scrollLeft = container.scrollWidth;
+}
+
 function SortButton({
   active,
   children,
@@ -393,7 +424,7 @@ function SortButton({
 function MoneyValue(props: ComponentProps<typeof BaseMoneyValue>) {
   if (props.amount === 0)
     return (
-      <span className="text-muted-foreground/60">
+      <span className="text-muted-foreground">
         <span aria-hidden="true">—</span>
         <span className="sr-only">Sem movimento</span>
       </span>

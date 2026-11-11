@@ -41,6 +41,23 @@
     animation: none;
   }
 
+  /* A full-screen form is pushed in from the side like a page; a sheet rises from the bottom. */
+  .mobile-form-content[data-slot="dialog-content"][data-open] {
+    animation: mobile-form-page-in var(--duration-slow) var(--ease-drawer) both;
+  }
+
+  .mobile-form-content[data-slot="dialog-content"][data-closed] {
+    animation: mobile-form-page-out var(--duration-base) var(--ease-out-strong) both;
+  }
+
+  .mobile-form-content[data-mobile-layout="sheet"][data-open] {
+    animation-name: mobile-form-sheet-in;
+  }
+
+  .mobile-form-content[data-mobile-layout="sheet"][data-closed] {
+    animation-name: mobile-form-sheet-out;
+  }
+
   .mobile-form-content[data-mobile-layout="sheet"] {
     top: auto;
     bottom: max(0px, calc(100dvh - var(--form-height, 100dvh) - var(--form-top, 0px)));
@@ -164,7 +181,8 @@
     background: var(--popover);
     color: var(--popover-foreground);
     padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom));
-    box-shadow: 0 0 0 1px var(--border);
+    border: 1px solid var(--border);
+    border-bottom-width: 0;
   }
 
   .mobile-select-content [data-slot="select-item"] {
@@ -316,8 +334,6 @@
 
   [data-mobile-financial-summary] dl > div {
     padding: 0.875rem;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   }
 
   [data-mobile-financial-summary] dl > div:last-child:nth-child(odd) {
@@ -367,5 +383,53 @@
 
   [data-mobile-entity-card] [data-mobile-primary-value] {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes mobile-form-page-in {
+  from {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+}
+
+@keyframes mobile-form-page-out {
+  to {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+}
+
+@keyframes mobile-form-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes mobile-form-sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes mobile-form-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes mobile-form-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (width < 768px) and (prefers-reduced-motion: reduce) {
+  .mobile-form-content[data-slot="dialog-content"][data-open] {
+    animation-name: mobile-form-fade-in;
+  }
+
+  .mobile-form-content[data-slot="dialog-content"][data-closed] {
+    animation-name: mobile-form-fade-out;
   }
 }

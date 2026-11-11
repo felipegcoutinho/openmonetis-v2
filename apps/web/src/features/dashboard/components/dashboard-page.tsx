@@ -44,7 +44,7 @@ export function DashboardPage({
       <main className="relative isolate min-h-svh bg-background">
         <div aria-hidden="true" className="dashboard-atmosphere hidden md:block" />
         <Navbar />
-        <div className="app-page project-container relative z-10 max-md:gap-5 max-md:py-4">
+        <div className="app-page project-container relative z-10">
           <div className="flex items-center justify-between gap-3 md:hidden">
             <div className="min-w-0 flex-1">
               <DashboardWelcome compactName name={session.data?.user.name} />
@@ -54,20 +54,13 @@ export function DashboardPage({
 
           <div className="hidden gap-6 md:flex lg:flex-row lg:items-center lg:justify-between">
             <DashboardWelcome name={session.data?.user.name} />
-            <div className="flex w-full items-center gap-1 lg:w-auto">
-              <div className="min-w-0 flex-1">
-                <DashboardQuickActions period={period} />
-              </div>
-              <DashboardRestoreDefaultButton />
+            <div className="w-full min-w-0 lg:w-auto">
+              <DashboardQuickActions period={period} />
             </div>
           </div>
 
           {hasNoAccounts ? <DashboardFirstAccountCard /> : null}
-          <MonthNavigation
-            className="sticky top-20 z-20 md:top-24"
-            onPeriodChange={onPeriodChange}
-            period={period}
-          />
+          <MonthNavigation onPeriodChange={onPeriodChange} period={period} />
 
           {metricsQuery.isLoading ? <DashboardMetricsSkeleton /> : null}
           {metricsQuery.isError && !hasNoAccounts ? (
@@ -84,6 +77,12 @@ export function DashboardPage({
           {isMobile === true ? <DashboardMobileOverview period={period} /> : null}
           {isMobile === false ? <DashboardAttentionWidget period={period} variant="band" /> : null}
           {isMobile === false ? <DashboardWidgetGrid period={period} /> : null}
+          {/* Layout settings live with the widgets, away from the create-transaction actions. */}
+          {isMobile === false ? (
+            <div className="flex justify-end">
+              <DashboardRestoreDefaultButton labeled />
+            </div>
+          ) : null}
           {isMobile === null ? <DashboardLayoutPlaceholder /> : null}
         </div>
       </main>

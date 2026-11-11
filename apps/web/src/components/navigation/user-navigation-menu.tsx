@@ -1,5 +1,6 @@
 import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
 
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Copy, LogOut, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -19,6 +20,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { ReleaseMenuItems } from "@/features/releases/components/release-menu-items";
+import { releasesQueryOptions } from "@/features/releases/releases.queries";
 
 import type { authClient } from "@/lib/auth-client";
 
@@ -36,6 +38,8 @@ export function UserNavigationMenu({
   handleCopyUserId: () => Promise<boolean>;
 }) {
   const navigate = useNavigate();
+  const releasesQuery = useQuery(releasesQueryOptions(Boolean(user)));
+  const updateAvailable = releasesQuery.data?.updateAvailable ?? false;
   const [userIdCopied, setUserIdCopied] = useState(false);
   const copiedResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -60,8 +64,12 @@ export function UserNavigationMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Abrir menu do usuário"
-        className="ml-2 inline-flex size-11 items-center justify-center appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:ml-0 md:size-auto"
+        aria-label={
+          updateAvailable
+            ? "Abrir menu do usuário (nova versão disponível)"
+            : "Abrir menu do usuário"
+        }
+        className="relative ml-2 inline-flex size-11 items-center justify-center appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:ml-0 md:size-auto"
       >
         <Avatar className="overflow-hidden max-md:data-[size=lg]:size-9" size="lg">
           <AvatarImage
@@ -73,6 +81,12 @@ export function UserNavigationMenu({
             {getInitials(user?.name)}
           </AvatarFallback>
         </Avatar>
+        {updateAvailable ? (
+          <span
+            aria-hidden="true"
+            className="absolute right-1 bottom-1 size-3 rounded-full bg-success ring-2 ring-background md:right-0 md:bottom-0"
+          />
+        ) : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuGroup>

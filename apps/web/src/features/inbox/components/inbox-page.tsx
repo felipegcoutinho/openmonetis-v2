@@ -11,14 +11,13 @@ import {
   Trash2,
   Workflow,
 } from "lucide-react";
-import { type KeyboardEvent, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Kbd } from "@/components/ui/kbd";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
@@ -123,7 +122,9 @@ export function InboxPage({
   async function discard(id: string) {
     try {
       await discardMutation.mutateAsync(id);
-      toast.success("Captura descartada");
+      toast.success("Captura descartada", {
+        action: { label: "Desfazer", onClick: () => void restore(id) },
+      });
     } catch {
       toast.error("Não foi possível descartar o item.");
     }
@@ -146,36 +147,6 @@ export function InboxPage({
       );
     } catch {
       toast.error("Não foi possível descartar as capturas selecionadas.");
-    }
-  }
-
-  function handleListKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (status !== "pending" || event.metaKey || event.ctrlKey || event.altKey) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("input, textarea, select, [contenteditable='true']")) return;
-    const cards = [...event.currentTarget.querySelectorAll<HTMLElement>("[data-inbox-item-id]")];
-    const card = target.closest<HTMLElement>("[data-inbox-item-id]");
-    const index = card ? cards.indexOf(card) : -1;
-    const key = event.key.toLowerCase();
-
-    if (key === "j" || key === "k") {
-      event.preventDefault();
-      const next = key === "j" ? Math.min(index + 1, cards.length - 1) : Math.max(index - 1, 0);
-      cards[next]?.focus();
-      return;
-    }
-    if (!card || target !== card) return;
-    const item = selectableItems.find((candidate) => candidate.id === card.dataset.inboxItemId);
-    if (!item) return;
-    if (event.key === "Enter") {
-      event.preventDefault();
-      void startProcessing(item);
-    } else if (key === "d") {
-      event.preventDefault();
-      void discard(item.id);
-    } else if (key === "x") {
-      event.preventDefault();
-      toggleSelected(item.id, !selectedItemIds.includes(item.id));
     }
   }
 
@@ -273,8 +244,8 @@ export function InboxPage({
         }
         value={status}
       >
-        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:border-border lg:border-b">
-          <div className="min-w-0 max-w-full overflow-x-auto">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:border-border lg:border-b">
+          <div className="min-w-0 max-w-full overflow-x-auto lg:shrink-0">
             <TabsList className="min-w-max lg:border-b-0" variant="line">
               {statuses.map((itemStatus) => (
                 <TabsTrigger key={itemStatus} value={itemStatus}>
@@ -288,7 +259,7 @@ export function InboxPage({
           </div>
 
           {query.data ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 lg:justify-end lg:pb-1.5">
               <InboxFilters
                 accounts={accountsQuery.data ?? []}
                 cards={cardsQuery.data ?? []}
@@ -306,11 +277,10 @@ export function InboxPage({
                 <Button
                   disabled={query.data.counts[status] === 0}
                   onClick={() => setClearStatus(status)}
-                  size="sm"
                   type="button"
                   variant="outline"
                 >
-                  <Trash2 aria-hidden="true" /> Excluir todo este histórico
+                  <Trash2 aria-hidden="true" /> Excluir histórico
                 </Button>
               ) : null}
             </div>
@@ -331,8 +301,7 @@ export function InboxPage({
       ) : null}
       {query.data && !query.isError ? (
         query.data.items.length ? (
-          // biome-ignore lint/a11y/noStaticElementInteractions: keyboard shortcuts delegate to the focused capture card.
-          <div className="grid gap-7" onKeyDown={handleListKeyDown}>
+          <div className="grid gap-7">
             {status === "pending" ? (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card px-4 py-2.5">
                 <div className="flex items-center gap-2 text-sm">
@@ -360,10 +329,6 @@ export function InboxPage({
                     {discardManyMutation.isPending ? "Descartando…" : "Descartar selecionadas"}
                   </Button>
                 ) : null}
-                <p className="ml-auto hidden text-muted-foreground text-xs lg:block">
-                  Atalhos: <Kbd>J</Kbd>/<Kbd>K</Kbd> navegam, <Kbd>Enter</Kbd> revisa, <Kbd>D</Kbd>{" "}
-                  descarta, <Kbd>X</Kbd> seleciona
-                </p>
               </div>
             ) : null}
             {groupInboxItemsByDate(query.data.items).map((group) => (

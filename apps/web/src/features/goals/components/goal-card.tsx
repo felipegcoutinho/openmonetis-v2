@@ -139,7 +139,7 @@ export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardPro
       </CardContent>
       <CardFooter className="mt-auto flex flex-wrap items-center gap-3 border-t pt-3">
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           disabled={busy}
           onClick={() => onEdit(goal)}
           type="button"
@@ -148,7 +148,7 @@ export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardPro
         </button>
         {statusAction ? (
           <button
-            className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
             disabled={busy}
             onClick={() => void onUpdate(goal.id, { status: statusAction.status })}
             type="button"

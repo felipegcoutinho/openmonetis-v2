@@ -75,7 +75,7 @@ export function DashboardAttentionWidget({
 
   if (query.data && items.length === 0 && !hasPartialError) {
     return (
-      <div className="flex min-h-11 items-center gap-2 rounded-card border border-dashed py-1 pr-1 pl-4 text-muted-foreground text-sm">
+      <div className="flex min-h-11 items-center gap-2 rounded-card border bg-card py-1 pr-1 pl-4 text-muted-foreground text-sm">
         <CheckCircle2 aria-hidden="true" className="size-4 shrink-0 text-success" />
         <p className="min-w-0 flex-1">
           <span className="font-medium text-foreground">Precisa de atenção:</span> tudo em dia,
@@ -87,7 +87,7 @@ export function DashboardAttentionWidget({
   }
 
   return (
-    <Card aria-labelledby={`attention-${variant}-title`} className="gap-3 border p-4" role="region">
+    <Card aria-labelledby={`attention-${variant}-title`} className="gap-4 p-5" role="region">
       <div className="flex items-center gap-2">
         <h2
           className="flex items-center gap-2 font-heading font-medium text-base leading-normal"
@@ -221,7 +221,7 @@ function AttentionItem({
   return (
     <AttentionLink
       className={cn(
-        "group grid min-h-11 gap-1 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "group grid min-h-11 gap-1 rounded-md bg-muted/70 p-3.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
         variant === "band" && "h-full",
       )}
       item={item}

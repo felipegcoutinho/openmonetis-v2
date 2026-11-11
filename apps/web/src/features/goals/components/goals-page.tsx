@@ -1,12 +1,13 @@
 import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type { CreateGoalInput, GoalOutput, UpdateGoalInput } from "@openmonetis/validators/goals";
 import { useQuery } from "@tanstack/react-query";
-import { Goal, Plus, RefreshCw } from "lucide-react";
+import { CircleCheck, Flag, Goal, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -134,20 +135,11 @@ export function GoalsPage() {
           {goalsQuery.isSuccess ? (
             <>
               {goals.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Card className="gap-1 border p-5">
-                    <p className="font-mono text-muted-foreground text-sm">Metas ativas</p>
-                    <p className="kpi-value text-3xl">{activeCount}</p>
-                  </Card>
-                  <Card className="gap-1 border p-5">
-                    <p className="text-muted-foreground text-sm">Concluídas</p>
-                    <p className="kpi-value text-3xl">{completedCount}</p>
-                  </Card>
-                  <Card className="gap-1 border p-5">
-                    <p className="font-mono text-muted-foreground text-sm">Total de metas</p>
-                    <p className="kpi-value text-3xl">{goals.length}</p>
-                  </Card>
-                </div>
+                <section aria-label="Resumo das metas" className="grid gap-3 sm:grid-cols-3">
+                  <StatCard icon={<Flag />} label="Metas ativas" value={activeCount} />
+                  <StatCard icon={<CircleCheck />} label="Concluídas" value={completedCount} />
+                  <StatCard icon={<Goal />} label="Total de metas" value={goals.length} />
+                </section>
               ) : null}
               <Tabs
                 onValueChange={(value) => {
@@ -167,7 +159,7 @@ export function GoalsPage() {
               {filtered.length > 0 ? (
                 <section
                   aria-label="Lista de metas"
-                  className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                  className="stagger-children grid gap-4 md:grid-cols-2 xl:grid-cols-3"
                 >
                   {filtered.map((goal) => (
                     <GoalCard

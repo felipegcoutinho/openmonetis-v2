@@ -1,6 +1,6 @@
 import type { BudgetOutput } from "@openmonetis/validators/budgets";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
 import { MoneyValue } from "@/components/money-value";
@@ -19,6 +19,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { CategoryIcon } from "@/features/categories/category-icons";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import {
   budgetProgressStyles,
@@ -43,67 +44,105 @@ export function BudgetCard({
   pending = false,
 }: BudgetCardProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const isMobile = useIsMobile();
+  // Phones list several budgets at once, so the launched/expected breakdown folds there.
+  const showDetails = isMobile !== true || detailsOpen;
+  const detailsId = `budget-${budget.id}-details`;
   const exceeded = budget.status === "exceeded";
 
   return (
-    <Card className="gap-5 border">
-      <CardHeader className="gap-4">
-        <div className="flex items-start justify-between gap-3">
+    <Card className="gap-4 border max-md:gap-3 max-md:py-4">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
               <CategoryIcon className="size-5" name={budget.categoryIcon} />
             </span>
-            <div className="min-w-0">
-              <CardTitle className="truncate">{budget.categoryName}</CardTitle>
-              <p className="mt-0.5 font-mono text-muted-foreground text-xs">Limite mensal</p>
-            </div>
+            <CardTitle className="truncate">{budget.categoryName}</CardTitle>
           </div>
-          <Badge
-            className={cn("font-mono border-transparent", budgetStatusStyles[budget.status])}
-            variant="outline"
-          >
-            {budgetStatusLabels[budget.status]}
-          </Badge>
+          {/* Only states that ask for attention get a badge; the bar already shows "on track". */}
+          {budget.status !== "onTrack" ? (
+            <Badge
+              className={cn("shrink-0 border-transparent", budgetStatusStyles[budget.status])}
+              variant="outline"
+            >
+              {budgetStatusLabels[budget.status]}
+            </Badge>
+          ) : null}
         </div>
       </CardHeader>
 
-      <CardContent className="grid gap-5">
-        <div>
-          <p className="font-mono text-muted-foreground text-xs">Consumo do limite</p>
-          <p className="mt-1 text-2xl font-medium">
-            <MoneyValue amount={budget.committedAmount} />
-            <span className="text-sm text-muted-foreground">
-              {" "}
+      <CardContent className="grid gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <p className="flex flex-wrap items-baseline gap-x-1.5">
+            <MoneyValue
+              amount={budget.committedAmount}
+              className="font-medium text-2xl max-md:text-lg"
+            />
+            <span className="text-muted-foreground text-sm">
               de <MoneyValue amount={budget.amount} />
             </span>
           </p>
-          <p className={cn("mt-2 text-sm", exceeded && "text-destructive")}>
-            {exceeded ? "Acima do limite: " : "Restam: "}
-            <MoneyValue amount={exceeded ? budget.exceededAmount : budget.remainingAmount} />
-          </p>
+          <span
+            className={cn(
+              "font-medium text-sm tabular-nums",
+              exceeded ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
+            {formatBudgetPercentage(budget.usagePercentage)}%
+          </span>
         </div>
-
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="font-medium tabular-nums">
-              {formatBudgetPercentage(budget.usagePercentage)}%
-            </span>
-          </div>
-          <Progress
-            aria-label={`${formatBudgetPercentage(budget.usagePercentage)}% do orçamento de ${budget.categoryName} comprometido`}
-            indicatorClassName={budgetProgressStyles[budget.status]}
-            value={Math.min(budget.usagePercentage, 100)}
-          />
-          <p className="text-muted-foreground text-xs">
-            <MoneyValue amount={budget.actualSpentAmount} /> lançados +{" "}
-            <MoneyValue amount={budget.projectedAmount} /> em recorrências previstas
+        <Progress
+          aria-label={`${formatBudgetPercentage(budget.usagePercentage)}% do limite de ${budget.categoryName} usado`}
+          indicatorClassName={budgetProgressStyles[budget.status]}
+          value={Math.min(budget.usagePercentage, 100)}
+        />
+        <p className={cn("font-medium text-sm", exceeded && "text-destructive")}>
+          {exceeded ? (
+            <>
+              <MoneyValue amount={budget.exceededAmount} /> acima do limite
+            </>
+          ) : (
+            <>
+              Restam <MoneyValue amount={budget.remainingAmount} />
+            </>
+          )}
+        </p>
+        {showDetails ? (
+          <p className="text-muted-foreground text-xs" id={detailsId}>
+            <MoneyValue amount={budget.actualSpentAmount} /> lançado
+            {budget.projectedAmount > 0 ? (
+              <>
+                {" "}
+                + <MoneyValue amount={budget.projectedAmount} /> previsto em recorrências
+              </>
+            ) : null}
           </p>
-        </div>
+        ) : null}
       </CardContent>
 
       <CardFooter className="flex flex-wrap items-center gap-3 border-t pt-3">
+        {isMobile === true ? (
+          <button
+            aria-controls={detailsOpen ? detailsId : undefined}
+            aria-expanded={detailsOpen}
+            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            onClick={() => setDetailsOpen((open) => !open)}
+            type="button"
+          >
+            Detalhes
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                "size-3.5 transition-transform motion-reduce:transition-none",
+                detailsOpen && "rotate-180",
+              )}
+            />
+          </button>
+        ) : null}
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           onClick={() => onEdit(budget)}
           type="button"
         >
@@ -112,7 +151,7 @@ export function BudgetCard({
         </button>
         {categorySlug ? (
           <Link
-            className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-brand-strong text-sm transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
             search={{ categories: categorySlug, period: budget.period, type: "expense" }}
             to="/transactions"
           >

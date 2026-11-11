@@ -70,6 +70,8 @@ export type BudgetOverviewCalculation = {
   committedAmount: number;
   availableAmount: number;
   exceededAmount: number;
+  /** Committed share of all limits together, the same ratio each budget reports. */
+  usagePercentage: number;
   unbudgetedCommittedAmount: number;
   unbudgetedItems: Array<{ categoryId: string | null; committedAmount: number }>;
   warningCount: number;
@@ -247,15 +249,18 @@ export function calculateBudgetOverview(
   );
 
   allocatedAmount = roundMoney(allocatedAmount);
+  committedAmount = roundMoney(committedAmount);
 
   return {
     progressByCategory,
     allocatedAmount,
     actualSpentAmount: roundMoney(actualSpentAmount),
     projectedAmount: roundMoney(projectedAmount),
-    committedAmount: roundMoney(committedAmount),
+    committedAmount,
     availableAmount: roundMoney(availableAmount),
     exceededAmount: roundMoney(exceededAmount),
+    usagePercentage:
+      allocatedAmount > 0 ? roundToOneDecimal((committedAmount / allocatedAmount) * 100) : 0,
     unbudgetedCommittedAmount: Math.max(0, unbudgetedCommittedAmount),
     unbudgetedItems: positiveUnbudgetedItems,
     warningCount,

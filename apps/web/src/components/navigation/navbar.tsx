@@ -19,6 +19,7 @@ import { DesktopNavigation } from "./desktop-navigation";
 import { MobileNavigation } from "./mobile-navigation";
 import { MobileNavigationMenu } from "./mobile-navigation-menu";
 import { headerIconButtonClassName } from "./navbar-options";
+import { SkipToContent } from "./skip-to-content";
 import { UserNavigationMenu } from "./user-navigation-menu";
 
 export function Navbar() {
@@ -70,8 +71,9 @@ export function Navbar() {
 
   return (
     <>
-      <header className="app-navbar fixed inset-x-0 top-0 z-50 border-b border-border/50 bg-background/95 text-foreground backdrop-blur-md">
-        <div className="project-container grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3vw,2.5rem)] xl:grid-cols-[1fr_auto_1fr]">
+      <header className="app-navbar material fixed inset-x-0 top-0 z-50 border-b border-border text-foreground">
+        <SkipToContent />
+        <div className="project-container grid h-14 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3.5vw,3rem)] xl:grid-cols-[1fr_auto_1fr]">
           <Link
             className="flex justify-self-start items-center gap-2 text-foreground"
             to="/dashboard"
@@ -87,7 +89,7 @@ export function Navbar() {
             setNavigationPopupVariant={setNavigationPopupVariant}
           />
 
-          <div className="flex justify-self-end items-center gap-0 md:gap-2">
+          <div className="flex justify-self-end items-center gap-0 md:gap-1">
             <Tooltip>
               <TooltipTrigger
                 aria-label="Abrir calculadora"
@@ -178,8 +180,9 @@ export function Navbar() {
         mobileNavigationOpen={mobileNavigationOpen}
         setMobileNavigationOpen={setMobileNavigationOpen}
       />
-      <div aria-hidden="true" className="h-16" />
-      <ReleaseNotice enabled={Boolean(user)} />
+      <div aria-hidden="true" className="h-14" />
+      {/* The user menu already flags a new version; the banner only greets on the overview. */}
+      {location.pathname === "/dashboard" ? <ReleaseNotice enabled={Boolean(user)} /> : null}
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />
     </>
   );

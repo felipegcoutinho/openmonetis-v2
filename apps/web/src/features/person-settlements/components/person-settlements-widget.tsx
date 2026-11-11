@@ -162,7 +162,7 @@ function PersonSettlementItem({
         </div>
         <div className="min-w-0 text-right">
           <span className="flex items-center justify-end gap-1.5 text-muted-foreground">
-            <ChartLegendMarker className={isCredit ? "text-success" : "text-warning"} />
+            <ChartLegendMarker className={isCredit ? "text-success" : "text-warning/25"} />
             {isCredit ? "Crédito" : "Falta receber"}
           </span>
           <MoneyValue

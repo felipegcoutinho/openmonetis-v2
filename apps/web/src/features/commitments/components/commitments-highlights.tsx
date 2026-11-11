@@ -1,13 +1,7 @@
 import type { CommitmentsOutput } from "@openmonetis/validators/commitments";
-import {
-  CalendarCheck,
-  CalendarClock,
-  Gauge,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+import { CalendarCheck, Gauge, Lock, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { MoneyValue } from "@/components/money-value";
+import { StatCard } from "@/components/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
@@ -29,55 +23,40 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
   return (
     <>
       <section aria-label="Resumo do mês" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="min-w-0 gap-1 px-5 py-4">
-          <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
-            <CalendarClock aria-hidden="true" className="size-4 shrink-0" />
-            Comprometido
-          </p>
-          <MoneyValue
-            amount={current.committedAmount}
-            className="font-medium text-xl leading-tight"
-          />
-          <p className="text-muted-foreground text-xs">Em {formatPeriod(current.period)}</p>
-        </Card>
-        <Card className="min-w-0 gap-1 px-5 py-4">
-          <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
-            <TrendingUp aria-hidden="true" className="size-4 shrink-0" />
-            Receita prevista
-          </p>
-          <MoneyValue amount={current.incomeAmount} className="font-medium text-xl leading-tight" />
-        </Card>
-        <Card className="min-w-0 gap-1 px-5 py-4">
-          <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
-            <Gauge aria-hidden="true" className="size-4 shrink-0" />
-            Comprometimento
-          </p>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-medium text-xl leading-tight">
-              {formatCommitmentPercentage(current.commitmentPercentage)}
-            </span>
-            <Badge
-              className={commitmentStatusClassName(current.status)}
-              variant={commitmentStatusVariant(current.status)}
-            >
-              {commitmentStatusLabel(current.status)}
-            </Badge>
-          </div>
+        <StatCard
+          description={`Em ${formatPeriod(current.period)}`}
+          icon={<Lock />}
+          label="Comprometido"
+          value={<MoneyValue amount={current.committedAmount} />}
+        />
+        <StatCard
+          icon={<TrendingUp />}
+          label="Receita prevista"
+          value={<MoneyValue amount={current.incomeAmount} />}
+        />
+        <StatCard
+          icon={<Gauge />}
+          label="Comprometimento"
+          value={
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>{formatCommitmentPercentage(current.commitmentPercentage)}</span>
+              <Badge
+                className={commitmentStatusClassName(current.status)}
+                variant={commitmentStatusVariant(current.status)}
+              >
+                {commitmentStatusLabel(current.status)}
+              </Badge>
+            </div>
+          }
+        >
           <CommitmentBandBar percentage={current.commitmentPercentage} status={current.status} />
-        </Card>
-        <Card className="min-w-0 gap-1 px-5 py-4">
-          <p className="flex items-center gap-2 font-heading font-medium text-base leading-normal">
-            <Wallet aria-hidden="true" className="size-4 shrink-0" />
-            Folga estimada
-          </p>
-          <MoneyValue
-            amount={current.freeAmount}
-            className={cn(
-              "font-medium text-xl leading-tight",
-              current.freeAmount < 0 && "text-destructive",
-            )}
-          />
-        </Card>
+        </StatCard>
+        <StatCard
+          icon={<Wallet />}
+          label="Folga estimada"
+          value={<MoneyValue amount={current.freeAmount} />}
+          valueClassName={cn(current.freeAmount < 0 && "text-destructive")}
+        />
       </section>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="gap-2 p-5 shadow-none">
@@ -186,7 +165,7 @@ function CommitmentBandBar({
       {position !== null ? (
         <span
           aria-hidden="true"
-          className="-translate-x-1/2 absolute -top-1 h-4 w-1 animate-[gauge-marker-in_0.9s_cubic-bezier(0.22,1,0.36,1)_0.3s_both] rounded-full bg-foreground motion-reduce:animate-none"
+          className="-translate-x-1/2 absolute -top-1 h-4 w-1 animate-[gauge-marker-in_0.6s_var(--ease-out-strong)_0.15s_both] rounded-full bg-foreground motion-reduce:animate-none"
           style={{ left: `${position}%` }}
         />
       ) : null}

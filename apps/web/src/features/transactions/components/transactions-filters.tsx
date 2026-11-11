@@ -1,4 +1,5 @@
 import { Circle, CircleCheck, CreditCard, Filter } from "lucide-react";
+import type { ReactNode } from "react";
 import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
 import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +99,11 @@ export function TransactionsFilters({
     <div className="order-3 shrink-0 md:order-5">
       <Sheet>
         <SheetTrigger
-          aria-label="Abrir filtros"
+          aria-label={
+            activeFilterCount
+              ? `Abrir filtros, ${activeFilterCount} ${activeFilterCount === 1 ? "ativo" : "ativos"}`
+              : "Abrir filtros"
+          }
           render={<Button className="relative bg-transparent" variant="outline" />}
         >
           <Filter aria-hidden="true" />
@@ -106,8 +111,10 @@ export function TransactionsFilters({
           {activeFilterCount ? (
             <span
               aria-hidden="true"
-              className="absolute -top-1 -right-1 size-3 rounded-full bg-brand"
-            />
+              className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 font-medium text-2xs text-brand-foreground tabular-nums max-md:absolute max-md:-top-2 max-md:-right-2"
+            >
+              {activeFilterCount}
+            </span>
           ) : null}
         </SheetTrigger>
         <SheetContent>
@@ -121,13 +128,12 @@ export function TransactionsFilters({
               ) : null}
             </SheetTitle>
             <SheetDescription>
-              Os filtros são aplicados automaticamente. Um intervalo de datas substitui o mês
-              selecionado.
+              A lista atualiza a cada escolha. Um intervalo de datas substitui o mês selecionado.
             </SheetDescription>
           </SheetHeader>
           <SheetBody>
-            <div className="grid content-start gap-6">
-              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid content-start gap-7">
+              <FilterGroup title="Tipo e pagamento">
                 {!hiddenFilterSet.has("type") ? (
                   <FilterSelect
                     label="Tipo de lançamento"
@@ -204,6 +210,8 @@ export function TransactionsFilters({
                     value={settlementFilter ?? "all"}
                   />
                 ) : null}
+              </FilterGroup>
+              <FilterGroup title="Pessoas e contas">
                 {!hiddenFilterSet.has("person") ? (
                   <MultiFilterSelect
                     label="Pessoa"
@@ -237,7 +245,6 @@ export function TransactionsFilters({
                     selected={categorySlugs}
                   />
                 ) : null}
-                <TagsFilter search={urlSearch} onChange={onSearchChange} />
                 {!hiddenFilterSet.has("accountCard") ? (
                   <MultiFilterSelect
                     className="sm:col-span-2"
@@ -289,71 +296,76 @@ export function TransactionsFilters({
                     ]}
                   />
                 ) : null}
-              </div>
-              <div className="grid gap-2">
-                <span className="font-medium text-muted-foreground text-xs">
-                  Intervalo de datas
-                </span>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <DatePicker
-                    onChange={(value) =>
-                      onSearchChange({
-                        dateStart: value || undefined,
-                        dateEnd: value ? (urlSearch.dateEnd ?? value) : undefined,
-                        page: undefined,
-                      })
-                    }
-                    placeholder="Data inicial"
-                    value={urlSearch.dateStart ?? ""}
-                  />
-                  <DatePicker
-                    onChange={(value) =>
-                      onSearchChange({
-                        dateStart: value ? (urlSearch.dateStart ?? value) : undefined,
-                        dateEnd: value || undefined,
-                        page: undefined,
-                      })
-                    }
-                    placeholder="Data final"
-                    value={urlSearch.dateEnd ?? ""}
-                  />
+                <TagsFilter search={urlSearch} onChange={onSearchChange} />
+              </FilterGroup>
+              <FilterGroup title="Datas e valores">
+                <div className="grid gap-2 sm:col-span-2">
+                  <span className="font-mono font-medium text-muted-foreground text-xs">
+                    Intervalo de datas
+                  </span>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <DatePicker
+                      onChange={(value) =>
+                        onSearchChange({
+                          dateStart: value || undefined,
+                          dateEnd: value ? (urlSearch.dateEnd ?? value) : undefined,
+                          page: undefined,
+                        })
+                      }
+                      placeholder="Data inicial"
+                      value={urlSearch.dateStart ?? ""}
+                    />
+                    <DatePicker
+                      onChange={(value) =>
+                        onSearchChange({
+                          dateStart: value ? (urlSearch.dateStart ?? value) : undefined,
+                          dateEnd: value || undefined,
+                          page: undefined,
+                        })
+                      }
+                      placeholder="Data final"
+                      value={urlSearch.dateEnd ?? ""}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <span className="font-medium text-muted-foreground text-xs">Faixa de valor</span>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <Input
-                    inputMode="decimal"
-                    className="placeholder:text-muted-foreground"
-                    min="0"
-                    onChange={(event) =>
-                      onSearchChange({
-                        minAmount: numberValue(event.target.value),
-                        page: undefined,
-                      })
-                    }
-                    placeholder="Mínimo"
-                    type="number"
-                    value={urlSearch.minAmount ?? ""}
-                  />
-                  <span className="text-muted-foreground text-xs">até</span>
-                  <Input
-                    inputMode="decimal"
-                    className="placeholder:text-muted-foreground"
-                    min="0"
-                    onChange={(event) =>
-                      onSearchChange({
-                        maxAmount: numberValue(event.target.value),
-                        page: undefined,
-                      })
-                    }
-                    placeholder="Máximo"
-                    type="number"
-                    value={urlSearch.maxAmount ?? ""}
-                  />
+                <div className="grid gap-2 sm:col-span-2">
+                  <span className="font-mono font-medium text-muted-foreground text-xs">
+                    Faixa de valor
+                  </span>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <Input
+                      inputMode="decimal"
+                      className="placeholder:text-muted-foreground"
+                      min="0"
+                      onChange={(event) =>
+                        onSearchChange({
+                          minAmount: numberValue(event.target.value),
+                          page: undefined,
+                        })
+                      }
+                      placeholder="Mínimo"
+                      type="number"
+                      value={urlSearch.minAmount ?? ""}
+                    />
+                    <span className="text-muted-foreground text-xs">até</span>
+                    <Input
+                      inputMode="decimal"
+                      className="placeholder:text-muted-foreground"
+                      min="0"
+                      onChange={(event) =>
+                        onSearchChange({
+                          maxAmount: numberValue(event.target.value),
+                          page: undefined,
+                        })
+                      }
+                      placeholder="Máximo"
+                      type="number"
+                      value={urlSearch.maxAmount ?? ""}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-3 rounded-md border border-dashed p-3">
+              </FilterGroup>
+              <FilterGroup title="Outros">
                 <FilterToggle
                   checked={Boolean(urlSearch.payables)}
                   label="Contas a pagar (com vencimento)"
@@ -378,17 +390,26 @@ export function TransactionsFilters({
                     onSearchChange({ isDivided: checked ? true : undefined, page: undefined })
                   }
                 />
-              </div>
+              </FilterGroup>
             </div>
           </SheetBody>
           <SheetFooter>
             <Button disabled={!activeFilterCount} onClick={clearFilters} variant="outline">
               Limpar filtros
             </Button>
-            <SheetClose render={<Button />}>Ver resultados</SheetClose>
+            <SheetClose render={<Button />}>Fechar</SheetClose>
           </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="m-0 min-w-0 border-0 p-0">
+      <legend className="mb-3 font-heading font-semibold text-sm">{title}</legend>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">{children}</div>
+    </fieldset>
   );
 }

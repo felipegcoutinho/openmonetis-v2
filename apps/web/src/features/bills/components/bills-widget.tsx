@@ -194,30 +194,6 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
             ? ` · ${bill.currentInstallment}/${bill.installmentCount}`
             : null}
         </p>
-        {bill.isSettled && (bill.dueDateAdjustment || bill.dueDateRuleExcluded) ? (
-          <div className="text-xs">
-            <DueDateIndicator
-              dueDate={bill.dueDate}
-              originalDueDate={bill.originalDueDate}
-              adjustment={bill.dueDateAdjustment}
-              excluded={bill.dueDateRuleExcluded}
-              editable={bill.dueDateExceptionEditable}
-              target={
-                bill.recordId
-                  ? { target: "transaction", transactionId: bill.recordId }
-                  : bill.recurringRuleId
-                    ? {
-                        target: "recurring",
-                        recurringRuleId: bill.recurringRuleId,
-                        occurrenceDate: bill.purchaseDate,
-                      }
-                    : undefined
-              }
-            >
-              {billDueLabel(bill.dueDate)}
-            </DueDateIndicator>
-          </div>
-        ) : null}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-0.5">
         <MoneyValue

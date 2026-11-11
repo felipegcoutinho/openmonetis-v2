@@ -98,6 +98,7 @@ export function createBudgetsService(
       committedAmount: overview.committedAmount,
       availableAmount: overview.availableAmount,
       exceededAmount: overview.exceededAmount,
+      usagePercentage: overview.usagePercentage,
       unbudgetedCommittedAmount: overview.unbudgetedCommittedAmount,
       unbudgetedItems: overview.unbudgetedItems,
       warningCount: overview.warningCount,

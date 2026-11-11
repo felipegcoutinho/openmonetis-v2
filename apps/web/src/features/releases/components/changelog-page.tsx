@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, History, RefreshCw } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { GithubIcon } from "@/components/github-icon";
 import { Navbar } from "@/components/navigation/navbar";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatReleaseDate,
+  openMonetisRepositoryUrl,
   releaseErrorMessage,
   releaseSectionLabels,
 } from "../releases.presentation";
@@ -24,7 +26,22 @@ export function ChangelogPage() {
         <section className="app-page project-container text-left">
           <PageHeader
             breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Novidades" }]}
-            description="Acompanhe novidades, melhorias e correções disponíveis no OpenMonetis."
+            description={
+              <>
+                Acompanhe novidades, melhorias e correções disponíveis no{" "}
+                <a
+                  className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline focus-visible:underline"
+                  href={openMonetisRepositoryUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <GithubIcon className="size-4 shrink-0" />
+                  OpenMonetis
+                  <span className="sr-only"> (repositório no GitHub, abre em nova aba)</span>
+                </a>
+                .
+              </>
+            }
             eyebrow="Aplicativo"
             icon={<History aria-hidden="true" className="size-5" />}
             title="Novidades"
@@ -33,7 +50,7 @@ export function ChangelogPage() {
           {releasesQuery.isPending ? <ChangelogSkeleton /> : null}
 
           {releasesQuery.isError ? (
-            <Card className="ring-1 ring-border">
+            <Card>
               <CardContent>
                 <div className="flex w-full max-w-4xl flex-col items-start gap-4">
                   <p className="text-muted-foreground text-sm">{releaseErrorMessage()}</p>
@@ -47,7 +64,7 @@ export function ChangelogPage() {
           ) : null}
 
           {releasesQuery.data ? (
-            <div className="grid gap-5">
+            <div className="grid grid-cols-1 gap-5 wrap-anywhere">
               {releasesQuery.data.updateAvailable &&
               releasesQuery.data.latestVersion &&
               releasesQuery.data.latestReleaseUrl ? (
@@ -79,11 +96,14 @@ export function ChangelogPage() {
 
               {releasesQuery.data.releases.map((release) => (
                 <article id={`v-${release.version.replaceAll(".", "-")}`} key={release.version}>
-                  <Card className="ring-1 ring-border">
+                  <Card>
                     <div className="grid w-full max-w-4xl gap-6 text-left">
                       <CardHeader className="gap-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <CardTitle className="font-mono text-xl">v{release.version}</CardTitle>
+                          <CardTitle className="text-xl">
+                            {/* The global card-title font rule outranks utilities on the title itself. */}
+                            <span className="font-mono">v{release.version}</span>
+                          </CardTitle>
                           {release.isCurrent ? <Badge>Atual</Badge> : null}
                           <time className="text-muted-foreground text-xs" dateTime={release.date}>
                             {formatReleaseDate(release.date)}
