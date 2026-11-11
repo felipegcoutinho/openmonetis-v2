@@ -213,6 +213,41 @@ test("the status reports the signed-in account email", async () => {
   });
 });
 
+test("a confirmed sign-in is reused until it is disconnected", async () => {
+  let reads = 0;
+  const readAccount = async () => {
+    reads += 1;
+    return { email: "pessoa@example.com" };
+  };
+  await withApp(fakeProvider({ readAccount }), async (app) => {
+    const status = () =>
+      app.request(`/homes/${homeId}/providers/claude`, { headers: authorization });
+    await status();
+    await status();
+    assert.equal(reads, 1);
+
+    await app.request(`/homes/${homeId}/providers/claude`, {
+      method: "DELETE",
+      headers: authorization,
+    });
+    await status();
+    assert.equal(reads, 2);
+  });
+});
+
+test("a missing sign-in is read again on the next status", async () => {
+  let reads = 0;
+  const readAccount = async () => {
+    reads += 1;
+    return null;
+  };
+  await withApp(fakeProvider({ readAccount }), async (app) => {
+    await app.request(`/homes/${homeId}/providers/claude`, { headers: authorization });
+    await app.request(`/homes/${homeId}/providers/claude`, { headers: authorization });
+    assert.equal(reads, 2);
+  });
+});
+
 test("disconnecting removes the provider home", async () => {
   await withApp(fakeProvider(), async (app, homes) => {
     const response = await app.request(`/homes/${homeId}/providers/claude`, {

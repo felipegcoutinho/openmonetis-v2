@@ -3,6 +3,8 @@ import { queryOptions } from "@tanstack/react-query";
 import { getAiProviderLogin, getAiProviders } from "./ai-providers.api";
 
 const loginCheckIntervalMs = 3_000;
+/** Each read checks the sign-in through the provider CLIs; changes here invalidate it. */
+const providersStaleTimeMs = 60_000;
 
 export const aiProviderKeys = {
   all: ["ai-providers"] as const,
@@ -15,6 +17,7 @@ export function aiProvidersQueryOptions() {
   return queryOptions({
     queryKey: aiProviderKeys.list(),
     queryFn: ({ signal }) => getAiProviders(signal),
+    staleTime: providersStaleTimeMs,
   });
 }
 

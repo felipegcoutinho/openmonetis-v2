@@ -15,7 +15,7 @@ import { createMiddleware } from "hono/factory";
 import { stream } from "hono/streaming";
 import { z } from "zod";
 import { createLoginSessions, type LoginSessions } from "./login-sessions";
-import type { ProviderAdapter, ProviderModel } from "./providers/provider";
+import type { ProviderAccount, ProviderAdapter, ProviderModel } from "./providers/provider";
 import type { ToolManager } from "./tools/manager";
 import { ToolError } from "./tools/sources";
 
@@ -53,6 +53,12 @@ const toolActivateSchema = z
   .object({ version: z.string().regex(aiToolVersionPattern).nullable() })
   .strict();
 const modelCatalogLifetimeMs = 10 * 60_000;
+/**
+ * Reading a sign-in starts the vendor CLI (Codex also starts its app server), which takes seconds
+ * and runs on every page that lists the providers. Only a confirmed sign-in is kept, so a new or
+ * finished sign-in is always read again; a run with a revoked one still fails on its own.
+ */
+const accountLifetimeMs = 2 * 60_000;
 
 type AiServiceOptions = {
   secret: string;
@@ -77,6 +83,7 @@ export function createAiServiceApp(options: AiServiceOptions) {
   const homesDirectory = path.resolve(options.homesDirectory);
   const expectedSecret = digest(options.secret);
   const modelCatalogs = new Map<string, { models: ProviderModel[]; expiresAt: number }>();
+  const accounts = new Map<string, { account: ProviderAccount; expiresAt: number }>();
   const tools = options.tools;
 
   /** Keeps the CLI build a call runs from being deleted until the call ends. */
@@ -121,8 +128,15 @@ export function createAiServiceApp(options: AiServiceOptions) {
     const params = parse(homeParamsSchema, context.req.param());
     const adapter = params && providers.get(params.provider);
     if (!params || !adapter) return context.json(fail("Not found", "not_found"), 404);
+    const ownerKey = `${params.homeId}:${params.provider}`;
+    const cached = accounts.get(ownerKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return context.json(ok({ connected: true, email: cached.account.email }));
+    }
     const home = await homeOf(params.homeId, params.provider);
     const account = await using(params.provider, () => adapter.readAccount(home));
+    if (account) accounts.set(ownerKey, { account, expiresAt: Date.now() + accountLifetimeMs });
+    else accounts.delete(ownerKey);
     return context.json(ok({ connected: account !== null, email: account?.email ?? null }));
   });
 
@@ -133,6 +147,7 @@ export function createAiServiceApp(options: AiServiceOptions) {
     const ownerKey = `${params.homeId}:${params.provider}`;
     loginSessions.cancelAll(ownerKey);
     modelCatalogs.delete(ownerKey);
+    accounts.delete(ownerKey);
     const home = await homeOf(params.homeId, params.provider);
     await using(params.provider, () => adapter.logout(home)).catch(() => undefined);
     await rm(home, { recursive: true, force: true });
@@ -160,6 +175,7 @@ export function createAiServiceApp(options: AiServiceOptions) {
     if (!params || !adapter) return context.json(fail("Not found", "not_found"), 404);
     const home = await homeOf(params.homeId, params.provider);
     modelCatalogs.delete(`${params.homeId}:${params.provider}`);
+    accounts.delete(`${params.homeId}:${params.provider}`);
     const release = tools?.hold(params.provider);
     const login = await loginSessions
       .start(`${params.homeId}:${params.provider}`, home, adapter, release)

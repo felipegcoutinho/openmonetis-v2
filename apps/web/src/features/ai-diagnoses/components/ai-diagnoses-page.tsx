@@ -48,7 +48,11 @@ import {
   formatDiagnosisDate,
   formatDiagnosisModel,
 } from "../ai-diagnoses.presentation";
-import { aiDiagnosesQueryOptions, aiDiagnosisQueryOptions } from "../ai-diagnoses.queries";
+import {
+  aiDiagnosesQueryOptions,
+  aiDiagnosisQueryOptions,
+  selectAiDiagnosisId,
+} from "../ai-diagnoses.queries";
 import { AiDiagnosisReport } from "./ai-diagnosis-report";
 import { AiDiagnosisVoiceSelect } from "./ai-diagnosis-voice-select";
 
@@ -99,8 +103,7 @@ export function AiDiagnosesPage({
         : null;
   // Until a voice is picked here, the last diagnosis' voice is kept.
   const voice = chosenVoice ?? diagnosesQuery.data?.items[0]?.voice ?? defaultAiDiagnosisVoice;
-  const selectedId =
-    diagnosisId ?? diagnosesQuery.data?.items.find((item) => item.period === period)?.id;
+  const selectedId = selectAiDiagnosisId(diagnosesQuery.data?.items, period, diagnosisId);
   const diagnosisQuery = useQuery({
     ...aiDiagnosisQueryOptions(selectedId ?? ""),
     enabled: Boolean(selectedId),
@@ -261,7 +264,8 @@ export function AiDiagnosesPage({
 
           {tab === "diagnosis" ? (
             <>
-              {providersQuery.isLoading || diagnosesQuery.isLoading ? (
+              {/* The providers only drive the generate options; a saved report shows without them. */}
+              {diagnosesQuery.isLoading || (providersQuery.isLoading && !selectedId) ? (
                 <div className="grid gap-4" role="status" aria-label="Carregando diagnóstico">
                   <Skeleton className="h-40 w-full" />
                   <Skeleton className="h-64 w-full" />

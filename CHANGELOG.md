@@ -7,6 +7,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- **Diagnóstico com IA** abre mais rápido: a situação da conexão com cada assistente de IA é
+  reaproveitada por alguns minutos em vez de consultada nas ferramentas a cada visita, e um
+  diagnóstico já salvo aparece sem esperar essa verificação. O histórico e o relatório do mês
+  começam a carregar assim que o ponteiro passa pelo link da página.
+
 ## [0.16.0] - 2026-11-07
 
 Adiciona o extrato mensal de cada pessoa externa, com envio por e-mail pelo Resend, envio

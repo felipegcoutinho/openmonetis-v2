@@ -1,6 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import {
-  createRootRoute,
+  createRootRouteWithContext,
   type ErrorComponentProps,
   HeadContent,
   Link,
@@ -8,7 +8,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { RefreshCw, TriangleAlert } from "lucide-react";
-import { useState } from "react";
 import { FlashToast } from "@/components/flash-toast";
 import { PrivacyProvider } from "@/components/privacy-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -17,9 +16,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesSynchronizer } from "@/features/preferences/components/preferences-synchronizer";
 import { siteName } from "@/lib/seo";
+import type { RouterContext } from "@/router";
 import appCss from "../styles/app.css?url";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       {
@@ -140,7 +140,7 @@ function RootErrorComponent({ reset }: ErrorComponentProps) {
 }
 
 function RootApp() {
-  const [queryClient] = useState(() => new QueryClient());
+  const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
