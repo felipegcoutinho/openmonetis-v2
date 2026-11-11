@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getInitials } from "@/lib/name-presentation";
-import { formatDashboardTransactionCount } from "../dashboard.presentation";
+import {
+  formatDashboardPercentage,
+  formatDashboardTransactionCount,
+} from "../dashboard.presentation";
 import { dashboardPeopleExpensesQueryOptions } from "../dashboard.queries";
 import { DashboardItemLinkArrow } from "./dashboard-item-link-arrow";
 import { DashboardWidget } from "./dashboard-widget";
@@ -113,12 +116,12 @@ function PeopleList({ people }: { people: PersonExpense[] }) {
               <div className="shrink-0 text-right">
                 <MoneyValue amount={person.amount} className="font-medium text-sm" />
                 <p className="mt-0.5 text-muted-foreground text-xs tabular-nums">
-                  {formatPercentage(person.percentage)}%
+                  {formatDashboardPercentage(person.percentage)}%
                 </p>
               </div>
             </div>
             <Progress
-              aria-label={`${person.personName}: ${formatPercentage(person.percentage)}% das despesas`}
+              aria-label={`${person.personName}: ${formatDashboardPercentage(person.percentage)}% das despesas`}
               indicatorClassName="bg-brand/70"
               trackClassName="h-1"
               value={person.percentage}
@@ -161,8 +164,4 @@ function PeopleEmpty() {
       title="Nenhuma despesa por pessoa"
     />
   );
-}
-
-function formatPercentage(value: number) {
-  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
 }

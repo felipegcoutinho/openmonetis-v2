@@ -1,3 +1,4 @@
+import { roundToTwoDecimals } from "./money";
 import { resolveRecurringDueDate } from "./recurring-expenses";
 import {
   addMonthsToPeriod,
@@ -25,7 +26,7 @@ export function isPayable(input: {
 
 export function calculateOpenBillsTotal(bills: readonly { amount: number; isSettled: boolean }[]) {
   const total = bills.reduce((sum, bill) => sum + (bill.isSettled ? 0 : bill.amount), 0);
-  return Math.round((total + Number.EPSILON) * 100) / 100;
+  return roundToTwoDecimals(total);
 }
 
 export function getBillStatus(input: {

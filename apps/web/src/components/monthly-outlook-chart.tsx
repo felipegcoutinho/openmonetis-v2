@@ -14,6 +14,7 @@ import { usePrivacyMode } from "@/components/privacy-provider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatChartAxisAmount } from "@/lib/money-presentation";
 import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 
@@ -46,16 +47,9 @@ type MonthlyOutlookChartProps = {
   isFetching?: boolean;
 };
 
-const axisNumberFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 const CURRENT_MONTH_LABEL = "Este mês";
 const UPCOMING_MONTH_OPACITY = 0.45;
 const TOP_RADIUS: [number, number, number, number] = [4, 4, 0, 0];
-
-function formatAxisAmount(value: number) {
-  return value >= 1000
-    ? `R$ ${axisNumberFormatter.format(value / 1000)} mil`
-    : `R$ ${axisNumberFormatter.format(value)}`;
-}
 
 function translucent(color: string) {
   return `color-mix(in oklab, ${color} ${UPCOMING_MONTH_OPACITY * 100}%, transparent)`;
@@ -150,7 +144,7 @@ export function MonthlyOutlookChart({
                 />
                 <YAxis
                   axisLine={false}
-                  tickFormatter={(value) => formatAxisAmount(Number(value))}
+                  tickFormatter={(value) => formatChartAxisAmount(Number(value))}
                   tickLine={false}
                   width={80}
                 />

@@ -1,4 +1,5 @@
 import type { CardClosingRule } from "./cards";
+import { roundToTwoDecimals } from "./money";
 import { getRecurringDueDate } from "./recurring-expenses";
 import { getOccurrenceAmount, type SettlementAwareRule } from "./settlements";
 import {
@@ -96,12 +97,12 @@ export function calculateBudgetProgress(
   actualSpent: number,
   projected = 0,
 ): BudgetProgress {
-  const normalizedLimit = Math.max(0, roundMoney(limit));
-  const actualSpentAmount = Math.max(0, roundMoney(actualSpent));
-  const projectedAmount = Math.max(0, roundMoney(projected));
-  const committedAmount = roundMoney(actualSpentAmount + projectedAmount);
-  const remainingAmount = roundMoney(Math.max(normalizedLimit - committedAmount, 0));
-  const exceededAmount = roundMoney(Math.max(committedAmount - normalizedLimit, 0));
+  const normalizedLimit = Math.max(0, roundToTwoDecimals(limit));
+  const actualSpentAmount = Math.max(0, roundToTwoDecimals(actualSpent));
+  const projectedAmount = Math.max(0, roundToTwoDecimals(projected));
+  const committedAmount = roundToTwoDecimals(actualSpentAmount + projectedAmount);
+  const remainingAmount = roundToTwoDecimals(Math.max(normalizedLimit - committedAmount, 0));
+  const exceededAmount = roundToTwoDecimals(Math.max(committedAmount - normalizedLimit, 0));
   const usagePercentage =
     normalizedLimit > 0 ? roundToOneDecimal((committedAmount / normalizedLimit) * 100) : 0;
   const status = resolveBudgetStatus(normalizedLimit, committedAmount, usagePercentage);
@@ -187,8 +188,8 @@ export function calculateBudgetSpending(
   return {
     actualByCategory: roundedMap(actualByCategory),
     projectedByCategory: roundedMap(projectedByCategory),
-    uncategorizedActualAmount: roundMoney(uncategorizedActualAmount),
-    uncategorizedProjectedAmount: roundMoney(uncategorizedProjectedAmount),
+    uncategorizedActualAmount: roundToTwoDecimals(uncategorizedActualAmount),
+    uncategorizedProjectedAmount: roundToTwoDecimals(uncategorizedProjectedAmount),
   };
 }
 
@@ -229,7 +230,7 @@ export function calculateBudgetOverview(
     .filter((categoryId) => !budgetedCategoryIds.has(categoryId))
     .map((categoryId) => ({
       categoryId: categoryId as string | null,
-      committedAmount: roundMoney(
+      committedAmount: roundToTwoDecimals(
         Math.max(0, spending.actualByCategory.get(categoryId) ?? 0) +
           Math.max(0, spending.projectedByCategory.get(categoryId) ?? 0),
       ),
@@ -238,27 +239,29 @@ export function calculateBudgetOverview(
     categoryId: null,
     committedAmount: Math.max(
       0,
-      roundMoney(spending.uncategorizedActualAmount + spending.uncategorizedProjectedAmount),
+      roundToTwoDecimals(
+        spending.uncategorizedActualAmount + spending.uncategorizedProjectedAmount,
+      ),
     ),
   });
   const positiveUnbudgetedItems = unbudgetedItems
     .filter((item) => item.committedAmount > 0)
     .sort((left, right) => right.committedAmount - left.committedAmount);
-  const unbudgetedCommittedAmount = roundMoney(
+  const unbudgetedCommittedAmount = roundToTwoDecimals(
     positiveUnbudgetedItems.reduce((total, item) => total + item.committedAmount, 0),
   );
 
-  allocatedAmount = roundMoney(allocatedAmount);
-  committedAmount = roundMoney(committedAmount);
+  allocatedAmount = roundToTwoDecimals(allocatedAmount);
+  committedAmount = roundToTwoDecimals(committedAmount);
 
   return {
     progressByCategory,
     allocatedAmount,
-    actualSpentAmount: roundMoney(actualSpentAmount),
-    projectedAmount: roundMoney(projectedAmount),
+    actualSpentAmount: roundToTwoDecimals(actualSpentAmount),
+    projectedAmount: roundToTwoDecimals(projectedAmount),
     committedAmount,
-    availableAmount: roundMoney(availableAmount),
-    exceededAmount: roundMoney(exceededAmount),
+    availableAmount: roundToTwoDecimals(availableAmount),
+    exceededAmount: roundToTwoDecimals(exceededAmount),
     usagePercentage:
       allocatedAmount > 0 ? roundToOneDecimal((committedAmount / allocatedAmount) * 100) : 0,
     unbudgetedCommittedAmount: Math.max(0, unbudgetedCommittedAmount),
@@ -293,11 +296,9 @@ function normalizedAmount(amount: string | number) {
 }
 
 function roundedMap(values: Map<string, number>) {
-  return new Map([...values].map(([categoryId, amount]) => [categoryId, roundMoney(amount)]));
-}
-
-function roundMoney(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return new Map(
+    [...values].map(([categoryId, amount]) => [categoryId, roundToTwoDecimals(amount)]),
+  );
 }
 
 function roundToOneDecimal(value: number) {

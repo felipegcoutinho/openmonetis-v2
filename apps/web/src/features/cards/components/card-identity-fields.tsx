@@ -1,4 +1,5 @@
 import { CreateCardInputSchema } from "@openmonetis/validators/cards";
+import { FieldError } from "@/components/forms/field-error";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -8,7 +9,6 @@ import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cardBrandOptions, parseCurrencyInput } from "../cards.presentation";
 import type { useCardForm } from "../useCardForm";
 import { CardBrandOption } from "./card-brand-option";
-import { FieldError } from "./card-field-error";
 import { CardStatusOption } from "./card-status-option";
 
 export function CardIdentityFields({
@@ -43,7 +43,7 @@ export function CardIdentityFields({
               placeholder="Ex.: Nubank Platinum"
               value={field.state.value}
             />
-            <FieldError message={field.state.meta.errors[0]} />
+            <FieldError errors={field.state.meta.errors} />
           </div>
         )}
       </form.Field>
@@ -130,7 +130,7 @@ export function CardIdentityFields({
               placeholder="R$ 0,00"
               value={field.state.value}
             />
-            <FieldError message={field.state.meta.errors[0]} />
+            <FieldError errors={field.state.meta.errors} />
           </div>
         )}
       </form.Field>

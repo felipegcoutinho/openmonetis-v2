@@ -1,6 +1,6 @@
 import type { CardClosingRule } from "./cards";
 import { expandCategoryIds, invoicePaymentCategoryName } from "./categories";
-import { fromCents } from "./money";
+import { fromCents, roundToTwoDecimals } from "./money";
 import { getRecurringDueDate } from "./recurring-expenses";
 import { getOccurrenceAmount, type SettlementAwareRule } from "./settlements";
 import {
@@ -491,8 +491,4 @@ function toAbsoluteCents(amount: string | number) {
 function toSignedCents(amount: string | number) {
   const numericAmount = Number(amount);
   return Number.isFinite(numericAmount) ? Math.round(numericAmount * 100) : 0;
-}
-
-function roundToTwoDecimals(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
 }

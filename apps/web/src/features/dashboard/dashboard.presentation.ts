@@ -49,8 +49,13 @@ export function getAccountBalanceShare(balance: number, totalMagnitude: number) 
   return Math.min(100, (Math.abs(balance) / totalMagnitude) * 100);
 }
 
+/** A percentage number with up to one decimal, without the "%" sign. */
+export function formatDashboardPercentage(value: number) {
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
+}
+
 export function formatAccountBalanceShare(share: number) {
-  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(share);
+  return formatDashboardPercentage(share);
 }
 
 export function getPaymentStatusPercentage(confirmed: number, total: number) {

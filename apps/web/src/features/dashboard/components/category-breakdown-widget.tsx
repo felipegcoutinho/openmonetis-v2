@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
-import { formatDashboardTransactionCount } from "../dashboard.presentation";
+import {
+  formatDashboardPercentage,
+  formatDashboardTransactionCount,
+} from "../dashboard.presentation";
 import { dashboardCategoryBreakdownQueryOptions } from "../dashboard.queries";
 import { useAdminPersonSlug } from "../useAdminPersonSlug";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
@@ -175,12 +178,12 @@ function CategoryBreakdownList({
               <div className="shrink-0 text-right">
                 <MoneyValue amount={item.amount} className="font-medium text-sm" />
                 <p className="mt-0.5 text-muted-foreground text-xs tabular-nums">
-                  {formatPercentage(item.percentage)}%
+                  {formatDashboardPercentage(item.percentage)}%
                 </p>
               </div>
             </div>
             <Progress
-              aria-label={`${item.categoryName}: ${formatPercentage(item.percentage)}% das ${itemLabel}`}
+              aria-label={`${item.categoryName}: ${formatDashboardPercentage(item.percentage)}% das ${itemLabel}`}
               indicatorClassName={indicatorClassName}
               trackClassName="h-1"
               value={Math.max(0, Math.min(100, item.percentage))}
@@ -213,8 +216,4 @@ function CategoryBreakdownError({ onRetry }: { onRetry: () => void }) {
       </div>
     </div>
   );
-}
-
-function formatPercentage(value: number) {
-  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
 }

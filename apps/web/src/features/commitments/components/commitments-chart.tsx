@@ -11,6 +11,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { formatChartAxisAmount } from "@/lib/money-presentation";
 import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { formatCommitmentChartPeriod } from "../commitments.presentation";
@@ -21,13 +22,6 @@ const chartConfig = {
   billsAmount: { label: "Contas avulsas", color: "var(--chart-4)" },
   incomeAmount: { label: "Receita prevista", color: "var(--chart-income)" },
 } satisfies ChartConfig;
-const axisNumberFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
-
-function formatAxisAmount(value: number) {
-  return value >= 1000
-    ? `R$ ${axisNumberFormatter.format(value / 1000)} mil`
-    : `R$ ${axisNumberFormatter.format(value)}`;
-}
 
 export function CommitmentsChart({
   report,
@@ -73,7 +67,7 @@ export function CommitmentsChart({
             />
             <YAxis
               axisLine={false}
-              tickFormatter={(value) => formatAxisAmount(Number(value))}
+              tickFormatter={(value) => formatChartAxisAmount(Number(value))}
               tickLine={false}
               width={68}
             />

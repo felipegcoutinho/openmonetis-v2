@@ -1,3 +1,5 @@
+import { roundToTwoDecimals } from "./money";
+
 export const goalStatuses = ["active", "paused", "completed", "archived"] as const;
 export type GoalStatus = (typeof goalStatuses)[number];
 export const goalTrackingTypes = ["manual", "account"] as const;
@@ -35,7 +37,7 @@ export function resolveGoalPaceStatus(status: GoalStatus, paceStatus: GoalPaceSt
 }
 
 export function snapshotLinkedGoalBalance(balance: number) {
-  return Math.max(0, roundMoney(balance)).toFixed(2);
+  return Math.max(0, roundToTwoDecimals(balance)).toFixed(2);
 }
 
 export function calculateGoalProgress(input: {
@@ -45,9 +47,9 @@ export function calculateGoalProgress(input: {
   targetDate: string | null;
   today: string;
 }): GoalProgress {
-  const target = roundMoney(input.targetAmount);
-  const currentAmount = Math.max(0, roundMoney(input.currentAmount));
-  const remainingAmount = roundMoney(Math.max(0, target - currentAmount));
+  const target = roundToTwoDecimals(input.targetAmount);
+  const currentAmount = Math.max(0, roundToTwoDecimals(input.currentAmount));
+  const remainingAmount = roundToTwoDecimals(Math.max(0, target - currentAmount));
   const progressPercentage = Math.round((currentAmount / target) * 1000) / 10;
 
   if (currentAmount >= target) {
@@ -73,8 +75,4 @@ export function calculateGoalProgress(input: {
     progressPercentage,
     paceStatus: currentAmount > expectedAmount ? "ahead" : paceStatus,
   };
-}
-
-function roundMoney(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
 }

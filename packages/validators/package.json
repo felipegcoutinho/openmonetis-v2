@@ -37,7 +37,6 @@
     "./device-tokens": "./src/device-tokens.ts",
     "./tags": "./src/tags.ts",
     "./recurring-transactions": "./src/recurring-transactions.ts",
-    "./business-calendars": "./src/business-calendars.ts",
     "./due-date-rules": "./src/due-date-rules.ts",
     "./ai-diagnoses": "./src/ai-diagnoses.ts",
     "./ai-chats": "./src/ai-chats.ts",

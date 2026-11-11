@@ -1,3 +1,4 @@
+import { roundToTwoDecimals } from "./money";
 import {
   addMonthsToPeriod,
   buildTrackedInstallmentSchedule,
@@ -989,8 +990,4 @@ function allocateCentsByKey(weights: Map<string, number>, totalCents: number) {
       return [key, amount];
     }),
   );
-}
-
-function roundToTwoDecimals(value: number) {
-  return Math.round(value * 100) / 100;
 }
