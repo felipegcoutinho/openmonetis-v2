@@ -184,17 +184,19 @@ export type RecurringReportVersion = RecurringVersion &
     amount: string | number;
   };
 
+/** The report projects every series from the current month over this many months. */
+export const recurringProjectionMonthCount = 12;
+
 /** Projections include historical versions; management lists each series only once. */
 export function buildRecurringTransactionsReport(input: {
   versions: RecurringReportVersion[];
+  /** First projected month, normally the current month. */
   period: string;
   today: string;
 }) {
-  const periods = [
-    input.period,
-    addMonthsToPeriod(input.period, 1),
-    addMonthsToPeriod(input.period, 2),
-  ];
+  const periods = Array.from({ length: recurringProjectionMonthCount }, (_, index) =>
+    addMonthsToPeriod(input.period, index),
+  );
   const totals = new Map(periods.map((period) => [period, 0]));
   const series = new Map<string, RecurringReportVersion[]>();
   for (const version of input.versions) {
@@ -202,7 +204,8 @@ export function buildRecurringTransactionsReport(input: {
     group.push(version);
     series.set(version.seriesId, group);
     if (version.status !== "active") continue;
-    for (let offset = -1; offset <= 3; offset++) {
+    // One month of margin on each side catches due dates shifted across a month boundary.
+    for (let offset = -1; offset <= recurringProjectionMonthCount; offset++) {
       for (const date of listRecurrenceDatesInPeriod({
         ...version,
         endDate: getEffectiveRecurringEndDate(version.endDate, version.recurrenceEndDate),
@@ -256,6 +259,7 @@ export function buildRecurringTransactionsReport(input: {
           : null,
     };
   });
+  const projectedCents = [...totals.values()].reduce((sum, cents) => sum + cents, 0);
   return {
     items,
     summary: {
@@ -263,6 +267,8 @@ export function buildRecurringTransactionsReport(input: {
       pausedCount: items.filter((item) => item.status === "paused").length,
       endedCount: items.filter((item) => item.status === "ended").length,
       projectedTotal: (totals.get(input.period) ?? 0) / 100,
+      projectionTotal: projectedCents / 100,
+      monthlyAverage: Math.round(projectedCents / recurringProjectionMonthCount) / 100,
     },
     projections: periods.map((period) => ({ period, total: (totals.get(period) ?? 0) / 100 })),
   };

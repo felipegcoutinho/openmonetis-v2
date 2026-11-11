@@ -9,7 +9,6 @@ import {
   Pencil,
   Play,
   RefreshCw,
-  Repeat2,
   Square,
 } from "lucide-react";
 import { useState } from "react";
@@ -77,7 +76,7 @@ export function RecurringExpensesWidget({ period }: { period: string }) {
               ) : null}
               <Link
                 className={dashboardWidgetFooterNavigationLinkClassName}
-                search={{ period, type: "expense", status: "active", paymentMethod: "all", q: "" }}
+                search={{ type: "expense", status: "active", paymentMethod: "all", q: "" }}
                 to="/reports/recurring-transactions"
               >
                 Ver relatório <ArrowRight aria-hidden="true" className="size-4" />
@@ -85,7 +84,7 @@ export function RecurringExpensesWidget({ period }: { period: string }) {
             </div>
           ) : undefined
         }
-        icon={<Repeat2 aria-hidden="true" />}
+        icon={<RefreshCw aria-hidden="true" />}
         title="Despesas recorrentes"
       >
         {query.isLoading ? <RecurringExpensesLoading /> : null}
@@ -111,7 +110,7 @@ export function RecurringExpensesWidget({ period }: { period: string }) {
           ) : (
             <DashboardWidgetEmptyState
               description="As recorrências do mês aparecerão aqui."
-              icon={<Repeat2 aria-hidden="true" />}
+              icon={<RefreshCw aria-hidden="true" />}
               title="Nenhuma recorrência neste mês"
             />
           )

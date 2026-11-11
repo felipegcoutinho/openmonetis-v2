@@ -1,6 +1,8 @@
 import { ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
+import { ReportRowFact } from "@/components/report-row-fact";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +12,10 @@ import {
   recurringFrequencyLabels,
 } from "@/features/recurring-expenses/recurring-expenses.presentation";
 import { paymentMethodLabels } from "@/features/transactions/transactions.presentation";
-import { recurringStatusLabels } from "../recurring-transactions.presentation";
+import {
+  recurringAmountSuffixLabels,
+  recurringStatusLabels,
+} from "../recurring-transactions.presentation";
 import { RecurringTransactionDetailsDialog } from "./recurring-transaction-details-dialog";
 import type { ReportItem } from "./recurring-transactions-report-page.types";
 import { recurringPaymentMethodIcons } from "./recurring-transactions-report-page-options";
@@ -31,6 +36,8 @@ export function RecurringTransactionReportRow({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const destinationName = item.cardName ?? item.accountName;
   const destinationLogo = item.cardLogo ?? item.accountLogo;
+  const active = item.status === "active";
+  const shared = item.splitPeople.length > 0;
 
   function chooseRowAction(nextAction: "pause" | "resume" | "skip" | "stop") {
     setDetailsOpen(false);
@@ -39,23 +46,20 @@ export function RecurringTransactionReportRow({
 
   return (
     <li className="py-4 sm:py-5">
-      <div className="grid items-center gap-x-5 gap-y-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_auto]">
+      <div className="grid items-center gap-x-6 gap-y-3 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_auto]">
         <div className="flex min-w-0 items-center gap-3">
           <EstablishmentLogo
             categoryIcon={item.categoryIcon}
-            className="shrink-0"
+            className={active ? "shrink-0" : "shrink-0 opacity-70"}
             name={item.name}
             size={40}
           />
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
               <h3 className="min-w-0 truncate font-medium">{item.name}</h3>
-              <Badge
-                className="font-mono"
-                variant={item.status === "active" ? "outline" : "secondary"}
-              >
-                {recurringStatusLabels[item.status]}
-              </Badge>
+              {active ? null : (
+                <Badge variant="secondary">{recurringStatusLabels[item.status]}</Badge>
+              )}
             </div>
             <p className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
               {destinationLogo ? (
@@ -69,41 +73,44 @@ export function RecurringTransactionReportRow({
                 <PaymentIcon aria-hidden="true" className="size-4 shrink-0" />
               )}
               <span className="truncate">
-                {destinationName ?? paymentMethodLabels[item.paymentMethod]} ·{" "}
-                {recurringFrequencyLabels[item.frequency]}
+                {destinationName ?? paymentMethodLabels[item.paymentMethod]}
+                {item.categoryName ? ` · ${item.categoryName}` : ""}
               </span>
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:col-span-2 md:gap-5 xl:col-span-2">
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Sua parte por ocorrência</p>
-            <MoneyValue amount={item.amount} className="mt-1 font-medium text-base" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Próxima ocorrência</p>
-            <p className="mt-1 font-medium text-sm">
-              {item.status !== "active"
-                ? recurringStatusLabels[item.status]
-                : item.nextOccurrenceDate
-                  ? formatRecurringExpenseCompactDate(item.nextOccurrenceDate)
-                  : "Sem previsão"}
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Data final</p>
-            <p className="mt-1 font-medium text-sm">
-              {item.recurrenceEndDate
-                ? formatRecurringExpenseCompactDate(item.recurrenceEndDate)
-                : item.status === "ended"
-                  ? "Encerrada"
-                  : "Sem prazo"}
-            </p>
-          </div>
+
+        <div className="grid grid-cols-3 gap-4 md:contents">
+          <ReportRowFact label={shared ? "Sua parte" : "Valor"}>
+            <span className="flex min-w-0 flex-wrap items-baseline gap-x-1">
+              <MoneyValue amount={item.amount} />
+              <span
+                className="font-normal text-muted-foreground text-xs"
+                title={recurringFrequencyLabels[item.frequency]}
+              >
+                {recurringAmountSuffixLabels[item.frequency]}
+              </span>
+            </span>
+          </ReportRowFact>
+          <ReportRowFact label="Próxima">
+            {active && item.nextOccurrenceDate ? (
+              formatRecurringExpenseCompactDate(item.nextOccurrenceDate)
+            ) : (
+              <Muted>{active ? "Sem previsão" : "Nenhuma"}</Muted>
+            )}
+          </ReportRowFact>
+          <ReportRowFact label="Termina em">
+            {item.recurrenceEndDate ? (
+              formatRecurringExpenseCompactDate(item.recurrenceEndDate)
+            ) : (
+              <Muted>{item.status === "ended" ? "Encerrada" : "Sem prazo"}</Muted>
+            )}
+          </ReportRowFact>
         </div>
+
         <Button
           aria-label={`Ver detalhes de ${item.name}`}
-          className="w-full justify-between md:col-span-3 xl:col-span-1 xl:w-auto"
+          className="w-full justify-between md:w-auto"
           onClick={() => setDetailsOpen(true)}
           size="sm"
           type="button"
@@ -125,4 +132,8 @@ export function RecurringTransactionReportRow({
       />
     </li>
   );
+}
+
+function Muted({ children }: { children: ReactNode }) {
+  return <span className="font-normal text-muted-foreground">{children}</span>;
 }

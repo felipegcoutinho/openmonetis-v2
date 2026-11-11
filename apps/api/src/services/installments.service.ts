@@ -1,24 +1,33 @@
+import { resolveCardClosingRule } from "@openmonetis/domain/cards";
 import {
   calculateDashboardInstallmentExpenses,
   calculateInstallmentAnticipation,
   calculateInstallmentAnticipationUndo,
+  calculateInstallmentGroups,
   calculateInstallmentQuote,
   calculateInstallmentsReport,
   type InstallmentAnticipationUndoItem,
   type InstallmentReportRow,
+  InstallmentSimulationError,
   isInstallmentPaid,
+  simulateInstallmentPayoff,
+  simulateInstallmentPurchase,
 } from "@openmonetis/domain/installments";
-import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
-import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
+import { deriveTransactionPeriod } from "@openmonetis/domain/transactions";
+import { getCurrentDateInBrazil, getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
 import type {
   CreateInstallmentAnticipationInput,
   DashboardInstallmentExpensesOutput,
   InstallmentAnticipationDetailsOutput,
   InstallmentAnticipationOutput,
+  InstallmentPayoffSimulationOutput,
+  InstallmentPurchaseSimulationOutput,
   InstallmentQuoteOutput,
   InstallmentsReportOutput,
   ListInstallmentsQuery,
   QuoteInstallmentsInput,
+  SimulateInstallmentPayoffInput,
+  SimulateInstallmentPurchaseInput,
   UndoInstallmentAnticipationInput,
   UndoInstallmentAnticipationOutput,
 } from "@openmonetis/validators/installments";
@@ -57,7 +66,20 @@ type InstallmentAnticipationRecord = {
   >;
 };
 
+type InstallmentSimulationCard = {
+  id: string;
+  name: string;
+  logo: string | null;
+  dueDay: number;
+  closingDay: number | null;
+  closingRuleType: "fixedDay" | "daysBeforeDue";
+  closingOffsetDays: number | null;
+  closingOffsetMode: "calendarDays" | "weekdays" | null;
+  closingDayPurchasesNextInvoice: boolean;
+};
+
 export type InstallmentsRepository = {
+  findActiveCardForUser(userId: string, cardId: string): Promise<InstallmentSimulationCard | null>;
   listForUser(
     userId: string,
     options?: { personScope?: "admin" | "all" },
@@ -92,11 +114,76 @@ export type InstallmentsRepository = {
   }): Promise<{ id: string } | null>;
 };
 
+function translateSimulationError<T>(simulate: () => T): T {
+  try {
+    return simulate();
+  } catch (error) {
+    if (error instanceof InstallmentSimulationError) throw badRequest(error.message, error.code);
+    throw error;
+  }
+}
+
 export function createInstallmentsService(
   repository: InstallmentsRepository,
   getCurrentPeriod: () => string = getCurrentPeriodInBrazil,
+  getToday: () => string = getCurrentDateInBrazil,
 ) {
   return {
+    async simulatePurchase(
+      userId: string,
+      input: SimulateInstallmentPurchaseInput,
+    ): Promise<InstallmentPurchaseSimulationOutput> {
+      const card = await repository.findActiveCardForUser(userId, input.cardId);
+      if (!card) throw badRequest("Card not found", "installment_simulation_card_not_found");
+
+      const firstPeriod =
+        input.invoicePeriod ??
+        deriveTransactionPeriod({
+          paymentMethod: "credit_card",
+          purchaseDate: getToday(),
+          card: {
+            closingDay: card.closingDay,
+            closingRule: resolveCardClosingRule(card),
+            dueDay: card.dueDay,
+          },
+        });
+      const simulation = translateSimulationError(() =>
+        simulateInstallmentPurchase({
+          amount: input.amount,
+          installmentCount: input.installmentCount,
+          firstPeriod,
+          outlookStartPeriod: getCurrentPeriod(),
+        }),
+      );
+      return {
+        cardId: card.id,
+        cardName: card.name,
+        cardLogo: card.logo,
+        name: input.name ?? null,
+        invoicePeriodChosen: input.invoicePeriod !== undefined,
+        amount: input.amount,
+        installmentCount: input.installmentCount,
+        ...simulation,
+      };
+    },
+
+    async simulatePayoff(
+      userId: string,
+      input: SimulateInstallmentPayoffInput,
+    ): Promise<InstallmentPayoffSimulationOutput> {
+      const rows = await repository.listForUser(userId, { personScope: "admin" });
+      const currentPeriod = getCurrentPeriod();
+      const groups = calculateInstallmentGroups(rows, currentPeriod);
+      return translateSimulationError(() =>
+        simulateInstallmentPayoff({
+          groups,
+          installmentIds: input.installmentIds,
+          discounts: input.discounts,
+          payoffPeriod: currentPeriod,
+        }),
+      );
+    },
+
     async dashboard(userId: string, period: string): Promise<DashboardInstallmentExpensesOutput> {
       const rows = await repository.listForUser(userId, { personScope: "admin" });
       return { period, items: calculateDashboardInstallmentExpenses(rows, period) };
@@ -105,9 +192,7 @@ export function createInstallmentsService(
     async list(userId: string, query: ListInstallmentsQuery): Promise<InstallmentsReportOutput> {
       const rows = await repository.listForUser(userId, { personScope: "admin" });
       return calculateInstallmentsReport(rows, {
-        referencePeriod: query.period,
-        historyEndPeriod: addMonthsToPeriod(getCurrentPeriod(), 1),
-        status: query.status,
+        referencePeriod: getCurrentPeriod(),
         q: query.q,
       });
     },

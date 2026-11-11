@@ -1,6 +1,6 @@
 import type { CategoryTrendRecurringRule } from "./category-trends";
 import {
-  calculateInstallmentsReport,
+  calculateInstallmentGroups,
   type InstallmentReportRow,
   moneyToCents,
 } from "./installments";
@@ -111,11 +111,8 @@ export function calculateCommitments(input: {
     if (total) total[key] += cents;
   };
 
-  const installments = calculateInstallmentsReport([...input.installmentRows], {
-    referencePeriod: input.period,
-    status: "all",
-  });
-  for (const group of installments.groups) {
+  const installmentGroups = calculateInstallmentGroups([...input.installmentRows], input.period);
+  for (const group of installmentGroups) {
     for (const installment of group.installments) {
       add(installment.period, "installments", moneyToCents(installment.amount));
     }
@@ -182,7 +179,7 @@ export function calculateCommitments(input: {
     };
   });
 
-  const endingSeries = installments.groups
+  const endingSeries = installmentGroups
     .flatMap((group) => {
       if (group.pendingInstallmentCount === 0 || !group.endPeriod) return [];
       if (group.endPeriod < input.period || group.endPeriod > lastPeriod) return [];

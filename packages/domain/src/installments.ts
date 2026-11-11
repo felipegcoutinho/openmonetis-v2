@@ -1,11 +1,33 @@
-import { addMonthsToPeriod, type PaymentMethod } from "./transactions";
+import {
+  addMonthsToPeriod,
+  buildTrackedInstallmentSchedule,
+  type PaymentMethod,
+} from "./transactions";
 
 export const installmentSeriesStatuses = ["open", "completed", "incomplete"] as const;
-export const installmentReportStatuses = ["open", "completed", "all"] as const;
 export const installmentPaymentStatuses = ["paid", "pending"] as const;
+/** The report looks ahead from the current month instead of slicing history by month. */
+export const installmentOutlookMonthCount = 12;
+/**
+ * How a payoff discount is informed: an amount off, a percentage off, or the final amount to pay
+ * (what bank apps usually show), from which the discount is derived.
+ */
+export const installmentDiscountTypes = ["amount", "percentage", "payoffAmount"] as const;
+
+export type InstallmentDiscountType = (typeof installmentDiscountTypes)[number];
+
+export type InstallmentSimulationErrorCode =
+  | "installment_simulation_invoice_before_current_month"
+  | "installment_payoff_invalid_selection";
+
+/** Raised when a simulation cannot be computed; nothing is ever persisted by simulations. */
+export class InstallmentSimulationError extends Error {
+  constructor(public readonly code: InstallmentSimulationErrorCode) {
+    super(code);
+  }
+}
 
 export type InstallmentSeriesStatus = (typeof installmentSeriesStatuses)[number];
-export type InstallmentReportStatus = (typeof installmentReportStatuses)[number];
 export type InstallmentPaymentStatus = (typeof installmentPaymentStatuses)[number];
 
 export type InstallmentReportRow = {
@@ -69,9 +91,8 @@ export type InstallmentAnticipationUndoCalculation = {
 };
 
 export type InstallmentReportOptions = {
+  /** The current month: the list shows what is still open plus what ends in it or later. */
   referencePeriod: string;
-  historyEndPeriod?: string;
-  status: InstallmentReportStatus;
   q?: string;
 };
 
@@ -100,6 +121,8 @@ export type InstallmentGroupCalculation = {
   missingInstallmentCount: number;
   paidInstallmentCount: number;
   pendingInstallmentCount: number;
+  /** Pending installments from months before the reference month. */
+  overdueInstallmentCount: number;
   trackedAmount: number;
   paidAmount: number;
   pendingAmount: number;
@@ -125,11 +148,13 @@ export type InstallmentGroupCalculation = {
 
 export type InstallmentsReportCalculation = {
   referencePeriod: string;
-  monthlyHistory: Array<{ period: string; totalAmount: number; activePurchaseCount: number }>;
+  upcomingMonths: Array<{ period: string; totalAmount: number; activePurchaseCount: number }>;
   summary: {
     openSeriesCount: number;
     totalPendingAmount: number;
     dueInPeriodAmount: number;
+    overdueAmount: number;
+    lastInstallmentPeriod: string | null;
     trackedAmount: number;
     paidInstallmentCount: number;
     pendingInstallmentCount: number;
@@ -160,12 +185,7 @@ export function calculateDashboardInstallmentExpenses(
   rows: InstallmentReportRow[],
   referencePeriod: string,
 ): DashboardInstallmentExpense[] {
-  const report = calculateInstallmentsReport(rows, {
-    referencePeriod,
-    status: "all",
-  });
-
-  return report.groups
+  return calculateInstallmentGroups(rows, referencePeriod)
     .flatMap((group) => {
       const current = group.installments.find(
         (installment) => installment.period === referencePeriod,
@@ -203,10 +223,11 @@ export function calculateDashboardInstallmentExpenses(
     );
 }
 
-export function calculateInstallmentsReport(
+/** Every purchase, finished or not, regardless of the month being looked at. */
+export function calculateInstallmentGroups(
   rows: InstallmentReportRow[],
-  options: InstallmentReportOptions,
-): InstallmentsReportCalculation {
+  referencePeriod: string,
+): InstallmentGroupCalculation[] {
   const rowsBySeries = new Map<string, InstallmentReportRow[]>();
 
   for (const row of rows) {
@@ -215,29 +236,42 @@ export function calculateInstallmentsReport(
     rowsBySeries.set(row.seriesId, seriesRows);
   }
 
-  const allGroups = [...rowsBySeries.values()].map((seriesRows) =>
-    calculateGroup(seriesRows, options.referencePeriod),
-  );
+  return [...rowsBySeries.values()]
+    .map((seriesRows) => calculateGroup(seriesRows, referencePeriod))
+    .sort(compareGroups);
+}
+
+/**
+ * Purchases from the current month onwards: everything still open (overdue or not started yet
+ * included) and the finished ones whose last installment is in the current month or later. A
+ * purchase finished this month disappears from the list once the month turns.
+ */
+export function calculateInstallmentsReport(
+  rows: InstallmentReportRow[],
+  options: InstallmentReportOptions,
+): InstallmentsReportCalculation {
+  const allGroups = calculateInstallmentGroups(rows, options.referencePeriod);
   const search = normalizeSearch(options.q);
   const groups = allGroups
-    .filter((group) => matchesStatus(group.status, options.status))
-    .filter((group) => matchesSearch(group, search))
-    .sort(compareGroups);
+    .filter((group) => isShownFromPeriod(group, options.referencePeriod))
+    .filter((group) => matchesSearch(group, search));
 
   return {
     referencePeriod: options.referencePeriod,
-    monthlyHistory: calculateMonthlyHistory(
-      allGroups,
-      options.historyEndPeriod ?? options.referencePeriod,
-    ),
+    upcomingMonths: calculateUpcomingMonths(allGroups, options.referencePeriod),
     summary: calculateSummary(allGroups, options.referencePeriod),
     groups,
   };
 }
 
-function calculateMonthlyHistory(groups: InstallmentGroupCalculation[], endPeriod: string) {
-  const periods = Array.from({ length: 13 }, (_, index) =>
-    addMonthsToPeriod(endPeriod, index - 12),
+function isShownFromPeriod(group: InstallmentGroupCalculation, referencePeriod: string) {
+  if (group.status !== "completed") return true;
+  return group.installments.some((installment) => installment.period >= referencePeriod);
+}
+
+function calculateUpcomingMonths(groups: InstallmentGroupCalculation[], startPeriod: string) {
+  const periods = Array.from({ length: installmentOutlookMonthCount }, (_, index) =>
+    addMonthsToPeriod(startPeriod, index),
   );
   const totals = new Map(periods.map((period) => [period, 0]));
   const purchaseCounts = new Map(periods.map((period) => [period, 0]));
@@ -261,6 +295,266 @@ function calculateMonthlyHistory(groups: InstallmentGroupCalculation[], endPerio
     totalAmount: centsToMoney(totals.get(period) ?? 0),
     activePurchaseCount: purchaseCounts.get(period) ?? 0,
   }));
+}
+
+export type InstallmentPurchaseSimulation = {
+  installments: Array<{ installmentNumber: number; period: string; amount: number }>;
+  installmentAmount: number;
+  firstPeriod: string;
+  endPeriod: string;
+  upcomingMonths: Array<{ period: string; amount: number }>;
+};
+
+/**
+ * Splits a purchase that does not exist yet exactly like a real credit card series and lays it
+ * over the report's outlook window. Nothing is persisted, so no other total is affected.
+ */
+export function simulateInstallmentPurchase(input: {
+  amount: number;
+  installmentCount: number;
+  /** Invoice of the first installment: chosen by the user or resolved from the closing rule. */
+  firstPeriod: string;
+  outlookStartPeriod: string;
+}): InstallmentPurchaseSimulation {
+  if (input.firstPeriod < input.outlookStartPeriod) {
+    throw new InstallmentSimulationError("installment_simulation_invoice_before_current_month");
+  }
+  const schedule = buildTrackedInstallmentSchedule({
+    totalAmount: input.amount,
+    installmentCount: input.installmentCount,
+    startInstallment: 1,
+    basePeriod: input.firstPeriod,
+    paymentMethod: "credit_card",
+  });
+  const centsByPeriod = new Map(
+    schedule.map((installment) => [installment.period, moneyToCents(installment.amount)]),
+  );
+  const first = schedule[0] as (typeof schedule)[number];
+  const last = schedule.at(-1) as (typeof schedule)[number];
+
+  return {
+    installments: schedule.map((installment) => ({
+      installmentNumber: installment.currentInstallment,
+      period: installment.period,
+      amount: installment.amount,
+    })),
+    installmentAmount: first.amount,
+    firstPeriod: first.period,
+    endPeriod: last.period,
+    upcomingMonths: Array.from({ length: installmentOutlookMonthCount }, (_, index) => {
+      const period = addMonthsToPeriod(input.outlookStartPeriod, index);
+      return { period, amount: centsToMoney(centsByPeriod.get(period) ?? 0) };
+    }),
+  };
+}
+
+export type InstallmentPayoffSimulation = {
+  payoffPeriod: string;
+  installmentCount: number;
+  totalAmount: number;
+  discountAmount: number;
+  discountPercentage: number;
+  payoffAmount: number;
+  /** Installments that would no longer be charged in the month after the payoff. */
+  nextMonthReliefAmount: number;
+  lastInstallmentPeriod: { current: string | null; simulated: string | null };
+  upcomingMonths: Array<{
+    period: string;
+    keptAmount: number;
+    releasedAmount: number;
+    payoffAmount: number;
+  }>;
+  series: Array<{
+    seriesId: string;
+    releasedInstallmentCount: number;
+    releasedAmount: number;
+    /**
+     * True when the discount would exceed what is selected, or the amount to pay would be above
+     * it; the discount is then left out (zero).
+     */
+    discountOutOfRange: boolean;
+    discountAmount: number;
+    discountPercentage: number;
+    payoffAmount: number;
+    remainingInstallmentCount: number;
+    remainingAmount: number;
+    /** Last month still charged after the payoff; the payoff month when nothing remains. */
+    endPeriod: string;
+  }>;
+};
+
+export type InstallmentPayoffDiscount = {
+  seriesId: string;
+  type: InstallmentDiscountType;
+  value: number;
+};
+
+/**
+ * Discount, in cents, over the installments selected in one purchase. An out-of-range discount is
+ * reported instead of failing the whole simulation, so the purchase can be pointed out.
+ */
+function calculatePayoffDiscountCents(
+  selectedCents: number,
+  discount: InstallmentPayoffDiscount | undefined,
+) {
+  if (!discount) return { discountCents: 0, outOfRange: false };
+  const valueCents = moneyToCents(Math.max(discount.value, 0));
+  const discountCents =
+    discount.type === "percentage"
+      ? Math.round((selectedCents * Math.min(Math.max(discount.value, 0), 100)) / 100)
+      : discount.type === "payoffAmount"
+        ? selectedCents - valueCents
+        : valueCents;
+  return discountCents < 0 || discountCents > selectedCents
+    ? { discountCents: 0, outOfRange: true }
+    : { discountCents, outOfRange: false };
+}
+
+function percentageOf(partCents: number, totalCents: number) {
+  return totalCents > 0 ? roundToTwoDecimals((partCents / totalCents) * 100) : 0;
+}
+
+/**
+ * Pays the selected pending installments in one go in `payoffPeriod`, each purchase with its own
+ * optional discount, and shows what each month and purchase would look like afterwards. Purely
+ * hypothetical.
+ */
+export function simulateInstallmentPayoff(input: {
+  groups: InstallmentGroupCalculation[];
+  installmentIds: string[];
+  /** At most one per purchase; only purchases with selected installments may have one. */
+  discounts: InstallmentPayoffDiscount[];
+  /** Month that receives the payoff, which is also where the outlook starts. */
+  payoffPeriod: string;
+}): InstallmentPayoffSimulation {
+  const selectedIds = new Set(input.installmentIds);
+  const selectedBySeries = new Map<string, InstallmentDetailCalculation[]>();
+  for (const group of input.groups) {
+    for (const installment of group.installments) {
+      if (installment.status !== "pending" || !selectedIds.has(installment.id)) continue;
+      const selected = selectedBySeries.get(group.seriesId) ?? [];
+      selected.push(installment);
+      selectedBySeries.set(group.seriesId, selected);
+    }
+  }
+  const selected = [...selectedBySeries.values()].flat();
+  if (selected.length === 0 || selected.length !== selectedIds.size) {
+    throw new InstallmentSimulationError("installment_payoff_invalid_selection");
+  }
+
+  const discountBySeries = new Map(input.discounts.map((item) => [item.seriesId, item]));
+  if (
+    discountBySeries.size !== input.discounts.length ||
+    input.discounts.some((item) => !selectedBySeries.has(item.seriesId))
+  ) {
+    throw new InstallmentSimulationError("installment_payoff_invalid_selection");
+  }
+
+  const centsBySeries = new Map(
+    [...selectedBySeries.entries()].map(([seriesId, released]) => {
+      const selectedCents = released.reduce((sum, item) => sum + moneyToCents(item.amount), 0);
+      const discount = calculatePayoffDiscountCents(selectedCents, discountBySeries.get(seriesId));
+      return [seriesId, { selectedCents, ...discount }] as const;
+    }),
+  );
+  const totalCents = [...centsBySeries.values()].reduce((sum, item) => sum + item.selectedCents, 0);
+  const discountCents = [...centsBySeries.values()].reduce(
+    (sum, item) => sum + item.discountCents,
+    0,
+  );
+  const payoffCents = totalCents - discountCents;
+
+  const releasedCentsByPeriod = new Map<string, number>();
+  for (const item of selected) {
+    releasedCentsByPeriod.set(
+      item.period,
+      (releasedCentsByPeriod.get(item.period) ?? 0) + moneyToCents(item.amount),
+    );
+  }
+  const upcomingMonths = calculateUpcomingMonths(input.groups, input.payoffPeriod).map((month) => {
+    const releasedCents = releasedCentsByPeriod.get(month.period) ?? 0;
+    return {
+      period: month.period,
+      keptAmount: centsToMoney(moneyToCents(month.totalAmount) - releasedCents),
+      releasedAmount: centsToMoney(releasedCents),
+      payoffAmount: month.period === input.payoffPeriod ? centsToMoney(payoffCents) : 0,
+    };
+  });
+
+  const series = [...selectedBySeries.entries()].map(([seriesId, released]) => {
+    const group = input.groups.find(
+      (item) => item.seriesId === seriesId,
+    ) as InstallmentGroupCalculation;
+    const releasedIds = new Set(released.map((item) => item.id));
+    const remaining = group.installments.filter(
+      (installment) => installment.status === "pending" && !releasedIds.has(installment.id),
+    );
+    const lastRemaining = remaining.reduce<string | null>(
+      (last, installment) => (!last || installment.period > last ? installment.period : last),
+      null,
+    );
+    const {
+      selectedCents,
+      discountCents: seriesDiscountCents,
+      outOfRange,
+    } = centsBySeries.get(seriesId) as {
+      selectedCents: number;
+      discountCents: number;
+      outOfRange: boolean;
+    };
+    return {
+      seriesId,
+      releasedInstallmentCount: released.length,
+      releasedAmount: centsToMoney(selectedCents),
+      discountOutOfRange: outOfRange,
+      discountAmount: centsToMoney(seriesDiscountCents),
+      discountPercentage: percentageOf(seriesDiscountCents, selectedCents),
+      payoffAmount: centsToMoney(selectedCents - seriesDiscountCents),
+      remainingInstallmentCount: remaining.length,
+      remainingAmount: centsToMoney(
+        remaining.reduce((sum, installment) => sum + moneyToCents(installment.amount), 0),
+      ),
+      endPeriod:
+        lastRemaining && lastRemaining > input.payoffPeriod ? lastRemaining : input.payoffPeriod,
+    };
+  });
+
+  const simulatedEndBySeries = new Map(
+    series.map((item) => [
+      item.seriesId,
+      item.remainingInstallmentCount > 0 ? item.endPeriod : null,
+    ]),
+  );
+  const openGroups = input.groups.filter((group) => group.status !== "completed");
+  const latest = (periods: Array<string | null>) =>
+    periods.reduce<string | null>(
+      (last, period) => (period && (!last || period > last) ? period : last),
+      null,
+    );
+
+  return {
+    payoffPeriod: input.payoffPeriod,
+    installmentCount: selected.length,
+    totalAmount: centsToMoney(totalCents),
+    discountAmount: centsToMoney(discountCents),
+    discountPercentage: percentageOf(discountCents, totalCents),
+    payoffAmount: centsToMoney(payoffCents),
+    nextMonthReliefAmount: centsToMoney(
+      releasedCentsByPeriod.get(addMonthsToPeriod(input.payoffPeriod, 1)) ?? 0,
+    ),
+    lastInstallmentPeriod: {
+      current: latest(openGroups.map((group) => group.endPeriod)),
+      simulated: latest(
+        openGroups.map((group) =>
+          simulatedEndBySeries.has(group.seriesId)
+            ? (simulatedEndBySeries.get(group.seriesId) ?? null)
+            : group.endPeriod,
+        ),
+      ),
+    },
+    upcomingMonths,
+    series,
+  };
 }
 
 export function calculateInstallmentQuote(items: Array<Pick<InstallmentQuoteItem, "amount">>) {
@@ -459,6 +753,9 @@ function calculateGroup(
     .sort(compareInstallments);
   const paidInstallmentCount = paidInstallments.length;
   const pendingInstallmentCount = pendingInstallments.length;
+  const overdueInstallmentCount = pendingInstallments.filter(
+    (installment) => installment.period < referencePeriod,
+  ).length;
   const trackedAmountCents = installments.reduce(
     (total, installment) => total + moneyToCents(installment.amount),
     0,
@@ -493,6 +790,7 @@ function calculateGroup(
     missingInstallmentCount,
     paidInstallmentCount,
     pendingInstallmentCount,
+    overdueInstallmentCount,
     trackedAmount: centsToMoney(trackedAmountCents),
     paidAmount: centsToMoney(paidAmountCents),
     pendingAmount: centsToMoney(pendingAmountCents),
@@ -526,14 +824,23 @@ function calculateSummary(
 ): InstallmentsReportCalculation["summary"] {
   let pendingCents = 0;
   let dueInPeriodCents = 0;
+  let overdueCents = 0;
   let trackedCents = 0;
   let paidInstallmentCount = 0;
   let pendingInstallmentCount = 0;
   let trackedInstallmentCount = 0;
   let untrackedInstallmentCount = 0;
   let missingInstallmentCount = 0;
+  let lastInstallmentPeriod: string | null = null;
 
   for (const group of groups) {
+    if (
+      group.status !== "completed" &&
+      group.endPeriod &&
+      (!lastInstallmentPeriod || group.endPeriod > lastInstallmentPeriod)
+    ) {
+      lastInstallmentPeriod = group.endPeriod;
+    }
     pendingCents += moneyToCents(group.pendingAmount);
     trackedCents += moneyToCents(group.trackedAmount);
     paidInstallmentCount += group.paidInstallmentCount;
@@ -543,8 +850,11 @@ function calculateSummary(
     missingInstallmentCount += group.missingInstallmentCount;
 
     for (const installment of group.installments) {
-      if (installment.status === "pending" && installment.period === referencePeriod) {
+      if (installment.status !== "pending") continue;
+      if (installment.period === referencePeriod) {
         dueInPeriodCents += moneyToCents(installment.amount);
+      } else if (installment.period < referencePeriod) {
+        overdueCents += moneyToCents(installment.amount);
       }
     }
   }
@@ -553,6 +863,8 @@ function calculateSummary(
     openSeriesCount: groups.filter((group) => group.status !== "completed").length,
     totalPendingAmount: centsToMoney(pendingCents),
     dueInPeriodAmount: centsToMoney(dueInPeriodCents),
+    overdueAmount: centsToMoney(overdueCents),
+    lastInstallmentPeriod,
     trackedAmount: centsToMoney(trackedCents),
     paidInstallmentCount,
     pendingInstallmentCount,
@@ -596,12 +908,6 @@ function matchesSearch(group: InstallmentGroupCalculation, search: string | null
   return [group.name, group.personName, group.categoryName, group.cardName, group.accountName].some(
     (value) => value?.toLocaleLowerCase("pt-BR").includes(search),
   );
-}
-
-function matchesStatus(status: InstallmentSeriesStatus, filter: InstallmentReportStatus) {
-  if (filter === "all") return true;
-  if (filter === "completed") return status === "completed";
-  return status !== "completed";
 }
 
 function compareRows(left: InstallmentReportRow, right: InstallmentReportRow) {

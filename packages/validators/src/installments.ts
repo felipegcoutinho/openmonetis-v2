@@ -1,29 +1,35 @@
 import { z } from "@hono/zod-openapi";
 import {
+  installmentDiscountTypes,
   installmentPaymentStatuses,
-  installmentReportStatuses,
   installmentSeriesStatuses,
 } from "@openmonetis/domain/installments";
-import { paymentMethods } from "@openmonetis/domain/transactions";
+import {
+  maximumInstallmentCount,
+  minimumInstallmentCount,
+  paymentMethods,
+} from "@openmonetis/domain/transactions";
 
-export { installmentPaymentStatuses, installmentReportStatuses, installmentSeriesStatuses };
+export { installmentDiscountTypes, installmentPaymentStatuses, installmentSeriesStatuses };
 
 const periodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
 const moneySchema = z.number().finite().nonnegative();
 
-export const ListInstallmentsQuerySchema = z
+export const DashboardInstallmentsQuerySchema = z
   .object({
     period: periodSchema.openapi({
       param: { name: "period", in: "query" },
       example: "2026-07",
     }),
-    status: z
-      .enum(installmentReportStatuses)
-      .default("open")
-      .openapi({
-        param: { name: "status", in: "query" },
-        example: "open",
-      }),
+  })
+  .openapi("DashboardInstallmentsQuery");
+
+/**
+ * The report lists what is still open plus what finishes in the current month (in Brazil) or
+ * later; finished purchases from earlier months are left out.
+ */
+export const ListInstallmentsQuerySchema = z
+  .object({
     q: z
       .string()
       .trim()
@@ -64,6 +70,7 @@ export const InstallmentGroupOutputSchema = z
     missingInstallmentCount: z.number().int().nonnegative(),
     paidInstallmentCount: z.number().int().nonnegative(),
     pendingInstallmentCount: z.number().int().nonnegative(),
+    overdueInstallmentCount: z.number().int().nonnegative(),
     trackedAmount: moneySchema,
     paidAmount: moneySchema,
     pendingAmount: moneySchema,
@@ -93,6 +100,8 @@ export const InstallmentsSummaryOutputSchema = z
     openSeriesCount: z.number().int().nonnegative(),
     totalPendingAmount: moneySchema,
     dueInPeriodAmount: moneySchema,
+    overdueAmount: moneySchema,
+    lastInstallmentPeriod: periodSchema.nullable(),
     trackedAmount: moneySchema,
     paidInstallmentCount: z.number().int().nonnegative(),
     pendingInstallmentCount: z.number().int().nonnegative(),
@@ -105,7 +114,7 @@ export const InstallmentsSummaryOutputSchema = z
 export const InstallmentsReportOutputSchema = z
   .object({
     referencePeriod: periodSchema,
-    monthlyHistory: z.array(
+    upcomingMonths: z.array(
       z.object({
         period: periodSchema,
         totalAmount: moneySchema,
@@ -149,6 +158,115 @@ export const QuoteInstallmentsInputSchema = z
       .refine((ids) => new Set(ids).size === ids.length, "Installment IDs must be unique"),
   })
   .openapi("QuoteInstallmentsInput");
+
+/** A hypothetical credit card purchase: nothing is saved and no other report changes. */
+export const SimulateInstallmentPurchaseInputSchema = z
+  .object({
+    amount: z.number().positive().multipleOf(0.01).max(999_999_999.99).openapi({ example: 3600 }),
+    installmentCount: z
+      .number()
+      .int()
+      .min(minimumInstallmentCount)
+      .max(maximumInstallmentCount)
+      .openapi({ example: 10 }),
+    cardId: z.uuid(),
+    name: z.string().trim().min(1).max(120).optional().openapi({ example: "Geladeira nova" }),
+    /** Invoice of the first installment; when omitted it follows the card's closing rule. */
+    invoicePeriod: periodSchema.optional().openapi({ example: "2026-12" }),
+  })
+  .openapi("SimulateInstallmentPurchaseInput");
+
+export const InstallmentPurchaseSimulationOutputSchema = z
+  .object({
+    cardId: z.uuid(),
+    cardName: z.string(),
+    cardLogo: z.string().nullable(),
+    name: z.string().nullable(),
+    /** Whether the first invoice was chosen by the user instead of the card's closing rule. */
+    invoicePeriodChosen: z.boolean(),
+    amount: moneySchema,
+    installmentCount: z.number().int().positive(),
+    installmentAmount: moneySchema,
+    firstPeriod: periodSchema,
+    endPeriod: periodSchema,
+    installments: z.array(
+      z.object({
+        installmentNumber: z.number().int().positive(),
+        period: periodSchema,
+        amount: moneySchema,
+      }),
+    ),
+    upcomingMonths: z.array(z.object({ period: periodSchema, amount: moneySchema })),
+  })
+  .openapi("InstallmentPurchaseSimulation");
+
+/** A hypothetical early payoff: nothing is saved and no other report changes. */
+export const SimulateInstallmentPayoffInputSchema = z
+  .object({
+    installmentIds: z
+      .array(z.uuid())
+      .min(1)
+      .max(500)
+      .refine((ids) => new Set(ids).size === ids.length, "Installment IDs must be unique"),
+    discounts: z
+      .array(
+        z
+          .object({
+            seriesId: z.uuid(),
+            type: z.enum(installmentDiscountTypes),
+            value: z.number().finite().nonnegative().multipleOf(0.01).max(999_999_999.99),
+          })
+          .refine((discount) => discount.type !== "percentage" || discount.value <= 100, {
+            path: ["value"],
+            message: "Percentage discount cannot exceed 100",
+          }),
+      )
+      .max(500)
+      .refine(
+        (discounts) => new Set(discounts.map((item) => item.seriesId)).size === discounts.length,
+        "Each purchase can have only one discount",
+      )
+      .default([]),
+  })
+  .openapi("SimulateInstallmentPayoffInput");
+
+export const InstallmentPayoffSimulationOutputSchema = z
+  .object({
+    payoffPeriod: periodSchema,
+    installmentCount: z.number().int().positive(),
+    totalAmount: moneySchema,
+    discountAmount: moneySchema,
+    discountPercentage: z.number().finite().min(0).max(100),
+    payoffAmount: moneySchema,
+    nextMonthReliefAmount: moneySchema,
+    lastInstallmentPeriod: z.object({
+      current: periodSchema.nullable(),
+      simulated: periodSchema.nullable(),
+    }),
+    upcomingMonths: z.array(
+      z.object({
+        period: periodSchema,
+        keptAmount: moneySchema,
+        releasedAmount: moneySchema,
+        payoffAmount: moneySchema,
+      }),
+    ),
+    series: z.array(
+      z.object({
+        seriesId: z.uuid(),
+        releasedInstallmentCount: z.number().int().positive(),
+        releasedAmount: moneySchema,
+        discountOutOfRange: z.boolean(),
+        discountAmount: moneySchema,
+        discountPercentage: z.number().finite().min(0).max(100),
+        payoffAmount: moneySchema,
+        remainingInstallmentCount: z.number().int().nonnegative(),
+        remainingAmount: moneySchema,
+        endPeriod: periodSchema,
+      }),
+    ),
+  })
+  .openapi("InstallmentPayoffSimulation");
 
 export const InstallmentSeriesParamsSchema = z.object({
   seriesId: z.uuid().openapi({ param: { name: "seriesId", in: "path" } }),
@@ -236,6 +354,16 @@ export type DashboardInstallmentExpensesOutput = z.infer<
 >;
 export type QuoteInstallmentsInput = z.infer<typeof QuoteInstallmentsInputSchema>;
 export type InstallmentQuoteOutput = z.infer<typeof InstallmentQuoteOutputSchema>;
+export type SimulateInstallmentPurchaseInput = z.infer<
+  typeof SimulateInstallmentPurchaseInputSchema
+>;
+export type InstallmentPurchaseSimulationOutput = z.infer<
+  typeof InstallmentPurchaseSimulationOutputSchema
+>;
+export type SimulateInstallmentPayoffInput = z.infer<typeof SimulateInstallmentPayoffInputSchema>;
+export type InstallmentPayoffSimulationOutput = z.infer<
+  typeof InstallmentPayoffSimulationOutputSchema
+>;
 export type CreateInstallmentAnticipationInput = z.infer<
   typeof CreateInstallmentAnticipationInputSchema
 >;

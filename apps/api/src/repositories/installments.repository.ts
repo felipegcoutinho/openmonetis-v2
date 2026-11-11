@@ -22,6 +22,25 @@ const transactionAccounts = alias(financialAccounts, "installment_transaction_ac
 const cardAccounts = alias(financialAccounts, "installment_card_accounts");
 
 export const installmentsRepository = {
+  async findActiveCardForUser(userId, cardId) {
+    const [card] = await db
+      .select({
+        id: cards.id,
+        name: cards.name,
+        logo: cards.logo,
+        dueDay: cards.dueDay,
+        closingDay: cards.closingDay,
+        closingRuleType: cards.closingRuleType,
+        closingOffsetDays: cards.closingOffsetDays,
+        closingOffsetMode: cards.closingOffsetMode,
+        closingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
+      })
+      .from(cards)
+      .where(and(eq(cards.id, cardId), eq(cards.userId, userId), eq(cards.status, "active")))
+      .limit(1);
+    return card ?? null;
+  },
+
   async listForUser(userId, options) {
     const adminScope = options?.personScope === "admin";
     const rows = await db

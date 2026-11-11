@@ -78,9 +78,11 @@ export function createRecurringTransactionsService(
       const rules = (await repository.listForReport(userId, query.type)).filter(
         (rule) => rule.adminAmount !== null,
       );
+      const today = getToday();
+      const period = today.slice(0, 7);
       const projection = buildRecurringTransactionsReport({
-        period: query.period,
-        today: getToday(),
+        period,
+        today,
         versions: rules.map((rule) => ({
           id: rule.id,
           seriesId: rule.seriesId,
@@ -110,7 +112,7 @@ export function createRecurringTransactionsService(
         projection.items.map((item) => item.ruleId),
       );
       return {
-        period: query.period,
+        period,
         type: query.type,
         summary: projection.summary,
         projections: projection.projections,

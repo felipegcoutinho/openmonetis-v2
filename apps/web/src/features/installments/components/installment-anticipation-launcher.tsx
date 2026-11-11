@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogMedia,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,7 +28,7 @@ export function InstallmentAnticipationLauncher({
 }) {
   const seriesId = transaction?.seriesId ?? "";
   const reportQuery = useQuery({
-    ...installmentsQueryOptions({ period: targetPeriod, status: "all" }),
+    ...installmentsQueryOptions({}),
     enabled: open && Boolean(seriesId),
   });
   const group = reportQuery.data?.groups.find((item) => item.seriesId === seriesId) ?? null;
@@ -62,13 +63,9 @@ export function InstallmentAnticipationLauncher({
       <Dialog onOpenChange={onOpenChange} open={open}>
         <DialogContent mobileLayout="sheet">
           <DialogHeader>
-            <span className="mb-1 grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
-              {unavailable ? (
-                <CalendarArrowDown aria-hidden="true" className="size-5" />
-              ) : (
-                <CircleAlert aria-hidden="true" className="size-5" />
-              )}
-            </span>
+            <DialogMedia tone="muted">
+              {unavailable ? <CalendarArrowDown /> : <CircleAlert />}
+            </DialogMedia>
             <DialogTitle>
               {unavailable ? "Nenhuma parcela para antecipar" : "Não foi possível carregar"}
             </DialogTitle>

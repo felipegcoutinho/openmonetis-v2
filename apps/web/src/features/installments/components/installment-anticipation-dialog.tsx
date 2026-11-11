@@ -15,7 +15,13 @@ import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogMedia,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiClientError } from "@/lib/api-client";
@@ -114,9 +120,9 @@ export function InstallmentAnticipationDialog({
     <Dialog onOpenChange={(next) => !mutation.isPending && onOpenChange(next)} open={open}>
       <DialogContent guarded className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
         <DialogHeader>
-          <span className="mb-1 grid size-10 place-items-center rounded-full bg-brand/10 text-brand-strong">
-            <CalendarArrowDown aria-hidden="true" className="size-5" />
-          </span>
+          <DialogMedia>
+            <CalendarArrowDown />
+          </DialogMedia>
           <DialogTitle>Antecipar para esta fatura?</DialogTitle>
           <DialogDescription>
             {group

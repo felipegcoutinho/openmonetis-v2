@@ -3,14 +3,19 @@ import { ok } from "@openmonetis/shared/api";
 import {
   CreateInstallmentAnticipationInputSchema,
   DashboardInstallmentExpensesOutputSchema,
+  DashboardInstallmentsQuerySchema,
   InstallmentAnticipationDetailsOutputSchema,
   InstallmentAnticipationOutputSchema,
   InstallmentAnticipationParamsSchema,
+  InstallmentPayoffSimulationOutputSchema,
+  InstallmentPurchaseSimulationOutputSchema,
   InstallmentQuoteOutputSchema,
   InstallmentSeriesParamsSchema,
   InstallmentsReportOutputSchema,
   ListInstallmentsQuerySchema,
   QuoteInstallmentsInputSchema,
+  SimulateInstallmentPayoffInputSchema,
+  SimulateInstallmentPurchaseInputSchema,
   UndoInstallmentAnticipationInputSchema,
   UndoInstallmentAnticipationOutputSchema,
 } from "@openmonetis/validators/installments";
@@ -36,7 +41,7 @@ export function createInstallmentsRoute(service: InstallmentsService) {
       method: "get",
       path: "/dashboard",
       tags: ["Dashboard"],
-      request: { query: ListInstallmentsQuerySchema.pick({ period: true }) },
+      request: { query: DashboardInstallmentsQuerySchema },
       responses: {
         200: {
           description: "Installment expenses in the dashboard period",
@@ -67,7 +72,7 @@ export function createInstallmentsRoute(service: InstallmentsService) {
       request: { query: ListInstallmentsQuerySchema },
       responses: {
         200: {
-          description: "Installment series report for a reference period",
+          description: "Every installment series, with the current month and the next 12 months",
           content: { "application/json": { schema: InstallmentsReportResponseSchema } },
         },
         401: {
@@ -108,6 +113,85 @@ export function createInstallmentsRoute(service: InstallmentsService) {
     }),
     async (context) =>
       context.json(ok(await service.quote(context.get("userId"), context.req.valid("json"))), 200),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/simulations",
+      tags: ["Reports"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: SimulateInstallmentPurchaseInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description:
+            "Schedule of a hypothetical credit card purchase over the next 12 months; nothing is saved",
+          content: {
+            "application/json": {
+              schema: z.object({
+                data: InstallmentPurchaseSimulationOutputSchema,
+                error: z.null(),
+              }),
+            },
+          },
+        },
+        400: {
+          description: "Invalid simulation or card not available",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.simulatePurchase(context.get("userId"), context.req.valid("json"))),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/payoff-simulations",
+      tags: ["Reports"],
+      request: {
+        body: {
+          required: true,
+          content: { "application/json": { schema: SimulateInstallmentPayoffInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description:
+            "Effect of paying the selected installments this month, with an optional discount; nothing is saved",
+          content: {
+            "application/json": {
+              schema: z.object({ data: InstallmentPayoffSimulationOutputSchema, error: z.null() }),
+            },
+          },
+        },
+        400: {
+          description: "Invalid selection or discount",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.simulatePayoff(context.get("userId"), context.req.valid("json"))),
+        200,
+      ),
   );
 
   route.openapi(

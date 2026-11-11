@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { InstallmentsPage } from "@/features/installments/components/installments-page";
 import {
+  compactInstallmentsSearch,
   resolveInstallmentsSearch,
   validateInstallmentsSearch,
 } from "@/features/installments/installments.presentation";
@@ -12,16 +13,15 @@ export const Route = createFileRoute("/reports/installments")({
 });
 
 function InstallmentsRoute() {
-  const search = Route.useSearch();
+  const search = resolveInstallmentsSearch(Route.useSearch());
   const navigate = Route.useNavigate();
-  const filters = resolveInstallmentsSearch(search);
 
   return (
     <InstallmentsPage
-      filters={filters}
-      onStatusChange={(status) => {
+      search={search}
+      onSearchChange={(patch) => {
         void navigate({
-          search: { ...search, status: status === "open" ? undefined : status },
+          search: compactInstallmentsSearch({ ...search, ...patch }),
           replace: true,
         });
       }}

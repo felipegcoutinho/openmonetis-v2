@@ -9,7 +9,13 @@ import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogMedia,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPeriod } from "@/lib/period-presentation";
@@ -71,9 +77,9 @@ export function InstallmentAnticipationUndoDialog({
       <DialogContent guarded className="flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl">
         <MobileFormState isDirty={selectedIds.size > 0} isSubmitting={mutation.isPending} />
         <DialogHeader>
-          <span className="mb-1 grid size-10 place-items-center rounded-full bg-brand/10 text-brand-strong">
-            <RotateCcw aria-hidden="true" className="size-5" />
-          </span>
+          <DialogMedia>
+            <RotateCcw />
+          </DialogMedia>
           <DialogTitle>Quais parcelas deseja restaurar?</DialogTitle>
           <DialogDescription>
             Escolha as parcelas de “{transaction?.name ?? "esta compra"}” que devem voltar às

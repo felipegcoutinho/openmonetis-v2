@@ -4,13 +4,10 @@ import {
   getRecurringTransactionsReport,
 } from "./recurring-transactions.api";
 
-export function recurringTransactionsReportQueryOptions(
-  period: string,
-  type: "income" | "expense",
-) {
+export function recurringTransactionsReportQueryOptions(type: "income" | "expense") {
   return queryOptions({
-    queryKey: ["recurring-transactions", "report", period, type],
-    queryFn: () => getRecurringTransactionsReport(period, type),
+    queryKey: ["recurring-transactions", "report", type],
+    queryFn: () => getRecurringTransactionsReport(type),
   });
 }
 export function recurringTransactionOccurrenceQueryOptions(id: string, date: string) {

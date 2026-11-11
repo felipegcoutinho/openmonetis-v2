@@ -287,9 +287,9 @@ test("settlements preserve planned values, cash dates, rateios, undo and recurre
     const report = await createRecurringTransactionsService(
       recurring.recurringTransactionsRepository,
       () => "2026-10-12",
-    ).report({ period: "2026-11", type: "income" }, owner.id);
+    ).report({ type: "income" }, owner.id);
     // The base recurrence remains; the capped rule adds nothing after its deadline.
-    assert.equal(report.summary.projectedTotal, 1000);
+    assert.deepEqual(report.projections[1], { period: "2026-11", total: 1000 });
     const [expenseCategory] = await db
       .insert(schema.categories)
       .values({ userId: owner.id, name: "Expenses", type: "expense" })

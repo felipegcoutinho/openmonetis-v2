@@ -104,13 +104,13 @@ test("recurring reports use the owner's effective share and exclude series with 
     }),
     rule({ id: "external-only", seriesId: "external", adminAmount: null }),
   ]);
-  const result = await f.service.report({ period: "2020-02", type: "expense" }, "owner");
+  const result = await f.service.report({ type: "expense" }, "owner");
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].amount, 60);
   assert.equal(result.items[0].totalAmount, 100);
   assert.equal(result.summary.projectedTotal, 54.01);
   assert.deepEqual(
-    result.projections.map((item) => item.total),
+    result.projections.slice(0, 3).map((item) => item.total),
     [54.01, 60, 60],
   );
   assert.deepEqual(
@@ -132,24 +132,24 @@ test("recurring reports select one version per series while preserving historica
       recurrenceEndDate: new Date("2020-04-30"),
     }),
   ]);
-  const result = await f.service.report({ period: "2020-02", type: "expense" }, "owner");
+  const result = await f.service.report({ type: "expense" }, "owner");
   assert.deepEqual(
     result.items.map((item) => item.id),
     ["old"],
   );
   assert.deepEqual(
-    result.projections.map((item) => item.total),
+    result.projections.slice(0, 3).map((item) => item.total),
     [60, 120, 120],
   );
   f.setToday("2020-03-01");
-  const march = await f.service.report({ period: "2020-03", type: "expense" }, "owner");
+  const march = await f.service.report({ type: "expense" }, "owner");
   assert.deepEqual(
     march.items.map((item) => item.id),
     ["new"],
   );
   assert.equal(march.items[0].recurrenceEndDate, "2020-04-30");
   assert.deepEqual(
-    march.projections.map((item) => item.total),
+    march.projections.slice(0, 3).map((item) => item.total),
     [120, 120, 0],
   );
 });
@@ -159,7 +159,7 @@ test("paused and ended series remain visible without editable actions or project
     rule({ status: "paused" }),
     rule({ id: "ended", seriesId: "ended", recurrenceEndDate: new Date("2020-01-31") }),
   ]);
-  const result = await f.service.report({ period: "2020-02", type: "expense" }, "owner");
+  const result = await f.service.report({ type: "expense" }, "owner");
   assert.equal(result.summary.projectedTotal, 0);
   assert.deepEqual(
     result.items.map((item) => [item.status, item.canEdit]),

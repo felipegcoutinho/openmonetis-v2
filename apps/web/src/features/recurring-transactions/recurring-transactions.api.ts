@@ -2,9 +2,9 @@ import type { RecurringTransactionsReportOutput } from "@openmonetis/validators/
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { requestApi } from "@/lib/api-client";
 
-export function getRecurringTransactionsReport(period: string, type: "income" | "expense") {
+export function getRecurringTransactionsReport(type: "income" | "expense") {
   return requestApi<RecurringTransactionsReportOutput>(
-    `/recurring-transactions/report?${new URLSearchParams({ period, type })}`,
+    `/recurring-transactions/report?${new URLSearchParams({ type })}`,
   );
 }
 

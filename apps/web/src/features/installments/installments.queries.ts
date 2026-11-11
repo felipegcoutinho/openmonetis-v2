@@ -1,6 +1,7 @@
 import type {
   ListInstallmentsQuery,
   QuoteInstallmentsInput,
+  SimulateInstallmentPayoffInput,
 } from "@openmonetis/validators/installments";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import {
@@ -8,15 +9,23 @@ import {
   getInstallmentAnticipation,
   getInstallments,
   quoteInstallments,
+  simulateInstallmentPayoff,
 } from "./installments.api";
 
 const installmentKeys = {
   all: ["installments"] as const,
   dashboard: (period: string) => [...installmentKeys.all, "dashboard", period] as const,
   report: (query: ListInstallmentsQuery) =>
-    [...installmentKeys.all, query.period, query.status, query.q ?? ""] as const,
+    [...installmentKeys.all, "report", query.q ?? ""] as const,
   quote: (installmentIds: string[]) =>
     [...installmentKeys.all, "anticipation-quote", ...installmentIds] as const,
+  payoffSimulation: (input: SimulateInstallmentPayoffInput) =>
+    [
+      ...installmentKeys.all,
+      "payoff-simulation",
+      input.installmentIds,
+      input.discounts.map((item) => `${item.seriesId}:${item.type}:${item.value}`),
+    ] as const,
   anticipation: (seriesId: string, anticipationId: string) =>
     [...installmentKeys.all, "anticipation", seriesId, anticipationId] as const,
 };
@@ -32,6 +41,17 @@ export function installmentQuoteQueryOptions(input: QuoteInstallmentsInput) {
   return queryOptions({
     queryKey: installmentKeys.quote(input.installmentIds),
     queryFn: () => quoteInstallments(input),
+  });
+}
+
+/** Read-only computation; keeps the previous result on screen while the next one loads. */
+export function installmentPayoffSimulationQueryOptions(input: SimulateInstallmentPayoffInput) {
+  return queryOptions({
+    queryKey: installmentKeys.payoffSimulation(input),
+    queryFn: () => simulateInstallmentPayoff(input),
+    enabled: input.installmentIds.length > 0,
+    placeholderData: keepPreviousData,
+    retry: false,
   });
 }
 

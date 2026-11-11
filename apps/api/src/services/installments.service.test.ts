@@ -6,6 +6,7 @@ import { createInstallmentsService } from "./installments.service";
 
 const userId = "10000000-0000-4000-8000-000000000001";
 const seriesId = "20000000-0000-4000-8000-000000000002";
+const otherSeriesId = "20000000-0000-4000-8000-000000000003";
 
 function installment(currentInstallment: number, period: string): InstallmentReportRow {
   return {
@@ -64,10 +65,7 @@ test("installment report uses only the admin person's allocation", async () => {
     () => "2026-09",
   );
 
-  const report = await service.list(userId, {
-    period: "2026-09",
-    status: "all",
-  });
+  const report = await service.list(userId, {});
 
   assert.deepEqual(receivedOptions, { personScope: "admin" });
   assert.equal(report.groups[0]?.originalAmount, 150);
@@ -78,15 +76,19 @@ test("installment report uses only the admin person's allocation", async () => {
     report.groups[0]?.installments.map((item) => item.amount),
     [50, 50, 50],
   );
-  assert.equal(report.monthlyHistory.length, 13);
-  assert.equal(report.monthlyHistory[0]?.period, "2025-10");
-  assert.deepEqual(report.monthlyHistory.slice(-2), [
+  assert.equal(report.referencePeriod, "2026-09");
+  assert.equal(report.upcomingMonths.length, 12);
+  assert.equal(report.upcomingMonths.at(-1)?.period, "2027-08");
+  assert.deepEqual(report.upcomingMonths.slice(0, 4), [
     { period: "2026-09", totalAmount: 50, activePurchaseCount: 1 },
     { period: "2026-10", totalAmount: 50, activePurchaseCount: 1 },
+    { period: "2026-11", totalAmount: 50, activePurchaseCount: 1 },
+    { period: "2026-12", totalAmount: 0, activePurchaseCount: 0 },
   ]);
+  assert.equal(report.summary.lastInstallmentPeriod, "2026-11");
 });
 
-test("monthly history and overview stay complete when the list is filtered", async () => {
+test("upcoming months and overview stay complete when the list is filtered", async () => {
   const service = createInstallmentsService(
     repository(async () => [
       { ...installment(1, "2026-08"), amount: "-10.10" },
@@ -96,24 +98,22 @@ test("monthly history and overview stay complete when the list is filtered", asy
     () => "2026-09",
   );
 
-  const report = await service.list(userId, {
-    period: "2026-09",
-    status: "completed",
-  });
+  const report = await service.list(userId, {});
 
-  assert.equal(report.groups.length, 0);
+  // Still open, so it is listed even with an overdue installment.
+  assert.equal(report.groups.length, 1);
   assert.equal(report.summary.totalPendingAmount, 60.6);
   assert.equal(report.summary.dueInPeriodAmount, 20.2);
-  assert.deepEqual(report.monthlyHistory.slice(-3), [
-    { period: "2026-08", totalAmount: 10.1, activePurchaseCount: 1 },
+  assert.equal(report.summary.lastInstallmentPeriod, "2026-10");
+  assert.equal(report.summary.overdueAmount, 10.1);
+  // Past months are not part of the outlook, even with pending installments.
+  assert.deepEqual(report.upcomingMonths.slice(0, 2), [
     { period: "2026-09", totalAmount: 20.2, activePurchaseCount: 1 },
     { period: "2026-10", totalAmount: 30.3, activePurchaseCount: 1 },
   ]);
-  const otherReference = await service.list(userId, { period: "2025-01", status: "open" });
-  assert.deepEqual(otherReference.monthlyHistory, report.monthlyHistory);
 });
 
-test("paid installments remain in monthly history when only open purchases are listed", async () => {
+test("a purchase finished in the current month stays listed until the month turns", async () => {
   const service = createInstallmentsService(
     repository(async () =>
       [installment(1, "2026-07"), installment(2, "2026-08"), installment(3, "2026-09")].map(
@@ -123,15 +123,51 @@ test("paid installments remain in monthly history when only open purchases are l
     () => "2026-09",
   );
 
-  const report = await service.list(userId, { period: "2026-09", status: "open" });
+  const report = await service.list(userId, {});
 
-  assert.equal(report.groups.length, 0);
+  assert.equal(report.groups.length, 1);
+  assert.equal(report.groups[0]?.status, "completed");
   assert.equal(report.summary.totalPendingAmount, 0);
-  assert.deepEqual(report.monthlyHistory.slice(-3), [
-    { period: "2026-08", totalAmount: 50, activePurchaseCount: 1 },
+  assert.equal(report.summary.lastInstallmentPeriod, null);
+  assert.deepEqual(report.upcomingMonths.slice(0, 2), [
     { period: "2026-09", totalAmount: 50, activePurchaseCount: 1 },
     { period: "2026-10", totalAmount: 0, activePurchaseCount: 0 },
   ]);
+});
+
+test("purchases finished before the current month leave the list; future ones are listed", async () => {
+  const futureSeriesId = "20000000-0000-4000-8000-000000000004";
+  const rows = [installment(1, "2026-07"), installment(2, "2026-08"), installment(3, "2026-09")];
+  const service = createInstallmentsService(
+    repository(async () => [
+      ...rows.map((row) => ({ ...row, invoicePaymentStatus: "paid" as const })),
+      // Bought this month after the closing day: the first installment is next month.
+      {
+        ...installment(1, "2026-11"),
+        id: "30000000-0000-4000-8000-000000000201",
+        seriesId: futureSeriesId,
+      },
+      {
+        ...installment(2, "2026-12"),
+        id: "30000000-0000-4000-8000-000000000202",
+        seriesId: futureSeriesId,
+      },
+      {
+        ...installment(3, "2027-01"),
+        id: "30000000-0000-4000-8000-000000000203",
+        seriesId: futureSeriesId,
+      },
+    ]),
+    () => "2026-10",
+  );
+
+  const report = await service.list(userId, {});
+
+  assert.deepEqual(
+    report.groups.map((group) => group.seriesId),
+    [futureSeriesId],
+  );
+  assert.equal(report.groups[0]?.nextPeriod, "2026-11");
 });
 
 test("monthly purchase count includes each series once per month", async () => {
@@ -145,9 +181,9 @@ test("monthly purchase count includes each series once per month", async () => {
     () => "2026-09",
   );
 
-  const report = await service.list(userId, { period: "2026-09", status: "all" });
+  const report = await service.list(userId, {});
 
-  assert.deepEqual(report.monthlyHistory.at(-2), {
+  assert.deepEqual(report.upcomingMonths[0], {
     period: "2026-09",
     totalAmount: 150,
     activePurchaseCount: 2,
@@ -403,7 +439,7 @@ for (const operation of [
       operation === "dashboard"
         ? f.service.dashboard(userId, "2026-09")
         : operation === "list"
-          ? f.service.list(userId, { period: "2026-09", status: "all" })
+          ? f.service.list(userId, {})
           : operation === "quote"
             ? f.service.quote(userId, { installmentIds: [f.rows[0].id] })
             : operation === "anticipate"
@@ -565,4 +601,272 @@ test("installment quote preserves cents and rejects missing or already paid reco
   await assert.rejects(f.service.quote(userId, { installmentIds: [f.rows[0].id] }), {
     code: "installment_already_paid",
   });
+});
+
+test("purchase simulation follows the card's closing day and splits cents like a real series", async () => {
+  const repo = repository(async () => {
+    throw new Error("The simulation must not read existing installments");
+  });
+  let lookup: [string, string] | undefined;
+  repo.findActiveCardForUser = async (receivedUserId, cardId) => {
+    lookup = [receivedUserId, cardId];
+    return {
+      id: cardId,
+      name: "Cartao",
+      logo: null,
+      dueDay: 15,
+      closingDay: 5,
+      closingRuleType: "fixedDay",
+      closingOffsetDays: null,
+      closingOffsetMode: null,
+      closingDayPurchasesNextInvoice: false,
+    };
+  };
+  const service = createInstallmentsService(
+    repo,
+    () => "2026-11",
+    () => "2026-11-10",
+  );
+  const cardId = "50000000-0000-4000-8000-000000000005";
+
+  const simulation = await service.simulatePurchase(userId, {
+    amount: 1000,
+    installmentCount: 3,
+    cardId,
+  });
+
+  assert.deepEqual(lookup, [userId, cardId]);
+  // Bought after the closing day, so the first installment lands on the next invoice.
+  assert.equal(simulation.firstPeriod, "2026-12");
+  assert.equal(simulation.endPeriod, "2027-02");
+  assert.equal(simulation.installmentAmount, 333.34);
+  assert.deepEqual(
+    simulation.installments.map((item) => item.amount),
+    [333.34, 333.33, 333.33],
+  );
+  assert.equal(simulation.upcomingMonths.length, 12);
+  assert.deepEqual(simulation.upcomingMonths.slice(0, 5), [
+    { period: "2026-11", amount: 0 },
+    { period: "2026-12", amount: 333.34 },
+    { period: "2027-01", amount: 333.33 },
+    { period: "2027-02", amount: 333.33 },
+    { period: "2027-03", amount: 0 },
+  ]);
+});
+
+test("purchase simulation rejects cards that are not the user's active cards", async () => {
+  const repo = repository(async () => []);
+  repo.findActiveCardForUser = async () => null;
+  const service = createInstallmentsService(
+    repo,
+    () => "2026-11",
+    () => "2026-11-10",
+  );
+
+  await assert.rejects(
+    service.simulatePurchase(userId, {
+      amount: 100,
+      installmentCount: 2,
+      cardId: "50000000-0000-4000-8000-000000000009",
+    }),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "installment_simulation_card_not_found",
+  );
+});
+
+function simulationService(today = "2026-11-10") {
+  const repo = repository(async () => [
+    installment(1, "2026-11"),
+    installment(2, "2026-12"),
+    installment(3, "2027-01"),
+  ]);
+  repo.findActiveCardForUser = async (_userId, cardId) => ({
+    id: cardId,
+    name: "Cartao",
+    logo: null,
+    dueDay: 15,
+    closingDay: 5,
+    closingRuleType: "fixedDay",
+    closingOffsetDays: null,
+    closingOffsetMode: null,
+    closingDayPurchasesNextInvoice: false,
+  });
+  return createInstallmentsService(
+    repo,
+    () => today.slice(0, 7),
+    () => today,
+  );
+}
+
+function hasCode(code: string) {
+  return (error: unknown) => error instanceof Error && "code" in error && error.code === code;
+}
+
+test("payoff simulation moves the selected installments to this month with the discount", async () => {
+  const simulation = await simulationService().simulatePayoff(userId, {
+    installmentIds: [installment(2, "2026-12").id, installment(3, "2027-01").id],
+    discounts: [{ seriesId, type: "percentage", value: 10 }],
+  });
+
+  assert.equal(simulation.payoffPeriod, "2026-11");
+  assert.equal(simulation.totalAmount, 100);
+  assert.equal(simulation.discountAmount, 10);
+  assert.equal(simulation.discountPercentage, 10);
+  assert.equal(simulation.payoffAmount, 90);
+  assert.equal(simulation.nextMonthReliefAmount, 50);
+  assert.deepEqual(simulation.lastInstallmentPeriod, { current: "2027-01", simulated: "2026-11" });
+  assert.deepEqual(simulation.upcomingMonths.slice(0, 3), [
+    { period: "2026-11", keptAmount: 50, releasedAmount: 0, payoffAmount: 90 },
+    { period: "2026-12", keptAmount: 0, releasedAmount: 50, payoffAmount: 0 },
+    { period: "2027-01", keptAmount: 0, releasedAmount: 50, payoffAmount: 0 },
+  ]);
+  assert.deepEqual(simulation.series, [
+    {
+      seriesId,
+      releasedInstallmentCount: 2,
+      releasedAmount: 100,
+      discountOutOfRange: false,
+      discountAmount: 10,
+      discountPercentage: 10,
+      payoffAmount: 90,
+      remainingInstallmentCount: 1,
+      remainingAmount: 50,
+      endPeriod: "2026-11",
+    },
+  ]);
+});
+
+test("payoff simulation rejects unknown installments and discounts for unselected purchases", async () => {
+  const service = simulationService();
+  await assert.rejects(
+    service.simulatePayoff(userId, {
+      installmentIds: ["30000000-0000-4000-8000-000000000099"],
+      discounts: [],
+    }),
+    hasCode("installment_payoff_invalid_selection"),
+  );
+  await assert.rejects(
+    service.simulatePayoff(userId, {
+      installmentIds: [installment(2, "2026-12").id],
+      discounts: [{ seriesId: otherSeriesId, type: "amount", value: 1 }],
+    }),
+    hasCode("installment_payoff_invalid_selection"),
+  );
+});
+
+test("payoff simulation flags a discount above the purchase's selection and leaves it out", async () => {
+  const simulation = await simulationService().simulatePayoff(userId, {
+    installmentIds: [installment(2, "2026-12").id],
+    discounts: [{ seriesId, type: "amount", value: 50.01 }],
+  });
+
+  assert.equal(simulation.discountAmount, 0);
+  assert.equal(simulation.payoffAmount, 50);
+  assert.equal(simulation.series[0]?.discountOutOfRange, true);
+  assert.equal(simulation.series[0]?.discountAmount, 0);
+
+  const aboveSelection = await simulationService().simulatePayoff(userId, {
+    installmentIds: [installment(2, "2026-12").id],
+    discounts: [{ seriesId, type: "payoffAmount", value: 50.01 }],
+  });
+  assert.equal(aboveSelection.series[0]?.discountOutOfRange, true);
+  assert.equal(aboveSelection.payoffAmount, 50);
+});
+
+test("payoff simulation derives the discount from the amount the bank asks to pay", async () => {
+  const simulation = await simulationService().simulatePayoff(userId, {
+    installmentIds: [installment(2, "2026-12").id, installment(3, "2027-01").id],
+    discounts: [{ seriesId, type: "payoffAmount", value: 87.5 }],
+  });
+
+  assert.equal(simulation.payoffAmount, 87.5);
+  assert.equal(simulation.discountAmount, 12.5);
+  assert.equal(simulation.discountPercentage, 12.5);
+  assert.deepEqual(
+    simulation.series.map(({ discountAmount, discountPercentage, payoffAmount }) => ({
+      discountAmount,
+      discountPercentage,
+      payoffAmount,
+    })),
+    [{ discountAmount: 12.5, discountPercentage: 12.5, payoffAmount: 87.5 }],
+  );
+});
+
+test("payoff simulation applies each purchase's own discount and sums them", async () => {
+  const other = (currentInstallment: number, period: string): InstallmentReportRow => ({
+    ...installment(currentInstallment, period),
+    id: `30000000-0000-4000-8000-00000000010${currentInstallment}`,
+    seriesId: otherSeriesId,
+    name: "Outra compra",
+    amount: "-30.00",
+    originalAmount: "90.00",
+  });
+  const service = createInstallmentsService(
+    repository(async () => [
+      installment(1, "2026-11"),
+      installment(2, "2026-12"),
+      installment(3, "2027-01"),
+      other(1, "2026-11"),
+      other(2, "2026-12"),
+      other(3, "2027-01"),
+    ]),
+    () => "2026-11",
+    () => "2026-11-10",
+  );
+
+  const simulation = await service.simulatePayoff(userId, {
+    installmentIds: [
+      installment(2, "2026-12").id,
+      installment(3, "2027-01").id,
+      other(3, "2027-01").id,
+    ],
+    discounts: [
+      { seriesId, type: "amount", value: 15 },
+      { seriesId: otherSeriesId, type: "percentage", value: 10 },
+    ],
+  });
+
+  assert.equal(simulation.totalAmount, 130);
+  assert.equal(simulation.discountAmount, 18);
+  assert.equal(simulation.discountPercentage, 13.85);
+  assert.equal(simulation.payoffAmount, 112);
+  assert.deepEqual(
+    simulation.series.map(({ seriesId, discountAmount, payoffAmount }) => ({
+      seriesId,
+      discountAmount,
+      payoffAmount,
+    })),
+    [
+      { seriesId, discountAmount: 15, payoffAmount: 85 },
+      { seriesId: otherSeriesId, discountAmount: 3, payoffAmount: 27 },
+    ],
+  );
+});
+
+test("purchase simulation honours a chosen invoice but never one before this month", async () => {
+  const service = simulationService();
+  const cardId = "50000000-0000-4000-8000-000000000005";
+  const chosen = await service.simulatePurchase(userId, {
+    amount: 200,
+    installmentCount: 2,
+    cardId,
+    name: "Geladeira",
+    invoicePeriod: "2027-02",
+  });
+  assert.equal(chosen.name, "Geladeira");
+  assert.equal(chosen.invoicePeriodChosen, true);
+  assert.equal(chosen.firstPeriod, "2027-02");
+  assert.equal(chosen.endPeriod, "2027-03");
+
+  await assert.rejects(
+    service.simulatePurchase(userId, {
+      amount: 200,
+      installmentCount: 2,
+      cardId,
+      invoicePeriod: "2026-10",
+    }),
+    hasCode("installment_simulation_invoice_before_current_month"),
+  );
 });

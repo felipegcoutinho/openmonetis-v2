@@ -207,11 +207,16 @@ test("management groups versions once and monthly projections retain historical 
   assert.equal(report.items.length, 1);
   assert.equal(report.items[0].ruleId, "old");
   assert.equal(report.items[0].actionDate, "2026-02-28");
-  assert.deepEqual(report.projections, [
+  assert.equal(report.projections.length, 12);
+  assert.deepEqual(report.projections.slice(0, 4), [
     { period: "2026-02", total: 1000 },
     { period: "2026-03", total: 1200 },
     { period: "2026-04", total: 1200 },
+    { period: "2026-05", total: 0 },
   ]);
+  assert.equal(report.projections.at(-1)?.period, "2027-01");
+  assert.equal(report.summary.projectionTotal, 3400);
+  assert.equal(report.summary.monthlyAverage, 283.33);
   const next = buildRecurringTransactionsReport({
     versions,
     period: "2026-03",
@@ -273,6 +278,8 @@ test("paused, stopped, expired and future-start series remain distinguishable", 
     pausedCount: 1,
     endedCount: 2,
     projectedTotal: 0,
+    projectionTotal: 0,
+    monthlyAverage: 0,
   });
   assert.equal(report.items.find((item) => item.seriesId === "paused")?.actionDate, "2026-03-31");
   assert.equal(report.items.find((item) => item.seriesId === "paused")?.nextOccurrenceDate, null);

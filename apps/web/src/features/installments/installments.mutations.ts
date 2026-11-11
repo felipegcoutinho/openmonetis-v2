@@ -6,12 +6,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { refreshFinancialQueries } from "@/lib/financial-query-invalidation";
 import {
   anticipateInstallments,
-  quoteInstallments,
+  simulateInstallmentPurchase,
   undoInstallmentAnticipation,
 } from "./installments.api";
 
-export function useInstallmentQuoteMutation() {
-  return useMutation({ mutationFn: quoteInstallments });
+/** No cache invalidation: a simulation never changes stored data. */
+export function useInstallmentPurchaseSimulationMutation() {
+  return useMutation({ mutationFn: simulateInstallmentPurchase });
 }
 
 export function useAnticipateInstallmentsMutation() {

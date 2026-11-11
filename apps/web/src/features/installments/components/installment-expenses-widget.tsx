@@ -1,7 +1,7 @@
 import type { DashboardInstallmentExpensesOutput } from "@openmonetis/validators/installments";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ListOrdered, RefreshCw } from "lucide-react";
+import { ArrowRight, CalendarClock, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,6 @@ export function InstallmentExpensesWidget({ period }: { period: string }) {
             ) : null}
             <Link
               className={dashboardWidgetFooterNavigationLinkClassName}
-              search={{ period, status: "open" }}
               to="/reports/installments"
             >
               Ver parcelamentos <ArrowRight aria-hidden="true" className="size-4" />
@@ -55,7 +54,7 @@ export function InstallmentExpensesWidget({ period }: { period: string }) {
           </div>
         ) : undefined
       }
-      icon={<ListOrdered aria-hidden="true" />}
+      icon={<CalendarClock aria-hidden="true" />}
       title="Despesas parceladas"
     >
       {query.isLoading ? <InstallmentExpensesLoading /> : null}
@@ -80,7 +79,7 @@ export function InstallmentExpensesWidget({ period }: { period: string }) {
           <DashboardWidgetEmptyState
             collapseWidget
             description="As parcelas do mês aparecerão aqui."
-            icon={<ListOrdered aria-hidden="true" />}
+            icon={<CalendarClock aria-hidden="true" />}
             title="Nenhuma parcela neste mês"
           />
         ) : (

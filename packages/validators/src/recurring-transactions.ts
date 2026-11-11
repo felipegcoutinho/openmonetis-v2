@@ -2,12 +2,11 @@ import { z } from "@hono/zod-openapi";
 import { paymentMethods } from "@openmonetis/domain/transactions";
 import { RecurringExpenseOutputSchema } from "./recurring-expenses";
 
+const periodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
+
+/** The report covers every series; projections always start at the current month. */
 export const RecurringTransactionsReportQuerySchema = z
   .object({
-    period: z
-      .string()
-      .regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/)
-      .openapi({ param: { name: "period", in: "query" } }),
     type: z
       .enum(["expense", "income"])
       .default("expense")
@@ -16,7 +15,6 @@ export const RecurringTransactionsReportQuerySchema = z
   .openapi("RecurringTransactionsReportQuery");
 
 export const RecurringTransactionsSearchSchema = z.object({
-  period: RecurringTransactionsReportQuerySchema.shape.period.optional().catch(undefined),
   type: z.enum(["expense", "income"]).default("expense").catch("expense"),
   status: z.enum(["active", "paused", "ended", "all"]).default("active").catch("active"),
   paymentMethod: z
@@ -40,17 +38,19 @@ export const RecurringTransactionReportItemSchema = RecurringExpenseOutputSchema
 
 export const RecurringTransactionsReportOutputSchema = z
   .object({
-    period: RecurringTransactionsReportQuerySchema.shape.period,
+    period: periodSchema,
     type: z.enum(["expense", "income"]),
     summary: z.object({
       activeCount: z.number().int().nonnegative(),
       pausedCount: z.number().int().nonnegative(),
       endedCount: z.number().int().nonnegative(),
       projectedTotal: z.number().finite().nonnegative(),
+      projectionTotal: z.number().finite().nonnegative(),
+      monthlyAverage: z.number().finite().nonnegative(),
     }),
     projections: z.array(
       z.object({
-        period: RecurringTransactionsReportQuerySchema.shape.period,
+        period: periodSchema,
         total: z.number().finite().nonnegative(),
       }),
     ),

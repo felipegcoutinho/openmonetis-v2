@@ -158,7 +158,7 @@ function ActionLink({
       return (
         <Link
           className={linkClassName}
-          search={{ period, type: "expense", status: "active", paymentMethod: "all", q: "" }}
+          search={{ type: "expense", status: "active", paymentMethod: "all", q: "" }}
           to="/reports/recurring-transactions"
         >
           {children}

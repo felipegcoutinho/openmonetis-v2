@@ -1,5 +1,5 @@
 import type { InstallmentGroupOutput } from "@openmonetis/validators/installments";
-import { AlertTriangle, CalendarDays, CheckCircle2, CircleDashed, CreditCard } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, CircleDashed, Clock, CreditCard } from "lucide-react";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { MoneyValue } from "@/components/money-value";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import {
   formatInstallmentDate,
   installmentPaymentMethodLabels,
+  payoffCheckboxClassName,
 } from "../installments.presentation";
 
 type InstallmentDetailsDialogProps = {
@@ -18,6 +19,8 @@ type InstallmentDetailsDialogProps = {
   onOpenChange: (open: boolean) => void;
   onToggleInstallment: (installmentId: string) => void;
   open: boolean;
+  /** Pending installments get checkboxes only while a payoff is being simulated. */
+  selectable: boolean;
   selectedIds: ReadonlySet<string>;
 };
 
@@ -26,6 +29,7 @@ export function InstallmentDetailsDialog({
   onOpenChange,
   onToggleInstallment,
   open,
+  selectable,
   selectedIds,
 }: InstallmentDetailsDialogProps) {
   return (
@@ -51,16 +55,15 @@ export function InstallmentDetailsDialog({
         </DialogHeader>
         <div className="contents" data-mobile-detail-body>
           <div className="grid gap-3 rounded-lg bg-muted/40 p-4 sm:grid-cols-3">
-            <Metric label="Compra original" value={group.originalAmount} />
-            <Metric label="Valor registrado" value={group.trackedAmount} />
-            <Metric label="Saldo pendente" value={group.pendingAmount} />
+            <Metric label="Valor da compra" value={group.originalAmount} />
+            <Metric label="Já pago" value={group.paidAmount} />
+            <Metric label="A pagar" value={group.pendingAmount} />
           </div>
 
           {group.untrackedInstallmentCount > 0 ? (
             <p className="text-muted-foreground text-sm">
-              Acompanhada desde a parcela {group.trackedFromInstallment}/{group.totalInstallments}
-              {";"}
-              as anteriores não compõem o saldo registrado.
+              Acompanhada desde a parcela {group.trackedFromInstallment}/{group.totalInstallments}.
+              As anteriores não entram nos valores acima.
             </p>
           ) : null}
 
@@ -69,10 +72,8 @@ export function InstallmentDetailsDialog({
               <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
               <p>
                 {group.missingInstallmentCount}{" "}
-                {group.missingInstallmentCount === 1
-                  ? "parcela acompanhada não está"
-                  : "parcelas registradas não estão"}{" "}
-                no cronograma. Revise a série antes de confiar no saldo.
+                {group.missingInstallmentCount === 1 ? "parcela não está" : "parcelas não estão"} no
+                cronograma, então o valor a pagar pode estar menor. Revise a compra.
               </p>
             </div>
           ) : null}
@@ -85,27 +86,40 @@ export function InstallmentDetailsDialog({
                 <div
                   className={cn(
                     "flex items-center gap-3 rounded-lg border p-3",
-                    paid ? "bg-success/5" : "cursor-pointer hover:bg-muted/50",
-                    selected && "border-brand-strong/40 bg-brand/5",
+                    paid && "bg-success/5",
+                    selected && "border-teal/40 bg-teal/5",
                   )}
                   key={installment.id}
                 >
-                  {paid ? (
-                    <CheckCircle2
-                      aria-label="Paga"
-                      className="size-5 shrink-0 animate-status-confirm text-success"
-                    />
+                  {/* Status is a filled tile, never an outlined circle, so it does not read as a control. */}
+                  {selectable && !paid ? (
+                    <span className="grid size-8 shrink-0 place-items-center">
+                      <Checkbox
+                        aria-label={[
+                          "Selecionar parcela",
+                          installment.installmentNumber,
+                          "de",
+                          group.totalInstallments,
+                        ].join(" ")}
+                        checked={selected}
+                        className={payoffCheckboxClassName}
+                        onCheckedChange={() => onToggleInstallment(installment.id)}
+                      />
+                    </span>
                   ) : (
-                    <Checkbox
-                      aria-label={[
-                        "Selecionar parcela",
-                        installment.installmentNumber,
-                        "de",
-                        group.totalInstallments,
-                      ].join(" ")}
-                      checked={selected}
-                      onCheckedChange={() => onToggleInstallment(installment.id)}
-                    />
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "grid size-8 shrink-0 place-items-center rounded-md",
+                        paid ? "bg-success/10 text-success" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {paid ? (
+                        <Check className="size-4 animate-status-confirm" />
+                      ) : (
+                        <Clock className="size-4" />
+                      )}
+                    </span>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -133,10 +147,17 @@ export function InstallmentDetailsDialog({
                       )}
                     </p>
                   </div>
-                  <MoneyValue
-                    amount={installment.amount}
-                    className={cn("shrink-0 font-medium", paid && "text-success")}
-                  />
+                  <div className="shrink-0 text-right">
+                    <MoneyValue
+                      amount={installment.amount}
+                      className={cn("block font-medium text-sm", paid && "text-success")}
+                    />
+                    <span
+                      className={cn("text-xs", paid ? "text-success" : "text-muted-foreground")}
+                    >
+                      {paid ? "Paga" : "A pagar"}
+                    </span>
+                  </div>
                 </div>
               );
             })}

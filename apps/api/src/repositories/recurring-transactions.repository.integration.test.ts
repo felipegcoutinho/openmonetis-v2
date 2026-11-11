@@ -425,10 +425,7 @@ test("recurring income actions preserve history, deadlines and projections", {
       false,
     );
     // General management separates income/expenses, deduplicates versions and retains ended series.
-    assert.deepEqual(
-      (await general.report({ period: "2026-03", type: "income" }, other.id)).items,
-      [],
-    );
+    assert.deepEqual((await general.report({ type: "income" }, other.id)).items, []);
     const [otherPerson] = await db
       .insert(schema.people)
       .values({ userId: other.id, name: "Other admin", role: "admin" })
@@ -467,21 +464,18 @@ test("recurring income actions preserve history, deadlines and projections", {
       categoryId: otherExpenseCategory.id,
       amount: 50,
     });
-    let incomeReport = await general.report({ period: "2026-03", type: "income" }, other.id);
+    let incomeReport = await general.report({ type: "income" }, other.id);
     RecurringTransactionsReportOutputSchema.parse(incomeReport);
     assert.equal(incomeReport.items.length, 1);
     assert.deepEqual(
-      incomeReport.projections.map((item) => item.total),
+      incomeReport.projections.slice(0, 3).map((item) => item.total),
       [1000, 1500, 1500],
     );
+    assert.equal(incomeReport.summary.projectionTotal, 4000);
     assert.equal(incomeReport.items[0].actionDate, "2026-03-10");
+    assert.equal((await general.report({ type: "expense" }, other.id)).summary.projectedTotal, 50);
     assert.equal(
-      (await general.report({ period: "2026-03", type: "expense" }, other.id)).summary
-        .projectedTotal,
-      50,
-    );
-    assert.equal(
-      (await general.report({ period: "2026-03", type: "income" }, owner.id)).items.some(
+      (await general.report({ type: "income" }, owner.id)).items.some(
         (item) => item.name === "Receita gerenciada",
       ),
       false,
@@ -510,7 +504,7 @@ test("recurring income actions preserve history, deadlines and projections", {
       action: "pause",
       occurrenceDate: "2026-03-10",
     });
-    incomeReport = await general.report({ period: "2026-03", type: "income" }, other.id);
+    incomeReport = await general.report({ type: "income" }, other.id);
     assert.equal(incomeReport.items.length, 1);
     assert.equal(incomeReport.items[0].status, "paused");
     assert.equal(incomeReport.summary.projectedTotal, 0);
@@ -518,39 +512,38 @@ test("recurring income actions preserve history, deadlines and projections", {
       action: "resume",
       occurrenceDate: incomeReport.items[0].actionDate as string,
     });
-    incomeReport = await general.report({ period: "2026-03", type: "income" }, other.id);
+    incomeReport = await general.report({ type: "income" }, other.id);
     assert.equal(incomeReport.items[0].status, "active");
     await service.applyRecurringRuleAction(incomeReport.items[0].id, other.id, {
       action: "skip",
       occurrenceDate: incomeReport.items[0].actionDate as string,
     });
-    incomeReport = await general.report({ period: "2026-03", type: "income" }, other.id);
+    incomeReport = await general.report({ type: "income" }, other.id);
     assert.equal(incomeReport.items.length, 1);
     assert.equal(incomeReport.items[0].actionDate, "2026-04-10");
     await service.applyRecurringRuleAction(ruleId(managedVersion), other.id, {
       action: "stop",
       occurrenceDate: "2026-04-10",
     });
-    incomeReport = await general.report({ period: "2026-01", type: "income" }, other.id);
+    incomeReport = await general.report({ type: "income" }, other.id);
     assert.equal(incomeReport.items.length, 1);
     assert.equal(incomeReport.items[0].status, "ended");
     assert.equal(incomeReport.items[0].actionDate, null);
-    assert.equal(incomeReport.summary.projectedTotal, 1000);
+    // March was skipped and the series stops in April, so nothing remains to project.
+    assert.equal(incomeReport.summary.projectionTotal, 0);
     const generalResponse = await app.request(
-      "http://test/recurring-transactions/report?period=2026-03&type=income",
+      "http://test/recurring-transactions/report?type=income",
     );
     assert.equal(generalResponse.status, 200);
     const generalBody = await generalResponse.json();
     RecurringTransactionsReportOutputSchema.parse(generalBody.data);
     assert.equal(JSON.stringify(generalBody).includes('"userId"'), false);
     assert.equal(
-      (await app.request("http://test/recurring-transactions/report?period=bad&type=income"))
-        .status,
+      (await app.request("http://test/recurring-transactions/report?type=bad")).status,
       400,
     );
     assert.equal(
-      (await app.request("http://test/recurring-transactions/report?period=2026-03&type=transfer"))
-        .status,
+      (await app.request("http://test/recurring-transactions/report?type=transfer")).status,
       400,
     );
     assert.equal(

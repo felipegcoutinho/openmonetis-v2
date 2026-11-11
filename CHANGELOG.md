@@ -21,6 +21,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Categorias mostram o gasto (ou recebimento) do mês atual de cada categoria e, quando há
   orçamento, quanto do limite já foi usado, com barra de progresso.
 - Pessoas: nove novos avatares ilustrados para escolher, no mesmo estilo dos atuais.
+- Despesas parceladas: **Simular compra** mostra como uma compra no cartão ocuparia os próximos
+  12 meses. Informe valor, parcelas, cartão e, se quiser, um nome e a fatura da primeira parcela;
+  sem fatura escolhida, ela segue o fechamento do cartão. A simulação aparece no gráfico em azul,
+  empilhada sobre as parcelas reais, e como uma linha tracejada no topo da lista, com quando
+  começa e termina. Nada é salvo e nenhum outro valor do sistema muda; dá para editar ou remover
+  a simulação a qualquer momento.
+- Despesas parceladas: **Simular quitação** calcula quanto pagar neste mês para antecipar as
+  parcelas marcadas. Em cada compra dá para informar o **valor a pagar** que o app do banco mostra,
+  ou o desconto em R$ ou %; a simulação calcula os outros dois e mostra a economia. Tudo o que
+  pertence à simulação usa o mesmo verde-azulado, separado do coral da marca e do azul da compra
+  simulada. O gráfico mostra a quitação nessa cor no mês atual e, em tracejado, o que deixa de ser cobrado nos meses
+  seguintes; cada compra mostra o novo saldo, o novo término e o valor a pagar. O painel resume
+  o total selecionado, o desconto, o alívio no próximo mês e a nova última parcela. Um valor fora
+  do selecionado da compra é apontado nela e a compra é calculada sem desconto. A caixa de
+  seleção da compra fica parcialmente marcada quando só algumas parcelas foram escolhidas.
+- O balão dos gráficos dos próximos 12 meses mostra o **Total do mês** quando há mais de uma
+  série empilhada.
+- API: `POST /reports/installments/simulations` calcula o cronograma de uma compra hipotética no
+  cartão, com nome e fatura opcionais, e `POST /reports/installments/payoff-simulations` calcula
+  uma quitação antecipada com desconto por compra (`discounts[]` por `seriesId`, com `type`
+  `amount`, `percentage` ou `payoffAmount`). Nenhuma das
+  duas grava nada.
 
 ### Alterado
 
@@ -100,6 +122,32 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   no celular, os formulários em tela cheia deslizam ao abrir e fechar; checkbox, switch, tooltip,
   accordion e blocos recolhíveis têm transições mais curtas e consistentes. Tudo respeita a
   preferência de movimento reduzido.
+- Despesas parceladas e Lançamentos recorrentes passam a mostrar todas as compras e séries de
+  uma vez, sem recorte por mês. Os dois relatórios começam no mês atual e projetam os próximos
+  12 meses num gráfico em que o mês atual aparece destacado.
+- Despesas parceladas: o resumo mostra **Saldo a pagar**, o valor a pagar no mês atual, as compras
+  em andamento e o mês da **Última parcela**. Cada compra mostra quanto falta, a próxima parcela
+  com valor e quando termina. A simulação de quitação abre em **Simular quitação**, e só então as
+  caixas de seleção aparecem. O filtro de cartão e a busca ficam no endereço da página.
+- Despesas parceladas: as abas **Em andamento**, **Concluídas** e **Todas** saem. A lista mostra
+  tudo o que ainda está em aberto, incluindo compras atrasadas e compras que só começam no mês
+  seguinte, e as quitadas cuja última parcela cai no mês atual ou depois, marcadas como
+  **Quitada**. Quando o mês vira, as quitadas no mês anterior saem da lista.
+- Lançamentos recorrentes: o resumo mostra o custo (ou recebimento) médio por mês, o previsto no
+  mês atual e o total dos próximos 12 meses. A situação vira abas com a contagem de cada uma, e
+  o valor de cada série mostra a frequência (por exemplo, **/mês** ou **/ano**).
+- API: `GET /reports/installments` e `GET /recurring-transactions/report` deixam de aceitar
+  `period` e passam a usar o mês atual. `GET /reports/installments` também deixa de aceitar
+  `status` e devolve as compras em aberto mais as quitadas a partir do mês atual. O relatório de parcelas troca `monthlyHistory` por
+  `upcomingMonths` e ganha `summary.lastInstallmentPeriod`, `summary.overdueAmount` e
+  `overdueInstallmentCount` em cada compra; o de recorrentes ganha
+  `summary.projectionTotal` e `summary.monthlyAverage`. `GET /reports/installments/dashboard`
+  continua exigindo `period`.
+- Despesas parceladas: compras com parcelas vencidas e não pagas mostram **Em atraso desde** no
+  lugar da próxima parcela, e o resumo informa quanto do saldo está atrasado.
+- Ícones padronizados com a tabela de lançamentos: parcelas usam o calendário com relógio e
+  recorrências usam as setas circulares no menu, nos títulos, nos widgets e no formulário.
+  **Compromissos futuros** passa a usar o medidor, o mesmo do widget da Visão geral.
 
 ### Removido
 
