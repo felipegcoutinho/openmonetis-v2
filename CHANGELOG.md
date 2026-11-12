@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-11
+
+Despesas parceladas e Lançamentos recorrentes passam a projetar os próximos 12 meses, e as
+parcelas ganham simulação de compra no cartão e de quitação antecipada com desconto, sem gravar
+nada. A interface unifica cards de indicador, buscas, filtros e cores de gráfico, melhora a
+acessibilidade e o uso no celular, e o Diagnóstico com IA abre mais rápido. Os relatórios de
+parcelas e recorrentes mudam de contrato na API; veja as notas de atualização.
+
 ### Adicionado
 
 - Botão **Pular para o conteúdo** no cabeçalho: é o primeiro item ao navegar com Tab e leva o
@@ -1342,7 +1350,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.13.1...v0.14.0
