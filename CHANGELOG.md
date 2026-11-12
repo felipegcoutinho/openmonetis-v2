@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Corrigido
+
+- O desfoque translúcido do cabeçalho, dos menus, listas suspensas, painéis laterais, avisos e
+  navegação de período voltou a aparecer na versão publicada em Chrome, Edge e Firefox; antes ele
+  só funcionava no Safari.
+
 ## [0.17.0] - 2026-11-11
 
 Despesas parceladas e Lançamentos recorrentes passam a projetar os próximos 12 meses, e as
