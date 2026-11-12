@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-11-11
+
+O desfoque translúcido do cabeçalho, dos menus e dos painéis volta a aparecer em Chrome, Edge e
+Firefox.
+
 ### Corrigido
 
 - O desfoque translúcido do cabeçalho, dos menus, listas suspensas, painéis laterais, avisos e
@@ -1356,7 +1361,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...HEAD
+[0.17.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.14.0...v0.15.0
