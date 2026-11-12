@@ -40,3 +40,6 @@ todos.json
 /coverage/
 /playwright-report/
 /test-results/
+
+# local Claude Code launch configuration
+/.claude/launch.json
