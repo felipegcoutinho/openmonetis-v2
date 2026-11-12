@@ -169,6 +169,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - As setas de rolagem dos seletores deixam de cobrir as opções com uma faixa de outra cor; agora
   só esmaecem a borda da lista.
 
+### Notas de atualização
+
+- Banco: nenhuma migration nesta versão.
+- API: `GET /reports/installments` passa a ignorar `period` e `status` e sempre responde a partir
+  do mês atual; `monthlyHistory` foi substituído por `upcomingMonths`, e entram
+  `summary.lastInstallmentPeriod`, `summary.overdueAmount` e `overdueInstallmentCount` em cada
+  compra. `GET /recurring-transactions/report` passa a ignorar `period` e ganha
+  `summary.projectionTotal` e `summary.monthlyAverage`. Clientes que liam `monthlyHistory` precisam
+  usar `upcomingMonths`. Novas rotas `POST /reports/installments/simulations` e
+  `POST /reports/installments/payoff-simulations`, que não gravam dados. Campos novos:
+  `usagePercentage` no resumo de orçamentos e `totalAmount`, `peakDay`, `comparison` e
+  `previousCumulativeAmount` nos gastos do cartão. `GET /reports/installments/dashboard` continua
+  exigindo `period`.
+- Ambiente: nenhuma variável nova ou removida.
+- Compose: sem mudanças; basta atualizar as imagens com `docker compose pull` e
+  `docker compose up -d`.
+
 ## [0.16.0] - 2026-11-07
 
 Adiciona o extrato mensal de cada pessoa externa, com envio por e-mail pelo Resend, envio
