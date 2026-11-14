@@ -225,6 +225,50 @@ test("paying an invoice updates its status and creates the account posting", asy
   );
 });
 
+test("the card invoice comparison can be narrowed to each person's share", async ({ page }) => {
+  const request = page.request;
+  const user = await seed(request);
+  const otherPerson = await data<{ id: string; name: string }>(request, "/people", {
+    name: "Bia comparação",
+  });
+  const card = await data<{ id: string }>(request, "/cards", {
+    accountId: user.accountId,
+    name: "Shared card",
+    brand: "visa",
+    closingDay: 20,
+    dueDay: 25,
+    limit: 1000,
+  });
+  const purchase = (personId: string, amount: number, invoicePeriod: string) =>
+    data(request, "/transactions", {
+      type: "expense",
+      paymentMethod: "credit_card",
+      name: "Shared card purchase",
+      amount,
+      purchaseDate: `${invoicePeriod}-10`,
+      invoicePeriod,
+      personId,
+      categoryId: user.categoryId,
+      cardId: card.id,
+    });
+  await purchase(user.personId as string, 40, "2026-02");
+  await purchase(user.personId as string, 60, "2026-03");
+  await purchase(otherPerson.id, 15, "2026-03");
+
+  await page.goto(`/cards/${card.id}?period=2026-03`);
+  const selector = page.getByRole("combobox", { name: "Pessoa da comparação" });
+  await expect(selector).toBeVisible();
+  await expect(selector).toContainText("Todas as pessoas");
+
+  await selector.click();
+  await page.getByRole("option", { name: /Bia comparação/ }).click();
+  await expect(page.getByText("sem gastos na anterior para comparar")).toBeVisible();
+
+  await selector.click();
+  await page.getByRole("option", { name: /Browser user/ }).click();
+  await expect(page.getByText("nesta:")).toBeVisible();
+});
+
 test("tag reports count transfers once on desktop and mobile without changing the result", async ({
   page,
 }) => {

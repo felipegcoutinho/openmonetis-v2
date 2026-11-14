@@ -166,6 +166,7 @@ export const cardsRepository = {
     return db
       .select({
         cardId: transactions.cardId,
+        personId: transactions.personId,
         period: transactions.period,
         amount: effectiveTransactionAmountSql.as("amount"),
         purchaseDate: transactions.purchaseDate,
@@ -236,6 +237,7 @@ export const cardsRepository = {
       .select({
         id: recurringTransactionRules.id,
         cardId: recurringTransactionRules.cardId,
+        personId: recurringTransactionRules.personId,
         amount: recurringTransactionRules.amount,
         anchorDate: recurringTransactionRules.anchorDate,
         startDate: recurringTransactionRules.startDate,

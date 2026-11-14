@@ -7,6 +7,7 @@ import {
   calculateCardInvoiceHistory,
   calculateCardInvoiceSummary,
   compareCardCycleSpending,
+  compareCardCycleSpendingByPerson,
   createCardDraft,
   resolveCardClosingRule,
 } from "@openmonetis/domain/cards";
@@ -61,6 +62,7 @@ type DeleteCardResult =
 
 type CardMovementRecord = {
   cardId: string | null;
+  personId: string;
   period: string;
   amount: string;
   purchaseDate: string;
@@ -89,6 +91,7 @@ type CardInvoicePaymentRecord = {
 type CardRecurringRuleRecord = {
   id: string;
   cardId: string | null;
+  personId: string;
   amount: string;
   anchorDate: string;
   startDate: string;
@@ -241,17 +244,18 @@ export function createCardsService(
         invoiceMovements
           .filter((movement) => movement.period === invoicePeriod)
           .map((movement) => ({
+            personId: movement.personId,
             purchaseDate: movement.purchaseDate,
             amount: Number(movement.amount),
           }));
-      const currentCycle = calculateCardCycleSpending({
+      const currentCycleInput = {
         previousClosingDate: previousInvoiceSummary.closingDate,
         closingDate: invoiceSummary.closingDate,
         movements: toCycleMovements(cardMovements, period),
-      });
+      };
       // Recurring purchases are expanded apart so the previous cycle never leaks into the
       // current invoice's limit and summary.
-      const previousCycle = calculateCardCycleSpending({
+      const previousCycleInput = {
         previousClosingDate: summarizeInvoice(addMonthsToPeriod(period, -2)).closingDate,
         closingDate: previousInvoiceSummary.closingDate,
         movements: toCycleMovements(
@@ -264,13 +268,24 @@ export function createCardsService(
           ],
           previousPeriod,
         ),
-      });
+      };
+      const currentCycle = calculateCardCycleSpending(currentCycleInput);
       const { daily, comparison } = compareCardCycleSpending({
         current: currentCycle,
-        previous: previousCycle,
+        previous: calculateCardCycleSpending(previousCycleInput),
         today: getToday(),
       });
-      return toCardOutput(card, invoiceSummary, { ...currentCycle, comparison, daily });
+      const peopleComparisons = compareCardCycleSpendingByPerson({
+        current: currentCycleInput,
+        previous: previousCycleInput,
+        today: getToday(),
+      });
+      return toCardOutput(card, invoiceSummary, {
+        ...currentCycle,
+        comparison,
+        peopleComparisons,
+        daily,
+      });
     });
   }
 
@@ -464,7 +479,15 @@ function expandRecurringInvoiceMovements(
               dueDay: rule.dueDay,
             },
           }) === invoicePeriod
-            ? [{ cardId: rule.cardId, period: invoicePeriod, amount: rule.amount, purchaseDate }]
+            ? [
+                {
+                  cardId: rule.cardId,
+                  personId: rule.personId,
+                  period: invoicePeriod,
+                  amount: rule.amount,
+                  purchaseDate,
+                },
+              ]
             : [],
         ),
       ),

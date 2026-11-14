@@ -157,6 +157,15 @@ export const CardInvoiceHistoryOutputSchema = z
   })
   .openapi("CardInvoiceHistoryOutput");
 
+const CardCycleComparisonSchema = z.object({
+  isClosed: z.boolean(),
+  dayOfCycle: z.number().int().positive(),
+  currentAmount: z.number(),
+  previousAmount: z.number(),
+  differenceAmount: z.number().nonnegative(),
+  trend: z.enum(cardCycleComparisonTrends),
+});
+
 export const CardOutputSchema = z
   .object({
     id: z.uuid(),
@@ -180,16 +189,14 @@ export const CardOutputSchema = z
       openingAmount: z.number(),
       totalAmount: z.number(),
       peakDay: z.object({ date: z.iso.date(), amount: z.number() }).nullable(),
-      comparison: z
-        .object({
-          isClosed: z.boolean(),
-          dayOfCycle: z.number().int().positive(),
-          currentAmount: z.number(),
-          previousAmount: z.number(),
-          differenceAmount: z.number().nonnegative(),
-          trend: z.enum(cardCycleComparisonTrends),
-        })
-        .nullable(),
+      comparison: CardCycleComparisonSchema.nullable(),
+      peopleComparisons: z.array(
+        z.object({
+          personId: z.uuid(),
+          totalAmount: z.number(),
+          comparison: CardCycleComparisonSchema.nullable(),
+        }),
+      ),
       daily: z.array(
         z.object({
           date: z.iso.date(),

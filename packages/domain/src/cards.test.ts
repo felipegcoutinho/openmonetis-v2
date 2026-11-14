@@ -6,6 +6,7 @@ import {
   calculateCardInvoiceHistory,
   calculateCardInvoiceSummary,
   compareCardCycleSpending,
+  compareCardCycleSpendingByPerson,
   getInvoiceDates,
 } from "./cards";
 import { deriveTransactionPeriod } from "./transactions";
@@ -277,6 +278,79 @@ test("closed cycles compare final totals and cycles without a reference are skip
   assert.equal(
     compareCardCycleSpending({ current, previous: empty, today: "2026-06-01" }).comparison,
     null,
+  );
+});
+
+test("cycle comparison by person compares each share and adds up to the invoice", () => {
+  const current = {
+    previousClosingDate: "2026-05-31",
+    closingDate: "2026-06-03",
+    movements: [
+      { personId: "ana", purchaseDate: "2026-06-01", amount: -30 },
+      { personId: "bia", purchaseDate: "2026-06-02", amount: -45.5 },
+      { personId: "ana", purchaseDate: "2026-06-03", amount: -99 },
+      { personId: "caio", purchaseDate: "2026-06-01", amount: -12 },
+    ],
+  };
+  const previous = {
+    previousClosingDate: "2026-04-30",
+    closingDate: "2026-05-03",
+    movements: [
+      { personId: "ana", purchaseDate: "2026-05-01", amount: -50 },
+      { personId: "bia", purchaseDate: "2026-05-02", amount: -45.5 },
+      { personId: "duda", purchaseDate: "2026-05-01", amount: -8 },
+    ],
+  };
+
+  const people = compareCardCycleSpendingByPerson({ current, previous, today: "2026-06-02" });
+
+  assert.deepEqual(
+    people.map(({ personId, totalAmount, comparison }) => ({
+      personId,
+      totalAmount,
+      currentAmount: comparison?.currentAmount,
+      previousAmount: comparison?.previousAmount,
+      differenceAmount: comparison?.differenceAmount,
+      trend: comparison?.trend,
+    })),
+    [
+      {
+        personId: "ana",
+        totalAmount: 129,
+        currentAmount: 30,
+        previousAmount: 50,
+        differenceAmount: 20,
+        trend: "below",
+      },
+      {
+        personId: "bia",
+        totalAmount: 45.5,
+        currentAmount: 45.5,
+        previousAmount: 45.5,
+        differenceAmount: 0,
+        trend: "equal",
+      },
+      {
+        personId: "caio",
+        totalAmount: 12,
+        currentAmount: undefined,
+        previousAmount: undefined,
+        differenceAmount: undefined,
+        trend: undefined,
+      },
+      {
+        personId: "duda",
+        totalAmount: 0,
+        currentAmount: 0,
+        previousAmount: 8,
+        differenceAmount: 8,
+        trend: "below",
+      },
+    ],
+  );
+  assert.equal(
+    people.reduce((sum, person) => sum + person.totalAmount, 0),
+    calculateCardCycleSpending(current).totalAmount,
   );
 });
 

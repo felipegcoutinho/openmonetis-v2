@@ -1,8 +1,11 @@
 import type { CardOutput } from "@openmonetis/validators/cards";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowDownRight, ArrowUpRight, ChartNoAxesCombined, Minus } from "lucide-react";
 import { useState } from "react";
 import { Bar, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
+import { MobileSelect as Select } from "@/components/forms/mobile-select";
+import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +15,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PersonOption } from "@/features/people/components/person-option";
+import { peopleQueryOptions } from "@/features/people/people.queries";
 import { cn } from "@/lib/utils";
 import {
   formatCardCycleClosing,
@@ -37,6 +43,10 @@ const comparisonTrendStyles = {
 } as const;
 
 type SpendingView = "cycle" | "history";
+type CardCycle = CardOutput["cycleSpending"];
+type CardCycleComparison = NonNullable<CardCycle["comparison"]>;
+
+const ALL_PEOPLE = "all";
 
 export function CardSpendingFlow({
   cardId,
@@ -87,7 +97,7 @@ export function CardSpendingFlow({
   );
 }
 
-function CardCycleSpending({ cycle }: { cycle: CardOutput["cycleSpending"] }) {
+function CardCycleSpending({ cycle }: { cycle: CardCycle }) {
   const { isPrivacyModeEnabled } = usePrivacyMode();
   const hasSpending = cycle.openingAmount !== 0 || cycle.daily.some((entry) => entry.amount !== 0);
   const today = getCardCycleToday(cycle.startDate, cycle.endDate);
@@ -107,7 +117,9 @@ function CardCycleSpending({ cycle }: { cycle: CardOutput["cycleSpending"] }) {
             {formatCardCycleClosing(cycle.endDate)}
           </p>
           <MoneyValue amount={cycle.totalAmount} className="kpi-value text-3xl" />
-          {cycle.comparison ? <CardCycleComparisonLine comparison={cycle.comparison} /> : null}
+          {cycle.comparison ? (
+            <CardCycleComparisonSummary comparison={cycle.comparison} cycle={cycle} />
+          ) : null}
         </div>
         {cycle.peakDay ? (
           <p className="text-muted-foreground text-xs">
@@ -242,10 +254,79 @@ function CardCycleSpending({ cycle }: { cycle: CardOutput["cycleSpending"] }) {
   );
 }
 
+/** The invoice comparison, narrowed to one person's share when more than one spent on the card. */
+function CardCycleComparisonSummary({
+  comparison,
+  cycle,
+}: {
+  comparison: CardCycleComparison;
+  cycle: CardCycle;
+}) {
+  const peopleQuery = useQuery(peopleQueryOptions());
+  const [selectedPersonId, setSelectedPersonId] = useState(ALL_PEOPLE);
+  const options = (peopleQuery.data ?? []).flatMap((person) => {
+    const share = cycle.peopleComparisons.find((entry) => entry.personId === person.id);
+    return share ? [{ person, share }] : [];
+  });
+  // A person without movements in the viewed invoice falls back to the whole invoice.
+  const selected = options.find((option) => option.person.id === selectedPersonId);
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+      {!selected ? (
+        <CardCycleComparisonLine comparison={comparison} />
+      ) : selected.share.comparison ? (
+        <CardCycleComparisonLine comparison={selected.share.comparison} showCurrentAmount />
+      ) : (
+        <p className="flex flex-wrap items-center gap-x-1 text-muted-foreground text-xs">
+          <Minus aria-hidden="true" className="size-3.5 shrink-0" />
+          <span>
+            <MoneyValue amount={selected.share.totalAmount} className="font-medium" /> nesta fatura
+          </span>
+          <span>
+            <span aria-hidden="true">· </span>
+            sem gastos na anterior para comparar
+          </span>
+        </p>
+      )}
+      {options.length > 1 ? (
+        <Select
+          onValueChange={(value) => setSelectedPersonId(value ?? ALL_PEOPLE)}
+          value={selected?.person.id ?? ALL_PEOPLE}
+        >
+          <SelectTrigger
+            aria-label="Pessoa da comparação"
+            className="-my-1.5 gap-1.5 border-transparent bg-transparent pr-1.5 pl-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-popup-open:bg-muted data-popup-open:text-foreground"
+            size="sm"
+          >
+            <SelectValue>
+              <span className="max-w-48 min-w-0">
+                <PersonOption person={selected?.person} placeholder="Todas as pessoas" />
+              </span>
+            </SelectValue>
+          </SelectTrigger>
+          {/* The list sizes to its own content, since the trigger is only as wide as its label. */}
+          <SelectContent align="start" alignItemWithTrigger={false} className="w-auto min-w-56">
+            <SelectItem value={ALL_PEOPLE}>Todas as pessoas</SelectItem>
+            {options.map(({ person }) => (
+              <SelectItem key={person.id} value={person.id}>
+                <PersonOption person={person} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
+    </div>
+  );
+}
+
 function CardCycleComparisonLine({
   comparison,
+  showCurrentAmount = false,
 }: {
-  comparison: NonNullable<CardOutput["cycleSpending"]["comparison"]>;
+  comparison: CardCycleComparison;
+  /** A person's share is not the headline total, so its own amount is spelled out. */
+  showCurrentAmount?: boolean;
 }) {
   const { icon: TrendIcon, className } = comparisonTrendStyles[comparison.trend];
   const label = formatCardCycleComparison(comparison);
@@ -264,6 +345,12 @@ function CardCycleComparisonLine({
           {label}
         </span>
       )}
+      {showCurrentAmount ? (
+        <span>
+          <span aria-hidden="true">· </span>
+          nesta: <MoneyValue amount={comparison.currentAmount} />
+        </span>
+      ) : null}
       <span>
         <span aria-hidden="true">· </span>
         na anterior: <MoneyValue amount={comparison.previousAmount} />

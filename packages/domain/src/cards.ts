@@ -158,6 +158,35 @@ export function compareCardCycleSpending(input: {
   };
 }
 
+type CardCycleInput = Parameters<typeof calculateCardCycleSpending>[0];
+
+/**
+ * Splits both cycles by the person each movement belongs to and compares every person's share
+ * with the same rule as the whole invoice. Lists whoever has a movement in either cycle, in the
+ * order they first appear; a person without spending in the previous cycle has no comparison.
+ */
+export function compareCardCycleSpendingByPerson(input: {
+  current: Omit<CardCycleInput, "movements"> & { movements: CardCyclePersonMovement[] };
+  previous: Omit<CardCycleInput, "movements"> & { movements: CardCyclePersonMovement[] };
+  today: string;
+}) {
+  const personIds = new Set(
+    [...input.current.movements, ...input.previous.movements].map((movement) => movement.personId),
+  );
+  return [...personIds].map((personId) => {
+    const ofPerson = (cycle: typeof input.current) => ({
+      ...cycle,
+      movements: cycle.movements.filter((movement) => movement.personId === personId),
+    });
+    const current = calculateCardCycleSpending(ofPerson(input.current));
+    const previous = calculateCardCycleSpending(ofPerson(input.previous));
+    const { comparison } = compareCardCycleSpending({ current, previous, today: input.today });
+    return { personId, totalAmount: current.totalAmount, comparison };
+  });
+}
+
+export type CardCyclePersonMovement = CardCycleInput["movements"][number] & { personId: string };
+
 export type CardInvoiceSummary = {
   period: string;
   amount: number;

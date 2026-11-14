@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Fatura do cartão: a comparação com a fatura anterior em **Gastos do cartão** pode ser vista por
+  pessoa. Quando mais de uma pessoa tem lançamentos na fatura ou na anterior, um seletor discreto
+  ao lado do aviso troca entre **Todas as pessoas** e a parte de cada uma.
+- API: `cycleSpending.peopleComparisons` em `GET /cards` e `GET /cards/{id}` traz, por pessoa, o
+  total do ciclo e a mesma comparação da fatura inteira (`null` sem gastos na fatura anterior).
+
 ## [0.17.1] - 2026-11-11
 
 O desfoque translúcido do cabeçalho, dos menus e dos painéis volta a aparecer em Chrome, Edge e

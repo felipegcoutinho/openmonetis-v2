@@ -29,7 +29,13 @@ test("card writes persist the option and preserve recorded invoice periods when 
   });
   let stored: Awaited<ReturnType<CardsRepository["findByIdForUser"]>> = null;
   const recordedMovements = [
-    { cardId: id, period: "2026-10", purchaseDate: "2026-10-05", amount: "-100.00" },
+    {
+      cardId: id,
+      personId: "55555555-5555-4555-8555-555555555555",
+      period: "2026-10",
+      purchaseDate: "2026-10-05",
+      amount: "-100.00",
+    },
   ];
   const repository: CardsRepository = {
     accountExistsForUser: async (accountId, ownerId) =>
@@ -131,6 +137,8 @@ test("card writes persist the option and preserve recorded invoice periods when 
 
 test("card cycle spending includes recurring purchases on their day in the selected invoice", async () => {
   const cardId = "11111111-1111-4111-8111-111111111111";
+  const personId = "55555555-5555-4555-8555-555555555555";
+  const otherPersonId = "66666666-6666-4666-8666-666666666666";
   const card = {
     id: cardId,
     userId: "user-1",
@@ -158,8 +166,14 @@ test("card cycle spending includes recurring purchases on their day in the selec
     findByIdForUser: async (id, userId) => (id === cardId && userId === card.userId ? card : null),
     updateForUser: async () => card,
     listMovementsByUser: async () => [
-      { cardId, period: "2026-04", amount: "-20.00", purchaseDate: "2026-03-08" },
-      { cardId, period: "2026-04", amount: "-10.00", purchaseDate: "2026-01-05" },
+      { cardId, personId, period: "2026-04", amount: "-20.00", purchaseDate: "2026-03-08" },
+      {
+        cardId,
+        personId: otherPersonId,
+        period: "2026-04",
+        amount: "-10.00",
+        purchaseDate: "2026-01-05",
+      },
     ],
     listInvoiceStatesByUser: async () => [],
     listInvoicePaymentsByUser: async () => [],
@@ -167,6 +181,7 @@ test("card cycle spending includes recurring purchases on their day in the selec
       {
         id: "33333333-3333-4333-8333-333333333333",
         cardId,
+        personId,
         amount: "-50.00",
         anchorDate: "2026-01-05",
         startDate: "2026-01-05",
@@ -209,6 +224,22 @@ test("card cycle spending includes recurring purchases on their day in the selec
     differenceAmount: 30,
     trend: "above",
   });
+  // Each person is compared on their own share; no previous spending means no comparison.
+  assert.deepEqual(result.cycleSpending.peopleComparisons, [
+    {
+      personId,
+      totalAmount: 70,
+      comparison: {
+        isClosed: true,
+        dayOfCycle: 28,
+        currentAmount: 70,
+        previousAmount: 50,
+        differenceAmount: 20,
+        trend: "above",
+      },
+    },
+    { personId: otherPersonId, totalAmount: 10, comparison: null },
+  ]);
 
   const history = await service.history(cardId, "user-1", "2026-04");
   assert.equal(history.items.length, 12);
