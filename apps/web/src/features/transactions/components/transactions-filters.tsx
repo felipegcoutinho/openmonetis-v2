@@ -4,7 +4,7 @@ import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-p
 import { MobileSheetContent as SheetContent } from "@/components/forms/mobile-sheet-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Sheet,
   SheetBody,
@@ -132,7 +132,7 @@ export function TransactionsFilters({
             </SheetDescription>
           </SheetHeader>
           <SheetBody>
-            <div className="grid content-start gap-7">
+            <div className="grid content-start">
               <FilterGroup title="Tipo e pagamento">
                 {!hiddenFilterSet.has("type") ? (
                   <FilterSelect
@@ -312,6 +312,7 @@ export function TransactionsFilters({
                           page: undefined,
                         })
                       }
+                      className="bg-card"
                       placeholder="Data inicial"
                       value={urlSearch.dateStart ?? ""}
                     />
@@ -323,6 +324,7 @@ export function TransactionsFilters({
                           page: undefined,
                         })
                       }
+                      className="bg-card"
                       placeholder="Data final"
                       value={urlSearch.dateEnd ?? ""}
                     />
@@ -332,40 +334,32 @@ export function TransactionsFilters({
                   <span className="font-mono font-medium text-muted-foreground text-xs">
                     Faixa de valor
                   </span>
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <Input
-                      inputMode="decimal"
-                      className="placeholder:text-muted-foreground"
-                      min="0"
-                      onChange={(event) =>
-                        onSearchChange({
-                          minAmount: numberValue(event.target.value),
-                          page: undefined,
-                        })
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                    <CurrencyInput
+                      aria-label="Valor mínimo"
+                      onValueChange={(value) =>
+                        onSearchChange({ minAmount: numberValue(value), page: undefined })
                       }
                       placeholder="Mínimo"
-                      type="number"
-                      value={urlSearch.minAmount ?? ""}
+                      showCalculator={false}
+                      value={urlSearch.minAmount === undefined ? "" : String(urlSearch.minAmount)}
                     />
-                    <span className="text-muted-foreground text-xs">até</span>
-                    <Input
-                      inputMode="decimal"
-                      className="placeholder:text-muted-foreground"
-                      min="0"
-                      onChange={(event) =>
-                        onSearchChange({
-                          maxAmount: numberValue(event.target.value),
-                          page: undefined,
-                        })
+                    <span aria-hidden="true" className="text-muted-foreground text-xs">
+                      até
+                    </span>
+                    <CurrencyInput
+                      aria-label="Valor máximo"
+                      onValueChange={(value) =>
+                        onSearchChange({ maxAmount: numberValue(value), page: undefined })
                       }
                       placeholder="Máximo"
-                      type="number"
-                      value={urlSearch.maxAmount ?? ""}
+                      showCalculator={false}
+                      value={urlSearch.maxAmount === undefined ? "" : String(urlSearch.maxAmount)}
                     />
                   </div>
                 </div>
               </FilterGroup>
-              <FilterGroup title="Outros">
+              <FilterGroup layout="list" title="Outros">
                 <FilterToggle
                   checked={Boolean(urlSearch.payables)}
                   label="Contas a pagar (com vencimento)"
@@ -405,11 +399,30 @@ export function TransactionsFilters({
   );
 }
 
-function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
+function FilterGroup({
+  title,
+  layout = "grid",
+  children,
+}: {
+  title: string;
+  layout?: "grid" | "list";
+  children: ReactNode;
+}) {
   return (
-    <fieldset className="m-0 min-w-0 border-0 p-0">
-      <legend className="mb-3 font-heading font-semibold text-sm">{title}</legend>
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">{children}</div>
-    </fieldset>
+    // The divider lives on a wrapper: a border on the fieldset itself would be cut by its legend.
+    <div className="border-t py-6 first:border-t-0 first:pt-0 last:pb-0">
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="mb-4 font-heading font-semibold text-sm">{title}</legend>
+        <div
+          className={
+            layout === "grid"
+              ? "grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+              : "grid gap-1"
+          }
+        >
+          {children}
+        </div>
+      </fieldset>
+    </div>
   );
 }

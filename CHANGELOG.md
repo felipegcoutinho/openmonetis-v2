@@ -15,6 +15,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - API: `cycleSpending.peopleComparisons` em `GET /cards` e `GET /cards/{id}` traz, por pessoa, o
   total do ciclo e a mesma comparação da fatura inteira (`null` sem gastos na fatura anterior).
 
+### Alterado
+
+- Filtros de lançamentos: todos os campos do painel passam a ter o mesmo fundo e a mesma borda, as
+  seções ficam separadas por divisórias, as opções de **Outros** aparecem em lista e a faixa de
+  valor usa o formato em reais, sem as setas de incremento.
+
 ## [0.17.1] - 2026-11-11
 
 O desfoque translúcido do cabeçalho, dos menus e dos painéis volta a aparecer em Chrome, Edge e

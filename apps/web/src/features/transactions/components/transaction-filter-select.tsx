@@ -1,10 +1,8 @@
 import type { LucideIcon } from "lucide-react";
-
+import { useId } from "react";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { cn } from "@/lib/utils";
 
 export function FilterSelect({
@@ -23,13 +21,20 @@ export function FilterSelect({
     dotClassName?: string;
   }>;
 }) {
+  const id = useId();
   const selectedOption = options.find((option) => option.value === value);
 
   return (
     <div className="grid min-w-0 gap-2">
-      <span className="font-mono font-medium text-muted-foreground text-xs">{label}</span>
+      <span className="font-mono font-medium text-muted-foreground text-xs" id={`${id}-label`}>
+        {label}
+      </span>
       <Select onValueChange={(next) => next && onChange(next)} value={value}>
-        <SelectTrigger className="w-full min-w-0 overflow-hidden">
+        <SelectTrigger
+          aria-labelledby={`${id}-label ${id}-trigger`}
+          className="w-full min-w-0 overflow-hidden"
+          id={`${id}-trigger`}
+        >
           <SelectValue
             className={cn("min-w-0", value === "all" ? "text-muted-foreground" : "text-foreground")}
           >

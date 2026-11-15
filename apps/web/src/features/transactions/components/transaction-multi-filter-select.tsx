@@ -59,6 +59,7 @@ export function MultiFilterSelect({
           "font-mono font-medium text-muted-foreground text-xs",
           hideLabel && "sr-only",
         )}
+        id={`${id}-label`}
       >
         {label}
       </span>
@@ -66,7 +67,9 @@ export function MultiFilterSelect({
         <PopoverTrigger
           render={
             <Button
-              className="w-full min-w-0 justify-between overflow-hidden bg-transparent font-normal"
+              aria-labelledby={`${id}-label ${id}-trigger`}
+              className="w-full min-w-0 justify-between overflow-hidden border-input bg-card pr-2.5 pl-3 font-normal"
+              id={`${id}-trigger`}
               type="button"
               variant="outline"
             />
