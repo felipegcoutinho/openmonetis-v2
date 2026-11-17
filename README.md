@@ -31,7 +31,7 @@
 
 - contas, cartões, faturas, transações e transferências;
 - parcelas, recorrências, orçamentos e contas a pagar;
-- calendário do mês com vencimentos, faturas e tarefas;
+- calendário do mês com vencimentos, faturas e tarefas, e busca global com **Ctrl K**;
 - pessoas, divisões, repasses e gastos compartilhados entre contas;
 - categorias e subcategorias, etiquetas, estabelecimentos, notas e checklists, além de anexos quando um storage S3 está
   configurado;

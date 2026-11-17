@@ -14,6 +14,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   ao lado do aviso troca entre **Todas as pessoas** e a parte de cada uma.
 - API: `cycleSpending.peopleComparisons` em `GET /cards` e `GET /cards/{id}` traz, por pessoa, o
   total do ciclo e a mesma comparação da fatura inteira (`null` sem gastos na fatura anterior).
+- Busca global: o botão de lupa no cabeçalho, ou **Ctrl K** (**⌘K** no Mac), abre uma paleta para
+  ir a qualquer página, abrir contas, cartões, categorias e pessoas, criar despesa, receita,
+  transferência ou anotação e buscar lançamentos dos últimos 12 meses pelo nome. Um lançamento
+  encontrado abre direto para edição, e **Ver todos os lançamentos** leva à lista filtrada pelo
+  termo. Contas e cartões aparecem com seus logos, pessoas com o avatar, categorias com o próprio
+  ícone e lançamentos com o logo do estabelecimento e o avatar da pessoa. Num lançamento
+  dividido, cada pessoa aparece com a própria parte, e as linhas da mesma compra ficam ligadas
+  como na lista de lançamentos. A paleta abre sem animação e mostra os atalhos
+  de teclado no rodapé.
 - Calendário (**Finanças → Calendário**): grade do mês com contas a pagar, fechamentos e
   vencimentos de faturas de cartão e tarefas com prazo, além de feriados e dias não úteis do
   calendário de vencimentos. O resumo mostra quanto falta pagar, quanto já foi pago e o que está

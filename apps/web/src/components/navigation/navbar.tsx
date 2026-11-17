@@ -1,9 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Calculator, Eye, EyeOff, Settings } from "lucide-react";
+import { Calculator, Eye, EyeOff, Search, Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CalculatorDialog } from "@/components/calculator/calculator-dialog";
+import { CommandMenu } from "@/components/command-menu/command-menu";
 import { OpenMonetisLogo } from "@/components/openmonetis-logo";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -31,6 +32,7 @@ export function Navbar() {
   const user = session.data?.user;
   const { isPrivacyModeEnabled, togglePrivacyMode } = usePrivacyMode();
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const mobileNavigationHidden = useMobileNavigationVisibility(isMobile);
   const [openNavigationSection, setOpenNavigationSection] = useState<string | null>(null);
@@ -90,6 +92,25 @@ export function Navbar() {
           />
 
           <div className="flex justify-self-end items-center gap-0 md:gap-1">
+            <Tooltip>
+              <TooltipTrigger
+                aria-keyshortcuts="Control+K Meta+K"
+                aria-label="Buscar"
+                render={
+                  <Button
+                    className={headerIconButtonClassName}
+                    onClick={() => setCommandMenuOpen(true)}
+                    size="icon-sm"
+                    type="button"
+                    variant="ghost"
+                  />
+                }
+              >
+                <Search aria-hidden="true" className="size-5 md:size-4.5" />
+              </TooltipTrigger>
+              <TooltipContent>Buscar (Ctrl K ou ⌘K)</TooltipContent>
+            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger
                 aria-label="Abrir calculadora"
@@ -184,6 +205,11 @@ export function Navbar() {
       {/* The user menu already flags a new version; the banner only greets on the overview. */}
       {location.pathname === "/dashboard" ? <ReleaseNotice enabled={Boolean(user)} /> : null}
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />
+      <CommandMenu
+        enabled={Boolean(user)}
+        onOpenChange={setCommandMenuOpen}
+        open={commandMenuOpen}
+      />
     </>
   );
 }

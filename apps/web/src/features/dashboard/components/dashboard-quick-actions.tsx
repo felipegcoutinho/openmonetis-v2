@@ -1,6 +1,5 @@
 import type { CreateNoteInput } from "@openmonetis/validators/notes";
 import type { TransactionInput } from "@openmonetis/validators/transactions";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownLeft,
   ArrowLeftRight,
@@ -9,15 +8,11 @@ import {
   NotebookPen,
 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
-import { cardsQueryOptions } from "@/features/cards/cards.queries";
-import { categoriesQueryOptions } from "@/features/categories/categories.queries";
 import { NoteDialog } from "@/features/notes/components/note-dialog";
 import { useCreateNoteMutation } from "@/features/notes/notes.mutations";
-import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
+import { useTransactionFormOptions } from "@/features/transactions/useTransactionFormOptions";
 import { cn } from "@/lib/utils";
 
 type TransactionAction = Extract<TransactionInput["type"], "expense" | "income" | "transfer">;
@@ -64,35 +59,16 @@ const transactionActions: Array<{
 ];
 
 export function DashboardQuickActions({ period }: { period: string }) {
-  const queryClient = useQueryClient();
   const [transactionAction, setTransactionAction] = useState<TransactionAction | null>(null);
   const [preparingAction, setPreparingAction] = useState<TransactionAction | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
-  const accountsQuery = useQuery(accountsQueryOptions());
-  const cardsQuery = useQuery(cardsQueryOptions());
-  const categoriesQuery = useQuery(categoriesQueryOptions());
-  const peopleQuery = useQuery(peopleQueryOptions());
+  const formOptions = useTransactionFormOptions();
   const createNote = useCreateNoteMutation();
 
-  // Waits for the form options (reusing cached data or retrying failed loads) so a click made
-  // while they load opens the form, and a failure is reported on that same click.
   async function openTransaction(type: TransactionAction) {
     setPreparingAction(type);
-    try {
-      await Promise.all([
-        queryClient.ensureQueryData(accountsQueryOptions()),
-        queryClient.ensureQueryData(cardsQueryOptions()),
-        queryClient.ensureQueryData(categoriesQueryOptions()),
-        queryClient.ensureQueryData(peopleQueryOptions()),
-      ]);
-      setTransactionAction(type);
-    } catch {
-      toast.error("Não foi possível preparar o formulário.", {
-        description: "Verifique sua conexão e tente novamente.",
-      });
-    } finally {
-      setPreparingAction(null);
-    }
+    if (await formOptions.ensureLoaded()) setTransactionAction(type);
+    setPreparingAction(null);
   }
 
   return (
@@ -151,9 +127,9 @@ export function DashboardQuickActions({ period }: { period: string }) {
 
       {transactionAction ? (
         <TransactionDialog
-          accounts={accountsQuery.data ?? []}
-          cards={cardsQuery.data ?? []}
-          categories={categoriesQuery.data ?? []}
+          accounts={formOptions.accounts}
+          cards={formOptions.cards}
+          categories={formOptions.categories}
           defaultPeriod={period}
           defaultType={transactionAction}
           key={`${transactionAction}-${period}`}
@@ -161,7 +137,7 @@ export function DashboardQuickActions({ period }: { period: string }) {
             if (!open) setTransactionAction(null);
           }}
           open
-          people={peopleQuery.data ?? []}
+          people={formOptions.people}
           transaction={null}
         />
       ) : null}
