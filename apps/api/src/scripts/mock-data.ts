@@ -1,13 +1,15 @@
 #!/usr/bin/env tsx
 
 import { createHash, randomUUID } from "node:crypto";
-import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { extname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   budgets,
   cards,
   categories,
   db,
+  establishmentLogos,
   financialAccounts,
   inboxItems,
   installmentSeries,
@@ -33,6 +35,7 @@ import {
   createDefaultCategoryDrafts,
   invoicePaymentCategoryName,
 } from "@openmonetis/domain/categories";
+import { createEstablishmentNameKey } from "@openmonetis/domain/establishments";
 import { defaultAdminPersonAvatarUrl } from "@openmonetis/domain/people";
 import {
   addMonthsToPeriod,
@@ -43,7 +46,8 @@ import {
   type PaymentMethod,
   type TransactionType,
 } from "@openmonetis/domain/transactions";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { maximumPersonAvatarDataUrlBytes } from "@openmonetis/validators/people";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
 const DEFAULT_MONTHS = 6;
 const MIN_MONTHS = 3;
@@ -54,7 +58,56 @@ export type CliOptions = {
   email: string | null;
   startPeriod: string;
   months: number;
+  avatarPath: string | null;
 };
+
+// Real establishments in the mock data get their logo from the configured logo provider.
+// Fictional names (rent, salary, freelance clients) keep the category icon.
+export const mockEstablishmentLogoDomains: Record<string, string> = {
+  "Assaí Atacadista": "assai.com.br",
+  Uber: "uber.com",
+  "Posto Shell": "shell.com",
+  iFood: "ifood.com.br",
+  "Rendimento CDB Itaú": "itau.com.br",
+  "Pão de Açúcar": "paodeacucar.com",
+  Cinemark: "cinemark.com.br",
+  Drogasil: "drogasil.com.br",
+  "Coco Bambu": "cocobambu.com",
+  "Vivo Fibra": "vivo.com.br",
+  "Conta de luz - Enel": "enel.com.br",
+  Netflix: "netflix.com",
+  "Smart Fit": "smartfit.com.br",
+  "Notebook Dell Inspiron": "dell.com",
+  "Ar-condicionado Springer Midea": "midea.com",
+  "Passagem LATAM - Salvador": "latamairlines.com",
+  Rappi: "rappi.com.br",
+  "99App": "99app.com",
+  Shopee: "shopee.com.br",
+};
+
+const avatarMimeTypes: Record<string, string> = {
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
+
+export function readAvatarDataUrl(path: string) {
+  const mimeType = avatarMimeTypes[extname(path).toLowerCase()];
+  if (!mimeType) throw new Error("O avatar precisa ser um arquivo JPEG, PNG ou WebP.");
+  const content = readFileSync(resolve(path));
+  if (content.length > maximumPersonAvatarDataUrlBytes) {
+    throw new Error(`O avatar precisa ter no máximo ${maximumPersonAvatarDataUrlBytes / 1024} KB.`);
+  }
+  return `data:${mimeType};base64,${content.toString("base64")}`;
+}
+
+// Bundled avatars ("/avatars/…") are stored as-is; any other value is read as an image file.
+export function resolveAvatarUrl(avatar: string | null) {
+  if (!avatar) return null;
+  if (avatar.startsWith("/avatars/")) return avatar;
+  return readAvatarDataUrl(avatar);
+}
 
 type SeedSummary = {
   people: number;
@@ -68,6 +121,7 @@ type SeedSummary = {
   invoices: number;
   invoicePayments: number;
   inboxItems: number;
+  establishmentLogos: number;
 };
 
 type SeedCard = {
@@ -116,6 +170,11 @@ Uso:
   pnpm db:seed -- --email=<email> --startPeriod=YYYY-MM [--months=${DEFAULT_MONTHS}]
   pnpm db:seed -- --userId=<uuid> --startPeriod=YYYY-MM [--months=${DEFAULT_MONTHS}]
 
+Opções:
+  --avatar=<valor>    Define o avatar da pessoa administradora e da conta. Aceita um avatar
+                      do app (por exemplo, /avatars/4825015.png) ou um arquivo JPEG, PNG ou
+                      WebP de até 256 KB.
+
 Exemplos:
   pnpm db:seed -- --email=demo@openmonetis.local --startPeriod=2026-02
   pnpm db:seed -- --userId=3f6d2b84-6ed0-4a50-b257-8adf0b6178de --startPeriod=2026-01 --months=8
@@ -135,6 +194,7 @@ export function parseArgs(argv: string[]): CliOptions | null {
   let email: string | null = null;
   let startPeriod = "";
   let months = DEFAULT_MONTHS;
+  let avatarPath: string | null = null;
 
   for (const argument of argv) {
     if (argument.startsWith("--userId=") || argument.startsWith("--user-id=")) {
@@ -151,6 +211,10 @@ export function parseArgs(argv: string[]): CliOptions | null {
     }
     if (argument.startsWith("--months=")) {
       months = Number(argument.split("=")[1] as string);
+      continue;
+    }
+    if (argument.startsWith("--avatar=")) {
+      avatarPath = argument.slice("--avatar=".length).trim() || null;
     }
   }
 
@@ -164,7 +228,7 @@ export function parseArgs(argv: string[]): CliOptions | null {
     throw new Error(`O parâmetro \`--months\` deve ficar entre ${MIN_MONTHS} e ${MAX_MONTHS}.`);
   }
 
-  return { userId, email, startPeriod, months };
+  return { userId, email, startPeriod, months, avatarPath };
 }
 
 export function toDate(value: string) {
@@ -324,6 +388,7 @@ export async function seedMockData(argv = process.argv.slice(2)) {
 
   const targetUser = await resolveTargetUser(options);
   await assertFinancialSpaceIsEmpty(targetUser.id);
+  const avatarUrl = resolveAvatarUrl(options.avatarPath);
 
   const today = getTodayInBrazil();
   const periods = Array.from({ length: options.months }, (_, index) =>
@@ -346,6 +411,7 @@ export async function seedMockData(argv = process.argv.slice(2)) {
     invoices: 0,
     invoicePayments: 0,
     inboxItems: 0,
+    establishmentLogos: 0,
   };
 
   const seededPeriods = new Set<string>();
@@ -391,6 +457,28 @@ export async function seedMockData(argv = process.argv.slice(2)) {
         .returning();
     }
     if (!adminPerson) throw new Error("Não foi possível localizar a pessoa administradora.");
+    if (avatarUrl) {
+      // The account image mirrors the admin person's avatar, as in the profile settings.
+      await tx.update(people).set({ avatarUrl }).where(eq(people.id, adminPerson.id));
+      await tx
+        .update(user)
+        .set({ image: avatarUrl, updatedAt: new Date() })
+        .where(eq(user.id, targetUser.id));
+    }
+
+    const logoRows = Object.entries(mockEstablishmentLogoDomains).map(([name, domain]) => ({
+      userId: targetUser.id,
+      nameKey: createEstablishmentNameKey(name),
+      domain,
+    }));
+    await tx
+      .insert(establishmentLogos)
+      .values(logoRows)
+      .onConflictDoUpdate({
+        target: [establishmentLogos.userId, establishmentLogos.nameKey],
+        set: { domain: sql`excluded.domain`, updatedAt: new Date() },
+      });
+    summary.establishmentLogos += logoRows.length;
 
     const marinaId = randomUUID();
     const eduardoId = randomUUID();
