@@ -2171,6 +2171,7 @@ export const goals = pgTable(
   },
   (table) => [
     index("goals_user_id_status_idx").on(table.userId, table.status),
+    uniqueIndex("goals_id_user_id_unique").on(table.id, table.userId),
     foreignKey({
       name: "goals_account_user_fk",
       columns: [table.accountId, table.userId],
@@ -2182,6 +2183,49 @@ export const goals = pgTable(
     check(
       "goals_tracking_account_check",
       sql`(${table.trackingType} = 'manual' AND ${table.accountId} IS NULL) OR (${table.trackingType} = 'account' AND ${table.accountId} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export const goalContributionKind = pgEnum("goal_contribution_kind", [
+  "deposit",
+  "withdrawal",
+  "adjustment",
+]);
+
+export const goalContributions = pgTable(
+  "goal_contributions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    goalId: uuid("goal_id").notNull(),
+    kind: goalContributionKind("kind").notNull(),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    note: varchar("note", { length: 240 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("goal_contributions_goal_id_date_idx").on(
+      table.userId,
+      table.goalId,
+      table.date.desc(),
+      table.createdAt.desc(),
+    ),
+    foreignKey({
+      name: "goal_contributions_goal_user_fk",
+      columns: [table.goalId, table.userId],
+      foreignColumns: [goals.id, goals.userId],
+    }).onDelete("cascade"),
+    check(
+      "goal_contributions_amount_sign_check",
+      sql`(${table.kind} = 'deposit' AND ${table.amount} > 0) OR (${table.kind} = 'withdrawal' AND ${table.amount} < 0) OR (${table.kind} = 'adjustment' AND ${table.amount} <> 0)`,
+    ),
+    check(
+      "goal_contributions_note_not_blank_check",
+      sql`${table.note} IS NULL OR btrim(${table.note}) <> ''`,
     ),
   ],
 );

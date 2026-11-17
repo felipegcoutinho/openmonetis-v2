@@ -472,6 +472,14 @@ app.use("/goals", privateCache);
 app.use("/goals/*", privateCache);
 app.use("/goals", requireAuth);
 app.use("/goals/*", requireAuth);
+app.use(
+  "/goals/*",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 60,
+    key: (context) => `goals:${context.get("userId")}`,
+  }),
+);
 app.use("/calendar", privateCache);
 app.use("/calendar", requireAuth);
 app.use("/bills", privateCache);

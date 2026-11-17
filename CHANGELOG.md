@@ -23,6 +23,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   dividido, cada pessoa aparece com a própria parte, e as linhas da mesma compra ficam ligadas
   como na lista de lançamentos. A paleta abre sem animação e mostra os atalhos
   de teclado no rodapé.
+- Metas: **Aportar** registra aportes e retiradas datados em metas manuais ativas ou pausadas, e
+  **Ver histórico** mostra o saldo da meta ao fim de cada um dos últimos 12 meses e a lista de
+  movimentos, que podem ser removidos. Metas com prazo mostram quanto guardar por mês para chegar
+  ao objetivo, e o aporte oferece usar esse valor com um clique. Editar o saldo de uma meta manual
+  passa a entrar no histórico como ajuste de saldo.
 - Calendário (**Finanças → Calendário**): grade do mês com contas a pagar, fechamentos e
   vencimentos de faturas de cartão e tarefas com prazo, além de feriados e dias não úteis do
   calendário de vencimentos. O resumo mostra quanto falta pagar, quanto já foi pago e o que está
@@ -34,7 +39,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   para pago ou concluída e cadeado para fechamento), e a legenda explica os ícones e o valor no
   topo de cada dia. A agenda do dia usa os mesmos ícones. As setas do teclado mudam o dia selecionado. No celular, o mês vira uma lista dos dias
   com compromissos. Veja `docs/calendar.md`.
-- API: `GET /calendar?period=YYYY-MM`.
+- API: `GET /calendar?period=YYYY-MM`; `GET`/`POST /goals/{id}/contributions` e
+  `DELETE /goals/{id}/contributions/{contributionId}`; `requiredMonthlyAmount` nas metas.
 
 ### Alterado
 
@@ -47,7 +53,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Notas de atualização
 
-- API: rota nova `GET /calendar`.
+- Banco: a migration `0032_goal_contributions.sql` cria a tabela `goal_contributions` e registra o
+  valor já economizado de cada meta manual como o primeiro movimento do histórico (ajuste de
+  saldo na data de criação da meta), sem alterar o saldo das metas. Faça backup antes de atualizar
+  e acompanhe `docker compose logs migrator`.
+- API: rotas novas; `GoalOutput` ganha `requiredMonthlyAmount`.
 
 ## [0.17.1] - 2026-11-11
 

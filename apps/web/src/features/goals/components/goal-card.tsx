@@ -4,8 +4,10 @@ import {
   Check,
   Ellipsis,
   Goal,
+  History,
   Pause,
   Pencil,
+  PiggyBank,
   Play,
   RotateCcw,
   Trash2,
@@ -33,18 +35,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { formatGoalDate, goalPaceLabels, goalStatusLabels } from "../goals.presentation";
+import {
+  acceptsGoalContributions,
+  formatGoalDate,
+  goalPaceLabels,
+  goalStatusLabels,
+} from "../goals.presentation";
 import { GoalAccountLogo } from "./goal-account-logo";
 
 type GoalCardProps = {
   goal: GoalOutput;
   busy: boolean;
   onEdit: (goal: GoalOutput) => void;
+  onContribute: (goal: GoalOutput) => void;
+  onOpenDetails: (goal: GoalOutput) => void;
   onUpdate: (id: string, input: UpdateGoalInput) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 };
 
-export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardProps) {
+export function GoalCard({
+  goal,
+  busy,
+  onEdit,
+  onContribute,
+  onOpenDetails,
+  onUpdate,
+  onRemove,
+}: GoalCardProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const statusAction =
     goal.status === "active"
@@ -135,9 +152,25 @@ export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardPro
           >
             {goal.paceStatus ? goalPaceLabels[goal.paceStatus] : "\u00a0"}
           </p>
+          {goal.requiredMonthlyAmount ? (
+            <p className="text-pretty text-muted-foreground text-xs">
+              Guarde <MoneyValue amount={goal.requiredMonthlyAmount} className="text-foreground" />{" "}
+              por mês para chegar no prazo
+            </p>
+          ) : null}
         </div>
       </CardContent>
       <CardFooter className="mt-auto flex flex-wrap items-center gap-3 border-t pt-3">
+        {acceptsGoalContributions(goal) ? (
+          <button
+            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            disabled={busy}
+            onClick={() => onContribute(goal)}
+            type="button"
+          >
+            <PiggyBank aria-hidden="true" className="size-3.5" /> Aportar
+          </button>
+        ) : null}
         <button
           className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
           disabled={busy}
@@ -170,6 +203,10 @@ export function GoalCard({ goal, busy, onEdit, onUpdate, onRemove }: GoalCardPro
             <Ellipsis aria-hidden="true" className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
+            <DropdownMenuItem onClick={() => onOpenDetails(goal)}>
+              <History aria-hidden="true" /> Ver histórico
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {goal.status === "active" || goal.status === "paused" ? (
               <DropdownMenuItem onClick={() => void onUpdate(goal.id, { status: "completed" })}>
                 <Check aria-hidden="true" /> Concluir

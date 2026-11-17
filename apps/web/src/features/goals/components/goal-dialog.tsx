@@ -10,13 +10,13 @@ import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { Landmark, PencilLine } from "lucide-react";
 import { useId, useState } from "react";
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileDatePicker as DatePicker } from "@/components/forms/mobile-date-picker";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -281,7 +281,7 @@ export function GoalDialog({
                   {(field) => (
                     <div className="grid gap-1.5">
                       <Label className="font-mono" htmlFor={`${id}-current`}>
-                        Valor já economizado
+                        {goal ? "Saldo da meta" : "Valor já economizado"}
                       </Label>
                       <CurrencyInput
                         id={`${id}-current`}
@@ -290,7 +290,14 @@ export function GoalDialog({
                         placeholder="R$ 0,00"
                         value={field.state.value}
                         aria-invalid={field.state.meta.errors.length > 0}
+                        aria-describedby={goal ? `${id}-current-hint` : undefined}
                       />
+                      {goal ? (
+                        <p className="text-muted-foreground text-xs" id={`${id}-current-hint`}>
+                          Uma alteração aqui entra no histórico como ajuste de saldo. Para registrar
+                          dinheiro guardado, use Aportar.
+                        </p>
+                      ) : null}
                       {field.state.meta.errors[0] ? (
                         <p className="text-destructive text-xs" role="alert">
                           {field.state.meta.errors[0]}
@@ -391,20 +398,11 @@ export function GoalDialog({
           ) : null}
           <form.Subscribe selector={(state) => state.isSubmitting}>
             {(submitting) => (
-              <div data-mobile-form-actions className="grid grid-cols-2 gap-2">
-                <Button
-                  data-mobile-cancel
-                  disabled={submitting}
-                  onClick={() => onOpenChange(false)}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancelar
-                </Button>
-                <Button disabled={submitting} type="submit">
-                  {submitting ? "Salvando..." : goal ? "Salvar alterações" : "Criar meta"}
-                </Button>
-              </div>
+              <FormActions
+                busy={submitting}
+                onCancel={() => onOpenChange(false)}
+                submitLabel={goal ? "Atualizar" : "Salvar meta"}
+              />
             )}
           </form.Subscribe>
         </form>

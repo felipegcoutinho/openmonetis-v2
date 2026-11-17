@@ -1,4 +1,12 @@
-import type { CreateGoalInput, GoalOutput, UpdateGoalInput } from "@openmonetis/validators/goals";
+import type {
+  CreatedGoalContributionOutput,
+  CreateGoalContributionInput,
+  CreateGoalInput,
+  GoalContributionsOutput,
+  GoalOutput,
+  RemovedGoalContributionOutput,
+  UpdateGoalInput,
+} from "@openmonetis/validators/goals";
 import { requestApiWithResponseMessage as request } from "@/lib/api-client";
 
 export function getGoals() {
@@ -15,4 +23,21 @@ export function updateGoal(id: string, input: UpdateGoalInput) {
 
 export function deleteGoal(id: string) {
   return request<{ id: string }>(`/goals/${id}`, { method: "DELETE" });
+}
+
+export function getGoalContributions(id: string) {
+  return request<GoalContributionsOutput>(`/goals/${id}/contributions`);
+}
+
+export function createGoalContribution(id: string, input: CreateGoalContributionInput) {
+  return request<CreatedGoalContributionOutput>(`/goals/${id}/contributions`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteGoalContribution(id: string, contributionId: string) {
+  return request<RemovedGoalContributionOutput>(`/goals/${id}/contributions/${contributionId}`, {
+    method: "DELETE",
+  });
 }

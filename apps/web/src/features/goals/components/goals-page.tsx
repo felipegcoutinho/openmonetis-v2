@@ -20,6 +20,8 @@ import {
 } from "../goals.mutations";
 import { goalsQueryOptions } from "../goals.queries";
 import { GoalCard } from "./goal-card";
+import { GoalContributionDialog } from "./goal-contribution-dialog";
+import { GoalDetailsSheet } from "./goal-details-sheet";
 import { GoalDialog } from "./goal-dialog";
 
 const filters = [
@@ -40,7 +42,11 @@ export function GoalsPage() {
   const [filter, setFilter] = useState<Filter>("active");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalOutput | null>(null);
+  const [contributingGoalId, setContributingGoalId] = useState<string | null>(null);
+  const [detailsGoalId, setDetailsGoalId] = useState<string | null>(null);
   const goals = goalsQuery.data ?? [];
+  const contributingGoal = goals.find((goal) => goal.id === contributingGoalId) ?? null;
+  const detailsGoal = goals.find((goal) => goal.id === detailsGoalId) ?? null;
   const filtered = filter === "all" ? goals : goals.filter((goal) => goal.status === filter);
   const activeCount = goals.filter((goal) => goal.status === "active").length;
   const completedCount = goals.filter((goal) => goal.status === "completed").length;
@@ -173,6 +179,8 @@ export function GoalsPage() {
                         setEditingGoal(item);
                         setDialogOpen(true);
                       }}
+                      onContribute={(item) => setContributingGoalId(item.id)}
+                      onOpenDetails={(item) => setDetailsGoalId(item.id)}
                       onRemove={remove}
                       onUpdate={update}
                     />
@@ -224,6 +232,26 @@ export function GoalsPage() {
           onSubmit={save}
           open={dialogOpen}
         />
+        {detailsGoal ? (
+          <GoalDetailsSheet
+            goal={detailsGoal}
+            onContribute={() => setContributingGoalId(detailsGoal.id)}
+            onOpenChange={(open) => {
+              if (!open) setDetailsGoalId(null);
+            }}
+            open
+          />
+        ) : null}
+        {contributingGoal ? (
+          <GoalContributionDialog
+            goal={contributingGoal}
+            key={contributingGoal.id}
+            onOpenChange={(open) => {
+              if (!open) setContributingGoalId(null);
+            }}
+            open
+          />
+        ) : null}
       </main>
     </ProtectedRoute>
   );
