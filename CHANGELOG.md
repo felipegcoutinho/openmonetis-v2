@@ -17,6 +17,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Formulários: **Cancelar** e a ação principal (**Salvar …** ou **Atualizar**) ficam iguais em todos
+  os formulários, com um spinner durante o salvamento. Nas anotações, os erros dos campos só
+  aparecem depois de tentar salvar e somem assim que são corrigidos.
 - Filtros de lançamentos: todos os campos do painel passam a ter o mesmo fundo e a mesma borda, as
   seções ficam separadas por divisórias, as opções de **Outros** aparecem em lista e a faixa de
   valor usa o formato em reais, sem as setas de incremento.

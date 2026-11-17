@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { validateAfterSubmit } from "@/lib/form-feedback";
 import { cn } from "@/lib/utils";
 import { isNearLimit, noteCompletionCheckboxClassName } from "../notes.presentation";
 import type { useNoteForm } from "../useNoteForm";
@@ -91,16 +92,14 @@ export function NoteChecklistEditor({
                   )}
                   <form.Field
                     name={`items[${index}].text`}
-                    validators={{
-                      onBlur: ({ value }) => {
-                        const parsed = CreateNoteInputSchema.safeParse({
-                          title: "Título válido",
-                          kind: "checklist",
-                          items: [{ text: value }],
-                        });
-                        return parsed.success ? undefined : "Informe o texto do item.";
-                      },
-                    }}
+                    validators={validateAfterSubmit((value: string) => {
+                      const parsed = CreateNoteInputSchema.safeParse({
+                        title: "Título válido",
+                        kind: "checklist",
+                        items: [{ text: value }],
+                      });
+                      return parsed.success ? undefined : "Informe o texto do item.";
+                    })}
                   >
                     {(textField) => (
                       <div className="grid min-w-0 flex-1 gap-1">

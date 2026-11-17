@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { validateAfterSubmit } from "@/lib/form-feedback";
 import { addDaysToDateOnly, noteCompletionCheckboxClassName } from "../notes.presentation";
 import type { useNoteForm } from "../useNoteForm";
 import { NoteCharacterCount } from "./note-character-count";
@@ -29,16 +30,14 @@ export function NoteTaskFields({
     <div className="grid gap-4">
       <form.Field
         name="dueDate"
-        validators={{
-          onBlur: ({ value }) => {
-            const parsed = CreateNoteInputSchema.safeParse({
-              title: "Título válido",
-              kind: "task",
-              dueDate: value,
-            });
-            return parsed.success ? undefined : "Informe a data da tarefa.";
-          },
-        }}
+        validators={validateAfterSubmit((value: string) => {
+          const parsed = CreateNoteInputSchema.safeParse({
+            title: "Título válido",
+            kind: "task",
+            dueDate: value,
+          });
+          return parsed.success ? undefined : "Informe a data da tarefa.";
+        })}
       >
         {(field) => (
           <div className="grid gap-1.5">

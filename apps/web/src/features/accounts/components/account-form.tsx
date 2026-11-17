@@ -11,11 +11,11 @@ import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { FieldError } from "@/components/forms/field-error";
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { LogoPicker } from "@/components/logo-picker";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -283,20 +283,12 @@ export function AccountForm(props: AccountFormProps) {
 
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
-          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
-            <Button
-              data-mobile-cancel
-              disabled={isSubmitting}
-              onClick={onCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button aria-disabled={!canSubmit} disabled={isSubmitting} type="submit">
-              {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Salvar"}
-            </Button>
-          </div>
+          <FormActions
+            busy={isSubmitting}
+            onCancel={onCancel}
+            submitAriaDisabled={!canSubmit}
+            submitLabel={isEditing ? "Atualizar" : "Salvar conta"}
+          />
         )}
       </form.Subscribe>
     </form>

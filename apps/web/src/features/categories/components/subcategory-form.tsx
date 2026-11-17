@@ -6,7 +6,7 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useId, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/forms/form-actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showInvalidFormToast } from "@/lib/form-feedback";
@@ -92,14 +92,7 @@ export function SubcategoryForm({
       </form.Field>
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" disabled={submitting} onClick={onCancel}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Salvando..." : "Adicionar subcategoria"}
-            </Button>
-          </div>
+          <FormActions busy={submitting} onCancel={onCancel} submitLabel={"Salvar subcategoria"} />
         )}
       </form.Subscribe>
     </form>

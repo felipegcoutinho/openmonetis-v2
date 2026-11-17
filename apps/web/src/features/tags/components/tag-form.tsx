@@ -7,8 +7,8 @@ import { useForm } from "@tanstack/react-form";
 import { Check } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showInvalidFormToast } from "@/lib/form-feedback";
@@ -135,20 +135,11 @@ export function TagForm({
       ) : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(pending) => (
-          <div data-mobile-form-actions className="grid grid-cols-2 gap-2">
-            <Button
-              data-mobile-cancel
-              type="button"
-              variant="outline"
-              disabled={pending}
-              onClick={onCancel}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
+          <FormActions
+            busy={pending}
+            onCancel={onCancel}
+            submitLabel={tag ? "Atualizar" : "Salvar etiqueta"}
+          />
         )}
       </form.Subscribe>
     </form>

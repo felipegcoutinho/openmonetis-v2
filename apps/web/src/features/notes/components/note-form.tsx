@@ -8,6 +8,7 @@ import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { validateAfterSubmit } from "@/lib/form-feedback";
 import { useNoteForm } from "../useNoteForm";
 import { NoteCharacterCount } from "./note-character-count";
 import { NoteChecklistEditor } from "./note-checklist-editor";
@@ -46,16 +47,14 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
 
         <form.Field
           name="title"
-          validators={{
-            onBlur: ({ value }) => {
-              const parsed = CreateNoteInputSchema.safeParse({
-                title: value,
-                kind: "text",
-                content: "Conteúdo válido",
-              });
-              return parsed.success ? undefined : "Informe um título válido.";
-            },
-          }}
+          validators={validateAfterSubmit((value: string) => {
+            const parsed = CreateNoteInputSchema.safeParse({
+              title: value,
+              kind: "text",
+              content: "Conteúdo válido",
+            });
+            return parsed.success ? undefined : "Informe um título válido.";
+          })}
         >
           {(field) => (
             <div className="grid gap-1.5">
@@ -89,16 +88,14 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
             kind === "text" ? (
               <form.Field
                 name="content"
-                validators={{
-                  onBlur: ({ value }) => {
-                    const parsed = CreateNoteInputSchema.safeParse({
-                      title: "Título válido",
-                      kind: "text",
-                      content: value,
-                    });
-                    return parsed.success ? undefined : "Escreva o conteúdo da nota.";
-                  },
-                }}
+                validators={validateAfterSubmit((value: string) => {
+                  const parsed = CreateNoteInputSchema.safeParse({
+                    title: "Título válido",
+                    kind: "text",
+                    content: value,
+                  });
+                  return parsed.success ? undefined : "Escreva o conteúdo da nota.";
+                })}
               >
                 {(field) => (
                   <div className="grid gap-1.5">

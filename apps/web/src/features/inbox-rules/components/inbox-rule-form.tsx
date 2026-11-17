@@ -18,6 +18,7 @@ import { useForm } from "@tanstack/react-form";
 import { CircleOff, Info, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
@@ -497,20 +498,11 @@ export function InboxRuleForm({
 
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div data-mobile-form-actions className="grid grid-cols-2 gap-2 [&>*]:w-full">
-            <Button
-              data-mobile-cancel
-              disabled={submitting}
-              onClick={onCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button disabled={submitting} type="submit">
-              {submitting ? "Salvando..." : rule ? "Atualizar" : "Salvar"}
-            </Button>
-          </div>
+          <FormActions
+            busy={submitting}
+            onCancel={onCancel}
+            submitLabel={rule ? "Atualizar" : "Salvar regra"}
+          />
         )}
       </form.Subscribe>
     </form>

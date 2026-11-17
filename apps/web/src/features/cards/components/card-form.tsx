@@ -1,6 +1,6 @@
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { LogoPicker } from "@/components/logo-picker";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { logoCatalog } from "@/lib/logo-catalog";
@@ -81,24 +81,13 @@ export function CardForm({ accounts, card, onCancel, onSubmit }: CardFormProps) 
       ) : null}
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
-          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
-            <Button
-              data-mobile-cancel
-              disabled={isSubmitting}
-              onClick={onCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button
-              aria-disabled={!canSubmit || accounts.length === 0}
-              disabled={isSubmitting || accounts.length === 0}
-              type="submit"
-            >
-              {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Salvar"}
-            </Button>
-          </div>
+          <FormActions
+            busy={isSubmitting}
+            onCancel={onCancel}
+            submitAriaDisabled={!canSubmit || accounts.length === 0}
+            submitDisabled={accounts.length === 0}
+            submitLabel={isEditing ? "Atualizar" : "Salvar cartão"}
+          />
         )}
       </form.Subscribe>
     </form>

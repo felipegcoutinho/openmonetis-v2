@@ -282,6 +282,10 @@
   .mobile-form-content[data-mobile-details] [data-mobile-detail-list] {
     max-height: none;
     overflow-y: visible;
+    margin-right: 0;
+    padding-right: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .mobile-form-content[data-mobile-details] [data-slot="checkbox"] {

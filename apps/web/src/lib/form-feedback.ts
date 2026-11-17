@@ -13,3 +13,17 @@ export function showInvalidFormToast() {
       ?.focus(),
   );
 }
+
+type SubmittedFieldApi = { form: { state: { submissionAttempts: number } } };
+
+/**
+ * Field validators that stay quiet while the person is still filling the form: the first error
+ * shows on submit, and from then on the field re-validates as it changes, so it clears once fixed.
+ */
+export function validateAfterSubmit<TValue>(validate: (value: TValue) => string | undefined) {
+  return {
+    onSubmit: ({ value }: { value: TValue }) => validate(value),
+    onChange: ({ value, fieldApi }: { value: TValue; fieldApi: SubmittedFieldApi }) =>
+      fieldApi.form.state.submissionAttempts > 0 ? validate(value) : undefined,
+  };
+}

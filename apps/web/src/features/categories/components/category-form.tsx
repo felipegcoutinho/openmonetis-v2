@@ -11,10 +11,10 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
+import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -221,20 +221,11 @@ export function CategoryForm({
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(submitting) => (
-          <div data-mobile-form-actions className="grid w-full grid-cols-2 gap-2 [&>*]:w-full">
-            <Button
-              data-mobile-cancel
-              disabled={submitting}
-              onClick={onCancel}
-              type="button"
-              variant="outline"
-            >
-              Cancelar
-            </Button>
-            <Button disabled={submitting} type="submit">
-              {submitting ? "Salvando..." : editing ? "Atualizar" : "Salvar"}
-            </Button>
-          </div>
+          <FormActions
+            busy={submitting}
+            onCancel={onCancel}
+            submitLabel={editing ? "Atualizar" : "Salvar categoria"}
+          />
         )}
       </form.Subscribe>
     </form>

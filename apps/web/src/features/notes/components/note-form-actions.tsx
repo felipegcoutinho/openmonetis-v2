@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/forms/form-actions";
 import type { useNoteForm } from "../useNoteForm";
 
 import type { NoteFormProps } from "./note-form.types";
@@ -13,22 +13,14 @@ export function NoteFormActions({
   form: ReturnType<typeof useNoteForm>["form"];
 }) {
   return (
-    <div
-      data-mobile-form-actions
-      className="flex w-full items-center justify-end gap-2 border-t pt-4"
-    >
-      <form.Subscribe selector={(state) => state.isSubmitting}>
-        {(isSubmitting) => (
-          <>
-            <Button disabled={isSubmitting} onClick={onCancel} type="button" variant="outline">
-              Cancelar
-            </Button>
-            <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? "Salvando..." : isEditing ? "Salvar alterações" : "Criar anotação"}
-            </Button>
-          </>
-        )}
-      </form.Subscribe>
-    </div>
+    <form.Subscribe selector={(state) => state.isSubmitting}>
+      {(isSubmitting) => (
+        <FormActions
+          busy={isSubmitting}
+          onCancel={onCancel}
+          submitLabel={isEditing ? "Atualizar" : "Salvar anotação"}
+        />
+      )}
+    </form.Subscribe>
   );
 }
