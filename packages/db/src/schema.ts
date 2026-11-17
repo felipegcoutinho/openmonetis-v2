@@ -2146,6 +2146,54 @@ export const budgets = pgTable(
   ],
 );
 
+/**
+ * Recurring budgets: a category limit repeated every month from `start_period` through the
+ * inclusive `end_period` (open when null). Rules of one category never overlap; the service checks
+ * it while holding a lock on the category row.
+ */
+export const budgetRules = pgTable(
+  "budget_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    startPeriod: varchar("start_period", { length: 7 }).notNull(),
+    endPeriod: varchar("end_period", { length: 7 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("budget_rules_user_id_start_period_idx").on(table.userId, table.startPeriod),
+    uniqueIndex("budget_rules_user_id_category_id_start_period_unique").on(
+      table.userId,
+      table.categoryId,
+      table.startPeriod,
+    ),
+    foreignKey({
+      name: "budget_rules_category_id_user_id_categories_fk",
+      columns: [table.categoryId, table.userId],
+      foreignColumns: [categories.id, categories.userId],
+    }).onDelete("cascade"),
+    check("budget_rules_amount_positive_check", sql`${table.amount} > 0`),
+    check(
+      "budget_rules_start_period_format_check",
+      sql`${table.startPeriod} ~ '^[1-9][0-9]{3}-(0[1-9]|1[0-2])$'`,
+    ),
+    check(
+      "budget_rules_end_period_check",
+      sql`${table.endPeriod} IS NULL OR (${table.endPeriod} ~ '^[1-9][0-9]{3}-(0[1-9]|1[0-2])$' AND ${table.endPeriod} >= ${table.startPeriod})`,
+    ),
+  ],
+);
+
 export const goalTrackingType = pgEnum("goal_tracking_type", ["manual", "account"]);
 export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
 
@@ -2318,6 +2366,7 @@ export const userRelations = relations(user, ({ many, one }) => ({
   transactions: many(transactions),
   invoices: many(invoices),
   budgets: many(budgets),
+  budgetRules: many(budgetRules),
   attachments: many(attachments),
   transactionSplits: many(transactionSplits),
   recurringTransactionSplits: many(recurringTransactionSplits),
@@ -2428,6 +2477,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   transactions: many(transactions),
   recurringTransactionRules: many(recurringTransactionRules),
   budgets: many(budgets),
+  budgetRules: many(budgetRules),
   inboxRules: many(inboxRules),
 }));
 
@@ -2624,6 +2674,17 @@ export const budgetsRelations = relations(budgets, ({ one }) => ({
   }),
   category: one(categories, {
     fields: [budgets.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const budgetRulesRelations = relations(budgetRules, ({ one }) => ({
+  user: one(user, {
+    fields: [budgetRules.userId],
+    references: [user.id],
+  }),
+  category: one(categories, {
+    fields: [budgetRules.categoryId],
     references: [categories.id],
   }),
 }));

@@ -182,6 +182,66 @@ test("authenticated users cannot read or mutate foreign financial resources", {
       },
     );
     await t.test(
+      "recurring budgets cannot be read, changed or created by another user",
+      async () => {
+        const recurring = await api.data<{ recurrence: { ruleId: string } }>(
+          await api.request("/budgets", owner, "POST", {
+            categoryId: owner.expenseCategoryId,
+            period: "2021-01",
+            amount: 300,
+            repeatMonthly: true,
+          }),
+          201,
+        );
+        const ruleId = recurring.recurrence.ruleId;
+        const oneOff = await api.data<{ id: string }>(
+          await api.request("/budgets", owner, "POST", {
+            categoryId: owner.expenseCategoryId,
+            period: "2019-06",
+            amount: 50,
+          }),
+          201,
+        );
+        await api.error(
+          await api.request(`/budgets/recurring-rules/${ruleId}`, stranger, "PUT", {
+            scope: "future",
+            period: "2021-03",
+            amount: 1,
+          }),
+          404,
+        );
+        await api.error(
+          await api.request(`/budgets/recurring-rules/${ruleId}/stop`, stranger, "POST", {
+            period: "2021-03",
+          }),
+          404,
+        );
+        await api.error(await api.request(`/budgets/${oneOff.id}/repeat`, stranger, "POST"), 404);
+        await api.error(
+          await api.request("/budgets", stranger, "POST", {
+            categoryId: owner.expenseCategoryId,
+            period: "2021-01",
+            amount: 10,
+            repeatMonthly: true,
+          }),
+          404,
+        );
+        const later = await api.data<{ items: Array<{ amount: number }> }>(
+          await api.request("/budgets?period=2021-06", owner),
+          200,
+        );
+        assert.deepEqual(
+          later.items.map((item) => item.amount),
+          [300],
+        );
+        const strangerView = await api.data<{ items: unknown[] }>(
+          await api.request("/budgets?period=2021-06", stranger),
+          200,
+        );
+        assert.equal(strangerView.items.length, 0);
+      },
+    );
+    await t.test(
       "AI diagnoses, chats, data sharing and tools stay private to their owner",
       async () => {
         const { db, aiChatMessages, aiChats, aiDataSharing, aiDiagnoses } = await import(

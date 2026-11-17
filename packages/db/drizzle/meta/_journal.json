@@ -232,6 +232,13 @@
       "when": 1794768645603,
       "tag": "0032_goal_contributions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794847134514,
+      "tag": "0033_budget_rules",
+      "breakpoints": true
     }
   ]
 }

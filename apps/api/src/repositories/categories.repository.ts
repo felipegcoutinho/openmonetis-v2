@@ -1,4 +1,11 @@
-import { budgets, categories, db, recurringTransactionRules, transactions } from "@openmonetis/db";
+import {
+  budgetRules,
+  budgets,
+  categories,
+  db,
+  recurringTransactionRules,
+  transactions,
+} from "@openmonetis/db";
 import { CategoryConstraintError, expandCategoryIds } from "@openmonetis/domain/categories";
 import { and, asc, eq, inArray, type SQLWrapper, sql } from "drizzle-orm";
 import type { CategoriesRepository } from "../services/categories.service";
@@ -66,11 +73,16 @@ export const categoriesRepository = {
     });
   },
   async hasFinancialReferencesForUser(id, userId) {
-    const [budgetRows, transactionRows, recurringRows] = await Promise.all([
+    const [budgetRows, budgetRuleRows, transactionRows, recurringRows] = await Promise.all([
       db
         .select({ id: budgets.id })
         .from(budgets)
         .where(and(eq(budgets.categoryId, id), eq(budgets.userId, userId)))
+        .limit(1),
+      db
+        .select({ id: budgetRules.id })
+        .from(budgetRules)
+        .where(and(eq(budgetRules.categoryId, id), eq(budgetRules.userId, userId)))
         .limit(1),
       db
         .select({ id: transactions.id })
@@ -88,7 +100,12 @@ export const categoriesRepository = {
         )
         .limit(1),
     ]);
-    return budgetRows.length > 0 || transactionRows.length > 0 || recurringRows.length > 0;
+    return (
+      budgetRows.length > 0 ||
+      budgetRuleRows.length > 0 ||
+      transactionRows.length > 0 ||
+      recurringRows.length > 0
+    );
   },
 } satisfies CategoriesRepository;
 

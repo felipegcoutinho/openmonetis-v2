@@ -274,6 +274,229 @@ export function getPreviousBudgetPeriod(period: string) {
   return addMonthsToPeriod(period, -1);
 }
 
+/**
+ * Recurring budgets. A rule repeats a category limit every month from `startPeriod` through the
+ * inclusive `endPeriod` (open when `null`) and is expanded per queried month, never materialized.
+ * The category is the identity of the series: versions are consecutive rules of one category, and
+ * a monthly budget of a covered month is that month's adjustment, which wins over the rule.
+ */
+export const budgetRuleEditScopes = ["single", "future"] as const;
+export type BudgetRuleEditScope = (typeof budgetRuleEditScopes)[number];
+
+export type BudgetRuleVersion = {
+  id: string;
+  categoryId: string;
+  amount: string | number;
+  startPeriod: string;
+  endPeriod: string | null;
+};
+
+export type BudgetRuleDraft = {
+  userId: string;
+  categoryId: string;
+  amount: string;
+  startPeriod: string;
+  endPeriod: string | null;
+};
+
+export type MonthlyBudgetLimit = { id: string; categoryId: string; amount: string | number };
+
+export type ResolvedBudgetLimit<
+  TBudget extends MonthlyBudgetLimit,
+  TRule extends BudgetRuleVersion,
+> = {
+  categoryId: string;
+  amount: number;
+  /** The month's own budget: a one-off limit, or the adjustment of a recurring one. */
+  budget: TBudget | null;
+  rule: TRule | null;
+};
+
+export const budgetRuleErrorCodes = [
+  "budget_rule_overlap",
+  "budget_rule_period_outside",
+  "budget_already_exists",
+] as const;
+export type BudgetRuleErrorCode = (typeof budgetRuleErrorCodes)[number];
+
+export class BudgetRuleError extends RangeError {
+  readonly code: BudgetRuleErrorCode;
+
+  constructor(code: BudgetRuleErrorCode) {
+    super(code);
+    this.code = code;
+    this.name = "BudgetRuleError";
+  }
+}
+
+/** `YYYY-MM` periods sort as text, so range checks need no date parsing. */
+export function isBudgetRuleActiveInPeriod(
+  rule: Pick<BudgetRuleVersion, "startPeriod" | "endPeriod">,
+  period: string,
+) {
+  return rule.startPeriod <= period && (rule.endPeriod === null || rule.endPeriod >= period);
+}
+
+function rangesOverlap(
+  left: Pick<BudgetRuleVersion, "startPeriod" | "endPeriod">,
+  right: Pick<BudgetRuleVersion, "startPeriod" | "endPeriod">,
+) {
+  return (
+    (left.endPeriod === null || left.endPeriod >= right.startPeriod) &&
+    (right.endPeriod === null || right.endPeriod >= left.startPeriod)
+  );
+}
+
+/** Throws when a candidate rule would share a month with another rule of the same category. */
+export function assertBudgetRuleFits(
+  candidate: Pick<BudgetRuleVersion, "categoryId" | "startPeriod" | "endPeriod">,
+  existingRules: BudgetRuleVersion[],
+  ignoredRuleIds: string[] = [],
+) {
+  const conflict = existingRules.some(
+    (rule) =>
+      rule.categoryId === candidate.categoryId &&
+      !ignoredRuleIds.includes(rule.id) &&
+      rangesOverlap(rule, candidate),
+  );
+  if (conflict) throw new BudgetRuleError("budget_rule_overlap");
+}
+
+export function createBudgetRuleDraft(input: {
+  userId: string;
+  categoryId: string;
+  amount: number | string;
+  startPeriod: string;
+  endPeriod?: string | null;
+}): BudgetRuleDraft {
+  return {
+    userId: input.userId,
+    categoryId: input.categoryId,
+    amount: Number(input.amount).toFixed(2),
+    startPeriod: input.startPeriod,
+    endPeriod: input.endPeriod ?? null,
+  };
+}
+
+/** Limits that apply in `period`: the month's own budget first, then the rule in force. */
+export function resolveBudgetLimits<
+  TBudget extends MonthlyBudgetLimit,
+  TRule extends BudgetRuleVersion,
+>(
+  period: string,
+  rules: TRule[],
+  monthlyBudgets: TBudget[],
+): ResolvedBudgetLimit<TBudget, TRule>[] {
+  const ruleByCategory = new Map<string, TRule>();
+  for (const rule of rules) {
+    if (!isBudgetRuleActiveInPeriod(rule, period)) continue;
+    const current = ruleByCategory.get(rule.categoryId);
+    // Rules never overlap; the latest start wins defensively if stored data ever does.
+    if (!current || rule.startPeriod > current.startPeriod)
+      ruleByCategory.set(rule.categoryId, rule);
+  }
+
+  const limits: ResolvedBudgetLimit<TBudget, TRule>[] = monthlyBudgets.map((budget) => ({
+    categoryId: budget.categoryId,
+    amount: Math.abs(Number(budget.amount)),
+    budget,
+    rule: ruleByCategory.get(budget.categoryId) ?? null,
+  }));
+  const budgetedCategoryIds = new Set(monthlyBudgets.map((budget) => budget.categoryId));
+  for (const rule of ruleByCategory.values()) {
+    if (budgetedCategoryIds.has(rule.categoryId)) continue;
+    limits.push({
+      categoryId: rule.categoryId,
+      amount: Math.abs(Number(rule.amount)),
+      budget: null,
+      rule,
+    });
+  }
+  return limits;
+}
+
+/** Monthly budgets a rule change removes: the adjustments of `categoryId` from a month on. */
+export type BudgetAdjustmentRange = {
+  categoryId: string;
+  fromPeriod: string;
+  toPeriod: string | null;
+};
+
+/**
+ * Store operations of one rule change, applied together. Months before the selected one never
+ * change, so a past limit stays what it was.
+ */
+export type BudgetRuleChange = {
+  updateRule?: { id: string; amount?: string; endPeriod?: string | null };
+  deleteRuleId?: string;
+  insertRule?: BudgetRuleDraft;
+  upsertMonthlyBudget?: BudgetCreateDraft;
+  removeAdjustments?: BudgetAdjustmentRange;
+};
+
+function assertPeriodInsideRule(rule: BudgetRuleVersion, period: string) {
+  if (!isBudgetRuleActiveInPeriod(rule, period)) {
+    throw new BudgetRuleError("budget_rule_period_outside");
+  }
+}
+
+/**
+ * New amount for a recurring budget. `single` adjusts only `period`; `future` starts a new version
+ * at `period` (or rewrites the rule when it starts there) and drops the adjustments it replaces.
+ */
+export function planBudgetRuleAmountChange(input: {
+  userId: string;
+  rule: BudgetRuleVersion;
+  period: string;
+  scope: BudgetRuleEditScope;
+  amount: number;
+}): BudgetRuleChange {
+  const { rule, period } = input;
+  assertPeriodInsideRule(rule, period);
+  const amount = input.amount.toFixed(2);
+
+  if (input.scope === "single") {
+    return {
+      upsertMonthlyBudget: { userId: input.userId, categoryId: rule.categoryId, period, amount },
+    };
+  }
+
+  const removeAdjustments = {
+    categoryId: rule.categoryId,
+    fromPeriod: period,
+    toPeriod: rule.endPeriod,
+  };
+  if (period === rule.startPeriod) {
+    return { updateRule: { id: rule.id, amount }, removeAdjustments };
+  }
+  return {
+    updateRule: { id: rule.id, endPeriod: addMonthsToPeriod(period, -1) },
+    insertRule: createBudgetRuleDraft({
+      userId: input.userId,
+      categoryId: rule.categoryId,
+      amount,
+      startPeriod: period,
+      endPeriod: rule.endPeriod,
+    }),
+    removeAdjustments,
+  };
+}
+
+/** Ends a recurring budget from `period` on; a rule that starts there is removed entirely. */
+export function planBudgetRuleStop(rule: BudgetRuleVersion, period: string): BudgetRuleChange {
+  assertPeriodInsideRule(rule, period);
+  const removeAdjustments = {
+    categoryId: rule.categoryId,
+    fromPeriod: period,
+    toPeriod: rule.endPeriod,
+  };
+  if (period === rule.startPeriod) return { deleteRuleId: rule.id, removeAdjustments };
+  return {
+    updateRule: { id: rule.id, endPeriod: addMonthsToPeriod(period, -1) },
+    removeAdjustments,
+  };
+}
+
 function resolveBudgetStatus(limit: number, spent: number, usagePercentage: number): BudgetStatus {
   if (spent > limit) return "exceeded";
   if (spent === limit && limit > 0) return "reached";

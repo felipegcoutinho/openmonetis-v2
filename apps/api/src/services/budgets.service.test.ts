@@ -7,6 +7,7 @@ function fixture() {
   const rows: Awaited<ReturnType<BudgetsRepository["listByUserAndPeriod"]>> = [];
   const spending: Awaited<ReturnType<BudgetsRepository["listSpendingEntries"]>> = [];
   const rules: Awaited<ReturnType<BudgetsRepository["listRecurringRules"]>> = [];
+  const budgetRules: Awaited<ReturnType<BudgetsRepository["listRulesForPeriod"]>> = [];
   let writes = 0;
   const repository: BudgetsRepository = {
     async listByUserAndPeriod(user, period) {
@@ -63,6 +64,80 @@ function fixture() {
       const index = rows.findIndex((r) => r.id === id && r.userId === user);
       return index < 0 ? null : rows.splice(index, 1)[0];
     },
+    async listRulesForPeriod(user, period) {
+      return budgetRules.filter(
+        (rule) =>
+          rule.userId === user &&
+          rule.startPeriod <= period &&
+          (rule.endPeriod === null || rule.endPeriod >= period),
+      );
+    },
+    async findRuleForUser(id, user) {
+      return budgetRules.find((rule) => rule.id === id && rule.userId === user) ?? null;
+    },
+    async withCategoryLock(user, categoryId, work) {
+      return work({
+        async listRules() {
+          return budgetRules.filter(
+            (rule) => rule.userId === user && rule.categoryId === categoryId,
+          );
+        },
+        async findMonthlyBudget(period) {
+          return (
+            rows.find(
+              (r) => r.userId === user && r.categoryId === categoryId && r.period === period,
+            ) ?? null
+          );
+        },
+        async apply(change) {
+          writes++;
+          const removeRows = (keep: (row: (typeof rows)[number]) => boolean) => {
+            for (let index = rows.length - 1; index >= 0; index--) {
+              if (!keep(rows[index] as (typeof rows)[number])) rows.splice(index, 1);
+            }
+          };
+          if (change.deleteMonthlyBudgetId) {
+            removeRows((row) => row.id !== change.deleteMonthlyBudgetId);
+          }
+          if (change.removeAdjustments) {
+            const { fromPeriod, toPeriod } = change.removeAdjustments;
+            removeRows(
+              (row) =>
+                row.userId !== user ||
+                row.categoryId !== categoryId ||
+                row.period < fromPeriod ||
+                (toPeriod !== null && row.period > toPeriod),
+            );
+          }
+          if (change.deleteRuleId) {
+            const index = budgetRules.findIndex((rule) => rule.id === change.deleteRuleId);
+            if (index >= 0) budgetRules.splice(index, 1);
+          }
+          if (change.updateRule) {
+            const { id, ...values } = change.updateRule;
+            Object.assign(budgetRules.find((rule) => rule.id === id) ?? {}, values);
+          }
+          if (change.insertRule) {
+            budgetRules.push({
+              ...change.insertRule,
+              id: `rule-${budgetRules.length}`,
+              categoryName: categoryId,
+              categoryIcon: null,
+              createdAt: new Date("2020-01-01"),
+              updatedAt: new Date("2020-01-01"),
+            });
+          }
+          if (change.upsertMonthlyBudget) {
+            const draft = change.upsertMonthlyBudget;
+            const existing = rows.find(
+              (r) => r.userId === user && r.categoryId === categoryId && r.period === draft.period,
+            );
+            if (existing) existing.amount = draft.amount;
+            else await repository.insertIfAbsent(draft);
+          }
+        },
+      });
+    },
     async insertCopies(drafts) {
       const created = [];
       for (const draft of drafts) {
@@ -78,7 +153,16 @@ function fixture() {
       return id === "foreign" ? null : { id, type: id === "salary" ? "income" : "expense" };
     },
   });
-  return { userId, rows, spending, rules, repository, service, writes: () => writes };
+  return {
+    userId,
+    rows,
+    spending,
+    rules,
+    budgetRules,
+    repository,
+    service,
+    writes: () => writes,
+  };
 }
 
 test("budget overview nets refunds, ignores transfers and invoice payments, and includes recurring commitments", async () => {
@@ -212,4 +296,88 @@ test("reading and updating a foreign budget are rejected without changing the ow
   });
   await assert.rejects(f.service.remove(row.id, "stranger"), { code: "budget_not_found" });
   assert.deepEqual(f.rows, before);
+});
+
+test("a recurring budget applies to later months and keeps earlier ones intact", async () => {
+  const f = fixture();
+  const created = await f.service.create(
+    { categoryId: "food", period: "2020-03", amount: 300, repeatMonthly: true },
+    f.userId,
+  );
+  assert.equal(created.budgetId, null);
+  assert.equal(created.id, "rule-0:2020-03");
+  assert.deepEqual(created.recurrence, {
+    ruleId: "rule-0",
+    startPeriod: "2020-03",
+    endPeriod: null,
+  });
+  assert.equal((await f.service.list(f.userId, { period: "2020-02" })).items.length, 0);
+  assert.equal((await f.service.list(f.userId, { period: "2021-07" })).items[0]?.amount, 300);
+
+  await assert.rejects(
+    f.service.create(
+      { categoryId: "food", period: "2020-05", amount: 10, repeatMonthly: true },
+      f.userId,
+    ),
+    { code: "budget_rule_overlap" },
+  );
+});
+
+test("editing a recurring budget adjusts one month or starts a new version", async () => {
+  const f = fixture();
+  await f.service.create(
+    { categoryId: "food", period: "2020-01", amount: 300, repeatMonthly: true },
+    f.userId,
+  );
+  const adjusted = await f.service.updateRule("rule-0", f.userId, {
+    scope: "single",
+    period: "2020-04",
+    amount: 450,
+  });
+  assert.equal(adjusted.amount, 450);
+  assert.ok(adjusted.budgetId);
+  assert.equal(adjusted.recurrence?.ruleId, "rule-0");
+  assert.equal((await f.service.list(f.userId, { period: "2020-05" })).items[0]?.amount, 300);
+
+  await f.service.updateRule("rule-0", f.userId, {
+    scope: "future",
+    period: "2020-03",
+    amount: 500,
+  });
+  const amountIn = async (period: string) =>
+    (await f.service.list(f.userId, { period })).items[0]?.amount;
+  assert.equal(await amountIn("2020-02"), 300);
+  assert.equal(await amountIn("2020-03"), 500);
+  // The April adjustment was replaced by the new version.
+  assert.equal(await amountIn("2020-04"), 500);
+  assert.equal(f.rows.length, 0);
+
+  await assert.rejects(
+    f.service.updateRule("rule-0", f.userId, { scope: "future", period: "2020-06", amount: 1 }),
+    { code: "budget_rule_period_outside" },
+  );
+});
+
+test("stopping a recurring budget ends it from the month on and a one-off can become recurring", async () => {
+  const f = fixture();
+  await f.service.create(
+    { categoryId: "food", period: "2020-01", amount: 300, repeatMonthly: true },
+    f.userId,
+  );
+  const stopped = await f.service.stopRule("rule-0", f.userId, { period: "2020-06" });
+  assert.deepEqual(stopped, { id: "rule-0", endPeriod: "2020-05", deleted: false });
+  assert.equal((await f.service.list(f.userId, { period: "2020-05" })).items.length, 1);
+  assert.equal((await f.service.list(f.userId, { period: "2020-06" })).items.length, 0);
+
+  const oneOff = await f.service.create(
+    { categoryId: "home", period: "2020-02", amount: 80 },
+    f.userId,
+  );
+  const repeated = await f.service.repeat(oneOff.id, f.userId);
+  assert.equal(repeated.budgetId, null);
+  assert.equal(repeated.recurrence?.startPeriod, "2020-02");
+  assert.equal((await f.service.list(f.userId, { period: "2020-09" })).items[0]?.amount, 80);
+  await assert.rejects(f.service.stopRule("missing", f.userId, { period: "2020-02" }), {
+    code: "budget_rule_not_found",
+  });
 });

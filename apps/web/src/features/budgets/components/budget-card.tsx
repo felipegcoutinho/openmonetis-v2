@@ -1,6 +1,14 @@
 import type { BudgetOutput } from "@openmonetis/validators/budgets";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarOff,
+  ChevronDown,
+  Pencil,
+  Repeat,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
 import { MoneyValue } from "@/components/money-value";
@@ -25,14 +33,20 @@ import {
   budgetProgressStyles,
   budgetStatusLabels,
   budgetStatusStyles,
+  describeBudgetRecurrence,
   formatBudgetPercentage,
+  formatBudgetPeriod,
+  isAdjustedBudget,
 } from "../budgets.presentation";
 
 type BudgetCardProps = {
   budget: BudgetOutput;
   categorySlug?: string;
   onEdit: (budget: BudgetOutput) => void;
+  /** Removes a one-off budget, or ends a recurring one from the card's month on. */
   onRemove: (budget: BudgetOutput) => Promise<void>;
+  onRepeat: (budget: BudgetOutput) => void;
+  onResetAdjustment: (budget: BudgetOutput) => void;
   pending?: boolean;
 };
 
@@ -41,8 +55,12 @@ export function BudgetCard({
   categorySlug,
   onEdit,
   onRemove,
+  onRepeat,
+  onResetAdjustment,
   pending = false,
 }: BudgetCardProps) {
+  const recurring = budget.recurrence !== null;
+  const month = formatBudgetPeriod(budget.period).toLocaleLowerCase("pt-BR");
   const [removeOpen, setRemoveOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -59,7 +77,13 @@ export function BudgetCard({
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
               <CategoryIcon className="size-5" name={budget.categoryIcon} />
             </span>
-            <CardTitle className="truncate">{budget.categoryName}</CardTitle>
+            <div className="grid min-w-0 gap-0.5">
+              <CardTitle className="truncate">{budget.categoryName}</CardTitle>
+              <p className="flex min-w-0 items-center gap-1 text-muted-foreground text-xs">
+                {recurring ? <Repeat aria-hidden="true" className="size-3 shrink-0" /> : null}
+                <span className="truncate">{describeBudgetRecurrence(budget)}</span>
+              </p>
+            </div>
           </div>
           {/* Only states that ask for attention get a badge; the bar already shows "on track". */}
           {budget.status !== "onTrack" ? (
@@ -160,8 +184,26 @@ export function BudgetCard({
           </Link>
         ) : null}
         <CardActionsMenu disabled={pending} label={`Mais ações para ${budget.categoryName}`}>
+          {recurring ? null : (
+            <DropdownMenuItem onClick={() => onRepeat(budget)}>
+              <Repeat aria-hidden="true" /> Repetir todo mês
+            </DropdownMenuItem>
+          )}
+          {isAdjustedBudget(budget) ? (
+            <DropdownMenuItem onClick={() => onResetAdjustment(budget)}>
+              <RotateCcw aria-hidden="true" /> Voltar ao valor recorrente
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onClick={() => setRemoveOpen(true)} variant="destructive">
-            <Trash2 aria-hidden="true" /> Remover orçamento
+            {recurring ? (
+              <>
+                <CalendarOff aria-hidden="true" /> Encerrar a partir de {month}
+              </>
+            ) : (
+              <>
+                <Trash2 aria-hidden="true" /> Remover orçamento
+              </>
+            )}
           </DropdownMenuItem>
         </CardActionsMenu>
       </CardFooter>
@@ -169,10 +211,13 @@ export function BudgetCard({
       <AlertDialog onOpenChange={setRemoveOpen} open={removeOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover orçamento?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {recurring ? "Encerrar orçamento recorrente?" : "Remover orçamento?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              O limite de &quot;{budget.categoryName}&quot; será removido apenas deste mês. Os
-              lançamentos da categoria não serão alterados.
+              {recurring
+                ? `O limite de "${budget.categoryName}" deixa de valer a partir de ${month}, incluindo os ajustes desses meses. Os meses anteriores continuam com o limite, e os lançamentos não mudam.`
+                : `O limite de "${budget.categoryName}" será removido apenas deste mês. Os lançamentos da categoria não serão alterados.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -191,7 +236,13 @@ export function BudgetCard({
               }}
               variant="destructive"
             >
-              {pending ? "Removendo..." : "Remover"}
+              {pending
+                ? recurring
+                  ? "Encerrando..."
+                  : "Removendo..."
+                : recurring
+                  ? "Encerrar"
+                  : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

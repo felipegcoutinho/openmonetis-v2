@@ -14,10 +14,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { cn } from "@/lib/utils";
 import { useCopyPreviousBudgetsMutation } from "../budgets.mutations";
-import { formatBudgetPeriod } from "../budgets.presentation";
+import { formatBudgetPeriod, getCopyableBudgets } from "../budgets.presentation";
 import { budgetsQueryOptions } from "../budgets.queries";
 
 type CopyBudgetsDialogProps = {
@@ -47,10 +48,9 @@ export function CopyBudgetsDialog({
     <Dialog onOpenChange={changeOpen} open={open}>
       <DialogContent guarded className="sm:max-w-xl" showCloseButton={!copyMutation.isPending}>
         <DialogHeader>
-          <DialogTitle>Copiar limites do mês anterior</DialogTitle>
+          <DialogTitle>Limites de {formatBudgetPeriod(previousPeriod)}</DialogTitle>
           <DialogDescription>
-            Selecione os orçamentos de {formatBudgetPeriod(previousPeriod)} que deseja usar em{" "}
-            {formatBudgetPeriod(period)}.
+            Escolha os limites que passam a valer em {formatBudgetPeriod(period)}.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,9 +79,13 @@ export function CopyBudgetsDialog({
             currentCategoryIds={currentCategoryIds}
             key={`${period}-${previousQuery.dataUpdatedAt}-${open ? "open" : "closed"}`}
             onCancel={() => changeOpen(false)}
-            onCopy={async (sourceBudgetIds) => {
-              const result = await copyMutation.mutateAsync({ period, sourceBudgetIds });
-              showCopySuccess(result);
+            onCopy={async (sourceBudgetIds, repeatMonthly) => {
+              const result = await copyMutation.mutateAsync({
+                period,
+                sourceBudgetIds,
+                repeatMonthly,
+              });
+              showCopySuccess(result, repeatMonthly);
               changeOpen(false);
             }}
             pending={copyMutation.isPending}
@@ -117,19 +121,23 @@ function CopyBudgetSelection({
   budgets: BudgetOutput[];
   currentCategoryIds: string[];
   onCancel: () => void;
-  onCopy: (sourceBudgetIds: string[]) => Promise<void>;
+  onCopy: (sourceBudgetIds: string[], repeatMonthly: boolean) => Promise<void>;
   pending: boolean;
   previousPeriod: string;
 }) {
   const existingCategoryIds = new Set(currentCategoryIds);
-  const availableBudgets = budgets.filter((budget) => !existingCategoryIds.has(budget.categoryId));
-  const [selectedIds, setSelectedIds] = useState(availableBudgets.map((budget) => budget.id));
+  const availableBudgets = getCopyableBudgets(budgets, currentCategoryIds);
+  const copyableIds = new Set(availableBudgets.map((budget) => budget.id));
+  const [selectedIds, setSelectedIds] = useState(
+    availableBudgets.map((budget) => budget.budgetId as string),
+  );
+  const [repeatMonthly, setRepeatMonthly] = useState(true);
   const selectedSet = new Set(selectedIds);
   const allSelected = availableBudgets.length > 0 && selectedIds.length === availableBudgets.length;
 
   async function copySelected() {
     try {
-      await onCopy(selectedIds);
+      await onCopy(selectedIds, repeatMonthly);
     } catch {
       toast.error("Não foi possível copiar os orçamentos.", {
         description: "Tente novamente em instantes.",
@@ -153,7 +161,9 @@ function CopyBudgetSelection({
               <Button
                 disabled={pending}
                 onClick={() =>
-                  setSelectedIds(allSelected ? [] : availableBudgets.map((budget) => budget.id))
+                  setSelectedIds(
+                    allSelected ? [] : availableBudgets.map((budget) => budget.budgetId as string),
+                  )
                 }
                 size="xs"
                 type="button"
@@ -166,33 +176,35 @@ function CopyBudgetSelection({
           <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
             {budgets.map((budget) => {
               const alreadyExists = existingCategoryIds.has(budget.categoryId);
+              const unavailable = !copyableIds.has(budget.id);
+              const sourceId = budget.budgetId ?? budget.id;
               const fieldId = `copy-budget-${budget.id}`;
               return (
                 <div
                   className={cn(
                     "flex items-center gap-3 rounded-lg border p-3",
-                    alreadyExists && "bg-muted/30 opacity-70",
+                    unavailable && "bg-muted/30 opacity-70",
                   )}
                   key={budget.id}
                 >
                   <Checkbox
-                    checked={selectedSet.has(budget.id)}
-                    disabled={alreadyExists || pending}
+                    checked={selectedSet.has(sourceId)}
+                    disabled={unavailable || pending}
                     id={fieldId}
                     onCheckedChange={(checked) =>
                       setSelectedIds((current) =>
                         checked
-                          ? current.includes(budget.id)
+                          ? current.includes(sourceId)
                             ? current
-                            : [...current, budget.id]
-                          : current.filter((id) => id !== budget.id),
+                            : [...current, sourceId]
+                          : current.filter((id) => id !== sourceId),
                       )
                     }
                   />
                   <Label
                     className={cn(
                       "min-w-0 flex-1 gap-3 font-sans font-normal",
-                      alreadyExists ? "cursor-not-allowed" : "cursor-pointer",
+                      unavailable ? "cursor-not-allowed" : "cursor-pointer",
                     )}
                     htmlFor={fieldId}
                   >
@@ -208,7 +220,11 @@ function CopyBudgetSelection({
                       </span>
                     </span>
                   </Label>
-                  {alreadyExists ? <Badge variant="secondary">Já existe</Badge> : null}
+                  {alreadyExists ? (
+                    <Badge variant="secondary">Já existe</Badge>
+                  ) : unavailable ? (
+                    <Badge variant="secondary">Recorrente</Badge>
+                  ) : null}
                 </div>
               );
             })}
@@ -217,7 +233,25 @@ function CopyBudgetSelection({
             <p className="text-muted-foreground text-sm">
               Todos os limites do mês anterior já existem neste mês.
             </p>
-          ) : null}
+          ) : (
+            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+              <Label className="grid gap-0.5 font-sans font-normal" htmlFor="copy-budgets-repeat">
+                <span className="font-medium text-sm">Repetir todo mês</span>
+                <span className="text-muted-foreground text-xs">
+                  {repeatMonthly
+                    ? "Os limites copiados passam a valer também nos próximos meses."
+                    : "Os limites copiados valem só para este mês."}
+                </span>
+              </Label>
+              <Switch
+                checked={repeatMonthly}
+                className="mt-0.5 shrink-0"
+                disabled={pending}
+                id="copy-budgets-repeat"
+                onCheckedChange={setRepeatMonthly}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid justify-items-center gap-2 rounded-lg border border-dashed p-6 text-center">
@@ -247,10 +281,10 @@ function CopyBudgetSelection({
           type="button"
         >
           {pending
-            ? "Copiando..."
-            : selectedIds.length === 1
-              ? "Copiar 1 orçamento"
-              : `Copiar ${selectedIds.length} orçamentos`}
+            ? "Salvando..."
+            : `${repeatMonthly ? "Repetir" : "Copiar"} ${
+                selectedIds.length === 1 ? "1 limite" : `${selectedIds.length} limites`
+              }`}
         </Button>
       </DialogFooter>
     </>
@@ -268,18 +302,19 @@ function CopyBudgetsLoading() {
   );
 }
 
-function showCopySuccess(result: CopyPreviousBudgetsOutput) {
+function showCopySuccess(result: CopyPreviousBudgetsOutput, repeatMonthly: boolean) {
   if (result.createdCount === 0) {
-    toast.info("Nenhum orçamento foi copiado", {
+    toast.info("Nenhum limite foi trazido", {
       description: "Os limites selecionados já existem neste mês.",
     });
     return;
   }
 
+  const count = result.createdCount === 1 ? "1 limite" : `${result.createdCount} limites`;
   toast.success(
-    result.createdCount === 1
-      ? "1 orçamento copiado do mês anterior"
-      : `${result.createdCount} orçamentos copiados do mês anterior`,
+    repeatMonthly
+      ? `${count} ${result.createdCount === 1 ? "passa" : "passam"} a se repetir todo mês`
+      : `${count} ${result.createdCount === 1 ? "copiado" : "copiados"} do mês anterior`,
     result.skippedCount > 0
       ? { description: `${result.skippedCount} já existiam e foram ignorados.` }
       : undefined,

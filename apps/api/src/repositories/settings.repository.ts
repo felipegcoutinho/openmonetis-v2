@@ -1,6 +1,7 @@
 import {
   account,
   attachments,
+  budgetRules,
   budgets,
   cards,
   categories,
@@ -136,6 +137,7 @@ async function clearApplicationDataForUser(transaction: DatabaseTransaction, use
   await transaction.delete(installmentSeries).where(eq(installmentSeries.userId, userId));
   await transaction.delete(invoices).where(eq(invoices.userId, userId));
   await transaction.delete(cards).where(eq(cards.userId, userId));
+  await transaction.delete(budgetRules).where(eq(budgetRules.userId, userId));
   await transaction.delete(budgets).where(eq(budgets.userId, userId));
   await transaction.delete(importCategoryMappings).where(eq(importCategoryMappings.userId, userId));
   await transaction.delete(categories).where(eq(categories.userId, userId));

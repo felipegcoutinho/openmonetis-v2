@@ -1,12 +1,8 @@
-import type {
-  BudgetOutput,
-  CreateBudgetInput,
-  UpdateBudgetInput,
-} from "@openmonetis/validators/budgets";
+import type { BudgetOutput } from "@openmonetis/validators/budgets";
 import type { CategoryOutput } from "@openmonetis/validators/categories";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Copy, Plus, RefreshCw, Tags, Target } from "lucide-react";
+import { Plus, RefreshCw, Tags, Target } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -22,14 +18,18 @@ import { buildFilterSlugMap } from "@/features/transactions/transactions.present
 import {
   useCreateBudgetMutation,
   useDeleteBudgetMutation,
+  useRepeatBudgetMutation,
+  useStopBudgetRuleMutation,
   useUpdateBudgetMutation,
+  useUpdateBudgetRuleMutation,
 } from "../budgets.mutations";
 import { formatBudgetCategoryCount, getBudgetWidgetItems } from "../budgets.presentation";
 import { budgetsQueryOptions } from "../budgets.queries";
 import { BudgetCard } from "./budget-card";
-import { BudgetDialog } from "./budget-dialog";
+import { BudgetDialog, type BudgetDialogSubmission } from "./budget-dialog";
 import { BudgetsSummary } from "./budgets-summary";
 import { CopyBudgetsDialog } from "./copy-budgets-dialog";
+import { PreviousBudgetsNotice } from "./previous-budgets-notice";
 import { UnbudgetedExpenses } from "./unbudgeted-expenses";
 
 const cardSkeletonKeys = ["first", "second", "third"] as const;
@@ -45,6 +45,10 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
   const createMutation = useCreateBudgetMutation();
   const updateMutation = useUpdateBudgetMutation();
   const deleteMutation = useDeleteBudgetMutation();
+  const repeatMutation = useRepeatBudgetMutation();
+  const updateRuleMutation = useUpdateBudgetRuleMutation();
+  const stopRuleMutation = useStopBudgetRuleMutation();
+  const [pendingBudgetId, setPendingBudgetId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetOutput | null>(null);
   const [initialCategoryId, setInitialCategoryId] = useState<string | undefined>();
@@ -77,27 +81,90 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
     setDialogOpen(true);
   }
 
-  async function saveBudget(input: CreateBudgetInput | UpdateBudgetInput) {
-    if (editingBudget) {
-      const updated = await updateMutation.mutateAsync({ id: editingBudget.id, input, period });
+  async function saveBudget(submission: BudgetDialogSubmission) {
+    if (submission.kind === "updateRule") {
+      await updateRuleMutation.mutateAsync({ ruleId: submission.ruleId, input: submission.input });
+      toast.success(
+        submission.input.scope === "single" ? "Limite ajustado neste mês" : "Orçamento atualizado",
+      );
+      return;
+    }
+    if (submission.kind === "update" && editingBudget?.budgetId) {
+      const updated = await updateMutation.mutateAsync({
+        id: editingBudget.budgetId,
+        input: submission.input,
+        period,
+      });
       toast.success("Orçamento atualizado");
       if (updated.period !== period) onPeriodChange(updated.period);
       return;
     }
+    if (submission.kind !== "create") return;
 
-    const created = await createMutation.mutateAsync(input as CreateBudgetInput);
-    toast.success("Orçamento criado");
+    const created = await createMutation.mutateAsync(submission.input);
+    toast.success(created.recurrence ? "Orçamento recorrente criado" : "Orçamento criado");
     if (created.period !== period) onPeriodChange(created.period);
   }
 
-  async function removeBudget(budget: BudgetOutput) {
+  async function runCardAction(budget: BudgetOutput, action: () => Promise<unknown>) {
+    setPendingBudgetId(budget.id);
     try {
-      await deleteMutation.mutateAsync({ id: budget.id, period });
-      toast.success("Orçamento removido");
-    } catch {
-      toast.error("Não foi possível remover o orçamento.");
-      throw new Error("Budget removal failed");
+      await action();
+    } finally {
+      setPendingBudgetId(null);
     }
+  }
+
+  async function removeBudget(budget: BudgetOutput) {
+    await runCardAction(budget, async () => {
+      try {
+        if (budget.recurrence) {
+          await stopRuleMutation.mutateAsync({
+            ruleId: budget.recurrence.ruleId,
+            input: { period },
+          });
+          toast.success("Orçamento recorrente encerrado");
+          return;
+        }
+        if (budget.budgetId) await deleteMutation.mutateAsync({ id: budget.budgetId, period });
+        toast.success("Orçamento removido");
+      } catch {
+        toast.error(
+          budget.recurrence
+            ? "Não foi possível encerrar o orçamento."
+            : "Não foi possível remover o orçamento.",
+        );
+        throw new Error("Budget removal failed");
+      }
+    });
+  }
+
+  function repeatBudget(budget: BudgetOutput) {
+    if (!budget.budgetId) return;
+    const budgetId = budget.budgetId;
+    void runCardAction(budget, async () => {
+      try {
+        await repeatMutation.mutateAsync(budgetId);
+        toast.success("Orçamento agora se repete todo mês");
+      } catch {
+        toast.error("Não foi possível repetir o orçamento.", {
+          description: "A categoria pode já ter um orçamento recorrente em outro período.",
+        });
+      }
+    });
+  }
+
+  function resetAdjustment(budget: BudgetOutput) {
+    if (!budget.budgetId) return;
+    const budgetId = budget.budgetId;
+    void runCardAction(budget, async () => {
+      try {
+        await deleteMutation.mutateAsync({ id: budgetId, period });
+        toast.success("Limite voltou ao valor recorrente");
+      } catch {
+        toast.error("Não foi possível voltar ao valor recorrente.");
+      }
+    });
   }
 
   return (
@@ -158,20 +225,19 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
             <>
               {overview.items.length ? <BudgetsSummary overview={overview} /> : null}
               <section aria-labelledby="budget-list-title" className="grid gap-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <h2 className="section-title" id="budget-list-title">
-                      Limites por categoria
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                      {formatBudgetCategoryCount(overview.items.length)}
-                    </p>
-                  </div>
-                  <Button onClick={() => setCopyOpen(true)} type="button" variant="outline">
-                    <Copy aria-hidden="true" className="size-4" />
-                    Copiar limites do mês anterior
-                  </Button>
+                <div>
+                  <h2 className="section-title" id="budget-list-title">
+                    Limites por categoria
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    {formatBudgetCategoryCount(overview.items.length)}
+                  </p>
                 </div>
+                <PreviousBudgetsNotice
+                  currentCategoryIds={overview.items.map((budget) => budget.categoryId)}
+                  onOpen={() => setCopyOpen(true)}
+                  period={period}
+                />
                 {overview.items.length > 0 ? (
                   <div className="stagger-children grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {getBudgetWidgetItems(overview.items).map((budget) => (
@@ -184,9 +250,9 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
                           setDialogOpen(true);
                         }}
                         onRemove={removeBudget}
-                        pending={
-                          deleteMutation.isPending && deleteMutation.variables?.id === budget.id
-                        }
+                        onRepeat={repeatBudget}
+                        onResetAdjustment={resetAdjustment}
+                        pending={pendingBudgetId === budget.id}
                       />
                     ))}
                   </div>
@@ -257,7 +323,7 @@ function BudgetsEmptyState({
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
           {hasExpenseCategories
-            ? "Comece por uma categoria importante ou copie os limites do mês anterior."
+            ? "Comece por uma categoria importante. Os limites se repetem nos próximos meses."
             : "Os orçamentos são organizados por categoria de despesa."}
         </p>
         {hasExpenseCategories ? (

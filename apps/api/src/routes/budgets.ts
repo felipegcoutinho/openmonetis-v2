@@ -4,11 +4,15 @@ import {
   BudgetOutputSchema,
   BudgetOverviewOutputSchema,
   BudgetParamsSchema,
+  BudgetRuleParamsSchema,
   CopyPreviousBudgetsInputSchema,
   CopyPreviousBudgetsOutputSchema,
   CreateBudgetInputSchema,
   ListBudgetsQuerySchema,
+  StopBudgetRuleInputSchema,
+  StoppedBudgetRuleOutputSchema,
   UpdateBudgetInputSchema,
+  UpdateBudgetRuleInputSchema,
 } from "@openmonetis/validators/budgets";
 import type { BudgetsService } from "../services/budgets.service";
 import type { ApiVariables } from "../types/context";
@@ -21,6 +25,10 @@ const BudgetOverviewResponseSchema = z.object({
 });
 const CopyResponseSchema = z.object({
   data: CopyPreviousBudgetsOutputSchema,
+  error: z.null(),
+});
+const StoppedRuleResponseSchema = z.object({
+  data: StoppedBudgetRuleOutputSchema,
   error: z.null(),
 });
 const DeleteResponseSchema = z.object({
@@ -117,6 +125,117 @@ export function createBudgetsRoute(service: BudgetsService) {
         ok(await service.copyPrevious(context.req.valid("json"), context.get("userId"))),
         200,
       ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "put",
+      path: "/recurring-rules/{ruleId}",
+      tags: ["Budgets"],
+      request: {
+        params: BudgetRuleParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: UpdateBudgetRuleInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "The category budget in the changed month",
+          content: { "application/json": { schema: BudgetResponseSchema } },
+        },
+        400: {
+          description: "Period outside the recurring budget or overlapping versions",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        404: {
+          description: "Recurring budget not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) => {
+      const { ruleId } = context.req.valid("param");
+      return context.json(
+        ok(await service.updateRule(ruleId, context.get("userId"), context.req.valid("json"))),
+        200,
+      );
+    },
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/recurring-rules/{ruleId}/stop",
+      tags: ["Budgets"],
+      request: {
+        params: BudgetRuleParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: StopBudgetRuleInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Ended or removed recurring budget",
+          content: { "application/json": { schema: StoppedRuleResponseSchema } },
+        },
+        400: {
+          description: "Period outside the recurring budget",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        404: {
+          description: "Recurring budget not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) => {
+      const { ruleId } = context.req.valid("param");
+      return context.json(
+        ok(await service.stopRule(ruleId, context.get("userId"), context.req.valid("json"))),
+        200,
+      );
+    },
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/{id}/repeat",
+      tags: ["Budgets"],
+      request: { params: BudgetParamsSchema },
+      responses: {
+        200: {
+          description: "The budget, now recurring",
+          content: { "application/json": { schema: BudgetResponseSchema } },
+        },
+        400: {
+          description: "A recurring budget already covers the category",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: {
+          description: "Authentication required",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        404: {
+          description: "Budget not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) => {
+      const { id } = context.req.valid("param");
+      return context.json(ok(await service.repeat(id, context.get("userId"))), 200);
+    },
   );
 
   route.openapi(

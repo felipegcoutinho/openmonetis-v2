@@ -42,7 +42,11 @@ export function UnbudgetedExpenses({ overview, categories, onCreate }: Unbudgete
             </DialogDescription>
           </DialogHeader>
           <div className="contents" data-mobile-detail-body>
-            <ul data-mobile-detail-list className="max-h-96 overflow-y-auto divide-y">
+            {/* Fades the cut edges and keeps a thin scrollbar in the dialog padding, clear of the buttons. */}
+            <ul
+              data-mobile-detail-list
+              className="-mr-3 max-h-96 scroll-fade-y divide-y overflow-y-auto overscroll-contain pr-3 [scrollbar-color:var(--border)_transparent] [scrollbar-gutter:stable] [scrollbar-width:thin]"
+            >
               {overview.unbudgetedItems.map((item) => {
                 const category = categories.find((category) => category.id === item.categoryId);
                 return (

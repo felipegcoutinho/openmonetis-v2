@@ -39,14 +39,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   para pago ou concluída e cadeado para fechamento), e a legenda explica os ícones e o valor no
   topo de cada dia. A agenda do dia usa os mesmos ícones. As setas do teclado mudam o dia selecionado. No celular, o mês vira uma lista dos dias
   com compromissos. Veja `docs/calendar.md`.
+- Orçamentos recorrentes: **Repetir todo mês** (ligado por padrão ao criar) faz o limite valer do
+  mês escolhido em diante, sem copiar mês a mês. Editar um orçamento recorrente pergunta se a
+  mudança vale **só naquele mês** (um ajuste, que pode **voltar ao valor recorrente**) ou **daquele
+  mês em diante**, sem alterar os meses anteriores; **Encerrar a partir de** um mês mantém o
+  histórico. Um limite avulso pode passar a se repetir pelo menu do card. Cada card diz se o limite
+  vale só no mês, todo mês ou se foi ajustado. Veja `docs/budgets.md`.
 - API: `GET /calendar?period=YYYY-MM`; `GET`/`POST /goals/{id}/contributions` e
-  `DELETE /goals/{id}/contributions/{contributionId}`; `requiredMonthlyAmount` nas metas.
+  `DELETE /goals/{id}/contributions/{contributionId}`; `requiredMonthlyAmount` nas metas;
+  `repeatMonthly` em `POST /budgets` e `POST /budgets/copy-previous`,
+  `POST /budgets/{id}/repeat`, `PUT /budgets/recurring-rules/{ruleId}` e
+  `POST /budgets/recurring-rules/{ruleId}/stop`.
 
 ### Alterado
 
 - Formulários: **Cancelar** e a ação principal (**Salvar …** ou **Atualizar**) ficam iguais em todos
   os formulários, com um spinner durante o salvamento. Nas anotações, os erros dos campos só
   aparecem depois de tentar salvar e somem assim que são corrigidos.
+- Orçamentos: o resumo do mês usa a mesma superfície dos resumos de categoria, com cada indicador em
+  um bloco com ícone.
+- Orçamentos: o botão fixo **Copiar limites do mês anterior** dá lugar a um aviso que só aparece
+  quando o mês anterior tem limites avulsos que ainda não existem no mês, com a opção de trazê-los
+  já repetindo todo mês.
 - Filtros de lançamentos: todos os campos do painel passam a ter o mesmo fundo e a mesma borda, as
   seções ficam separadas por divisórias, as opções de **Outros** aparecem em lista e a faixa de
   valor usa o formato em reais, sem as setas de incremento.
@@ -57,7 +71,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   valor já economizado de cada meta manual como o primeiro movimento do histórico (ajuste de
   saldo na data de criação da meta), sem alterar o saldo das metas. Faça backup antes de atualizar
   e acompanhe `docker compose logs migrator`.
-- API: rotas novas; `GoalOutput` ganha `requiredMonthlyAmount`.
+- Banco: a migration `0033_budget_rules.sql` cria a tabela `budget_rules`. Os orçamentos existentes
+  não são convertidos e continuam valendo só para o mês deles.
+- API: rotas novas; `GoalOutput` ganha `requiredMonthlyAmount`. Em
+  `BudgetOutput`, `id` passa a ser texto (`ruleId:período` quando o mês é coberto só por um
+  orçamento recorrente) e surgem `budgetId` e `recurrence`; para alterar ou excluir o limite do
+  mês, use `budgetId`.
 
 ## [0.17.1] - 2026-11-11
 

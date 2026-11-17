@@ -1,4 +1,5 @@
 import {
+  budgetRules,
   budgets,
   cards,
   categories,
@@ -10,9 +11,9 @@ import {
   transactions,
 } from "@openmonetis/db";
 import { resolveCardClosingRule } from "@openmonetis/domain/cards";
-import { and, asc, eq, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import type { BudgetsRepository } from "../services/budgets.service";
+import type { BudgetRuleStore, BudgetsRepository } from "../services/budgets.service";
 import { categoryLabelSql } from "./categories.repository";
 import { effectiveRecurringEndDateSql } from "./recurring-transactions.repository";
 import {
@@ -38,7 +39,135 @@ const budgetWithCategoryColumns = {
   categoryIcon: categories.icon,
 };
 
+const budgetRuleWithCategoryColumns = {
+  id: budgetRules.id,
+  userId: budgetRules.userId,
+  categoryId: budgetRules.categoryId,
+  amount: budgetRules.amount,
+  startPeriod: budgetRules.startPeriod,
+  endPeriod: budgetRules.endPeriod,
+  createdAt: budgetRules.createdAt,
+  updatedAt: budgetRules.updatedAt,
+  categoryName: categoryLabelSql(categories),
+  categoryIcon: categories.icon,
+};
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function createBudgetRuleStore(
+  transaction: Transaction,
+  userId: string,
+  categoryId: string,
+): BudgetRuleStore {
+  return {
+    listRules() {
+      return transaction
+        .select()
+        .from(budgetRules)
+        .where(and(eq(budgetRules.userId, userId), eq(budgetRules.categoryId, categoryId)))
+        .orderBy(asc(budgetRules.startPeriod));
+    },
+
+    async findMonthlyBudget(period) {
+      const [budget] = await transaction
+        .select()
+        .from(budgets)
+        .where(
+          and(
+            eq(budgets.userId, userId),
+            eq(budgets.categoryId, categoryId),
+            eq(budgets.period, period),
+          ),
+        )
+        .limit(1);
+      return budget ?? null;
+    },
+
+    async apply(change) {
+      if (change.deleteMonthlyBudgetId) {
+        await transaction
+          .delete(budgets)
+          .where(and(eq(budgets.id, change.deleteMonthlyBudgetId), eq(budgets.userId, userId)));
+      }
+      if (change.removeAdjustments) {
+        const { fromPeriod, toPeriod } = change.removeAdjustments;
+        await transaction
+          .delete(budgets)
+          .where(
+            and(
+              eq(budgets.userId, userId),
+              eq(budgets.categoryId, categoryId),
+              gte(budgets.period, fromPeriod),
+              toPeriod === null ? undefined : lte(budgets.period, toPeriod),
+            ),
+          );
+      }
+      if (change.deleteRuleId) {
+        await transaction
+          .delete(budgetRules)
+          .where(and(eq(budgetRules.id, change.deleteRuleId), eq(budgetRules.userId, userId)));
+      }
+      if (change.updateRule) {
+        const { id, ...values } = change.updateRule;
+        await transaction
+          .update(budgetRules)
+          .set({ ...values, updatedAt: new Date() })
+          .where(and(eq(budgetRules.id, id), eq(budgetRules.userId, userId)));
+      }
+      if (change.insertRule) {
+        await transaction.insert(budgetRules).values({ ...change.insertRule, userId, categoryId });
+      }
+      if (change.upsertMonthlyBudget) {
+        await transaction
+          .insert(budgets)
+          .values({ ...change.upsertMonthlyBudget, userId, categoryId })
+          .onConflictDoUpdate({
+            target: [budgets.userId, budgets.categoryId, budgets.period],
+            set: { amount: change.upsertMonthlyBudget.amount, updatedAt: new Date() },
+          });
+      }
+    },
+  };
+}
+
 export const budgetsRepository = {
+  listRulesForPeriod(userId, period) {
+    return db
+      .select(budgetRuleWithCategoryColumns)
+      .from(budgetRules)
+      .innerJoin(
+        categories,
+        and(eq(budgetRules.categoryId, categories.id), eq(categories.userId, userId)),
+      )
+      .where(
+        and(
+          eq(budgetRules.userId, userId),
+          lte(budgetRules.startPeriod, period),
+          or(isNull(budgetRules.endPeriod), gte(budgetRules.endPeriod, period)),
+        ),
+      );
+  },
+
+  async findRuleForUser(id, userId) {
+    const [rule] = await db
+      .select()
+      .from(budgetRules)
+      .where(and(eq(budgetRules.id, id), eq(budgetRules.userId, userId)))
+      .limit(1);
+    return rule ?? null;
+  },
+
+  withCategoryLock(userId, categoryId, work) {
+    return db.transaction(async (transaction) => {
+      await transaction
+        .select({ id: categories.id })
+        .from(categories)
+        .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+        .for("update");
+      return work(createBudgetRuleStore(transaction, userId, categoryId));
+    });
+  },
+
   async insertIfAbsent(data) {
     const [budget] = await db
       .insert(budgets)

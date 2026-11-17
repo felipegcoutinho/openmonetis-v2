@@ -20,11 +20,30 @@ type FinancialSummaryMetric = {
   value: ReactNode;
 };
 
-const metricGridClassNames: Record<number, string> = {
+export const financialSummaryMetricGridClassNames: Record<number, string> = {
   2: "sm:grid-cols-2",
   3: "sm:grid-cols-3",
   4: "sm:grid-cols-2 xl:grid-cols-4",
 };
+
+/** Surfaces of summary headers, shared so every summary page reads the same. */
+export const financialSummarySolidClassName =
+  "border-current/20 bg-primary text-primary-foreground";
+export const financialSummarySoftClassName = "border-brand/25 bg-brand/15 text-foreground";
+
+/** Tile of one metric on a summary surface; it inherits the surface color. */
+export const financialSummaryMetricClassName =
+  "grid min-w-0 content-start gap-1 rounded-xl border border-current/15 bg-current/8 px-5 py-4";
+
+/** Soft light-to-shade gradient over the solid surface. */
+export function FinancialSummaryGlow() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 bg-linear-to-br from-white/15 via-transparent to-black/10"
+    />
+  );
+}
 
 type FinancialSummaryHeaderProps = {
   accentImage?: string | null;
@@ -68,9 +87,7 @@ export function FinancialSummaryHeader({
       data-mobile-financial-summary
       className={cn(
         "relative overflow-hidden py-0 transition-colors duration-300",
-        variant === "solid"
-          ? "border-current/20 bg-primary text-primary-foreground"
-          : "border-brand/25 bg-brand/15 text-foreground",
+        variant === "solid" ? financialSummarySolidClassName : financialSummarySoftClassName,
       )}
       style={
         variant === "solid" && logoColors
@@ -81,12 +98,7 @@ export function FinancialSummaryHeader({
           : undefined
       }
     >
-      {variant === "solid" ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-linear-to-br from-white/15 via-transparent to-black/10"
-        />
-      ) : null}
+      {variant === "solid" ? <FinancialSummaryGlow /> : null}
       <CardContent className="relative p-0">
         <div className="p-6 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -130,12 +142,14 @@ export function FinancialSummaryHeader({
           ) : null}
 
           {metrics.length ? (
-            <dl className={cn("mt-6 grid gap-3", metricGridClassNames[metrics.length] ?? "")}>
+            <dl
+              className={cn(
+                "mt-6 grid gap-3",
+                financialSummaryMetricGridClassNames[metrics.length] ?? "",
+              )}
+            >
               {metrics.map((metric) => (
-                <div
-                  className="grid min-w-0 content-start gap-1 rounded-xl border border-current/15 bg-current/8 px-5 py-4"
-                  key={metric.key ?? metric.label}
-                >
+                <div className={financialSummaryMetricClassName} key={metric.key ?? metric.label}>
                   <dt className={statLabelClassName}>
                     {metric.icon}
                     <span className="min-w-0 truncate">{metric.label}</span>
