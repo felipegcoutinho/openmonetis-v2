@@ -7,6 +7,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-17
+
+Novo calendário do mês com vencimentos, faturas e tarefas, busca global com Ctrl K, orçamentos que
+se repetem todo mês e metas com histórico de aportes. A fatura do cartão compara os gastos por
+pessoa, os filtros de lançamentos e os formulários ganham um visual padronizado e as dependências
+foram atualizadas.
+
 ### Adicionado
 
 - Fatura do cartão: a comparação com a fatura anterior em **Gastos do cartão** pode ser vista por
@@ -1437,7 +1444,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.15.0...v0.16.0
