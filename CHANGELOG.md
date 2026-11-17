@@ -64,6 +64,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Filtros de lançamentos: todos os campos do painel passam a ter o mesmo fundo e a mesma borda, as
   seções ficam separadas por divisórias, as opções de **Outros** aparecem em lista e a faixa de
   valor usa o formato em reais, sem as setas de incremento.
+- Dependências atualizadas: `better-auth`, `@better-auth/passkey` e `@better-auth/drizzle-adapter`
+  1.7.25, `hono` 4.13.19, `@hono/node-server` 2.1.8, AWS SDK 3.1169.0, `@tanstack/react-start`
+  1.169.5, TanStack Query 5.107.1, `vite` 8.3.8, Tailwind 4.3.5, `@vitejs/plugin-react` 6.3.0,
+  `lucide-react` 1.73.0, `oxlint` 1.94.0 e Playwright 1.65.1. `dotenv` passa para a 18 e `c8`
+  para a 12, sem mudanças de uso. O Biome continua na linha 2.5 (2.5.15).
 
 ### Notas de atualização
 
