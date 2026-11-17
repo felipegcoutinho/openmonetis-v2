@@ -75,6 +75,7 @@ import { createAttachmentsRoute } from "./routes/attachments";
 import { createAuthConfigRoute } from "./routes/auth-config";
 import { createBillsRoute } from "./routes/bills";
 import { createBudgetsRoute } from "./routes/budgets";
+import { createCalendarRoute } from "./routes/calendar";
 import { createCardsRoute } from "./routes/cards";
 import { createCategoriesRoute } from "./routes/categories";
 import { createCategoryTrendsRoute } from "./routes/category-trends";
@@ -114,6 +115,7 @@ import { createAttachmentsService } from "./services/attachments.service";
 import { createAuthConfigService } from "./services/auth-config.service";
 import { createBillsService } from "./services/bills.service";
 import { createBudgetsService } from "./services/budgets.service";
+import { createCalendarService } from "./services/calendar.service";
 import { createCardsService } from "./services/cards.service";
 import { createCategoriesService } from "./services/categories.service";
 import { createCategoryTrendsService } from "./services/category-trends.service";
@@ -330,6 +332,14 @@ const dueDateRulesService = createDueDateRulesService(
   },
 );
 const dueDateRulesRoute = createDueDateRulesRoute(dueDateRulesService);
+const calendarRoute = createCalendarRoute(
+  createCalendarService({
+    bills: billsService,
+    invoices: invoicesService,
+    notes: notesService,
+    dueDateRules: dueDateRulesService,
+  }),
+);
 const preferencesService = createPreferencesService(preferencesRepository);
 const preferencesRoute = createPreferencesRoute(preferencesService);
 const deviceTokenSecret =
@@ -462,6 +472,8 @@ app.use("/goals", privateCache);
 app.use("/goals/*", privateCache);
 app.use("/goals", requireAuth);
 app.use("/goals/*", requireAuth);
+app.use("/calendar", privateCache);
+app.use("/calendar", requireAuth);
 app.use("/bills", privateCache);
 app.use("/bills/*", privateCache);
 app.use("/bills", requireAuth);
@@ -791,6 +803,7 @@ app.route("/cards", cardsRoute);
 app.route("/budgets", budgetsRoute);
 app.route("/goals", goalsRoute);
 app.route("/bills", billsRoute);
+app.route("/calendar", calendarRoute);
 app.route("/categories", categoriesRoute);
 app.route("/tags", tagsRoute);
 app.route("/people", peopleRoute);

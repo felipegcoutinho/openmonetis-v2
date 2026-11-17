@@ -105,6 +105,8 @@ export type NotesRepository = {
     isCompleted: boolean,
   ): Promise<NoteStateMutationResult>;
   listPendingTasksDueBy(userId: string, dueBy: string): Promise<NoteRecord[]>;
+  /** Tasks due within the inclusive range, completed or not, excluding archived ones. */
+  listTasksDueBetween(userId: string, startDate: string, endDate: string): Promise<NoteRecord[]>;
   deleteForUser(id: string, userId: string, expectedVersion: number): Promise<DeleteNoteResult>;
 };
 
@@ -246,6 +248,15 @@ export function createNotesService(repository: NotesRepository) {
         title: note.title,
         dueDate: (note.dueDate as Date).toISOString().slice(0, 10),
         updatedAt: note.updatedAt.toISOString(),
+      }));
+    },
+
+    async listTasksDueBetween(userId: string, startDate: string, endDate: string) {
+      return (await repository.listTasksDueBetween(userId, startDate, endDate)).map((note) => ({
+        id: note.id,
+        title: note.title,
+        dueDate: (note.dueDate as Date).toISOString().slice(0, 10),
+        isCompleted: note.isCompleted,
       }));
     },
 

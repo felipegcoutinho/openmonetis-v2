@@ -12,6 +12,7 @@ const staticRoutes = [
   "/cards",
   "/categories",
   "/budgets",
+  "/calendar",
   "/goals",
   "/people",
   "/tags",

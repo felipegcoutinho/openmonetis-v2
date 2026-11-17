@@ -31,6 +31,7 @@
 
 - contas, cartões, faturas, transações e transferências;
 - parcelas, recorrências, orçamentos e contas a pagar;
+- calendário do mês com vencimentos, faturas e tarefas;
 - pessoas, divisões, repasses e gastos compartilhados entre contas;
 - categorias e subcategorias, etiquetas, estabelecimentos, notas e checklists, além de anexos quando um storage S3 está
   configurado;
@@ -145,6 +146,7 @@ detalhes e as convenções no [`guia de arquitetura`](docs/architecture.md).
 - [`docs/environment-variables.md`](docs/environment-variables.md): configuração dos serviços e integrações;
 - [`docs/recurring-transactions.md`](docs/recurring-transactions.md): séries, versões, ocorrências e ações de recorrência;
 - [`docs/settlements.md`](docs/settlements.md): baixas efetivas, extratos e contas a pagar;
+- [`docs/calendar.md`](docs/calendar.md): calendário de vencimentos, faturas e tarefas do mês;
 - [`docs/person-reports.md`](docs/person-reports.md): extrato mensal de cada pessoa externa;
 - [`docs/due-date-rules.md`](docs/due-date-rules.md): calendário compartilhado, ajustes e exceções de vencimento;
 - [`docs/ai-diagnoses.md`](docs/ai-diagnoses.md): assistente de IA, permissões de dados, serviço

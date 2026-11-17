@@ -14,6 +14,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   ao lado do aviso troca entre **Todas as pessoas** e a parte de cada uma.
 - API: `cycleSpending.peopleComparisons` em `GET /cards` e `GET /cards/{id}` traz, por pessoa, o
   total do ciclo e a mesma comparação da fatura inteira (`null` sem gastos na fatura anterior).
+- Calendário (**Finanças → Calendário**): grade do mês com contas a pagar, fechamentos e
+  vencimentos de faturas de cartão e tarefas com prazo, além de feriados e dias não úteis do
+  calendário de vencimentos. O resumo mostra quanto falta pagar, quanto já foi pago e o que está
+  em atraso, dizendo quantas contas, faturas e tarefas compõem cada número. A agenda do dia separa
+  os itens em **Contas a pagar**, **Faturas que vencem**, **Faturas que fecham** e **Tarefas com
+  prazo**; uma conta pode ser paga direto do dia, e faturas e tarefas abrem suas telas. Na grade,
+  cada item mostra o logo do estabelecimento ou do cartão (**Fatura** e **Fecha** antes do nome do
+  cartão) com um ícone de situação no canto (alerta para em atraso, relógio para a vencer, check
+  para pago ou concluída e cadeado para fechamento), e a legenda explica os ícones e o valor no
+  topo de cada dia. A agenda do dia usa os mesmos ícones. As setas do teclado mudam o dia selecionado. No celular, o mês vira uma lista dos dias
+  com compromissos. Veja `docs/calendar.md`.
+- API: `GET /calendar?period=YYYY-MM`.
 
 ### Alterado
 
@@ -23,6 +35,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Filtros de lançamentos: todos os campos do painel passam a ter o mesmo fundo e a mesma borda, as
   seções ficam separadas por divisórias, as opções de **Outros** aparecem em lista e a faixa de
   valor usa o formato em reais, sem as setas de incremento.
+
+### Notas de atualização
+
+- API: rota nova `GET /calendar`.
 
 ## [0.17.1] - 2026-11-11
 

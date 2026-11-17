@@ -45,6 +45,7 @@ function repository(overrides: Partial<NotesRepository> = {}): NotesRepository {
       aggregate: taskAggregate({ isCompleted: true, version: 2 }),
     }),
     listPendingTasksDueBy: async () => [taskAggregate().note],
+    listTasksDueBetween: async () => [taskAggregate().note],
     deleteForUser: async () => ({ status: "deleted", id: noteId }),
     ...overrides,
   };

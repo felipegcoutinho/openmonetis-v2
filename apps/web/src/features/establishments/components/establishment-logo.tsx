@@ -43,7 +43,10 @@ export function EstablishmentLogo({
       className="grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
       style={{ width: size, height: size }}
     >
-      <CategoryIcon className="size-4" name={categoryIcon} />
+      <CategoryIcon
+        className={size <= 20 ? "size-2.5" : size < 32 ? "size-3.5" : "size-4"}
+        name={categoryIcon}
+      />
     </span>
   );
   if (!editable || !data?.enabled)

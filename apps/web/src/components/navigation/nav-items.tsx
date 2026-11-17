@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   CalendarClock,
+  CalendarDays,
   CreditCard,
   FileChartColumn,
   Gauge,
@@ -83,6 +84,13 @@ export const navSections: NavSection[] = [
         label: "Contas",
         description: "Saldos, extratos e contas financeiras",
         icon: <Landmark className="size-4" aria-hidden="true" />,
+      },
+      {
+        href: "/calendar",
+        label: "Calendário",
+        description: "Vencimentos e tarefas do mês, dia a dia",
+        icon: <CalendarDays className="size-4" aria-hidden="true" />,
+        preservePeriod: true,
       },
       {
         href: "/budgets",

@@ -7,6 +7,7 @@ import {
   desc,
   eq,
   exists,
+  gte,
   ilike,
   inArray,
   lte,
@@ -330,6 +331,22 @@ export const notesRepository = {
           eq(notes.isArchived, false),
           eq(notes.isCompleted, false),
           lte(notes.dueDate, new Date(`${dueBy}T00:00:00.000Z`)),
+        ),
+      )
+      .orderBy(asc(notes.dueDate), asc(notes.id));
+  },
+
+  listTasksDueBetween(userId, startDate, endDate) {
+    return db
+      .select()
+      .from(notes)
+      .where(
+        and(
+          eq(notes.userId, userId),
+          eq(notes.kind, "task"),
+          eq(notes.isArchived, false),
+          gte(notes.dueDate, new Date(`${startDate}T00:00:00.000Z`)),
+          lte(notes.dueDate, new Date(`${endDate}T00:00:00.000Z`)),
         ),
       )
       .orderBy(asc(notes.dueDate), asc(notes.id));

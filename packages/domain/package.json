@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./accounts": "./src/accounts.ts",
+    "./calendar": "./src/calendar.ts",
     "./cards": "./src/cards.ts",
     "./categories": "./src/categories.ts",
     "./category-trends": "./src/category-trends.ts",

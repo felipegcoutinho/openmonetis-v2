@@ -5,6 +5,7 @@ const financialQueryRoots = new Set([
   "attachments",
   "bills",
   "budgets",
+  "calendar",
   "cards",
   "categories",
   "tags",
