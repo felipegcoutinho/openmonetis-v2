@@ -14,6 +14,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   entrada. Filtrando por uma das contas, ou no extrato da conta, continua aparecendo só o lado
   daquela conta, com o sinal de saída ou entrada.
 
+### Notas de atualização
+
+- API: em `GET /transactions`, os dois lados de uma transferência passam a vir como uma única
+  entrada, com valor sem sinal e `transferLeg` igual a `both`. Filtrando por uma conta, cada lado
+  continua separado e com sinal (`source` ou `destination`). `TransactionOutput` ganha
+  `transferLeg`, nulo fora de transferências. Clientes que somavam os dois lados da listagem
+  precisam tratar a entrada mesclada; a exportação continua com os dois lançamentos.
+
 ## [0.18.0] - 2026-11-17
 
 Novo calendário do mês com vencimentos, faturas e tarefas, busca global com Ctrl K, orçamentos que
