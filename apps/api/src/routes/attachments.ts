@@ -6,10 +6,14 @@ import {
   AttachmentUrlOutputSchema,
   AttachmentUrlQuerySchema,
   ConfirmAttachmentInputSchema,
+  ConfirmNoteAttachmentInputSchema,
   ListAttachmentsQuerySchema,
+  NoteAttachmentItemParamsSchema,
+  NoteAttachmentParamsSchema,
   PaginatedAttachmentsOutputSchema,
   PrepareAttachmentInputSchema,
   PreparedAttachmentOutputSchema,
+  PrepareNoteAttachmentInputSchema,
   TransactionAttachmentItemParamsSchema,
   TransactionAttachmentParamsSchema,
 } from "@openmonetis/validators/attachments";
@@ -40,6 +44,18 @@ const DetachAttachmentResponseSchema = z.object({
     transactionId: z.uuid(),
     deleted: z.boolean(),
   }),
+  error: z.null(),
+});
+const DetachNoteAttachmentResponseSchema = z.object({
+  data: z.object({
+    id: z.uuid(),
+    noteId: z.uuid(),
+    deleted: z.boolean(),
+  }),
+  error: z.null(),
+});
+const PreparedAttachmentResponseSchema = z.object({
+  data: PreparedAttachmentOutputSchema,
   error: z.null(),
 });
 const errorResponses = {
@@ -181,6 +197,120 @@ export function createAttachmentsRoute(service: AttachmentsService) {
       const { transactionId, attachmentId } = context.req.valid("param");
       return context.json(
         ok(await service.detach(transactionId, attachmentId, context.get("userId"))),
+        200,
+      );
+    },
+  );
+
+  route.openapi(
+    createRoute({
+      method: "get",
+      path: "/note/{noteId}",
+      tags: ["Attachments"],
+      request: { params: NoteAttachmentParamsSchema },
+      responses: {
+        200: {
+          description: "Note attachments",
+          content: { "application/json": { schema: AttachmentsResponseSchema } },
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        404: errorResponses[404],
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.listForNote(context.req.valid("param").noteId, context.get("userId"))),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/note/{noteId}/prepare",
+      tags: ["Attachments"],
+      request: {
+        params: NoteAttachmentParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: PrepareNoteAttachmentInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Prepared note attachment upload",
+          content: { "application/json": { schema: PreparedAttachmentResponseSchema } },
+        },
+        ...errorResponses,
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.prepareForNote(
+            context.req.valid("param").noteId,
+            context.req.valid("json"),
+            context.get("userId"),
+          ),
+        ),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "post",
+      path: "/note/{noteId}/confirm",
+      tags: ["Attachments"],
+      request: {
+        params: NoteAttachmentParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: ConfirmNoteAttachmentInputSchema } },
+        },
+      },
+      responses: {
+        201: {
+          description: "Confirmed note attachment",
+          content: { "application/json": { schema: AttachmentResponseSchema } },
+        },
+        ...errorResponses,
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.confirmForNote(
+            context.req.valid("param").noteId,
+            context.req.valid("json"),
+            context.get("userId"),
+          ),
+        ),
+        201,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "delete",
+      path: "/note/{noteId}/{attachmentId}",
+      tags: ["Attachments"],
+      request: { params: NoteAttachmentItemParamsSchema },
+      responses: {
+        200: {
+          description: "Detached note attachment",
+          content: { "application/json": { schema: DetachNoteAttachmentResponseSchema } },
+        },
+        400: errorResponses[400],
+        401: errorResponses[401],
+        404: errorResponses[404],
+      },
+    }),
+    async (context) => {
+      const { noteId, attachmentId } = context.req.valid("param");
+      return context.json(
+        ok(await service.detachFromNote(noteId, attachmentId, context.get("userId"))),
         200,
       );
     },

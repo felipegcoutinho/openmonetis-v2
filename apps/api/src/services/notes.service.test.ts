@@ -29,6 +29,7 @@ function taskAggregate(overrides: Partial<NoteAggregateRecord["note"]> = {}): No
       ...overrides,
     },
     items: [],
+    attachmentCount: 0,
   };
 }
 
@@ -314,4 +315,23 @@ test("missing notes and failed reads never become empty successful results", asy
     failed.list(userId, { status: "active", limit: 10, offset: 0 }),
     (actual) => actual === error,
   );
+});
+
+test("deleting a note cleans attachments left without any link", async () => {
+  const cleanedUsers: string[] = [];
+  const service = createNotesService(
+    repository({ deleteForUser: async (id) => ({ status: "deleted", id }) }),
+    { cleanupOrphans: async (owner) => cleanedUsers.push(owner) },
+  );
+
+  assert.deepEqual(await service.remove(noteId, 1, userId), { id: noteId });
+  assert.deepEqual(cleanedUsers, [userId]);
+});
+
+test("note output exposes how many files are attached", async () => {
+  const service = createNotesService(
+    repository({ findByIdForUser: async () => ({ ...taskAggregate(), attachmentCount: 3 }) }),
+  );
+
+  assert.equal((await service.get(noteId, userId)).attachmentCount, 3);
 });

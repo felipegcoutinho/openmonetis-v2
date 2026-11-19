@@ -19,12 +19,15 @@ import {
   maximumAttachmentSizeMb,
   validateAttachmentFile,
 } from "../attachments.presentation";
+import { useClipboardFiles } from "../useClipboardFiles";
 
 type AttachmentFilePickerProps = {
   files?: File[];
   disabled?: boolean;
   onAdd: (file: File) => void;
   onRemove?: (file: File) => void;
+  /** Also accepts files pasted anywhere on the page while the picker is mounted. */
+  captureDocumentPaste?: boolean;
 };
 
 export function AttachmentFilePicker({
@@ -32,9 +35,11 @@ export function AttachmentFilePicker({
   disabled = false,
   onAdd,
   onRemove,
+  captureDocumentPaste = false,
 }: AttachmentFilePickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const descriptionId = useId();
+  useClipboardFiles((pastedFiles) => addFiles(pastedFiles), captureDocumentPaste && !disabled);
 
   function addFiles(filesToAdd: File[]) {
     const knownFiles = new Set(files.map(fileIdentity));
@@ -62,6 +67,7 @@ export function AttachmentFilePicker({
   }
 
   function handlePaste(event: ClipboardEvent<HTMLButtonElement>) {
+    if (captureDocumentPaste) return;
     const pastedFiles = getFilesFromClipboard(event);
     if (!pastedFiles.length || disabled) return;
 

@@ -18,6 +18,7 @@ export function useNoteForm({ note, onSubmit, ref }: NoteFormProps) {
   const idPrefix = useId();
   const [newItemText, setNewItemText] = useState("");
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const isEditing = Boolean(note);
   const form = useForm({
     defaultValues: initialValues(note),
@@ -58,8 +59,18 @@ export function useNoteForm({ note, onSubmit, ref }: NoteFormProps) {
       }
 
       try {
-        await onSubmit(parsed.data);
-        toast.success(isEditing ? "Anotação atualizada" : "Anotação criada");
+        const result = await onSubmit(parsed.data, isEditing ? [] : pendingFiles);
+        const failedUploadCount = result?.failedUploadCount ?? 0;
+        if (failedUploadCount > 0) {
+          toast.warning("Anotação criada, mas houve falha nos anexos", {
+            description:
+              failedUploadCount === 1
+                ? "1 arquivo não foi enviado. Edite a anotação para tentar novamente."
+                : `${failedUploadCount} arquivos não foram enviados. Edite a anotação para tentar novamente.`,
+          });
+        } else {
+          toast.success(isEditing ? "Anotação atualizada" : "Anotação criada");
+        }
       } catch (error) {
         const message =
           error instanceof NotesApiError && error.code === "note_version_conflict"
@@ -71,7 +82,8 @@ export function useNoteForm({ note, onSubmit, ref }: NoteFormProps) {
     },
   });
   useImperativeHandle(ref, () => ({
-    hasUnsavedChanges: () => form.state.isDirty || Boolean(newItemText.trim()),
+    hasUnsavedChanges: () =>
+      form.state.isDirty || Boolean(newItemText.trim()) || pendingFiles.length > 0,
   }));
   const fieldId = (name: string) => `${idPrefix}-${name}`;
 
@@ -95,5 +107,15 @@ export function useNoteForm({ note, onSubmit, ref }: NoteFormProps) {
     setSubmissionError(null);
   }
 
-  return { newItemText, setNewItemText, submissionError, isEditing, form, fieldId, addItem };
+  return {
+    newItemText,
+    setNewItemText,
+    submissionError,
+    isEditing,
+    form,
+    fieldId,
+    addItem,
+    pendingFiles,
+    setPendingFiles,
+  };
 }

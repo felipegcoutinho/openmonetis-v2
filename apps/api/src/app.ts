@@ -201,9 +201,9 @@ const invoicesService = createInvoicesService(
   dueDateRulesRepository,
 );
 const invoicesRoute = createInvoicesRoute(invoicesService);
-const notesService = createNotesService(notesRepository);
-const notesRoute = createNotesRoute(notesService);
 const attachmentsService = createAttachmentsService(attachmentsRepository, attachmentStorage);
+const notesService = createNotesService(notesRepository, attachmentsService);
+const notesRoute = createNotesRoute(notesService);
 const attachmentsRoute = createAttachmentsRoute(attachmentsService);
 const transactionsService = createTransactionsService(
   {

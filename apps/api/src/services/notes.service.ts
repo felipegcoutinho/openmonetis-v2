@@ -46,6 +46,12 @@ export type NoteItemRecord = {
 export type NoteAggregateRecord = {
   note: NoteRecord;
   items: NoteItemRecord[];
+  attachmentCount: number;
+};
+
+/** Removes stored files that lost their last link after a note was deleted. */
+export type NoteAttachmentCleaner = {
+  cleanupOrphans(userId: string): Promise<unknown>;
 };
 
 export type NoteListFilters = {
@@ -110,7 +116,10 @@ export type NotesRepository = {
   deleteForUser(id: string, userId: string, expectedVersion: number): Promise<DeleteNoteResult>;
 };
 
-export function createNotesService(repository: NotesRepository) {
+export function createNotesService(
+  repository: NotesRepository,
+  attachmentCleaner?: NoteAttachmentCleaner,
+) {
   return {
     async list(userId: string, query: ListNotesQuery) {
       const page = await repository.listByUser(userId, query);
@@ -262,11 +271,23 @@ export function createNotesService(repository: NotesRepository) {
 
     async remove(id: string, expectedVersion: number, userId: string) {
       const result = await repository.deleteForUser(id, userId, expectedVersion);
-      if (result.status === "deleted") return { id: result.id };
+      if (result.status === "deleted") {
+        await cleanupOrphanedAttachments(userId);
+        return { id: result.id };
+      }
       if (result.status === "version_conflict") throw noteVersionConflict();
       throw noteNotFound();
     },
   };
+
+  async function cleanupOrphanedAttachments(userId: string) {
+    if (!attachmentCleaner) return;
+    try {
+      await attachmentCleaner.cleanupOrphans(userId);
+    } catch (error) {
+      console.error("Failed to clean orphaned attachments after note deletion", error);
+    }
+  }
 }
 
 async function findNote(id: string, userId: string, repository: NotesRepository) {
@@ -321,6 +342,7 @@ function toNoteOutput(aggregate: NoteAggregateRecord): NoteOutput {
     isArchived: aggregate.note.isArchived,
     items,
     ...progress,
+    attachmentCount: aggregate.attachmentCount,
     version: aggregate.note.version,
     createdAt: aggregate.note.createdAt.toISOString(),
     updatedAt: aggregate.note.updatedAt.toISOString(),

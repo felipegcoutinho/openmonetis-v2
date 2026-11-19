@@ -1,7 +1,7 @@
 import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Eye, NotebookPen, Pencil, Plus, RefreshCw } from "lucide-react";
+import { ArrowRight, Eye, NotebookPen, Paperclip, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,12 @@ import {
   useSetNoteItemCompletionMutation,
   useSetTaskCompletionMutation,
 } from "../notes.mutations";
-import { formatTaskDueDate, getChecklistProgressLabel, noteKindIcons } from "../notes.presentation";
+import {
+  formatAttachmentCount,
+  formatTaskDueDate,
+  getChecklistProgressLabel,
+  noteKindIcons,
+} from "../notes.presentation";
 import { notesDashboardQueryOptions } from "../notes.queries";
 import { NoteDetailsDialog } from "./note-details-dialog";
 import { NoteDialog } from "./note-dialog";
@@ -55,18 +60,15 @@ export function NotesWidget() {
     setDialogOpen(true);
   }
 
-  async function save(input: CreateNoteInput | ReplaceNoteInput) {
-    try {
-      if (editingNote) {
-        await replaceMutation.mutateAsync({ id: editingNote.id, input: input as ReplaceNoteInput });
-      } else {
-        await createMutation.mutateAsync(input as CreateNoteInput);
-      }
+  async function save(input: CreateNoteInput | ReplaceNoteInput, files: File[]) {
+    if (editingNote) {
+      await replaceMutation.mutateAsync({ id: editingNote.id, input: input as ReplaceNoteInput });
       changeDialog(false);
-      toast.success(editingNote ? "Anotação atualizada" : "Anotação criada");
-    } catch {
-      toast.error("Não foi possível salvar a anotação.");
+      return undefined;
     }
+    const created = await createMutation.mutateAsync({ input: input as CreateNoteInput, files });
+    changeDialog(false);
+    return created;
   }
 
   async function setItemCompletion(note: NoteOutput, itemId: string, isCompleted: boolean) {
@@ -191,13 +193,24 @@ function NotesWidgetList({
               <KindIcon aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <button
-                className="block max-w-full truncate text-left font-medium text-sm hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50"
-                onClick={() => onOpen(note.id)}
-                type="button"
-              >
-                {note.title}
-              </button>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <button
+                  className="block min-w-0 truncate text-left font-medium text-sm hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50"
+                  onClick={() => onOpen(note.id)}
+                  type="button"
+                >
+                  {note.title}
+                </button>
+                {note.attachmentCount > 0 ? (
+                  <span
+                    className="inline-flex shrink-0 text-muted-foreground"
+                    title={formatAttachmentCount(note.attachmentCount)}
+                  >
+                    <Paperclip aria-hidden="true" className="size-3.5" />
+                    <span className="sr-only">{formatAttachmentCount(note.attachmentCount)}</span>
+                  </span>
+                ) : null}
+              </div>
               {checklist ? (
                 <div className="mt-1 grid gap-1">
                   <p className="truncate text-muted-foreground text-xs">

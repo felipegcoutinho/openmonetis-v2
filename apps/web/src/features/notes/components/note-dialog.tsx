@@ -1,4 +1,4 @@
-import type { CreateNoteInput, NoteOutput, ReplaceNoteInput } from "@openmonetis/validators/notes";
+import type { NoteOutput } from "@openmonetis/validators/notes";
 import { useRef, useState } from "react";
 import { MobileFormContent as DialogContent } from "@/components/forms/mobile-form-content";
 import {
@@ -14,11 +14,12 @@ import {
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { noteKindLabels } from "../notes.presentation";
 import { NoteForm, type NoteFormHandle } from "./note-form";
+import type { NoteFormProps } from "./note-form.types";
 
 type NoteDialogProps = {
   note: NoteOutput | null;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (input: CreateNoteInput | ReplaceNoteInput) => Promise<void>;
+  onSubmit: NoteFormProps["onSubmit"];
   open: boolean;
   pending: boolean;
 };

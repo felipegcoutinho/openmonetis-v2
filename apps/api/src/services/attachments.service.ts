@@ -9,9 +9,11 @@ import type {
   AttachmentListItemOutput,
   AttachmentOutput,
   ConfirmAttachmentInput,
+  ConfirmNoteAttachmentInput,
   ListAttachmentsQuery,
   PaginatedAttachmentsOutput,
   PrepareAttachmentInput,
+  PrepareNoteAttachmentInput,
 } from "@openmonetis/validators/attachments";
 import { badRequest, notFound, serviceUnavailable } from "../utils/errors";
 import type { AttachmentStorage } from "../utils/storage";
@@ -41,8 +43,11 @@ type AttachmentLinkRecord = AttachmentRecord & {
   linkedTransactionCount: number;
 };
 
+type DetachResult = { attachment: AttachmentRecord; orphaned: boolean } | null;
+
 export type AttachmentsRepository = {
   transactionExistsForUser(transactionId: string, userId: string): Promise<boolean>;
+  findNoteStateForUser(noteId: string, userId: string): Promise<{ isArchived: boolean } | null>;
   insertPending(data: Omit<AttachmentRecord, "createdAt">): Promise<AttachmentRecord>;
   finalizeAndAttach(
     uploadId: string,
@@ -51,14 +56,27 @@ export type AttachmentsRepository = {
     pendingKey: string,
     finalKey: string,
   ): Promise<AttachmentRecord | null>;
+  finalizeAndAttachToNote(
+    uploadId: string,
+    noteId: string,
+    userId: string,
+    pendingKey: string,
+    finalKey: string,
+  ): Promise<AttachmentRecord | null>;
   listForTransaction(transactionId: string, userId: string): Promise<AttachmentRecord[]>;
+  listForNote(noteId: string, userId: string): Promise<AttachmentRecord[]>;
   listLinksForPeriod(userId: string, period: string): Promise<AttachmentLinkRecord[]>;
   findForUser(id: string, userId: string): Promise<AttachmentRecord | null>;
   detachFromTransactionForUser(
     transactionId: string,
     attachmentId: string,
     userId: string,
-  ): Promise<{ attachment: AttachmentRecord; orphaned: boolean } | null>;
+  ): Promise<DetachResult>;
+  detachFromNoteForUser(
+    noteId: string,
+    attachmentId: string,
+    userId: string,
+  ): Promise<DetachResult>;
   markForDeletionForUser(id: string, userId: string): Promise<AttachmentRecord | null>;
   markPendingForDeletionForUser(
     uploadId: string,
@@ -78,6 +96,14 @@ export type AttachmentsRepository = {
   ): Promise<AttachmentRecord | null>;
 };
 
+/** Where a confirmed upload is linked; keeps one upload flow for every owner entity. */
+type AttachmentTarget = {
+  assertWritable(): Promise<void>;
+  attach(uploadId: string, pendingKey: string, finalKey: string): Promise<AttachmentRecord | null>;
+};
+
+type UploadDescriptor = Omit<PrepareAttachmentInput, "transactionId">;
+
 type AttachmentGroup = {
   rows: AttachmentLinkRecord[];
   primary: AttachmentLinkRecord;
@@ -93,122 +119,156 @@ export function createAttachmentsService(
     }
   }
 
-  return {
-    async prepare(input: PrepareAttachmentInput, userId: string) {
-      assertAttachmentStorage(storage);
-      await assertTransaction(input.transactionId, userId);
-      if (!isAllowedAttachment(input.mimeType, input.fileSize)) {
-        throw badRequest("Invalid attachment", "invalid_attachment");
-      }
+  async function assertWritableNote(noteId: string, userId: string) {
+    const note = await repository.findNoteStateForUser(noteId, userId);
+    if (!note) throw notFound("Note not found", "note_not_found");
+    if (note.isArchived) {
+      throw badRequest(
+        "Archived notes must be restored before they can be changed",
+        "archived_note_read_only",
+      );
+    }
+  }
 
+  function transactionTarget(transactionId: string, userId: string): AttachmentTarget {
+    return {
+      assertWritable: () => assertTransaction(transactionId, userId),
+      attach: (uploadId, pendingKey, finalKey) =>
+        repository.finalizeAndAttach(uploadId, transactionId, userId, pendingKey, finalKey),
+    };
+  }
+
+  function noteTarget(noteId: string, userId: string): AttachmentTarget {
+    return {
+      assertWritable: () => assertWritableNote(noteId, userId),
+      attach: (uploadId, pendingKey, finalKey) =>
+        repository.finalizeAndAttachToNote(uploadId, noteId, userId, pendingKey, finalKey),
+    };
+  }
+
+  async function prepareUpload(input: UploadDescriptor, target: AttachmentTarget, userId: string) {
+    assertAttachmentStorage(storage);
+    await target.assertWritable();
+    if (!isAllowedAttachment(input.mimeType, input.fileSize)) {
+      throw badRequest("Invalid attachment", "invalid_attachment");
+    }
+
+    await cleanupExpiredPendingUploads(repository, storage, userId);
+    const uploadId = randomUUID();
+    const pendingKey = getPendingFileKey(uploadId);
+    await repository.insertPending({
+      id: uploadId,
+      userId,
+      fileKey: pendingKey,
+      fileName: normalizeAttachmentFileName(input.fileName),
+      fileSize: input.fileSize,
+      mimeType: input.mimeType,
+    });
+
+    try {
+      const prepared = await storage.prepareUpload(pendingKey, input.mimeType, input.fileSize);
       await cleanupExpiredPendingUploads(repository, storage, userId);
-      const uploadId = randomUUID();
-      const pendingKey = getPendingFileKey(uploadId);
-      await repository.insertPending({
-        id: uploadId,
-        userId,
-        fileKey: pendingKey,
-        fileName: normalizeAttachmentFileName(input.fileName),
-        fileSize: input.fileSize,
-        mimeType: input.mimeType,
-      });
+      return { uploadId, uploadUrl: prepared.uploadUrl };
+    } catch (error) {
+      await markAndFinalizePendingDeletion(repository, storage, uploadId, userId, pendingKey);
+      throw error;
+    }
+  }
 
-      try {
-        const prepared = await storage.prepareUpload(pendingKey, input.mimeType, input.fileSize);
-        await cleanupExpiredPendingUploads(repository, storage, userId);
-        return { uploadId, uploadUrl: prepared.uploadUrl };
-      } catch (error) {
-        await markAndFinalizePendingDeletion(repository, storage, uploadId, userId, pendingKey);
-        throw error;
-      }
-    },
-
-    async confirm(input: ConfirmAttachmentInput, userId: string) {
-      assertAttachmentStorage(storage);
-      await assertTransaction(input.transactionId, userId);
-      const pendingKey = getPendingFileKey(input.uploadId);
-      const finalFileKey = getFinalFileKey(input.uploadId);
-      const upload = await repository.findForUser(input.uploadId, userId);
-      if (!upload) {
+  async function confirmUpload(uploadId: string, target: AttachmentTarget, userId: string) {
+    assertAttachmentStorage(storage);
+    await target.assertWritable();
+    const pendingKey = getPendingFileKey(uploadId);
+    const finalFileKey = getFinalFileKey(uploadId);
+    const upload = await repository.findForUser(uploadId, userId);
+    if (!upload) {
+      throw notFound("Attachment upload not found", "attachment_upload_not_found");
+    }
+    if (upload.fileKey === finalFileKey) {
+      const attached = await target.attach(uploadId, pendingKey, finalFileKey);
+      if (!attached) {
         throw notFound("Attachment upload not found", "attachment_upload_not_found");
       }
-      if (upload.fileKey === finalFileKey) {
-        const attached = await repository.finalizeAndAttach(
-          input.uploadId,
-          input.transactionId,
-          userId,
-          pendingKey,
-          finalFileKey,
-        );
-        if (!attached) {
-          throw notFound("Attachment upload not found", "attachment_upload_not_found");
-        }
-        await removeQuietly(storage, pendingKey);
-        return toOutput(attached);
-      }
-      if (upload.fileKey !== pendingKey) {
-        throw badRequest("Invalid attachment key", "invalid_attachment_key");
-      }
-      if (!isAllowedAttachment(upload.mimeType, upload.fileSize)) {
-        await rejectPendingUpload(repository, storage, upload, userId);
-        throw badRequest("Invalid attachment", "invalid_attachment");
-      }
+      await removeQuietly(storage, pendingKey);
+      return toOutput(attached);
+    }
+    if (upload.fileKey !== pendingKey) {
+      throw badRequest("Invalid attachment key", "invalid_attachment_key");
+    }
+    if (!isAllowedAttachment(upload.mimeType, upload.fileSize)) {
+      await rejectPendingUpload(repository, storage, upload, userId);
+      throw badRequest("Invalid attachment", "invalid_attachment");
+    }
 
-      let object: Awaited<ReturnType<AttachmentStorage["inspect"]>>;
-      try {
-        object = await storage.inspect(pendingKey);
-      } catch {
-        await rejectPendingUpload(repository, storage, upload, userId);
-        throw badRequest("Attachment upload not found", "attachment_upload_not_found");
-      }
+    let object: Awaited<ReturnType<AttachmentStorage["inspect"]>>;
+    try {
+      object = await storage.inspect(pendingKey);
+    } catch {
+      await rejectPendingUpload(repository, storage, upload, userId);
+      throw badRequest("Attachment upload not found", "attachment_upload_not_found");
+    }
 
-      if (object.size !== upload.fileSize || object.mimeType !== upload.mimeType || !object.etag) {
-        await rejectPendingUpload(repository, storage, upload, userId);
-        throw badRequest("Attachment validation failed", "attachment_validation_failed");
-      }
-      if (!hasAllowedAttachmentSignature(object.mimeType, object.bytes)) {
-        await rejectPendingUpload(repository, storage, upload, userId);
-        throw badRequest("Attachment content is invalid", "invalid_attachment_content");
-      }
+    if (object.size !== upload.fileSize || object.mimeType !== upload.mimeType || !object.etag) {
+      await rejectPendingUpload(repository, storage, upload, userId);
+      throw badRequest("Attachment validation failed", "attachment_validation_failed");
+    }
+    if (!hasAllowedAttachmentSignature(object.mimeType, object.bytes)) {
+      await rejectPendingUpload(repository, storage, upload, userId);
+      throw badRequest("Attachment content is invalid", "invalid_attachment_content");
+    }
 
-      await storage.commit(pendingKey, finalFileKey, object.etag);
+    await storage.commit(pendingKey, finalFileKey, object.etag);
 
-      try {
-        const attachment = await repository.finalizeAndAttach(
-          input.uploadId,
-          input.transactionId,
-          userId,
-          pendingKey,
-          finalFileKey,
-        );
-        if (!attachment) {
-          await removeQuietly(storage, finalFileKey);
-          throw notFound("Attachment upload not found", "attachment_upload_not_found");
-        }
-        await removeQuietly(storage, pendingKey);
-        return toOutput(attachment);
-      } catch (error) {
-        try {
-          const persisted = await repository.findForUser(input.uploadId, userId);
-          if (persisted?.fileKey === finalFileKey) {
-            const attached = await repository.finalizeAndAttach(
-              input.uploadId,
-              input.transactionId,
-              userId,
-              pendingKey,
-              finalFileKey,
-            );
-            if (attached) {
-              await removeQuietly(storage, pendingKey);
-              return toOutput(attached);
-            }
-          }
-        } catch {
-          // Fall through to best-effort object cleanup and preserve the original database error.
-        }
+    try {
+      const attachment = await target.attach(uploadId, pendingKey, finalFileKey);
+      if (!attachment) {
         await removeQuietly(storage, finalFileKey);
-        throw error;
+        throw notFound("Attachment upload not found", "attachment_upload_not_found");
       }
+      await removeQuietly(storage, pendingKey);
+      return toOutput(attachment);
+    } catch (error) {
+      try {
+        const persisted = await repository.findForUser(uploadId, userId);
+        if (persisted?.fileKey === finalFileKey) {
+          const attached = await target.attach(uploadId, pendingKey, finalFileKey);
+          if (attached) {
+            await removeQuietly(storage, pendingKey);
+            return toOutput(attached);
+          }
+        }
+      } catch {
+        // Fall through to best-effort object cleanup and preserve the original database error.
+      }
+      await removeQuietly(storage, finalFileKey);
+      throw error;
+    }
+  }
+
+  async function finishDetach(detached: DetachResult, userId: string) {
+    if (!detached) throw notFound("Attachment not found", "attachment_not_found");
+    if (detached.orphaned) {
+      await finalizeDeletionTombstone(repository, storage, detached.attachment, userId);
+    }
+    return detached.orphaned;
+  }
+
+  return {
+    prepare(input: PrepareAttachmentInput, userId: string) {
+      const { transactionId, ...file } = input;
+      return prepareUpload(file, transactionTarget(transactionId, userId), userId);
+    },
+
+    confirm(input: ConfirmAttachmentInput, userId: string) {
+      return confirmUpload(input.uploadId, transactionTarget(input.transactionId, userId), userId);
+    },
+
+    prepareForNote(noteId: string, input: PrepareNoteAttachmentInput, userId: string) {
+      return prepareUpload(input, noteTarget(noteId, userId), userId);
+    },
+
+    confirmForNote(noteId: string, input: ConfirmNoteAttachmentInput, userId: string) {
+      return confirmUpload(input.uploadId, noteTarget(noteId, userId), userId);
     },
 
     async list(userId: string, query: ListAttachmentsQuery): Promise<PaginatedAttachmentsOutput> {
@@ -250,6 +310,13 @@ export function createAttachmentsService(
       return (await repository.listForTransaction(transactionId, userId)).map(toOutput);
     },
 
+    async listForNote(noteId: string, userId: string) {
+      if (!(await repository.findNoteStateForUser(noteId, userId))) {
+        throw notFound("Note not found", "note_not_found");
+      }
+      return (await repository.listForNote(noteId, userId)).map(toOutput);
+    },
+
     async getDownloadUrl(id: string, userId: string, disposition: "inline" | "attachment") {
       assertAttachmentStorage(storage);
       const attachment = await repository.findForUser(id, userId);
@@ -264,16 +331,20 @@ export function createAttachmentsService(
     },
 
     async detach(transactionId: string, attachmentId: string, userId: string) {
-      const detached = await repository.detachFromTransactionForUser(
-        transactionId,
-        attachmentId,
+      const deleted = await finishDetach(
+        await repository.detachFromTransactionForUser(transactionId, attachmentId, userId),
         userId,
       );
-      if (!detached) throw notFound("Attachment not found", "attachment_not_found");
-      if (detached.orphaned) {
-        await finalizeDeletionTombstone(repository, storage, detached.attachment, userId);
-      }
-      return { id: attachmentId, transactionId, deleted: detached.orphaned };
+      return { id: attachmentId, transactionId, deleted };
+    },
+
+    async detachFromNote(noteId: string, attachmentId: string, userId: string) {
+      await assertWritableNote(noteId, userId);
+      const deleted = await finishDetach(
+        await repository.detachFromNoteForUser(noteId, attachmentId, userId),
+        userId,
+      );
+      return { id: attachmentId, noteId, deleted };
     },
 
     async remove(id: string, userId: string) {

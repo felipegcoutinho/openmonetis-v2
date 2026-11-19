@@ -90,13 +90,15 @@ export function NotesPage() {
     setDialogOpen(true);
   }
 
-  async function save(input: CreateNoteInput | ReplaceNoteInput) {
+  async function save(input: CreateNoteInput | ReplaceNoteInput, files: File[]) {
     if (editingNote) {
       await replaceMutation.mutateAsync({ id: editingNote.id, input: input as ReplaceNoteInput });
-    } else {
-      await createMutation.mutateAsync(input as CreateNoteInput);
+      changeDialog(false);
+      return undefined;
     }
+    const created = await createMutation.mutateAsync({ input: input as CreateNoteInput, files });
     changeDialog(false);
+    return created;
   }
 
   async function setArchived(note: NoteOutput, isArchived: boolean) {

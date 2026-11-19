@@ -1,4 +1,4 @@
-import { db, noteItems, notes } from "@openmonetis/db";
+import { attachments, db, noteAttachments, noteItems, notes } from "@openmonetis/db";
 import { noteItemsMaximumCount } from "@openmonetis/domain/notes";
 import {
   and,
@@ -12,6 +12,7 @@ import {
   inArray,
   lte,
   notInArray,
+  notLike,
   or,
   sql,
 } from "drizzle-orm";
@@ -49,7 +50,7 @@ export const notesRepository = {
             .returning()
         : [];
 
-      return aggregate(note, items);
+      return aggregate(note, items, 0);
     });
   },
 
@@ -74,9 +75,12 @@ export const notesRepository = {
               .orderBy(asc(noteItems.position))
           : [];
         const itemsByNoteId = groupItems(itemRows);
+        const attachmentCounts = await countAttachments(transaction, userId, noteIds);
 
         return {
-          aggregates: noteRows.map((note) => aggregate(note, itemsByNoteId.get(note.id) ?? [])),
+          aggregates: noteRows.map((note) =>
+            aggregate(note, itemsByNoteId.get(note.id) ?? [], attachmentCounts.get(note.id) ?? 0),
+          ),
           total: (totals[0] as { value: number }).value,
         };
       },
@@ -99,7 +103,8 @@ export const notesRepository = {
           .from(noteItems)
           .where(and(eq(noteItems.noteId, id), eq(noteItems.userId, userId)))
           .orderBy(asc(noteItems.position));
-        return aggregate(note, items);
+        const attachmentCounts = await countAttachments(transaction, userId, [id]);
+        return aggregate(note, items, attachmentCounts.get(id) ?? 0);
       },
       { isolationLevel: "repeatable read", accessMode: "read only" },
     );
@@ -207,7 +212,10 @@ export const notesRepository = {
         .where(and(eq(noteItems.noteId, id), eq(noteItems.userId, userId)))
         .orderBy(asc(noteItems.position));
 
-      return { status: "updated" as const, aggregate: aggregate(updated, items) };
+      return {
+        status: "updated" as const,
+        aggregate: aggregate(updated, items, await countNoteAttachments(transaction, userId, id)),
+      };
     });
   },
 
@@ -236,7 +244,10 @@ export const notesRepository = {
         .from(noteItems)
         .where(and(eq(noteItems.noteId, id), eq(noteItems.userId, userId)))
         .orderBy(asc(noteItems.position));
-      return { status: "updated" as const, aggregate: aggregate(updated, items) };
+      return {
+        status: "updated" as const,
+        aggregate: aggregate(updated, items, await countNoteAttachments(transaction, userId, id)),
+      };
     });
   },
 
@@ -283,7 +294,11 @@ export const notesRepository = {
 
       return {
         status: "updated" as const,
-        aggregate: aggregate(updatedNote, items),
+        aggregate: aggregate(
+          updatedNote,
+          items,
+          await countNoteAttachments(transaction, userId, noteId),
+        ),
       };
     });
   },
@@ -316,7 +331,10 @@ export const notesRepository = {
         return { status: current ? ("version_conflict" as const) : ("not_found" as const) };
       }
 
-      return { status: "updated" as const, aggregate: aggregate(updated, []) };
+      return {
+        status: "updated" as const,
+        aggregate: aggregate(updated, [], await countNoteAttachments(transaction, userId, id)),
+      };
     });
   },
 
@@ -409,6 +427,45 @@ function groupItems(items: NoteItemRecord[]) {
   return itemsByNoteId;
 }
 
-function aggregate(note: NoteRecord, items: NoteItemRecord[]): NoteAggregateRecord {
-  return { note, items };
+function aggregate(
+  note: NoteRecord,
+  items: NoteItemRecord[],
+  attachmentCount: number,
+): NoteAggregateRecord {
+  return { note, items, attachmentCount };
+}
+
+type DatabaseTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function countAttachments(
+  transaction: DatabaseTransaction,
+  userId: string,
+  noteIds: string[],
+) {
+  if (!noteIds.length) return new Map<string, number>();
+  const rows = await transaction
+    .select({ noteId: noteAttachments.noteId, value: count() })
+    .from(noteAttachments)
+    .innerJoin(
+      attachments,
+      and(eq(noteAttachments.attachmentId, attachments.id), eq(attachments.userId, userId)),
+    )
+    .where(
+      and(
+        eq(noteAttachments.userId, userId),
+        inArray(noteAttachments.noteId, noteIds),
+        notLike(attachments.fileKey, "pending/%"),
+        notLike(attachments.fileKey, "deleting/%"),
+      ),
+    )
+    .groupBy(noteAttachments.noteId);
+  return new Map(rows.map((row) => [row.noteId, Number(row.value)]));
+}
+
+async function countNoteAttachments(
+  transaction: DatabaseTransaction,
+  userId: string,
+  noteId: string,
+) {
+  return (await countAttachments(transaction, userId, [noteId])).get(noteId) ?? 0;
 }

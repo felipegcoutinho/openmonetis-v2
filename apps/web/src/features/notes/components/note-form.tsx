@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { validateAfterSubmit } from "@/lib/form-feedback";
 import { useNoteForm } from "../useNoteForm";
+import { NoteAttachmentsField } from "./note-attachments-field";
 import { NoteCharacterCount } from "./note-character-count";
 import { NoteChecklistEditor } from "./note-checklist-editor";
 import type { NoteFormProps } from "./note-form.types";
@@ -20,8 +21,17 @@ import { NoteTaskFields } from "./note-task-fields";
 export type { NoteFormHandle } from "./note-form.types";
 
 export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
-  const { newItemText, setNewItemText, submissionError, isEditing, form, fieldId, addItem } =
-    useNoteForm({ note, onCancel, onSubmit, ref });
+  const {
+    newItemText,
+    setNewItemText,
+    submissionError,
+    isEditing,
+    form,
+    fieldId,
+    addItem,
+    pendingFiles,
+    setPendingFiles,
+  } = useNoteForm({ note, onCancel, onSubmit, ref });
   return (
     <form
       data-mobile-page-form
@@ -136,6 +146,17 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
               <NoteTaskFields isEditing={isEditing} form={form} fieldId={fieldId} />
             )
           }
+        </form.Subscribe>
+
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <NoteAttachmentsField
+              disabled={isSubmitting}
+              noteId={note?.id}
+              pendingFiles={pendingFiles}
+              setPendingFiles={setPendingFiles}
+            />
+          )}
         </form.Subscribe>
       </div>
 

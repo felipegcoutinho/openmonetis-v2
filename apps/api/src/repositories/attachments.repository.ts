@@ -2,11 +2,13 @@ import {
   attachments,
   categories,
   db,
+  noteAttachments,
+  notes,
   people,
   transactionAttachments,
   transactions,
 } from "@openmonetis/db";
-import { and, asc, desc, eq, like, lt, notExists, notLike, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, lt, notExists, notLike, type SQL, sql } from "drizzle-orm";
 import type { AttachmentsRepository } from "../services/attachments.service";
 import { categoryLabelSql } from "./categories.repository";
 
@@ -34,29 +36,8 @@ export const attachmentsRepository = {
         .limit(1);
       if (!ownedTransaction) return null;
 
-      const [current] = await transaction
-        .select()
-        .from(attachments)
-        .where(and(eq(attachments.id, uploadId), eq(attachments.userId, userId)))
-        .limit(1)
-        .for("update");
-      if (!current || (current.fileKey !== pendingKey && current.fileKey !== finalKey)) return null;
-
-      let attachment = current;
-      if (current.fileKey === pendingKey) {
-        const [updatedRecord] = await transaction
-          .update(attachments)
-          .set({ fileKey: finalKey })
-          .where(
-            and(
-              eq(attachments.id, uploadId),
-              eq(attachments.userId, userId),
-              eq(attachments.fileKey, pendingKey),
-            ),
-          )
-          .returning();
-        attachment = updatedRecord as typeof attachments.$inferSelect;
-      }
+      const attachment = await promoteUpload(transaction, uploadId, userId, pendingKey, finalKey);
+      if (!attachment) return null;
 
       await transaction
         .insert(transactionAttachments)
@@ -71,17 +52,79 @@ export const attachmentsRepository = {
     });
   },
 
+  async findNoteStateForUser(noteId, userId) {
+    const [row] = await db
+      .select({ isArchived: notes.isArchived })
+      .from(notes)
+      .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+      .limit(1);
+    return row ?? null;
+  },
+
+  async finalizeAndAttachToNote(uploadId, noteId, userId, pendingKey, finalKey) {
+    return db.transaction(async (transaction) => {
+      const [ownedNote] = await transaction
+        .select({ id: notes.id })
+        .from(notes)
+        .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isArchived, false)))
+        .limit(1);
+      if (!ownedNote) return null;
+
+      const attachment = await promoteUpload(transaction, uploadId, userId, pendingKey, finalKey);
+      if (!attachment) return null;
+
+      await transaction
+        .insert(noteAttachments)
+        .values({ userId, noteId, attachmentId: attachment.id })
+        .onConflictDoNothing();
+
+      return attachment;
+    });
+  },
+
+  listForNote(noteId, userId) {
+    return db
+      .select(attachmentColumns)
+      .from(noteAttachments)
+      .innerJoin(
+        attachments,
+        and(eq(noteAttachments.attachmentId, attachments.id), eq(attachments.userId, userId)),
+      )
+      .where(
+        and(
+          eq(noteAttachments.noteId, noteId),
+          eq(noteAttachments.userId, userId),
+          notLike(attachments.fileKey, "pending/%"),
+          notLike(attachments.fileKey, "deleting/%"),
+        ),
+      )
+      .orderBy(asc(noteAttachments.createdAt), asc(attachments.id));
+  },
+
+  async detachFromNoteForUser(noteId, attachmentId, userId) {
+    return db.transaction(async (transaction) => {
+      const current = await lockActiveAttachment(transaction, attachmentId, userId);
+      if (!current) return null;
+
+      const [linked] = await transaction
+        .delete(noteAttachments)
+        .where(
+          and(
+            eq(noteAttachments.noteId, noteId),
+            eq(noteAttachments.attachmentId, attachmentId),
+            eq(noteAttachments.userId, userId),
+          ),
+        )
+        .returning({ attachmentId: noteAttachments.attachmentId });
+      if (!linked) return null;
+
+      return tombstoneIfOrphaned(transaction, current, userId);
+    });
+  },
+
   listForTransaction(transactionId, userId) {
     return db
-      .select({
-        id: attachments.id,
-        userId: attachments.userId,
-        fileKey: attachments.fileKey,
-        fileName: attachments.fileName,
-        fileSize: attachments.fileSize,
-        mimeType: attachments.mimeType,
-        createdAt: attachments.createdAt,
-      })
+      .select(attachmentColumns)
       .from(transactionAttachments)
       .innerJoin(
         attachments,
@@ -171,19 +214,8 @@ export const attachmentsRepository = {
 
   async detachFromTransactionForUser(transactionId, attachmentId, userId) {
     return db.transaction(async (transaction) => {
-      const [current] = await transaction
-        .select()
-        .from(attachments)
-        .where(and(eq(attachments.id, attachmentId), eq(attachments.userId, userId)))
-        .limit(1)
-        .for("update");
-      if (
-        !current ||
-        current.fileKey.startsWith("pending/") ||
-        current.fileKey.startsWith("deleting/")
-      ) {
-        return null;
-      }
+      const current = await lockActiveAttachment(transaction, attachmentId, userId);
+      if (!current) return null;
 
       const [linked] = await transaction
         .select({ attachmentId: transactionAttachments.attachmentId })
@@ -216,38 +248,7 @@ export const attachmentsRepository = {
           ),
         );
 
-      const [remainingLink] = await transaction
-        .select({ attachmentId: transactionAttachments.attachmentId })
-        .from(transactionAttachments)
-        .where(
-          and(
-            eq(transactionAttachments.attachmentId, attachmentId),
-            eq(transactionAttachments.userId, userId),
-          ),
-        )
-        .limit(1);
-      const orphaned = !remainingLink;
-
-      if (orphaned) {
-        const tombstoneKey = toDeletionKey(current.fileKey);
-        const [tombstoneRecord] = await transaction
-          .update(attachments)
-          .set({ fileKey: tombstoneKey })
-          .where(
-            and(
-              eq(attachments.id, attachmentId),
-              eq(attachments.userId, userId),
-              eq(attachments.fileKey, current.fileKey),
-            ),
-          )
-          .returning();
-        return {
-          attachment: tombstoneRecord as typeof attachments.$inferSelect,
-          orphaned: true,
-        };
-      }
-
-      return { attachment: current, orphaned: false };
+      return tombstoneIfOrphaned(transaction, current, userId);
     });
   },
 
@@ -269,6 +270,9 @@ export const attachmentsRepository = {
             eq(transactionAttachments.userId, userId),
           ),
         );
+      await transaction
+        .delete(noteAttachments)
+        .where(and(eq(noteAttachments.attachmentId, id), eq(noteAttachments.userId, userId)));
       if (current.fileKey.startsWith("deleting/")) return current;
 
       const [tombstoneRecord] = await transaction
@@ -295,18 +299,7 @@ export const attachmentsRepository = {
         .limit(1)
         .for("update");
       if (!current || current.fileKey !== pendingKey) return null;
-
-      const [linked] = await transaction
-        .select({ attachmentId: transactionAttachments.attachmentId })
-        .from(transactionAttachments)
-        .where(
-          and(
-            eq(transactionAttachments.attachmentId, uploadId),
-            eq(transactionAttachments.userId, userId),
-          ),
-        )
-        .limit(1);
-      if (linked) return null;
+      if (await isLinked(transaction, uploadId, userId)) return null;
 
       const [attachmentRecord] = await transaction
         .update(attachments)
@@ -332,17 +325,7 @@ export const attachmentsRepository = {
           eq(attachments.userId, userId),
           notLike(attachments.fileKey, "pending/%"),
           notLike(attachments.fileKey, "deleting/%"),
-          notExists(
-            db
-              .select({ attachmentId: transactionAttachments.attachmentId })
-              .from(transactionAttachments)
-              .where(
-                and(
-                  eq(transactionAttachments.attachmentId, attachments.id),
-                  eq(transactionAttachments.userId, userId),
-                ),
-              ),
-          ),
+          ...hasNoLinks(userId),
         ),
       )
       .returning();
@@ -357,17 +340,7 @@ export const attachmentsRepository = {
           eq(attachments.userId, userId),
           like(attachments.fileKey, "pending/%"),
           lt(attachments.createdAt, olderThan),
-          notExists(
-            db
-              .select({ attachmentId: transactionAttachments.attachmentId })
-              .from(transactionAttachments)
-              .where(
-                and(
-                  eq(transactionAttachments.attachmentId, attachments.id),
-                  eq(transactionAttachments.userId, userId),
-                ),
-              ),
-          ),
+          ...hasNoLinks(userId),
         ),
       )
       .returning();
@@ -389,17 +362,7 @@ export const attachmentsRepository = {
           eq(attachments.id, id),
           eq(attachments.userId, userId),
           eq(attachments.fileKey, tombstoneKey),
-          notExists(
-            db
-              .select({ attachmentId: transactionAttachments.attachmentId })
-              .from(transactionAttachments)
-              .where(
-                and(
-                  eq(transactionAttachments.attachmentId, attachments.id),
-                  eq(transactionAttachments.userId, userId),
-                ),
-              ),
-          ),
+          ...hasNoLinks(userId),
         ),
       )
       .returning();
@@ -407,6 +370,139 @@ export const attachmentsRepository = {
   },
 } satisfies AttachmentsRepository;
 
+type DatabaseTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type AttachmentRow = typeof attachments.$inferSelect;
+
+const attachmentColumns = {
+  id: attachments.id,
+  userId: attachments.userId,
+  fileKey: attachments.fileKey,
+  fileName: attachments.fileName,
+  fileSize: attachments.fileSize,
+  mimeType: attachments.mimeType,
+  createdAt: attachments.createdAt,
+};
+
 function toDeletionKey(fileKey: string) {
   return `deleting/${fileKey}`;
+}
+
+/** An attachment is orphaned only when no transaction and no note references it. */
+function hasNoLinks(userId: string): SQL[] {
+  return [
+    notExists(
+      db
+        .select({ attachmentId: transactionAttachments.attachmentId })
+        .from(transactionAttachments)
+        .where(
+          and(
+            eq(transactionAttachments.attachmentId, attachments.id),
+            eq(transactionAttachments.userId, userId),
+          ),
+        ),
+    ),
+    notExists(
+      db
+        .select({ attachmentId: noteAttachments.attachmentId })
+        .from(noteAttachments)
+        .where(
+          and(eq(noteAttachments.attachmentId, attachments.id), eq(noteAttachments.userId, userId)),
+        ),
+    ),
+  ];
+}
+
+async function isLinked(transaction: DatabaseTransaction, attachmentId: string, userId: string) {
+  const [transactionLink] = await transaction
+    .select({ attachmentId: transactionAttachments.attachmentId })
+    .from(transactionAttachments)
+    .where(
+      and(
+        eq(transactionAttachments.attachmentId, attachmentId),
+        eq(transactionAttachments.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (transactionLink) return true;
+
+  const [noteLink] = await transaction
+    .select({ attachmentId: noteAttachments.attachmentId })
+    .from(noteAttachments)
+    .where(and(eq(noteAttachments.attachmentId, attachmentId), eq(noteAttachments.userId, userId)))
+    .limit(1);
+  return Boolean(noteLink);
+}
+
+async function promoteUpload(
+  transaction: DatabaseTransaction,
+  uploadId: string,
+  userId: string,
+  pendingKey: string,
+  finalKey: string,
+) {
+  const [current] = await transaction
+    .select()
+    .from(attachments)
+    .where(and(eq(attachments.id, uploadId), eq(attachments.userId, userId)))
+    .limit(1)
+    .for("update");
+  if (!current || (current.fileKey !== pendingKey && current.fileKey !== finalKey)) return null;
+  if (current.fileKey === finalKey) return current;
+
+  const [updatedRecord] = await transaction
+    .update(attachments)
+    .set({ fileKey: finalKey })
+    .where(
+      and(
+        eq(attachments.id, uploadId),
+        eq(attachments.userId, userId),
+        eq(attachments.fileKey, pendingKey),
+      ),
+    )
+    .returning();
+  return updatedRecord as AttachmentRow;
+}
+
+async function lockActiveAttachment(
+  transaction: DatabaseTransaction,
+  attachmentId: string,
+  userId: string,
+) {
+  const [current] = await transaction
+    .select()
+    .from(attachments)
+    .where(and(eq(attachments.id, attachmentId), eq(attachments.userId, userId)))
+    .limit(1)
+    .for("update");
+  if (
+    !current ||
+    current.fileKey.startsWith("pending/") ||
+    current.fileKey.startsWith("deleting/")
+  ) {
+    return null;
+  }
+  return current;
+}
+
+async function tombstoneIfOrphaned(
+  transaction: DatabaseTransaction,
+  current: AttachmentRow,
+  userId: string,
+) {
+  if (await isLinked(transaction, current.id, userId)) {
+    return { attachment: current, orphaned: false };
+  }
+
+  const [tombstoneRecord] = await transaction
+    .update(attachments)
+    .set({ fileKey: toDeletionKey(current.fileKey) })
+    .where(
+      and(
+        eq(attachments.id, current.id),
+        eq(attachments.userId, userId),
+        eq(attachments.fileKey, current.fileKey),
+      ),
+    )
+    .returning();
+  return { attachment: tombstoneRecord as AttachmentRow, orphaned: true };
 }

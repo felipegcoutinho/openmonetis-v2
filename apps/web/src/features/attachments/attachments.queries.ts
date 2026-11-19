@@ -1,12 +1,18 @@
 import type { ListAttachmentsQuery } from "@openmonetis/validators/attachments";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import { getAttachments, getAttachmentUrl, getTransactionAttachments } from "./attachments.api";
+import {
+  getAttachments,
+  getAttachmentUrl,
+  getNoteAttachments,
+  getTransactionAttachments,
+} from "./attachments.api";
 
 export const attachmentKeys = {
   all: ["attachments"] as const,
   lists: () => [...attachmentKeys.all, "list"] as const,
   list: (query: ListAttachmentsQuery) => [...attachmentKeys.lists(), query] as const,
   transaction: (id: string) => [...attachmentKeys.all, "transaction", id] as const,
+  note: (id: string) => [...attachmentKeys.all, "note", id] as const,
   url: (id: string, disposition: "inline" | "attachment") =>
     [...attachmentKeys.all, "url", id, disposition] as const,
 };
@@ -22,6 +28,13 @@ export const transactionAttachmentsQueryOptions = (id: string) =>
   queryOptions({
     queryKey: attachmentKeys.transaction(id),
     queryFn: () => getTransactionAttachments(id),
+    enabled: Boolean(id),
+  });
+
+export const noteAttachmentsQueryOptions = (id: string) =>
+  queryOptions({
+    queryKey: attachmentKeys.note(id),
+    queryFn: () => getNoteAttachments(id),
     enabled: Boolean(id),
   });
 

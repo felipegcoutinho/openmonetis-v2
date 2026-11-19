@@ -39,6 +39,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Celular: uma faixa avisa quando a conexão cai, e um aviso confirma quando ela volta.
 - Celular: vibração curta ao armar o puxar para atualizar, fechar um painel arrastando e abrir a
   escolha do atalho (Android).
+- Anotações: notas, listas e tarefas aceitam anexos em PDF, JPEG, PNG ou WebP. Ao criar, os
+  arquivos são enviados junto com a anotação; ao editar ou nos detalhes, são enviados e removidos
+  na hora, numa grade com miniaturas e pré-visualização. O cartão mostra quantos anexos a anotação
+  tem, anotações arquivadas ficam só para consulta, e ao excluir uma anotação os arquivos que não
+  estão em nenhum lançamento são apagados. Com o formulário ou os detalhes abertos, uma imagem
+  copiada (como um print) pode ser colada com Ctrl+V em qualquer ponto, e colar texto nos campos
+  continua funcionando normalmente.
+- Lançamentos: no formulário de nova receita, despesa ou edição, uma imagem copiada (como um print)
+  pode ser colada com Ctrl+V em qualquer campo para virar anexo. A seção "Etiquetas, anotações e
+  anexos" abre sozinha para mostrar o arquivo adicionado.
 
 ### Alterado
 
@@ -68,6 +78,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- No widget de anotações da visão geral, uma falha ao salvar não mostra mais "Anotação criada".
 - O zoom com dois dedos voltou a funcionar no celular.
 - Os links de voltar e as trilhas de navegação no topo das páginas não recarregam mais o
   aplicativo inteiro.
@@ -78,11 +89,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Notas de atualização
 
+- Banco: a migration `0034_note_attachments.sql` cria a tabela `note_attachments`, que liga cada
+  anotação a anexos do mesmo usuário; nenhum dado existente é alterado. Faça backup antes de
+  atualizar e acompanhe `docker compose logs migrator`.
 - API: em `GET /transactions`, os dois lados de uma transferência passam a vir como uma única
   entrada, com valor sem sinal e `transferLeg` igual a `both`. Filtrando por uma conta, cada lado
   continua separado e com sinal (`source` ou `destination`). `TransactionOutput` ganha
   `transferLeg`, nulo fora de transferências. Clientes que somavam os dois lados da listagem
   precisam tratar a entrada mesclada; a exportação continua com os dois lançamentos.
+- API: rotas novas `GET /attachments/note/{noteId}`, `POST /attachments/note/{noteId}/prepare`,
+  `POST /attachments/note/{noteId}/confirm` e `DELETE /attachments/note/{noteId}/{attachmentId}`;
+  `NoteOutput` ganha `attachmentCount`. Anotações arquivadas recusam envio e remoção de anexos.
 
 ## [0.18.0] - 2026-11-17
 

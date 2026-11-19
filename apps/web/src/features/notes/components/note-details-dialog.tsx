@@ -21,6 +21,7 @@ import {
   noteKindIcons,
   noteKindLabels,
 } from "../notes.presentation";
+import { NoteAttachments } from "./note-attachments";
 
 type NoteDetailsDialogProps = {
   note: NoteOutput | null;
@@ -175,6 +176,11 @@ export function NoteDetailsDialog({
               </p>
             </div>
           )}
+          {note.attachmentCount > 0 ? (
+            <div className="mt-5 min-w-0 md:mt-0">
+              <NoteAttachments noteId={note.id} readOnly={note.isArchived} />
+            </div>
+          ) : null}
         </div>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)} type="button" variant="outline">

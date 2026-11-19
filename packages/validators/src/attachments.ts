@@ -23,6 +23,14 @@ export const PrepareAttachmentInputSchema = z
   })
   .openapi("PrepareAttachmentInput");
 
+export const PrepareNoteAttachmentInputSchema = PrepareAttachmentInputSchema.omit({
+  transactionId: true,
+}).openapi("PrepareNoteAttachmentInput");
+
+export const ConfirmNoteAttachmentInputSchema = z
+  .object({ uploadId: z.uuid() })
+  .openapi("ConfirmNoteAttachmentInput");
+
 export const ConfirmAttachmentInputSchema = z
   .object({
     uploadId: z.uuid(),
@@ -63,6 +71,16 @@ export const TransactionAttachmentParamsSchema = z
 export const TransactionAttachmentItemParamsSchema = TransactionAttachmentParamsSchema.extend({
   attachmentId: z.uuid().openapi({ param: { name: "attachmentId", in: "path" } }),
 }).openapi("TransactionAttachmentItemParams");
+
+export const NoteAttachmentParamsSchema = z
+  .object({
+    noteId: z.uuid().openapi({ param: { name: "noteId", in: "path" } }),
+  })
+  .openapi("NoteAttachmentParams");
+
+export const NoteAttachmentItemParamsSchema = NoteAttachmentParamsSchema.extend({
+  attachmentId: z.uuid().openapi({ param: { name: "attachmentId", in: "path" } }),
+}).openapi("NoteAttachmentItemParams");
 
 export const AttachmentUrlQuerySchema = z
   .object({
@@ -129,6 +147,8 @@ export const AttachmentUrlOutputSchema = z
   .openapi("AttachmentUrl");
 
 export type PrepareAttachmentInput = z.infer<typeof PrepareAttachmentInputSchema>;
+export type PrepareNoteAttachmentInput = z.infer<typeof PrepareNoteAttachmentInputSchema>;
+export type ConfirmNoteAttachmentInput = z.infer<typeof ConfirmNoteAttachmentInputSchema>;
 export type ConfirmAttachmentInput = z.infer<typeof ConfirmAttachmentInputSchema>;
 export type ListAttachmentsQuery = z.infer<typeof ListAttachmentsQuerySchema>;
 export type AttachmentOutput = z.infer<typeof AttachmentOutputSchema>;

@@ -26,8 +26,31 @@ function fixture() {
     row.fileKey = `deleting/${row.fileKey}`;
     return row;
   };
+  const notes = new Map([
+    ["note-active", { isArchived: false }],
+    ["note-archived", { isArchived: true }],
+  ]);
+  const detach = (linkKey: string, id: string, userId: string) => {
+    const row = owned(id, userId);
+    if (!row || !links.delete(linkKey)) return null;
+    const orphaned = ![...links].some((link) => link.endsWith(`:${id}`));
+    return { attachment: orphaned ? (mark(id, userId) as Record) : row, orphaned };
+  };
   const repository: AttachmentsRepository = {
     transactionExistsForUser: async (id, userId) => userId === owner && id.startsWith("owned"),
+    findNoteStateForUser: async (id, userId) => (userId === owner ? (notes.get(id) ?? null) : null),
+    finalizeAndAttachToNote: async (id, noteId, userId, pending, final) => {
+      const row = owned(id, userId);
+      if (!row || ![pending, final].includes(row.fileKey)) return null;
+      row.fileKey = final;
+      links.add(`note:${noteId}:${id}`);
+      return row;
+    },
+    listForNote: async (noteId, userId) =>
+      [...records.values()].filter(
+        (row) => row.userId === userId && links.has(`note:${noteId}:${row.id}`),
+      ),
+    detachFromNoteForUser: async (noteId, id, userId) => detach(`note:${noteId}:${id}`, id, userId),
     insertPending: async (input) => {
       const row = { ...input, createdAt: new Date() };
       records.set(row.id, row);
@@ -74,12 +97,8 @@ function fixture() {
       records.delete(id);
       return row;
     },
-    detachFromTransactionForUser: async (transactionId, id, userId) => {
-      const row = owned(id, userId);
-      if (!row || !links.delete(`${transactionId}:${id}`)) return null;
-      const orphaned = ![...links].some((link) => link.endsWith(`:${id}`));
-      return { attachment: orphaned ? (mark(id, userId) as Record) : row, orphaned };
-    },
+    detachFromTransactionForUser: async (transactionId, id, userId) =>
+      detach(`${transactionId}:${id}`, id, userId),
   };
   const storage: AttachmentStorage = {
     enabled: true,
@@ -126,6 +145,20 @@ function fixture() {
     });
     return { uploadId: upload.uploadId, transactionId: "owned-1" };
   }
+  async function prepareForNote(noteId = "note-active") {
+    const upload = await service.prepareForNote(
+      noteId,
+      { fileName: "photo.png", fileSize: 8, mimeType: "image/png" },
+      owner,
+    );
+    objects.set(`pending/${upload.uploadId}`, {
+      size: 8,
+      mimeType: "image/png",
+      etag: "etag",
+      bytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    });
+    return { uploadId: upload.uploadId };
+  }
   return {
     owner,
     records,
@@ -134,6 +167,7 @@ function fixture() {
     storage,
     service,
     prepare,
+    prepareForNote,
     fail: (kind: "remove" | "commit" | "prepare" | "finalize", value = true) => {
       if (kind === "remove") failRemove = value;
       if (kind === "commit") failCommit = value;
@@ -280,4 +314,58 @@ test("cleanup expires only old owned pending uploads and preserves fresh or fore
   assert.ok(f.records.has(fresh.uploadId));
   assert.ok(f.records.has(foreignId));
   assert.equal(f.records.has(old.uploadId), false);
+});
+
+test("note attachments upload, list and delete the file after the last note link", async () => {
+  const { owner, objects, records, service, prepareForNote } = fixture();
+  const { uploadId } = await prepareForNote();
+
+  const attachment = await service.confirmForNote("note-active", { uploadId }, owner);
+  assert.equal(attachment.mimeType, "image/png");
+  assert.deepEqual(
+    (await service.listForNote("note-active", owner)).map((item) => item.id),
+    [uploadId],
+  );
+  assert.ok(objects.has(`attachments/${uploadId}`));
+
+  const detached = await service.detachFromNote("note-active", uploadId, owner);
+  assert.deepEqual(detached, { id: uploadId, noteId: "note-active", deleted: true });
+  assert.equal(records.has(uploadId), false);
+  assert.equal(objects.has(`attachments/${uploadId}`), false);
+});
+
+test("note attachments enforce ownership and keep archived notes read-only", async () => {
+  const { owner, service, prepareForNote } = fixture();
+  const file = { fileName: "photo.png", fileSize: 8, mimeType: "image/png" as const };
+
+  await assert.rejects(service.prepareForNote("note-archived", file, owner), {
+    code: "archived_note_read_only",
+  });
+  await assert.rejects(service.prepareForNote("note-active", file, "intruder"), {
+    code: "note_not_found",
+  });
+  await assert.rejects(service.listForNote("note-active", "intruder"), {
+    code: "note_not_found",
+  });
+
+  const { uploadId } = await prepareForNote();
+  await assert.rejects(service.confirmForNote("note-archived", { uploadId }, owner), {
+    code: "archived_note_read_only",
+  });
+  await service.confirmForNote("note-active", { uploadId }, owner);
+  await assert.rejects(service.detachFromNote("note-active", uploadId, "intruder"), {
+    code: "note_not_found",
+  });
+  assert.equal((await service.listForNote("note-archived", owner)).length, 0);
+});
+
+test("a file shared by a transaction and a note survives detaching from the note", async () => {
+  const { owner, objects, service, prepare, links } = fixture();
+  const upload = await prepare();
+  await service.confirm(upload, owner);
+  links.add(`note:note-active:${upload.uploadId}`);
+
+  const detached = await service.detachFromNote("note-active", upload.uploadId, owner);
+  assert.equal(detached.deleted, false);
+  assert.ok(objects.has(`attachments/${upload.uploadId}`));
 });

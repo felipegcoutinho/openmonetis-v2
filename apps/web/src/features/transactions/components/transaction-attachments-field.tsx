@@ -13,6 +13,7 @@ export function TransactionAttachmentsField({
   mode,
   values,
   isSubmitting,
+  onAttachmentAdded,
 }: {
   pendingFiles: ReturnType<typeof useTransactionForm>["pendingFiles"];
   setPendingFiles: ReturnType<typeof useTransactionForm>["setPendingFiles"];
@@ -21,6 +22,8 @@ export function TransactionAttachmentsField({
   mode: "create" | "edit" | "copy";
   values: TransactionFormValues;
   isSubmitting: boolean;
+  /** Reveals the collapsed section so a pasted or dropped file is visible. */
+  onAttachmentAdded?: () => void;
 }) {
   return (
     <>
@@ -29,6 +32,7 @@ export function TransactionAttachmentsField({
           {transaction?.recordId ? (
             <TransactionAttachments
               onBusyChange={onAttachmentBusyChange}
+              onUploadStart={onAttachmentAdded}
               transactionId={transaction.recordId}
             />
           ) : (
@@ -47,9 +51,13 @@ export function TransactionAttachmentsField({
       ) : (
         <FieldShell label="Anexos">
           <AttachmentFilePicker
+            captureDocumentPaste
             disabled={isSubmitting}
             files={pendingFiles}
-            onAdd={(file) => setPendingFiles((current) => [...current, file])}
+            onAdd={(file) => {
+              setPendingFiles((current) => [...current, file]);
+              onAttachmentAdded?.();
+            }}
             onRemove={(file) =>
               setPendingFiles((current) => current.filter((item) => item !== file))
             }

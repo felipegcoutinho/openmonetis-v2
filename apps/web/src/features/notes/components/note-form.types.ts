@@ -21,8 +21,16 @@ export type NoteFormValues = {
 export type NoteFormProps = {
   note?: NoteOutput | null;
   onCancel: () => void;
-  onSubmit: (input: CreateNoteInput | ReplaceNoteInput) => Promise<void>;
+  /** Pending files are only sent when creating; existing notes save attachments immediately. */
+  onSubmit: (
+    input: CreateNoteInput | ReplaceNoteInput,
+    pendingFiles: File[],
+  ) => Promise<NoteSubmitResult | undefined>;
   ref?: Ref<NoteFormHandle>;
+};
+
+export type NoteSubmitResult = {
+  failedUploadCount: number;
 };
 
 export type NoteFormHandle = {

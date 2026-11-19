@@ -80,6 +80,7 @@ export function TransactionAdvancedFields({
           mode={mode}
           values={values}
           isSubmitting={isSubmitting}
+          onAttachmentAdded={() => setIsAdvancedOpen(true)}
         />
       </div>
     </details>

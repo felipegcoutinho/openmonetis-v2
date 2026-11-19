@@ -5,6 +5,8 @@ import type {
   ReplaceNoteInput,
 } from "@openmonetis/validators/notes";
 import { type InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import { uploadNoteAttachment } from "@/features/attachments/attachments.api";
+import { attachmentKeys } from "@/features/attachments/attachments.queries";
 import { notificationKeys } from "@/features/notifications/notifications.queries";
 import {
   archiveNote,
@@ -19,9 +21,21 @@ import { noteKeys } from "./notes.queries";
 export function useCreateNoteMutation() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateNoteInput) => createNote(input),
-    onSuccess: (note) => {
-      client.setQueryData(noteKeys.detail(note.id), note);
+    mutationFn: async ({ input, files = [] }: { input: CreateNoteInput; files?: File[] }) => {
+      const note = await createNote(input);
+      const uploads = await Promise.allSettled(
+        files.map((file) => uploadNoteAttachment(file, note.id)),
+      );
+      const failedUploadCount = uploads.filter((upload) => upload.status === "rejected").length;
+      return { note, failedUploadCount };
+    },
+    onSuccess: ({ note, failedUploadCount }, { files = [] }) => {
+      if (files.length === failedUploadCount) {
+        client.setQueryData(noteKeys.detail(note.id), note);
+      } else {
+        client.removeQueries({ queryKey: noteKeys.detail(note.id) });
+        client.removeQueries({ queryKey: attachmentKeys.note(note.id) });
+      }
       return invalidateNoteCollections(client);
     },
   });

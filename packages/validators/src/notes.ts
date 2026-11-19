@@ -171,6 +171,7 @@ export const NoteOutputSchema = z
     totalItemCount: z.number().int().nonnegative(),
     completedItemCount: z.number().int().nonnegative(),
     completionPercentage: z.number().int().min(0).max(100),
+    attachmentCount: z.number().int().nonnegative(),
     version: z.number().int().positive(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),

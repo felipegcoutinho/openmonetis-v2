@@ -68,3 +68,7 @@ export function addDaysToDateOnly(value: string, days: number) {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 }
+
+export function formatAttachmentCount(count: number) {
+  return count === 1 ? "1 anexo" : `${count} anexos`;
+}

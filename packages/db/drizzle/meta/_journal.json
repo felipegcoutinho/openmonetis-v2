@@ -239,6 +239,13 @@
       "when": 1794847134514,
       "tag": "0033_budget_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795104849019,
+      "tag": "0034_note_attachments",
+      "breakpoints": true
     }
   ]
 }

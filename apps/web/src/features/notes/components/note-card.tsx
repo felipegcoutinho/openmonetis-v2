@@ -5,6 +5,7 @@ import {
   CalendarDays,
   FileText,
   ListChecks,
+  Paperclip,
   Pencil,
   RotateCcw,
   Trash2,
@@ -16,6 +17,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
+  formatAttachmentCount,
   formatNoteUpdatedAt,
   formatTaskDueDate,
   getChecklistProgressLabel,
@@ -75,8 +77,19 @@ export function NoteCard({
                   {note.title}
                 </CardTitle>
               </button>
-              <p className="mt-0.5 font-mono text-muted-foreground text-xs">
-                {noteKindLabels[note.kind]}
+              <p className="mt-0.5 flex items-center gap-2 font-mono text-muted-foreground text-xs">
+                <span>{noteKindLabels[note.kind]}</span>
+                {note.attachmentCount > 0 ? (
+                  <span
+                    className="inline-flex items-center gap-1 tabular-nums"
+                    title={formatAttachmentCount(note.attachmentCount)}
+                  >
+                    <span aria-hidden="true">·</span>
+                    <Paperclip aria-hidden="true" className="size-3" />
+                    <span aria-hidden="true">{note.attachmentCount}</span>
+                    <span className="sr-only">{formatAttachmentCount(note.attachmentCount)}</span>
+                  </span>
+                ) : null}
               </p>
             </div>
           </div>

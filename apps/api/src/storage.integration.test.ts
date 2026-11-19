@@ -146,6 +146,148 @@ test("S3 uploads validate real objects and preserve database ownership and delet
             }
           },
         );
+        await t.test(
+          "note attachments upload over S3, stay read-only when archived and are cleaned with their last link",
+          async () => {
+            const pngBytes = Uint8Array.from([
+              0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+            ]);
+            async function createNote(kind: "text" | "checklist" | "task") {
+              const body =
+                kind === "text"
+                  ? { title: "Contrato", kind, content: "Revisar cláusulas" }
+                  : kind === "checklist"
+                    ? { title: "Documentos", kind, items: [{ text: "RG" }] }
+                    : { title: "Pagar IPVA", kind, dueDate: "2026-12-10" };
+              return api.data<{ id: string; version: number; attachmentCount: number }>(
+                await api.request("/notes", owner, "POST", body),
+                201,
+              );
+            }
+            async function uploadToNote(noteId: string) {
+              const prepared = await api.data<{ uploadId: string; uploadUrl: string }>(
+                await api.request(`/attachments/note/${noteId}/prepare`, owner, "POST", {
+                  fileName: "foto.png",
+                  fileSize: pngBytes.length,
+                  mimeType: "image/png",
+                }),
+              );
+              const put = await fetch(prepared.uploadUrl, {
+                method: "PUT",
+                headers: { "content-type": "image/png" },
+                body: Buffer.from(pngBytes),
+              });
+              assert.ok(put.ok, await put.text());
+              return api.data<AttachmentOutput>(
+                await api.request(`/attachments/note/${noteId}/confirm`, owner, "POST", {
+                  uploadId: prepared.uploadId,
+                }),
+                201,
+              );
+            }
+            async function objectCount(id: string) {
+              const objects = await s3.send(
+                new ListObjectsV2Command({ Bucket: bucket, Prefix: `attachments/${id}` }),
+              );
+              return objects.KeyCount ?? 0;
+            }
+
+            for (const kind of ["text", "checklist", "task"] as const) {
+              const note = await createNote(kind);
+              const attachment = await uploadToNote(note.id);
+              const listed = await api.data<AttachmentOutput[]>(
+                await api.request(`/attachments/note/${note.id}`, owner),
+              );
+              assert.deepEqual(
+                listed.map((item) => item.id),
+                [attachment.id],
+              );
+              const detail = await api.data<{ attachmentCount: number }>(
+                await api.request(`/notes/${note.id}`, owner),
+              );
+              assert.equal(detail.attachmentCount, 1);
+              await api.error(await api.request(`/attachments/note/${note.id}`, stranger), 404);
+              await api.error(
+                await api.request(
+                  `/attachments/note/${note.id}/${attachment.id}`,
+                  stranger,
+                  "DELETE",
+                ),
+                404,
+              );
+              await api.data(
+                await api.request(`/attachments/note/${note.id}/${attachment.id}`, owner, "DELETE"),
+              );
+              assert.equal(await objectCount(attachment.id), 0);
+            }
+
+            const archived = await createNote("text");
+            const kept = await uploadToNote(archived.id);
+            await api.data(
+              await api.request(`/notes/${archived.id}/archive`, owner, "PATCH", {
+                isArchived: true,
+              }),
+            );
+            await api.error(
+              await api.request(`/attachments/note/${archived.id}/prepare`, owner, "POST", {
+                fileName: "foto.png",
+                fileSize: pngBytes.length,
+                mimeType: "image/png",
+              }),
+              400,
+              "archived_note_read_only",
+            );
+            await api.error(
+              await api.request(`/attachments/note/${archived.id}/${kept.id}`, owner, "DELETE"),
+              400,
+              "archived_note_read_only",
+            );
+
+            const shared = await createNote("text");
+            const sharedFile = await uploadToNote(shared.id);
+            await api.data(
+              await api.request("/attachments/confirm", owner, "POST", {
+                uploadId: sharedFile.id,
+                transactionId: first.recordId,
+              }),
+              201,
+            );
+            const sharedNote = await api.data<{ version: number }>(
+              await api.request(`/notes/${shared.id}`, owner),
+            );
+            await api.data(
+              await api.request(
+                `/notes/${shared.id}?expectedVersion=${sharedNote.version}`,
+                owner,
+                "DELETE",
+              ),
+            );
+            assert.equal(await objectCount(sharedFile.id), 1);
+            await api.data(
+              await api.request(
+                `/attachments/transaction/${first.recordId}/${sharedFile.id}`,
+                owner,
+                "DELETE",
+              ),
+            );
+            assert.equal(await objectCount(sharedFile.id), 0);
+
+            const removable = await createNote("task");
+            const orphan = await uploadToNote(removable.id);
+            await api.data(
+              await api.request(
+                `/notes/${removable.id}?expectedVersion=${removable.version}`,
+                owner,
+                "DELETE",
+              ),
+            );
+            assert.equal(await objectCount(orphan.id), 0);
+            assert.deepEqual(
+              await db.select().from(attachments).where(eq(attachments.id, orphan.id)),
+              [],
+            );
+          },
+        );
       },
       {
         environment: {

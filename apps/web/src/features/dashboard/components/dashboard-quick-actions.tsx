@@ -146,9 +146,10 @@ export function DashboardQuickActions({ period }: { period: string }) {
         key={noteOpen ? "new-note-open" : "new-note-closed"}
         note={null}
         onOpenChange={setNoteOpen}
-        onSubmit={async (input) => {
-          await createNote.mutateAsync(input as CreateNoteInput);
+        onSubmit={async (input, files) => {
+          const created = await createNote.mutateAsync({ input: input as CreateNoteInput, files });
           setNoteOpen(false);
+          return created;
         }}
         open={noteOpen}
         pending={createNote.isPending}
