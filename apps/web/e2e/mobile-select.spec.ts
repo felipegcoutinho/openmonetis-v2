@@ -27,9 +27,13 @@ test("responsive selectors preserve their open state across desktop and mobile",
   await page.goto(`/categories/${category?.id}?period=2020-01`);
   const trigger = page.getByRole("combobox", { name: "Considerar lançamentos de", exact: true });
   const allPeople = page.getByRole("option", { name: "Todas as pessoas", exact: true });
+  // Only the mobile list has its own close button. Waiting for it confirms the presentation was
+  // replaced, so the next action does not reach the list that is being swapped out.
+  const mobileClose = page.getByRole("button", { name: "Fechar", exact: true });
   await trigger.click();
   await expect(allPeople).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect(mobileClose).toBeVisible();
   await expect(allPeople).toBeVisible();
   await allPeople.click();
   await expect(trigger).toContainText("Todas as pessoas");
@@ -37,12 +41,13 @@ test("responsive selectors preserve their open state across desktop and mobile",
   await trigger.click();
   await expect(allPeople).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(mobileClose).toBeHidden();
   await expect(allPeople).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(allPeople).toBeHidden();
   await page.setViewportSize({ width: 390, height: 844 });
   await trigger.click();
-  await page.getByRole("button", { name: "Fechar", exact: true }).click();
+  await mobileClose.click();
   await expect(allPeople).toBeHidden();
   expect(errors).toEqual([]);
 });
