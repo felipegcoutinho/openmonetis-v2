@@ -15,13 +15,14 @@ import {
 } from "@openmonetis/validators/inbox-rules";
 import type { PersonOutput } from "@openmonetis/validators/people";
 import { useForm } from "@tanstack/react-form";
-import { CircleOff, Info, Plus, Trash2 } from "lucide-react";
+import { CircleOff, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { FormActions } from "@/components/forms/form-actions";
 import { MobileFormState } from "@/components/forms/mobile-form-state";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
+import { InfoTip } from "@/components/info-tip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,23 +161,10 @@ export function InboxRuleForm({
                 <Label className="font-mono" htmlFor={`${id}-priority`}>
                   Ordem de aplicação
                 </Label>
-                <Tooltip>
-                  <TooltipTrigger
-                    aria-label="Informações sobre a ordem de aplicação"
-                    render={
-                      <button
-                        className="text-muted-foreground transition-colors hover:text-foreground"
-                        type="button"
-                      />
-                    }
-                  >
-                    <Info aria-hidden="true" className="size-3.5" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    Números menores são aplicados primeiro. Se mais de uma regra coincidir, cada
-                    campo fica com a sugestão da regra de menor número.
-                  </TooltipContent>
-                </Tooltip>
+                <InfoTip label="Informações sobre a ordem de aplicação">
+                  Números menores são aplicados primeiro. Se mais de uma regra coincidir, cada campo
+                  fica com a sugestão da regra de menor número.
+                </InfoTip>
               </div>
               <Input
                 id={`${id}-priority`}

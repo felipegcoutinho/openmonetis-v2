@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
+import { MobileSheetContent } from "@/components/forms/mobile-sheet-content";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import {
@@ -30,14 +31,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useDeleteGoalContributionMutation } from "../goals.mutations";
@@ -95,7 +89,8 @@ export function GoalDetailsSheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent>
+      {/* Phones open the details as a page, so Back closes them. */}
+      <MobileSheetContent mobileLayout="page">
         <SheetHeader>
           <SheetTitle>{goal.name}</SheetTitle>
           <SheetDescription>
@@ -256,7 +251,7 @@ export function GoalDetailsSheet({
             </>
           )}
         </SheetBody>
-      </SheetContent>
+      </MobileSheetContent>
 
       <AlertDialog
         onOpenChange={(nextOpen) => {

@@ -2,8 +2,9 @@ import type { DashboardInvoice } from "@openmonetis/validators/invoices";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { ArrowRight, CheckCircle2, CreditCard, ReceiptText } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard, ReceiptText, Users } from "lucide-react";
 import { useState } from "react";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -228,53 +229,69 @@ function InvoiceCardName({ invoice }: { invoice: DashboardInvoice }) {
     );
   }
 
-  return (
-    <HoverCard>
-      <HoverCardTrigger
-        render={
-          <Link
-            className={linkClassName}
-            params={{ cardId: invoice.cardId }}
-            search={{ period: invoice.period }}
-            to="/cards/$cardId"
-          />
-        }
-      >
-        <span className="truncate">{invoice.cardName}</span>
-        <DashboardItemLinkArrow />
-      </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-72">
-        <p className="font-medium">Valores por pessoa</p>
-        <div className="mt-3 grid gap-3">
-          {invoice.people.map((person) => (
-            <div
-              className="flex gap-3 border-b pb-3 last:border-b-0 last:pb-0"
-              key={person.personId}
-            >
-              <Avatar className="overflow-hidden">
-                <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
-                <AvatarFallback>
-                  {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid min-w-0 flex-1 gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="min-w-0 truncate font-medium text-sm">{person.personName}</span>
-                  <MoneyValue amount={person.amount} className="shrink-0 font-medium text-sm" />
-                </div>
-                <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
-                  <span>Pago</span>
-                  <MoneyValue amount={person.paidAmount} />
-                </div>
-                <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
-                  <span>Em aberto</span>
-                  <MoneyValue amount={person.remainingAmount} />
-                </div>
+  const breakdown = (
+    <>
+      <p className="font-medium">Valores por pessoa</p>
+      <div className="mt-3 grid gap-3">
+        {invoice.people.map((person) => (
+          <div className="flex gap-3 border-b pb-3 last:border-b-0 last:pb-0" key={person.personId}>
+            <Avatar className="overflow-hidden">
+              <AvatarImage alt="" src={person.personAvatarUrl ?? undefined} />
+              <AvatarFallback>
+                {person.personName.slice(0, 1).toLocaleUpperCase("pt-BR")}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid min-w-0 flex-1 gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate font-medium text-sm">{person.personName}</span>
+                <MoneyValue amount={person.amount} className="shrink-0 font-medium text-sm" />
+              </div>
+              <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+                <span>Pago</span>
+                <MoneyValue amount={person.paidAmount} />
+              </div>
+              <div className="flex items-center justify-between gap-3 text-muted-foreground text-xs">
+                <span>Em aberto</span>
+                <MoneyValue amount={person.remainingAmount} />
               </div>
             </div>
-          ))}
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+  return (
+    <>
+      <HoverCard>
+        <HoverCardTrigger
+          render={
+            <Link
+              className={linkClassName}
+              params={{ cardId: invoice.cardId }}
+              search={{ period: invoice.period }}
+              to="/cards/$cardId"
+            />
+          }
+        >
+          <span className="truncate">{invoice.cardName}</span>
+          <DashboardItemLinkArrow />
+        </HoverCardTrigger>
+        <HoverCardContent align="start" className="w-72">
+          {breakdown}
+        </HoverCardContent>
+      </HoverCard>
+      {/* Hover cards do not open on touch: phones get the same breakdown behind a tap. */}
+      {invoice.people.length > 0 ? (
+        <InfoTip
+          align="start"
+          className="hidden pointer-coarse:inline-grid"
+          contentClassName="w-72 max-w-[calc(100vw-2rem)] gap-0"
+          label={`Valores por pessoa em ${invoice.cardName}`}
+          trigger={<Users aria-hidden="true" className="size-3.5" />}
+        >
+          {breakdown}
+        </InfoTip>
+      ) : null}
+    </>
   );
 }

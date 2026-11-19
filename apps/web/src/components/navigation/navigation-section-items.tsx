@@ -21,8 +21,9 @@ export function NavigationSectionItems({
 
         return (
           <NavLink
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-start gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+              "pressable flex items-start gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground",
               active && "bg-accent text-accent-foreground",
             )}
             href={item.href}

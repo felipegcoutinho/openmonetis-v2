@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LockKeyhole, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import {
   Accordion,
@@ -23,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   budgetProgressStyles,
   formatBudgetPercentage,
@@ -84,7 +84,7 @@ export function CategoriesTable({
             </span>
             <div className="min-w-0 flex-1">
               <Link
-                className="block truncate font-medium hover:text-brand-strong"
+                className="block truncate font-medium hover:text-brand-strong active:text-brand-strong pointer-coarse:-my-3 pointer-coarse:py-3"
                 params={{ categoryId: parent.id }}
                 to="/categories/$categoryId"
               >
@@ -119,7 +119,7 @@ export function CategoriesTable({
               <ul aria-label={`Subcategorias de ${parent.name}`} className="mt-2 ml-4 pl-3 sm:pl-5">
                 {children.map((child) => (
                   <li
-                    className="flex min-w-0 items-center gap-2 rounded-md px-2 hover:bg-muted/50 focus-within:bg-muted/50"
+                    className="flex min-w-0 items-center gap-2 rounded-md px-2 transition-colors hover:bg-muted/50 focus-within:bg-muted/50 has-[a:active]:bg-(--pressed)"
                     key={child.id}
                   >
                     <Link
@@ -212,17 +212,14 @@ function CategoryActions({
 }) {
   if (category.isSystem)
     return (
-      <Tooltip>
-        <TooltipTrigger
-          aria-label={`Por que ${category.name} é automática?`}
-          render={<Button variant="ghost" size="icon" />}
-        >
-          <LockKeyhole aria-hidden="true" className="size-4 text-muted-foreground" />
-        </TooltipTrigger>
-        <TooltipContent>
-          Criada pelo sistema. Esta categoria não pode ser editada ou removida.
-        </TooltipContent>
-      </Tooltip>
+      <InfoTip
+        align="end"
+        label={`Por que ${category.name} é automática?`}
+        render={<Button variant="ghost" size="icon" />}
+        trigger={<LockKeyhole aria-hidden="true" className="size-4 text-muted-foreground" />}
+      >
+        Criada pelo sistema. Esta categoria não pode ser editada ou removida.
+      </InfoTip>
     );
   return <EditableCategoryActions {...{ category, onAddSubcategory, onEdit, onRemove, pending }} />;
 }

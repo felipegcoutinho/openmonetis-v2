@@ -68,7 +68,7 @@ export function AiDiagnosisReport({
   );
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6" data-selectable="">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
         <HealthScore diagnosis={diagnosis} />
         <HealthIndicators indicators={health.indicators} />

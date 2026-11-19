@@ -167,6 +167,7 @@ export function NotesPage() {
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button onClick={openCreate} type="button">
                 <Plus aria-hidden="true" />

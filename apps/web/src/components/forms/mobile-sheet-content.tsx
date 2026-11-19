@@ -36,6 +36,7 @@ export function MobileSheetContent({
       {...props}
       ref={setElement}
       side={mobile ? "bottom" : props.side}
+      swipeToDismiss={Boolean(mobile) && mobileLayout === "sheet"}
       className={cn(className, "mobile-sheet-content")}
       data-mobile-layout={mobileLayout}
     />

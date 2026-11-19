@@ -131,7 +131,7 @@ export function ChangelogPage() {
                             </section>
                           ) : null}
                           <details>
-                            <summary className="cursor-pointer font-medium text-sm">
+                            <summary className="cursor-pointer py-3 font-medium text-sm md:py-0">
                               Ver todas as mudanças desta versão
                             </summary>
                             <div className="mt-4 grid gap-5">

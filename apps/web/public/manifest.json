@@ -1,8 +1,20 @@
 {
   "short_name": "OpenMonetis",
   "name": "OpenMonetis",
+  "description": "Controle financeiro pessoal: lançamentos, contas, cartões, orçamentos e relatórios.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "id": "/",
   "scope": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#f6f4f1",
+  "background_color": "#f6f4f1",
+  "categories": ["finance", "productivity"],
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "icons": [
     {
       "src": "/icon-192.png",
@@ -29,8 +41,42 @@
       "purpose": "maskable"
     }
   ],
-  "start_url": "/",
-  "display": "standalone",
-  "theme_color": "#fc941d",
-  "background_color": "#f6f4f1"
+  "shortcuts": [
+    {
+      "name": "Lançamentos",
+      "short_name": "Lançamentos",
+      "url": "/transactions",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Caixa de entrada",
+      "short_name": "Caixa",
+      "url": "/inbox",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Contas",
+      "short_name": "Contas",
+      "url": "/accounts",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

@@ -30,7 +30,10 @@ export function DashboardAccountsCardsStrip({ period }: { period: string }) {
           </h2>
           <p className="text-muted-foreground text-xs">Seus saldos e faturas em um só lugar</p>
         </div>
-        <Link className="shrink-0 font-medium text-brand-strong text-xs" to="/accounts">
+        <Link
+          className="-my-3 inline-flex min-h-11 shrink-0 items-center px-1 font-medium text-brand-strong text-xs active:opacity-70"
+          to="/accounts"
+        >
           Ver tudo
         </Link>
       </div>

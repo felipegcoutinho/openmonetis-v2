@@ -71,7 +71,7 @@ export function SettingsPage() {
           <Tabs className="min-w-0 gap-0" onValueChange={changeTab} value={activeTab}>
             <div className="relative">
               <div
-                className="snap-x overflow-x-auto scroll-px-4 scrollbar-none [&::-webkit-scrollbar]:hidden"
+                className="scroll-fade-x snap-x overflow-x-auto scroll-px-4 scrollbar-none [&::-webkit-scrollbar]:hidden"
                 data-tab-scroller
               >
                 <TabsList className="min-w-max" variant="line">

@@ -1,5 +1,6 @@
 @import "./fonts.css";
 @import "./mobile-forms.css";
+@import "./touch.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -137,9 +138,22 @@
   --app-text-sm: 0.875rem;
   --page-max-width: 84rem;
   --section-gap: 2.5rem;
-  --stack-gap: 1.25rem;
-  /* Sticky page controls (month navigation) rest 1rem below the 3.5rem navbar on every page. */
-  --page-sticky-top: 4.5rem;
+  /*
+   * Device insets. In a standalone PWA or with the phone in landscape the browser no longer pads
+   * the page, so every fixed piece of chrome adds these itself (`viewport-fit=cover`).
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --navbar-height: 3.5rem;
+  /* Sticky page controls (month navigation) rest 1rem below the navbar on every page. */
+  --page-sticky-top: calc(var(--navbar-height) + var(--safe-top) + 1rem);
+  /* Minimum hit area for touch (Apple HIG 44pt, WCAG 2.5.5). */
+  --touch-target: 2.75rem;
+  /* Fallback press feedback for tappable elements without their own pressed state. */
+  --tap-highlight: color-mix(in srgb, var(--primary) 14%, transparent);
+  --pressed: color-mix(in srgb, var(--foreground) 7%, transparent);
 
   /* Motion. Short and decisive; exits are quicker than entrances. */
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
@@ -157,11 +171,6 @@
     --app-text-xs: 0.875rem;
     --app-text-sm: 0.9375rem;
     --section-gap: 2rem;
-  }
-
-  html,
-  body {
-    touch-action: pan-x pan-y;
   }
 }
 
@@ -248,7 +257,9 @@
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: clamp(1.5rem, 2.5vw, var(--section-gap));
-  padding: clamp(1.75rem, 3vw, 3rem) clamp(1rem, 3.5vw, 3rem) clamp(3rem, 5vw, 5rem);
+  padding-block: clamp(1.75rem, 3vw, 3rem) clamp(3rem, 5vw, 5rem);
+  padding-left: max(clamp(1rem, 3.5vw, 3rem), var(--safe-left));
+  padding-right: max(clamp(1rem, 3.5vw, 3rem), var(--safe-right));
   animation: page-in var(--duration-base) ease-out;
 }
 
@@ -379,6 +390,11 @@
   html {
     background: var(--background);
     color-scheme: light;
+    /* Drops the double-tap zoom delay while keeping pinch zoom (WCAG 1.4.4). */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: var(--tap-highlight);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -424,6 +440,47 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  /*
+   * Controls are not text: a long press must not select their label or open the iOS link
+   * preview. Controls that draw their own pressed state also skip the fallback tap highlight.
+   */
+  :where(
+    button,
+    [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="menuitemradio"],
+    [role="menuitemcheckbox"],
+    [role="option"],
+    [role="switch"],
+    [data-slot="button"],
+    nav a
+  ) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :where([data-slot="button"], [role="tab"], [data-slot="checkbox"], [data-slot="switch"]) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Anchor for the invisible touch hit area drawn in touch.css; utilities such as `absolute` win. */
+  @media (pointer: coarse) {
+    :where(
+        :is([data-slot="button"], [data-slot$="-trigger"]):is(
+          [data-size^="icon"],
+          [data-size="xs"]
+        ),
+        [data-slot="checkbox"],
+        [data-slot="radio-group-item"],
+        [data-slot="switch"],
+        [data-hit-slop]
+      ) {
+      position: relative;
+    }
   }
 
   :focus-visible {
@@ -568,7 +625,7 @@
 
 @media (max-width: 47.999rem) {
   main:has(> .app-navbar) {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(4rem + var(--safe-bottom));
   }
 }
 
@@ -579,11 +636,16 @@
     background-color var(--duration-fast) ease;
 }
 
-[data-slot="table-row"]:hover {
-  background-color: color-mix(in srgb, var(--primary) 6%, transparent);
+@media (hover: hover) {
+  [data-slot="table-row"]:hover {
+    background-color: color-mix(in srgb, var(--primary) 6%, transparent);
+  }
+
+  [data-slot="table-row"]:hover > [data-slot="table-cell"]:first-child {
+    border-left-color: var(--primary);
+  }
 }
 
-[data-slot="table-row"]:hover > [data-slot="table-cell"]:first-child,
 [data-slot="table-row"][data-state="selected"] > [data-slot="table-cell"]:first-child,
 [data-slot="table-row"]:has([aria-expanded="true"]) > [data-slot="table-cell"]:first-child {
   border-left-color: var(--primary);
@@ -640,6 +702,46 @@
   line-height: 1.4;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+
+  /* 11px caps stay legible on a desktop monitor; phones get the 12px floor. */
+  @media (width < 48rem) {
+    font-size: 0.75rem;
+  }
+}
+
+/*
+ * Pressed state for anything tappable that is not a Button (rows, cards, navigation items):
+ * touch devices have no hover, so the press is the only feedback. Instant on press, eased on
+ * release.
+ */
+@utility pressable {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  transition-property: background-color, color, scale;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-out-strong);
+
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--pressed);
+    transition-duration: 0ms;
+  }
+}
+
+/*
+ * Drag handle on top of a bottom sheet. Decorative: the whole surface accepts the swipe, and the
+ * close button stays for screen readers and keyboards. Absolute, so it never shifts the layout.
+ */
+@utility sheet-grabber {
+  position: absolute;
+  top: 0.4375rem;
+  left: 50%;
+  z-index: 2;
+  width: 2.25rem;
+  height: 0.3125rem;
+  translate: -50% 0;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  pointer-events: none;
 }
 
 /*

@@ -9,11 +9,11 @@ import {
   YAxis,
 } from "recharts";
 import { ChartLegendMarker } from "@/components/chart-legend-marker";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatChartAxisAmount } from "@/lib/money-presentation";
 import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
@@ -97,20 +97,12 @@ export function MonthlyOutlookChart({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="section-title">{title}</h2>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    aria-label="Como ler o gráfico"
-                    className="relative shrink-0 rounded-full text-muted-foreground after:absolute after:-inset-3 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    type="button"
-                  />
-                }
-              >
-                <Info aria-hidden="true" className="size-4" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-72 text-pretty">{info}</TooltipContent>
-            </Tooltip>
+            <InfoTip
+              label="Como ler o gráfico"
+              trigger={<Info aria-hidden="true" className="size-4" />}
+            >
+              {info}
+            </InfoTip>
           </div>
           <p className="mt-0.5 text-pretty text-muted-foreground text-xs sm:text-sm">
             {description}

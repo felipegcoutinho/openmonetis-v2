@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NotificationPanel } from "@/features/notifications/components/notification-panel";
 import { ReleaseNotice } from "@/features/releases/components/release-notice";
+import { useCompactPageTitle } from "@/hooks/useCompactPageTitle";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMobileNavigationVisibility } from "@/hooks/useMobileNavigationVisibility";
 import { authClient } from "@/lib/auth-client";
@@ -20,6 +21,7 @@ import { DesktopNavigation } from "./desktop-navigation";
 import { MobileNavigation } from "./mobile-navigation";
 import { MobileNavigationMenu } from "./mobile-navigation-menu";
 import { headerIconButtonClassName } from "./navbar-options";
+import { scrollToTop } from "./scroll-to-top";
 import { SkipToContent } from "./skip-to-content";
 import { UserNavigationMenu } from "./user-navigation-menu";
 
@@ -35,6 +37,8 @@ export function Navbar() {
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const mobileNavigationHidden = useMobileNavigationVisibility(isMobile);
+  const compactTitle = useCompactPageTitle();
+  const showCompactTitle = Boolean(isMobile && compactTitle?.visible);
   const [openNavigationSection, setOpenNavigationSection] = useState<string | null>(null);
   const [navigationPopupVariant, setNavigationPopupVariant] = useState<"default" | "preview">(
     "default",
@@ -73,15 +77,37 @@ export function Navbar() {
 
   return (
     <>
-      <header className="app-navbar material fixed inset-x-0 top-0 z-50 border-b border-border text-foreground">
+      <header className="app-navbar material fixed inset-x-0 top-0 z-50 border-b border-border pt-(--safe-top) text-foreground">
         <SkipToContent />
-        <div className="project-container grid h-14 grid-cols-[1fr_auto] items-center gap-3 px-[clamp(1rem,3.5vw,3rem)] xl:grid-cols-[1fr_auto_1fr]">
-          <Link
-            className="flex justify-self-start items-center gap-2 text-foreground"
-            to="/dashboard"
-          >
-            <OpenMonetisLogo className="max-md:[&>img:first-child]:h-10" compactOnMobile />
-          </Link>
+        <div className="project-container grid h-(--navbar-height) grid-cols-[1fr_auto] items-center gap-3 pr-[max(clamp(1rem,3.5vw,3rem),var(--safe-right))] pl-[max(clamp(1rem,3.5vw,3rem),var(--safe-left))] xl:grid-cols-[1fr_auto_1fr]">
+          {/* On phones the page title takes the logo's place once the large title scrolls away. */}
+          <div className="relative flex min-w-0 items-center justify-self-stretch">
+            <Link
+              aria-label="OpenMonetis, ir para a visão geral"
+              className={cn(
+                "flex min-h-11 min-w-11 items-center gap-2 text-foreground transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out-strong) motion-reduce:transition-none",
+                showCompactTitle && "pointer-events-none -translate-y-1 opacity-0",
+              )}
+              inert={showCompactTitle}
+              to="/dashboard"
+            >
+              <OpenMonetisLogo className="max-md:[&>img:first-child]:h-10" compactOnMobile />
+            </Link>
+            {compactTitle ? (
+              <button
+                aria-label={`${compactTitle.title}, voltar ao topo`}
+                className={cn(
+                  "absolute inset-y-0 left-0 max-w-full truncate text-left font-heading font-semibold text-[1.0625rem] tracking-[-0.012em] outline-none transition-[opacity,translate] duration-(--duration-base) ease-(--ease-out-strong) focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none md:hidden",
+                  !showCompactTitle && "pointer-events-none translate-y-1 opacity-0",
+                )}
+                inert={!showCompactTitle}
+                onClick={scrollToTop}
+                type="button"
+              >
+                {compactTitle.title}
+              </button>
+            ) : null}
+          </div>
 
           <DesktopNavigation
             location={location}
@@ -201,7 +227,7 @@ export function Navbar() {
         mobileNavigationOpen={mobileNavigationOpen}
         setMobileNavigationOpen={setMobileNavigationOpen}
       />
-      <div aria-hidden="true" className="h-14" />
+      <div aria-hidden="true" className="h-[calc(var(--navbar-height)+var(--safe-top))]" />
       {/* The user menu already flags a new version; the banner only greets on the overview. */}
       {location.pathname === "/dashboard" ? <ReleaseNotice enabled={Boolean(user)} /> : null}
       <CalculatorDialog onOpenChange={setCalculatorOpen} open={calculatorOpen} />

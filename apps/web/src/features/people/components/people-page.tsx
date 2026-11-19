@@ -69,6 +69,7 @@ export function PeoplePage() {
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button onClick={() => setOpen(true)}>
                 <Plus className="size-4" />

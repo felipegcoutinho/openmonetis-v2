@@ -26,8 +26,9 @@ export function CardActionsMenu({
           <button
             aria-label={label}
             data-card-actions-menu=""
+            data-hit-slop=""
             className={cn(
-              "ml-auto inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
+              "ml-auto inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-(--pressed) disabled:opacity-50 aria-expanded:bg-muted aria-expanded:text-foreground",
               className,
             )}
             type="button"

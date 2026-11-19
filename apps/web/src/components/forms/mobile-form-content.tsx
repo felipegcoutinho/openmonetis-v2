@@ -1,11 +1,12 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { useBlocker } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, XIcon } from "lucide-react";
 import { type ComponentProps, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMobileViewport } from "@/hooks/useMobileViewport";
+import { useSwipeToDismiss } from "@/hooks/useSwipeToDismiss";
 import { cn } from "@/lib/utils";
 import { MobileFormDialogContext } from "./mobile-form-dialog";
 import { getTopmostMobileSurface } from "./mobile-surface";
@@ -52,6 +53,8 @@ export function MobileFormContent({
   });
 
   useMobileViewport(element);
+  const mobileSheet = Boolean(mobile) && mobileLayout === "sheet";
+  useSwipeToDismiss(element, { enabled: mobileSheet && showCloseButton });
   useEffect(() => {
     if (!mobile || !element) return;
     function beforeUnload(event: BeforeUnloadEvent) {
@@ -86,14 +89,20 @@ export function MobileFormContent({
         popupRef.current?.querySelector<HTMLButtonElement>("[data-mobile-back]")?.click();
       }}
     >
+      {mobileSheet && showCloseButton ? (
+        <span aria-hidden="true" className="sheet-grabber" data-slot="sheet-grabber" />
+      ) : null}
       {children}
       {mobile && showCloseButton ? (
+        // A full-screen form goes back like a page; a bottom sheet closes like one.
         <DialogPrimitive.Close
           data-mobile-back
           className="mobile-form-back"
-          render={<Button aria-label="Voltar" size="icon" variant="ghost" />}
+          render={
+            <Button aria-label={mobileSheet ? "Fechar" : "Voltar"} size="icon" variant="ghost" />
+          }
         >
-          <ArrowLeft aria-hidden="true" />
+          {mobileSheet ? <XIcon aria-hidden="true" /> : <ArrowLeft aria-hidden="true" />}
         </DialogPrimitive.Close>
       ) : null}
     </DialogContent>

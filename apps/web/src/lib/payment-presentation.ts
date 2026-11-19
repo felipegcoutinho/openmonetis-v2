@@ -1,4 +1,17 @@
-import { dateOnlyToSafeInstant, formatDateToPartsInBrazil } from "@openmonetis/shared/date-time";
+import {
+  dateOnlyToSafeInstant,
+  differenceInCalendarDaysFromTodayInBrazil,
+  formatDateToPartsInBrazil,
+} from "@openmonetis/shared/date-time";
+
+export function formatDueDateLabel(value: string) {
+  const days = differenceInCalendarDaysFromTodayInBrazil(value);
+  if (days === 0) return "Vence hoje";
+  if (days === 1) return "Vence amanhã";
+  if (days > 1) return `Vence em ${days} dias`;
+  if (days === -1) return "Venceu ontem";
+  return `Venceu há ${Math.abs(days)} dias`;
+}
 
 export function formatRecordedPaymentDate(value: string) {
   const parts = formatDateToPartsInBrazil(dateOnlyToSafeInstant(value), {

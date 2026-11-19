@@ -79,6 +79,7 @@ export function CardsPage() {
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button
                 disabled={activeAccounts.length === 0}

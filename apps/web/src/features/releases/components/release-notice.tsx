@@ -24,7 +24,7 @@ export function ReleaseNotice({ enabled }: { enabled: boolean }) {
 
   return (
     <aside className="border-brand/20 border-b bg-brand/10" aria-label="Novidades da versão">
-      <div className="project-container flex items-center gap-3 px-[clamp(1rem,3.5vw,3rem)] py-1.5">
+      <div className="project-container flex items-center gap-3 py-1.5 pr-[max(clamp(1rem,3.5vw,3rem),var(--safe-right))] pl-[max(clamp(1rem,3.5vw,3rem),var(--safe-left))] pointer-coarse:py-1">
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand/15 text-brand-strong">
           <Megaphone aria-hidden="true" className="size-3.5" />
         </span>
@@ -35,7 +35,7 @@ export function ReleaseNotice({ enabled }: { enabled: boolean }) {
             · {currentRelease.summary}
           </span>
         </p>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1 pointer-coarse:gap-2">
           <Button asChild size="sm" variant="outline">
             <Link aria-label="Ver novidades" onClick={dismiss} to="/changelog">
               <span className="sm:hidden">Ver</span>

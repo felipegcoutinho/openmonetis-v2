@@ -245,7 +245,7 @@ export function InboxPage({
         value={status}
       >
         <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:border-border lg:border-b">
-          <div className="min-w-0 max-w-full overflow-x-auto lg:shrink-0">
+          <div className="scroll-fade-x min-w-0 max-w-full snap-x overflow-x-auto scrollbar-none lg:shrink-0 [&_[data-slot=tabs-trigger]]:snap-start">
             <TabsList className="min-w-max lg:border-b-0" variant="line">
               {statuses.map((itemStatus) => (
                 <TabsTrigger key={itemStatus} value={itemStatus}>

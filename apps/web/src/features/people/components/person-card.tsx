@@ -82,7 +82,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring active:bg-(--pressed) pointer-coarse:h-11"
           params={{ personId: person.id }}
           to="/people/$personId"
         >
@@ -90,7 +90,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
           Ver painel
         </Link>
         <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring active:bg-(--pressed) pointer-coarse:h-11"
           onClick={() => onEdit(person)}
           type="button"
         >

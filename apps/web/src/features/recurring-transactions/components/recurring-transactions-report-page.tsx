@@ -66,6 +66,7 @@ export function RecurringTransactionsReportPage({
         <Navbar />
         <section className="app-page project-container min-w-0">
           <PageHeader
+            mobileFloatingAction
             title="Lançamentos recorrentes"
             description="Tudo o que se repete: quanto custa por mês, o que vem pela frente e quando cada série termina."
             icon={<RefreshCw aria-hidden="true" className="size-5" />}

@@ -23,7 +23,7 @@ export function TransactionDueDate({ transaction }: { transaction: TransactionOu
             : undefined
       }
     >
-      Venc. {formatCompactDate(transaction.dueDate)}
+      Vence {formatCompactDate(transaction.dueDate)}
     </DueDateIndicator>
   );
 }

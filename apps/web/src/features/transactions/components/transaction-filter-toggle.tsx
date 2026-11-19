@@ -13,7 +13,10 @@ export function FilterToggle({
   const id = useId();
   return (
     // The whole row is the hit target and the box sits right next to its text.
-    <label className="flex min-h-9 cursor-pointer items-center gap-3 text-sm" htmlFor={id}>
+    <label
+      className="flex min-h-9 cursor-pointer items-center gap-3 text-sm pointer-coarse:min-h-11"
+      htmlFor={id}
+    >
       <Checkbox checked={checked} id={id} onCheckedChange={onChange} />
       {label}
     </label>

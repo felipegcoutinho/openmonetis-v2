@@ -1,5 +1,46 @@
 /* Opt-in mobile compositions. No declarations apply at desktop widths. */
 @media (width < 768px) {
+  :root {
+    /* Height of the bottom navigation: top padding, 56px items and the home indicator. */
+    --mobile-navigation-height: calc(3.75rem + max(0.3rem, var(--safe-bottom)));
+  }
+
+  /*
+   * Extended floating action for the page's create action, resting above the bottom navigation
+   * in the thumb zone. It follows the navigation down when the navigation hides on scroll.
+   */
+  .mobile-fab {
+    position: fixed;
+    z-index: 40;
+    right: max(1rem, var(--safe-right));
+    bottom: calc(var(--mobile-navigation-height) + 1rem);
+    transition: translate var(--duration-slow) var(--ease-drawer);
+    animation: mobile-fab-in var(--duration-base) var(--ease-out-strong) both;
+  }
+
+  :root[data-mobile-navigation-hidden] .mobile-fab {
+    translate: 0 calc(var(--mobile-navigation-height) - max(0px, var(--safe-bottom)));
+  }
+
+  :root .mobile-fab [data-slot="button"][data-size] {
+    min-height: 3.25rem;
+    gap: 0.5rem;
+    padding-inline: 1.125rem 1.375rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+    box-shadow: var(--elevation-3);
+  }
+
+  .mobile-fab [data-slot="button"] svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* The last row of a list scrolls clear of the floating action. */
+  body:has(.mobile-fab) main:has(> .app-navbar) {
+    padding-bottom: calc(var(--mobile-navigation-height) + 5rem);
+  }
+
   [data-mobile-financial-summary] button {
     min-width: 2.75rem;
     min-height: 2.75rem;
@@ -84,6 +125,22 @@
     top: max(1rem, env(safe-area-inset-top));
     width: 2.75rem;
     height: 2.75rem;
+  }
+
+  /* A sheet closes from the trailing corner, next to where the thumb rests, below the grabber. */
+  .mobile-form-content[data-mobile-layout="sheet"] {
+    padding-top: 1.5rem;
+  }
+
+  .mobile-form-content[data-mobile-layout="sheet"] > [data-slot="dialog-header"] {
+    padding-left: 0;
+    padding-right: 3rem;
+  }
+
+  .mobile-form-content[data-mobile-layout="sheet"] .mobile-form-back {
+    top: 0.875rem;
+    right: max(0.75rem, env(safe-area-inset-right));
+    left: auto;
   }
 
   .mobile-form-content > form {
@@ -174,13 +231,14 @@
   }
 
   .mobile-select-content {
+    position: relative;
     max-height: 70dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
     border-radius: 1.25rem 1.25rem 0 0;
     background: var(--popover);
     color: var(--popover-foreground);
-    padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom));
+    padding: 1.25rem 1rem max(1rem, env(safe-area-inset-bottom));
     border: 1px solid var(--border);
     border-bottom-width: 0;
   }
@@ -390,6 +448,217 @@
   }
 }
 
+/*
+ * Installed app: the interface behaves like native chrome. Labels and figures are not text to
+ * select and a long press opens no link preview; fields and long free text (notes, AI answers)
+ * stay selectable so they can still be copied.
+ */
+@media (display-mode: standalone) {
+  body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :is(
+    input,
+    textarea,
+    [contenteditable="true"],
+    [data-selectable],
+    .whitespace-pre-line,
+    .whitespace-pre-wrap
+  ),
+  :is([data-selectable], .whitespace-pre-line, .whitespace-pre-wrap) * {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+}
+
+/*
+ * Native screen transitions on phones (View Transitions, chosen per navigation in
+ * `navigation-transition.ts`). The top bar, tab bar and floating action keep their place; only
+ * the screen moves: push slides in from the trailing edge, pop slides back, tabs cross-fade.
+ */
+@media (width < 768px) {
+  .app-navbar {
+    view-transition-name: app-navbar;
+  }
+
+  .app-tabbar {
+    view-transition-name: app-tabbar;
+  }
+
+  .mobile-fab {
+    view-transition-name: mobile-fab;
+  }
+
+  /* The entering screen is already moving; its own fade-in would only blur the gesture. */
+  html:active-view-transition .app-page {
+    animation: none;
+  }
+}
+
+html:active-view-transition-type(push)::view-transition-old(root) {
+  animation: screen-push-out var(--duration-slow) var(--ease-drawer) both;
+}
+
+html:active-view-transition-type(push)::view-transition-new(root) {
+  animation: screen-push-in var(--duration-slow) var(--ease-drawer) both;
+}
+
+html:active-view-transition-type(pop)::view-transition-old(root) {
+  z-index: 1;
+  animation: screen-pop-out var(--duration-slow) var(--ease-drawer) both;
+}
+
+html:active-view-transition-type(pop)::view-transition-new(root) {
+  animation: screen-pop-in var(--duration-slow) var(--ease-drawer) both;
+}
+
+html:active-view-transition-type(tab)::view-transition-old(root) {
+  animation: screen-fade-out var(--duration-fast) var(--ease-out-strong) both;
+}
+
+html:active-view-transition-type(tab)::view-transition-new(root) {
+  animation: screen-fade-in var(--duration-base) var(--ease-out-strong) both;
+}
+
+@keyframes screen-push-out {
+  to {
+    opacity: 0.6;
+    translate: -28% 0;
+  }
+}
+
+@keyframes screen-push-in {
+  from {
+    translate: 100% 0;
+  }
+}
+
+@keyframes screen-pop-out {
+  to {
+    translate: 100% 0;
+  }
+}
+
+@keyframes screen-pop-in {
+  from {
+    opacity: 0.6;
+    translate: -28% 0;
+  }
+}
+
+@keyframes screen-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes screen-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * Pull-to-refresh indicator of the installed app. It slides out from under the top bar with the
+ * finger (`--pull-distance`), turns with the progress and spins while the screen refetches.
+ */
+.pull-to-refresh {
+  --pull-distance: 0px;
+  --pull-progress: 0;
+  position: fixed;
+  z-index: 40;
+  top: calc(var(--navbar-height) + var(--safe-top) - 2.5rem);
+  left: 50%;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  box-shadow: var(--elevation-2);
+  opacity: var(--pull-progress);
+  translate: -50% calc(var(--pull-distance) + 0.5rem);
+  pointer-events: none;
+  transition:
+    translate var(--duration-base) var(--ease-out-strong),
+    opacity var(--duration-base) var(--ease-out-strong);
+}
+
+.pull-to-refresh[data-state="pulling"] {
+  transition: none;
+}
+
+.pull-to-refresh[data-armed],
+.pull-to-refresh[data-state="refreshing"] {
+  color: var(--brand-strong);
+  opacity: 1;
+}
+
+.pull-to-refresh-icon {
+  display: grid;
+  rotate: calc(var(--pull-progress) * 270deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pull-to-refresh {
+    transition: opacity var(--duration-fast) linear;
+  }
+
+  .pull-to-refresh-icon {
+    rotate: none;
+  }
+}
+
+/* Back-swipe affordance of the installed iPhone app: a chevron follows the finger from the edge. */
+.edge-swipe-back {
+  --edge-distance: 0px;
+  --edge-progress: 0;
+  position: fixed;
+  z-index: 60;
+  top: 50%;
+  left: 0;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  box-shadow: var(--elevation-2);
+  opacity: var(--edge-progress);
+  translate: calc(var(--edge-distance) - 100%) -50%;
+  pointer-events: none;
+  transition:
+    translate var(--duration-base) var(--ease-out-strong),
+    opacity var(--duration-base) var(--ease-out-strong);
+}
+
+.edge-swipe-back[data-state="swiping"] {
+  transition: none;
+}
+
+.edge-swipe-back[data-armed] {
+  color: var(--brand-strong);
+}
+
+@keyframes mobile-fab-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
 @keyframes mobile-form-page-in {
   from {
     opacity: 0;
@@ -429,6 +698,11 @@
 }
 
 @media (width < 768px) and (prefers-reduced-motion: reduce) {
+  .mobile-fab {
+    transition: none;
+    animation-name: mobile-form-fade-in;
+  }
+
   .mobile-form-content[data-slot="dialog-content"][data-open] {
     animation-name: mobile-form-fade-in;
   }

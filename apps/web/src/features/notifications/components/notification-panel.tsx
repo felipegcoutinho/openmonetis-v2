@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { useAppBadge } from "@/hooks/useAppBadge";
 import { cn } from "@/lib/utils";
 import {
   type UpdateNotificationVariables,
@@ -44,6 +45,7 @@ export function NotificationPanel({
   const mutation = useUpdateNotificationMutation();
   const navigate = useNavigate();
   const unreadCount = query.data?.unreadCount ?? 0;
+  useAppBadge(unreadCount);
 
   function changeState(state: UpdateNotificationVariables) {
     mutation.mutate(state, {

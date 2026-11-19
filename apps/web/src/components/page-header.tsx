@@ -1,5 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,6 +9,8 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useCompactPageTitleSource } from "@/hooks/useCompactPageTitle";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
 export type PageBreadcrumb = {
@@ -22,7 +26,15 @@ type PageHeaderProps = {
   className?: string;
   eyebrow?: string;
   icon?: ReactNode;
+  /**
+   * The page's create action becomes a floating button above the bottom navigation on phones,
+   * within reach of the thumb. Use only for a single primary "Novo …" action.
+   */
+  mobileFloatingAction?: boolean;
 };
+
+/** Top-level destinations live in the bottom navigation and menu; "back to overview" is noise. */
+const overviewPath = "/dashboard";
 
 export function PageHeader({
   actions,
@@ -31,8 +43,12 @@ export function PageHeader({
   description,
   eyebrow,
   icon,
+  mobileFloatingAction = false,
   title,
 }: PageHeaderProps) {
+  const isMobile = useIsMobile();
+  const [heading, setHeading] = useState<HTMLHeadingElement | null>(null);
+  useCompactPageTitleSource(isMobile ? title : undefined, heading);
   const breadcrumbItems = breadcrumbs ?? [];
   const hasBreadcrumbs = breadcrumbItems.length > 0;
   // On phones the full trail does not fit; a single link back to the nearest destination does.
@@ -40,6 +56,8 @@ export function PageHeader({
     .slice(0, -1)
     .reverse()
     .find((breadcrumb) => breadcrumb.href);
+  const mobileBackBreadcrumb = backBreadcrumb?.href !== overviewPath ? backBreadcrumb : undefined;
+  const floatingAction = mobileFloatingAction && isMobile === true && actions;
   const hasContent = Boolean(title || description || actions || (!hasBreadcrumbs && eyebrow));
 
   return (
@@ -47,23 +65,23 @@ export function PageHeader({
       data-mobile-page-header
       className={cn("grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4", className)}
     >
-      {backBreadcrumb?.href ? (
-        <a
-          className="-ml-1 inline-flex min-h-11 w-fit items-center gap-1 rounded-md pr-2 text-muted-foreground text-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
-          href={backBreadcrumb.href}
+      {mobileBackBreadcrumb?.href ? (
+        <Link
+          className="pressable -ml-2 -mb-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-md pr-3 pl-1 text-muted-foreground text-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
+          to={mobileBackBreadcrumb.href as never}
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          {backBreadcrumb.label}
-        </a>
+          {mobileBackBreadcrumb.label}
+        </Link>
       ) : null}
       {hasBreadcrumbs ? (
-        <Breadcrumb className={cn("min-w-0 max-w-full", backBreadcrumb?.href && "max-md:hidden")}>
+        <Breadcrumb className="min-w-0 max-w-full max-md:hidden">
           <BreadcrumbList className="min-w-0 max-w-full">
             {breadcrumbItems.map((breadcrumb, index) => (
               <Fragment key={breadcrumb.label}>
                 <BreadcrumbItem className="max-md:shrink-0">
                   {breadcrumb.href ? (
-                    <BreadcrumbLink render={<a href={breadcrumb.href} />}>
+                    <BreadcrumbLink render={<Link to={breadcrumb.href as never} />}>
                       {breadcrumb.label}
                     </BreadcrumbLink>
                   ) : (
@@ -92,20 +110,34 @@ export function PageHeader({
             {title ? (
               <div className="flex items-center gap-2.5">
                 {icon ? <span className="shrink-0 text-brand-strong">{icon}</span> : null}
-                <h1 className="page-title">{title}</h1>
+                <h1 className="page-title" ref={setHeading}>
+                  {title}
+                </h1>
               </div>
             ) : null}
             {description ? (
-              <p className="mt-2 max-w-2xl text-muted-foreground leading-relaxed">{description}</p>
+              // Phones keep the gist; the content, not the intro, should own the first screen.
+              <p className="mt-2 max-w-2xl text-muted-foreground leading-relaxed max-md:mt-1.5 max-md:line-clamp-2 max-md:text-sm">
+                {description}
+              </p>
             ) : null}
           </div>
-          {actions ? (
-            <div className="w-full **:data-[slot=button]:w-full sm:w-auto sm:**:data-[slot=button]:w-auto">
+          {actions && !floatingAction ? (
+            <div
+              className={cn(
+                "w-full **:data-[slot=button]:w-full sm:w-auto sm:**:data-[slot=button]:w-auto",
+                // Until the client knows the viewport, keep the floating action out of the header.
+                mobileFloatingAction && "max-md:hidden",
+              )}
+            >
               {actions}
             </div>
           ) : null}
         </div>
       ) : null}
+      {floatingAction
+        ? createPortal(<div className="mobile-fab">{actions}</div>, document.body)
+        : null}
     </header>
   );
 }

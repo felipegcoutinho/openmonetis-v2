@@ -10,11 +10,16 @@ import {
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { FlashToast } from "@/components/flash-toast";
 import { PrivacyProvider } from "@/components/privacy-provider";
+import { EdgeSwipeBack } from "@/components/pwa/edge-swipe-back";
+import { OfflineNotice } from "@/components/pwa/offline-notice";
+import { PullToRefresh } from "@/components/pwa/pull-to-refresh";
+import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PreferencesSynchronizer } from "@/features/preferences/components/preferences-synchronizer";
+import { appleSplashScreenLinks } from "@/lib/apple-splash-screens";
 import { siteName } from "@/lib/seo";
 import type { RouterContext } from "@/router";
 import appCss from "../styles/app.css?url";
@@ -47,7 +52,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       {
         name: "theme-color",
-        content: "#fc941d",
+        content: "#f6f4f1",
       },
       {
         name: "apple-mobile-web-app-title",
@@ -56,6 +61,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       {
         name: "apple-mobile-web-app-capable",
         content: "yes",
+      },
+      {
+        name: "mobile-web-app-capable",
+        content: "yes",
+      },
+      {
+        name: "format-detection",
+        content: "telephone=no",
       },
       {
         name: "apple-mobile-web-app-status-bar-style",
@@ -93,6 +106,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         href: "/manifest.json",
         crossOrigin: "use-credentials",
       },
+      ...appleSplashScreenLinks,
     ],
   }),
   component: RootApp,
@@ -146,8 +160,17 @@ function RootApp() {
     <QueryClientProvider client={queryClient}>
       <PrivacyProvider>
         <PreferencesSynchronizer />
+        <ServiceWorkerRegistrar />
         <Outlet />
-        <Toaster closeButton position="bottom-right" />
+        <OfflineNotice />
+        <PullToRefresh />
+        <EdgeSwipeBack />
+        <Toaster
+          closeButton
+          // Phones: toasts clear the bottom navigation and the home indicator.
+          mobileOffset={{ bottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
+          position="bottom-right"
+        />
         <FlashToast />
       </PrivacyProvider>
     </QueryClientProvider>

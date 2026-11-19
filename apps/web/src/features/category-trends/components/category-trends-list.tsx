@@ -1,7 +1,8 @@
 import type { CategoryTrendsOutput } from "@openmonetis/validators/category-trends";
 import { Link } from "@tanstack/react-router";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Info, Minus } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Minus } from "lucide-react";
 import { type ComponentProps, useState } from "react";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue as BaseMoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -14,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getCategoryLabel } from "@/features/categories/categories.presentation";
 import { CategoryIcon } from "@/features/categories/category-icons";
 import { formatPeriod } from "@/lib/period-presentation";
@@ -219,15 +219,12 @@ function CategorySection({
                   >
                     Média
                   </SortButton>
-                  <Tooltip>
-                    <TooltipTrigger
-                      aria-label="Como a média é calculada"
-                      render={<Button size="icon-xs" variant="ghost" />}
-                    >
-                      <Info aria-hidden="true" className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent>Considera apenas os meses com movimento.</TooltipContent>
-                  </Tooltip>
+                  <InfoTip
+                    label="Como a média é calculada"
+                    render={<Button size="icon-xs" variant="ghost" />}
+                  >
+                    Considera apenas os meses com movimento.
+                  </InfoTip>
                 </span>
               </TableHead>
               <TableHead
@@ -470,50 +467,58 @@ function TrendValueCell({
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger className="ml-auto grid min-h-9 w-full content-start justify-items-end gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <MoneyValue
-          amount={value.totalAmount}
-          className={cn(
-            "font-normal",
-            (detail || value.totalAmount === 0) && "text-muted-foreground",
-          )}
+    <InfoTip
+      contentClassName="grid min-w-48 gap-1.5"
+      render={
+        <button
+          className="ml-auto grid min-h-9 w-full content-start justify-items-end gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring active:opacity-70"
+          type="button"
         />
-        <span
-          className={cn(
-            "inline-flex max-w-full items-start justify-end gap-0.5 whitespace-normal text-right text-muted-foreground text-xs",
-            favorable && "text-success",
-            unfavorable && "text-destructive",
-          )}
-        >
-          <ChangeIcon aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
-          {formatTrendPercentage(value.changePercentage, value.changeKind)}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="grid min-w-48 gap-1.5" side="top">
-        <span className="flex items-center justify-between gap-4">
-          <span className="text-background">Período anterior</span>
-          <MoneyValue amount={value.previousAmount} className="font-normal" />
-        </span>
-        <span className="flex items-center justify-between gap-4">
-          <span className="text-background">Diferença</span>
+      }
+      trigger={
+        <>
           <MoneyValue
-            amount={value.changeAmount}
+            amount={value.totalAmount}
             className={cn(
               "font-normal",
+              (detail || value.totalAmount === 0) && "text-muted-foreground",
+            )}
+          />
+          <span
+            className={cn(
+              "inline-flex max-w-full items-start justify-end gap-0.5 whitespace-normal text-right text-muted-foreground text-xs",
               favorable && "text-success",
               unfavorable && "text-destructive",
             )}
-            showPositiveSign
-          />
-        </span>
-        {value.recurringAmount > 0 ? (
-          <span className="flex items-center justify-between gap-4">
-            <span className="text-background">Recorrente</span>
-            <MoneyValue amount={value.recurringAmount} className="font-normal" />
+          >
+            <ChangeIcon aria-hidden="true" className="mt-0.5 size-3 shrink-0" />
+            {formatTrendPercentage(value.changePercentage, value.changeKind)}
           </span>
-        ) : null}
-      </TooltipContent>
-    </Tooltip>
+        </>
+      }
+    >
+      <span className="flex items-center justify-between gap-4">
+        <span className="text-muted-foreground">Período anterior</span>
+        <MoneyValue amount={value.previousAmount} className="font-normal" />
+      </span>
+      <span className="flex items-center justify-between gap-4">
+        <span className="text-muted-foreground">Diferença</span>
+        <MoneyValue
+          amount={value.changeAmount}
+          className={cn(
+            "font-normal",
+            favorable && "text-success",
+            unfavorable && "text-destructive",
+          )}
+          showPositiveSign
+        />
+      </span>
+      {value.recurringAmount > 0 ? (
+        <span className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground">Recorrente</span>
+          <MoneyValue amount={value.recurringAmount} className="font-normal" />
+        </span>
+      ) : null}
+    </InfoTip>
   );
 }

@@ -77,6 +77,7 @@ export function CategoriesPage() {
         <Navbar />
         <section className="app-page project-container min-w-0">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button onClick={() => setOpen(true)}>
                 <Plus className="size-4" />

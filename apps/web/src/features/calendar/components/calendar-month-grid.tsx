@@ -78,7 +78,7 @@ export function CalendarMonthGrid({
                 aria-label={describeCalendarDay(day, holiday)}
                 aria-pressed={selected}
                 className={cn(
-                  "relative flex min-h-28 min-w-0 flex-col gap-1.5 border-r border-b p-2 text-left transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
+                  "relative flex min-h-28 min-w-0 flex-col gap-1.5 border-r border-b p-2 text-left transition-colors duration-150 hover:bg-muted/50 active:bg-(--pressed) active:duration-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
                   !day.isBusinessDay && "bg-muted/30",
                   selected &&
                     "z-[1] bg-primary/5 ring-2 ring-primary ring-inset hover:bg-primary/10",

@@ -4,6 +4,7 @@ import { Image } from "@unpic/react";
 import { Archive, CalendarDays, FileText, Info, Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import { NotePopover } from "@/components/note-popover";
 import {
@@ -19,7 +20,6 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatPeriod } from "@/lib/period-presentation";
 import { cn } from "@/lib/utils";
 import { getCardBrandAsset } from "../card-brand-assets";
@@ -117,19 +117,17 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
                 Fecha <strong className="font-medium text-foreground">dia {card.closingDay}</strong>
               </>
             ) : (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <button
-                      className="border-muted-foreground/50 border-b border-solid font-medium text-foreground focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                      type="button"
-                    />
-                  }
-                >
-                  Fechamento variável
-                </TooltipTrigger>
-                <TooltipContent>{getCardClosingRuleDescription(card)}</TooltipContent>
-              </Tooltip>
+              <InfoTip
+                render={
+                  <button
+                    className="relative border-muted-foreground/50 border-b border-solid font-medium text-foreground after:absolute after:-inset-x-1 after:-inset-y-3 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    type="button"
+                  />
+                }
+                trigger="Fechamento variável"
+              >
+                {getCardClosingRuleDescription(card)}
+              </InfoTip>
             )}
           </span>
           <span className="flex items-center justify-end gap-1.5 text-muted-foreground">

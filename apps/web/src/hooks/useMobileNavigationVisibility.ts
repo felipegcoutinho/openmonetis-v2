@@ -49,5 +49,14 @@ export function useMobileNavigationVisibility(isMobile: boolean | null) {
       if (frameId) window.cancelAnimationFrame(frameId);
     };
   }, [isMobile]);
+  // Lets fixed chrome outside the navigation (the floating action) follow it with CSS alone.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute(
+      "data-mobile-navigation-hidden",
+      Boolean(isMobile && mobileNavigationHidden),
+    );
+    return () => root.removeAttribute("data-mobile-navigation-hidden");
+  }, [isMobile, mobileNavigationHidden]);
   return mobileNavigationHidden;
 }

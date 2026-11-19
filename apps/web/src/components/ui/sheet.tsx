@@ -1,7 +1,9 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
+import { type Ref, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSwipeToDismiss } from "@/hooks/useSwipeToDismiss";
 import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -35,16 +37,38 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   );
 }
 
+function assignRef<T>(ref: Ref<T> | undefined, value: T) {
+  if (typeof ref === "function") ref(value);
+  else if (ref) ref.current = value;
+}
+
 function SheetContent({
   className,
   children,
   side = "right",
   showCloseButton = true,
+  swipeToDismiss = side === "bottom",
+  ref,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
+  /** Drag the sheet toward its edge to close it. On by default for bottom sheets. */
+  swipeToDismiss?: boolean;
 }) {
+  const [popup, setPopup] = useState<HTMLDivElement | null>(null);
+  const attachPopup = useCallback(
+    (node: HTMLDivElement | null) => {
+      setPopup(node);
+      assignRef(ref as Ref<HTMLDivElement | null> | undefined, node);
+    },
+    [ref],
+  );
+  useSwipeToDismiss(popup, {
+    enabled: swipeToDismiss && (side === "bottom" || side === "right"),
+    direction: side === "right" ? "right" : "down",
+  });
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -60,7 +84,11 @@ function SheetContent({
           className,
         )}
         {...props}
+        ref={attachPopup}
       >
+        {swipeToDismiss && side === "bottom" ? (
+          <span aria-hidden="true" className="sheet-grabber" data-slot="sheet-grabber" />
+        ) : null}
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close

@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export const headerIconButtonClassName =
   "max-md:size-11 md:size-10 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground";
 
@@ -16,3 +18,11 @@ export const mobileNavigationTopThreshold = 64;
 export const mobileNavigationHideDistance = 20;
 
 export const mobileNavigationShowDistance = 12;
+
+/** Tab bar item: the label stays put; the active tab is marked by colour and an icon pill. */
+export function mobileNavigationItemClassName(active: boolean) {
+  return cn(
+    "group/nav-item flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-2xs text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-3 focus-visible:ring-ring/50",
+    active && "font-medium text-brand-strong",
+  );
+}

@@ -98,6 +98,7 @@ export function PersonForm({
               </Label>
               <Input
                 aria-invalid={field.state.meta.errors.length > 0}
+                autoCapitalize="words"
                 id={`${id}-name`}
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}

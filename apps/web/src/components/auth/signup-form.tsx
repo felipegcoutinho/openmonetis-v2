@@ -130,7 +130,9 @@ export function SignupForm() {
             <Label htmlFor={`${id}-name`}>Nome</Label>
             <Input
               aria-invalid={field.state.meta.errors.length > 0}
+              autoCapitalize="words"
               autoComplete="name"
+              enterKeyHint="next"
               id={`${id}-name`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -157,6 +159,7 @@ export function SignupForm() {
             <Input
               aria-invalid={field.state.meta.errors.length > 0}
               autoComplete="email"
+              enterKeyHint="next"
               id={`${id}-email`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -188,6 +191,7 @@ export function SignupForm() {
               aria-invalid={field.state.meta.errors.length > 0}
               autoComplete="new-password"
               aria-describedby={`${id}-password-help`}
+              enterKeyHint="next"
               id={`${id}-password`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -219,6 +223,7 @@ export function SignupForm() {
               aria-invalid={field.state.meta.errors.length > 0}
               autoComplete="new-password"
               aria-describedby={`${id}-password-help`}
+              enterKeyHint="go"
               id={`${id}-password-confirmation`}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}

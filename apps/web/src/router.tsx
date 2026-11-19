@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { createIsomorphicFn, getGlobalStartContext } from "@tanstack/react-start";
+import { getNavigationViewTransition } from "./lib/navigation-transition";
 import { routeTree } from "./routeTree.gen";
 
 const getContentSecurityPolicyNonce = createIsomorphicFn()
@@ -21,6 +22,7 @@ export function getRouter() {
     context: { queryClient: new QueryClient() } satisfies RouterContext,
 
     scrollRestoration: true,
+    defaultViewTransition: getNavigationViewTransition(),
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     ssr: {

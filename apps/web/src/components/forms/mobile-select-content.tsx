@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SelectContent } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMobileViewport } from "@/hooks/useMobileViewport";
+import { useSwipeToDismiss } from "@/hooks/useSwipeToDismiss";
 import { MobileSelectCloseContext } from "./mobile-select";
 
 /** Keeps the desktop select untouched and uses a touch-sized bottom list on mobile. */
@@ -12,6 +13,7 @@ export function MobileSelectContent({ children, ...props }: ComponentProps<typeo
   const mobile = useIsMobile();
   const select = useContext(MobileSelectCloseContext);
   const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [popup, setPopup] = useState<HTMLDivElement | null>(null);
   const open = select?.open ?? false;
   const [presentation, setPresentation] = useState(mobile);
   const [previousOpen, setPreviousOpen] = useState(open);
@@ -25,6 +27,7 @@ export function MobileSelectContent({ children, ...props }: ComponentProps<typeo
     if (open) setReplacedWhileOpen(false);
   }
   useMobileViewport(element);
+  useSwipeToDismiss(popup, { enabled: Boolean(mobile) });
   useBlocker({
     disabled: !mobile || !select?.open,
     enableBeforeUnload: false,
@@ -73,9 +76,11 @@ export function MobileSelectContent({ children, ...props }: ComponentProps<typeo
       >
         <SelectPrimitive.Popup
           {...popupProps}
+          ref={setPopup}
           className="mobile-select-content"
           data-mobile-select={select?.open || undefined}
         >
+          <span aria-hidden="true" className="sheet-grabber" data-slot="sheet-grabber" />
           <div className="flex items-center justify-between border-b pb-2 mb-2">
             <span className="text-sm font-medium">Selecione uma opção</span>
             <Button

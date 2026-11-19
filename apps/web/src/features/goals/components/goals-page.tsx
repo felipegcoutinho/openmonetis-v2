@@ -87,6 +87,7 @@ export function GoalsPage() {
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button
                 onClick={() => {
@@ -154,7 +155,11 @@ export function GoalsPage() {
                 }}
                 value={filter}
               >
-                <TabsList aria-label="Filtrar metas" className="overflow-x-auto" variant="line">
+                <TabsList
+                  aria-label="Filtrar metas"
+                  className="scroll-fade-x snap-x scroll-px-2 overflow-x-auto scrollbar-none [&>[data-slot=tabs-trigger]]:snap-start"
+                  variant="line"
+                >
                   {filters.map((item) => (
                     <TabsTrigger key={item.value} value={item.value}>
                       {item.label}

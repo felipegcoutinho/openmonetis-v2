@@ -58,6 +58,7 @@ function Button({
   return (
     <Component
       data-slot="button"
+      data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

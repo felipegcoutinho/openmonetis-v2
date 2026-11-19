@@ -93,6 +93,7 @@ export function TagsPage({
         <Navbar />
         <section className="app-page project-container min-w-0">
           <PageHeader
+            mobileFloatingAction
             title="Etiquetas"
             eyebrow="Organização"
             icon={<Tag className="size-5" aria-hidden="true" />}

@@ -41,7 +41,7 @@ export function NoteForm({ note, onCancel, onSubmit, ref }: NoteFormProps) {
       </form.Subscribe>
       <div
         data-mobile-form-body
-        className="grid min-h-0 flex-1 gap-5 overflow-y-auto overscroll-contain px-2 py-1"
+        className="grid min-h-0 flex-1 content-start gap-5 overflow-y-auto overscroll-contain px-2 py-1"
       >
         <NoteKindField note={note} form={form} fieldId={fieldId} />
 

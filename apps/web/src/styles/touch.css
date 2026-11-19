@@ -1,0 +1,80 @@
+/*
+ * Touch layer. Declared unlayered on purpose: it must win over component utilities so a dense
+ * desktop control still reaches the touch minimum on a phone or tablet. Nothing here applies to
+ * a mouse or trackpad (`pointer: fine`).
+ */
+
+/* Scrolling inside a surface never chains to the page underneath it. */
+:is(
+  [data-slot="sheet-content"],
+  [data-slot="sheet-body"],
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"],
+  [data-slot="command-list"]
+) {
+  overscroll-behavior: contain;
+}
+
+@media (pointer: coarse) {
+  /* Labelled buttons and fields grow to the minimum. Controls inside an input group stay inline. */
+  :is([data-slot="button"], [data-slot$="-trigger"]):is(
+    [data-size="default"],
+    [data-size="sm"],
+    [data-size="lg"]
+  ):not([data-slot="input-group"] *),
+  [data-slot="select-trigger"],
+  [data-slot="input"]:not([data-slot="input-group"] *),
+  [data-slot="input-group"] {
+    min-height: var(--touch-target);
+  }
+
+  [data-slot="select-trigger"] {
+    min-width: var(--touch-target);
+  }
+
+  /*
+   * Icon buttons, compact buttons and small toggles keep their drawn size and get an invisible
+   * hit area instead, so dense rows keep their rhythm. The anchor (`position: relative`) lives in
+   * the base layer of app.css, below utilities such as `absolute`.
+   */
+  :is(
+    :is([data-slot="button"], [data-slot$="-trigger"]):is([data-size^="icon"], [data-size="xs"]),
+    [data-slot="checkbox"],
+    [data-slot="radio-group-item"],
+    [data-slot="switch"],
+    [data-hit-slop]
+  )::after {
+    content: "";
+    position: absolute;
+    inset-block: min(0px, calc((100% - var(--touch-target)) / 2));
+    inset-inline: min(0px, calc((100% - var(--touch-target)) / 2));
+  }
+
+  /* Rows of menus, lists and pickers. */
+  :is([data-slot="dropdown-menu-item"], [data-slot="select-item"], [data-slot="command-item"]) {
+    min-height: var(--touch-target);
+  }
+
+  /* Line tabs: the list keeps its 1px rule under the 44px tabs. */
+  [data-slot="tabs-list"][data-variant="line"] {
+    min-height: calc(var(--touch-target) + 1px);
+  }
+
+  [data-slot="tabs-list"][data-variant="default"] {
+    height: auto;
+  }
+
+  [data-slot="tabs-list"][data-variant="default"] > [data-slot="tabs-trigger"] {
+    min-height: var(--touch-target);
+  }
+}
+
+@media (width < 48rem) {
+  /* Fields read at the same 16px as the text inputs next to them. */
+  [data-slot="select-trigger"] {
+    font-size: 1rem;
+  }
+}

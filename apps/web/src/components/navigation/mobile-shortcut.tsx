@@ -32,9 +32,13 @@ import {
   preferencesMutationErrorMessage,
 } from "@/features/preferences/preferences.presentation";
 import { userPreferencesQueryOptions } from "@/features/preferences/preferences.queries";
+import { hapticTick } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
+import { MobileNavigationIcon } from "./mobile-navigation-icon";
 import { isPathActive } from "./nav-items";
 import { NavLink } from "./nav-link";
+import { mobileNavigationItemClassName } from "./navbar-options";
+import { scrollToTopWhenCurrent } from "./scroll-to-top";
 
 const longPressDurationMs = 500;
 const longPressMoveTolerancePx = 10;
@@ -83,6 +87,7 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
 
   function openChoices() {
     stopHolding();
+    hapticTick();
     suppressClickRef.current = true;
     setOpen(true);
   }
@@ -128,16 +133,19 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
       <div className="relative min-w-0">
         <NavLink
           aria-label={`Abrir ${label}. Mantenha pressionado para alterar o atalho`}
+          aria-current={isPathActive(location.pathname, option.href) ? "page" : undefined}
           className={cn(
-            "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 text-muted-foreground text-2xs select-none focus-visible:outline-2 focus-visible:outline-ring",
-            isPathActive(location.pathname, option.href) && "text-brand-strong",
+            mobileNavigationItemClassName(isPathActive(location.pathname, option.href)),
+            "relative",
           )}
           href={option.href}
           onClick={(event) => {
             if (suppressClickRef.current) {
               event.preventDefault();
               suppressClickRef.current = false;
+              return;
             }
+            scrollToTopWhenCurrent(event, location.pathname, option.href);
           }}
           onContextMenu={(event) => {
             event.preventDefault();
@@ -150,7 +158,9 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
           onPointerUp={handlePointerUp}
           preservePeriod={option.preservePeriod}
         >
-          <option.icon aria-hidden="true" className="size-5" />
+          <MobileNavigationIcon active={isPathActive(location.pathname, option.href)}>
+            <option.icon aria-hidden="true" className="size-5" />
+          </MobileNavigationIcon>
           <span className="max-w-full truncate">{label}</span>
           <span
             aria-hidden="true"
@@ -168,7 +178,7 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
 
       <Sheet onOpenChange={setOpen} open={open}>
         <SheetContent
-          className="max-h-[min(78svh,36rem)] rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
+          className="max-h-[min(78svh,36rem)] rounded-t-2xl pb-[max(1rem,var(--safe-bottom))] md:hidden"
           side="bottom"
         >
           <SheetHeader>
@@ -183,7 +193,7 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
               return (
                 <button
                   aria-current={choice === destination ? "true" : undefined}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-md px-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                  className="pressable flex min-h-12 w-full items-center gap-3 rounded-md px-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
                   disabled={updatePreferences.isPending}
                   key={choice}
                   onClick={() => void selectShortcut(choice)}

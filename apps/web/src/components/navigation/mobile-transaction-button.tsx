@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { mobileNavigationItemClassName } from "./navbar-options";
 
 const MobileTransactionLauncher = lazy(() =>
   import("@/features/transactions/components/mobile-transaction-launcher").then((module) => ({
@@ -12,17 +12,20 @@ export function MobileTransactionButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button
+      {/* The tab bar's primary action: a filled pill sets it apart from the destinations. */}
+      <button
         aria-label="Novo lançamento"
         aria-haspopup="dialog"
-        className="h-auto min-h-14 min-w-0 flex-col gap-1 rounded-md px-1 text-2xs"
+        aria-expanded={open}
+        className={mobileNavigationItemClassName(false)}
         onClick={() => setOpen(true)}
         type="button"
-        variant="ghost"
       >
-        <Plus aria-hidden="true" className="size-5 text-brand-strong" />
-        <span>Novo</span>
-      </Button>
+        <span className="primary-action grid h-8 w-13 place-items-center rounded-full text-primary-foreground transition-[scale] duration-(--duration-press) group-active/nav-item:scale-90 motion-reduce:transition-none">
+          <Plus aria-hidden="true" className="size-5" strokeWidth={2.25} />
+        </span>
+        <span className="font-medium text-foreground">Novo</span>
+      </button>
       {open ? (
         <Suspense
           fallback={

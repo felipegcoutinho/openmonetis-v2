@@ -65,9 +65,16 @@ export function EstablishmentLogo({
         {avatar}
         <span
           aria-hidden
-          className="absolute inset-0 grid place-items-center rounded-full bg-foreground/65 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+          className="absolute inset-0 grid place-items-center rounded-full bg-foreground/65 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
         >
           <Pencil className="size-3 text-background" />
+        </span>
+        {/* Touch has no hover to reveal the overlay: a small badge shows the logo is editable. */}
+        <span
+          aria-hidden
+          className="absolute -right-0.5 -bottom-0.5 hidden size-4 place-items-center rounded-full border bg-background text-muted-foreground pointer-coarse:grid"
+        >
+          <Pencil className="size-2.5" />
         </span>
       </button>
     </EstablishmentLogoPicker>

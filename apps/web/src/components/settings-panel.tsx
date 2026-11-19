@@ -27,7 +27,7 @@ export function SettingsSection({
   return (
     <section
       className={cn(
-        "grid border-border border-b last:border-b-0 lg:grid-cols-[minmax(13rem,0.34fr)_minmax(0,1fr)]",
+        "grid grid-cols-[minmax(0,1fr)] border-border border-b last:border-b-0 lg:grid-cols-[minmax(13rem,0.34fr)_minmax(0,1fr)]",
         className,
       )}
     >
@@ -54,7 +54,12 @@ export function SettingsSection({
           </p>
         </div>
       </div>
-      <div className={cn("min-w-0 px-5 pt-5 pb-6 sm:px-6 lg:py-6", contentClassName)}>
+      <div
+        className={cn(
+          "min-w-0 grid-cols-[minmax(0,1fr)] px-5 pt-5 pb-6 sm:px-6 lg:py-6",
+          contentClassName,
+        )}
+      >
         {children}
       </div>
     </section>

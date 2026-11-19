@@ -16,7 +16,8 @@ type ThemeProviderState = {
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined);
-const browserThemeColors = { dark: "#1b1917", light: "#fc941d" } as const;
+/* The system bars take the canvas colour, so the app reads as one surface in light and dark. */
+const browserThemeColors = { dark: "#1b1917", light: "#f6f4f1" } as const;
 
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
   const key = JSON.stringify(storageKey);

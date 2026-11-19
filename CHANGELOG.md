@@ -7,12 +7,74 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Celular: bottom sheets (novo lançamento, filtros, listas de opções, seletores de data e de
+  registro, atalho da barra inferior) fecham ao arrastar para baixo, e o menu de navegação fecha
+  ao arrastar para a direita. Uma alça no topo indica o gesto; o botão de fechar continua lá, e
+  alterações não salvas ainda pedem confirmação antes de descartar.
+- Celular: em Contas, Cartões, Categorias, Pessoas, Metas, Orçamentos, Etiquetas, Anotações e
+  Lançamentos recorrentes, a ação de criar vira um botão flutuante acima da barra inferior, ao
+  alcance do polegar, e desce junto com a barra quando ela se esconde na rolagem.
+- Celular: a revisão da importação de extrato mostra cada lançamento num cartão com descrição,
+  pessoa e categoria editáveis, em vez de uma tabela com rolagem lateral.
+- Aplicativo instalado: atalhos para Lançamentos, Caixa de entrada e Contas no ícone, com idioma e
+  descrição no manifesto.
+- Aplicativo instalado: abre mais rápido e, sem internet, mostra uma tela própria que volta sozinha
+  quando a conexão retorna. Só os arquivos do aplicativo ficam salvos no aparelho; páginas e dados
+  financeiros sempre vêm do servidor. Uma nova versão aparece num aviso com **Atualizar**, sem
+  recarregar no meio de um formulário.
+- Aplicativo instalado: puxar a tela para baixo no topo atualiza os dados exibidos, e no iPhone
+  arrastar a partir da borda esquerda volta para a tela anterior.
+- Aplicativo instalado no iPhone: tela de abertura com o símbolo do OpenMonetis no tema claro e
+  no escuro, no lugar da tela branca.
+- Aplicativo instalado: o número de notificações não lidas aparece no ícone.
+- Celular: o menu ganha **Instalar o app**, com o ícone do OpenMonetis, que instala com um toque
+  no Android e mostra o passo a passo no iPhone; a opção some quando o app já está instalado.
+- Celular: transições entre telas como num aplicativo. A tela de detalhe entra pela lateral, voltar
+  a faz sair e as abas da barra inferior trocam com um esmaecimento curto; topo e barra inferior
+  ficam parados. Mudar filtros, mês ou busca não anima.
+- Celular: ao rolar, o título da página passa para a barra superior; tocar nele, ou na aba já
+  aberta da barra inferior, volta ao topo.
+- Celular: uma faixa avisa quando a conexão cai, e um aviso confirma quando ela volta.
+- Celular: vibração curta ao armar o puxar para atualizar, fechar um painel arrastando e abrir a
+  escolha do atalho (Android).
+
 ### Alterado
 
 - Lançamentos: uma transferência entre contas aparece como um único lançamento, com os logos das
   duas contas lado a lado e a indicação de origem → destino, em vez de duas linhas de saída e
   entrada. Filtrando por uma das contas, ou no extrato da conta, continua aparecendo só o lado
   daquela conta, com o sinal de saída ou entrada.
+- Celular: todos os botões, abas, itens de menu, listas e campos têm área de toque de pelo menos
+  44 px; botões de ícone e caixas de seleção ganham uma área invisível ao redor, sem mudar o
+  layout.
+- Celular: linhas de lançamentos, itens de menu, dias do calendário e destinos da barra inferior
+  respondem ao toque com um estado pressionado. A aba ativa da barra inferior ganha um destaque
+  atrás do ícone, e **Novo** aparece como a ação principal.
+- Celular: o topo das páginas fica mais compacto. Páginas principais não repetem o link para a
+  visão geral, a descrição se limita a duas linhas e o conteúdo começa mais acima.
+- Explicações antes só disponíveis ao passar o mouse (saldo de conta, fechamento variável do
+  cartão, categorias automáticas, como ler os gráficos, média e variação em Tendências, ordem das
+  regras da Caixa de entrada) abrem também com um toque. Os valores por pessoa das contas a pagar
+  e das faturas no painel ganham um botão próprio no celular.
+- A barra do sistema acompanha a cor de fundo do app no tema claro e no escuro.
+- Avisos aparecem acima da barra inferior no celular, e os textos em caixa alta de cabeçalhos
+  de data e de tabelas sobem para 12 px.
+- Login e cadastro sugerem **Próximo** e **Entrar** no teclado do celular, e nomes de pessoa
+  começam com maiúscula.
+- Aplicativo instalado: textos da interface não são mais selecionados por toque longo, nem abrem
+  prévia de link; campos, anotações e respostas da IA continuam copiáveis.
+
+### Corrigido
+
+- O zoom com dois dedos voltou a funcionar no celular.
+- Os links de voltar e as trilhas de navegação no topo das páginas não recarregam mais o
+  aplicativo inteiro.
+- Cabeçalho, barra inferior e páginas respeitam o recorte da tela e o indicador inicial em
+  aparelhos com entalhe, também com o celular deitado.
+- Em Ajustes, um e-mail longo não empurra mais o conteúdo para fora da tela no celular.
+- Celular: o formulário de anotação não espalha mais os campos pela altura da tela.
 
 ### Notas de atualização
 

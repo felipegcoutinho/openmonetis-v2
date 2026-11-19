@@ -173,6 +173,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
         <Navbar />
         <section className="app-page project-container">
           <PageHeader
+            mobileFloatingAction
             actions={
               <Button
                 disabled={loading || availableCategories.length === 0}

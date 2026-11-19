@@ -1,5 +1,6 @@
 import { Calculator, Eye, EyeOff, Menu, Settings } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
+import { InstallAppEntry } from "@/components/pwa/install-app-entry";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,12 +49,12 @@ export function MobileNavigationMenu({
       >
         <Menu aria-hidden="true" className="size-4.5" />
       </SheetTrigger>
-      <SheetContent side="right">
-        <SheetHeader>
+      <SheetContent side="right" swipeToDismiss>
+        <SheetHeader className="pt-[max(1rem,var(--safe-top))]">
           <SheetTitle>Navegação</SheetTitle>
           <SheetDescription>Acesse as áreas do seu controle financeiro.</SheetDescription>
         </SheetHeader>
-        <SheetBody>
+        <SheetBody className="pb-[max(1rem,var(--safe-bottom))]">
           <nav aria-label="Navegação principal" className="grid gap-5">
             <section className="grid gap-2 md:hidden">
               <h2 className="eyebrow px-1 text-muted-foreground">Ferramentas</h2>
@@ -87,10 +88,11 @@ export function MobileNavigationMenu({
                 </Button>
                 <ThemeToggle card />
               </div>
+              <InstallAppEntry onInstalling={() => setMobileNavigationOpen(false)} />
             </section>
             <NavLink
               className={cn(
-                "flex min-h-11 items-center rounded-md px-3 font-medium text-sm transition-colors hover:bg-accent",
+                "pressable flex min-h-11 items-center rounded-md px-3 font-medium text-sm hover:bg-accent",
                 location.pathname === dashboardNavItem.href && "bg-accent",
               )}
               href={dashboardNavItem.href}
@@ -111,7 +113,7 @@ export function MobileNavigationMenu({
             ))}
             <NavLink
               className={cn(
-                "flex min-h-12 items-center gap-3 rounded-md border-t px-3 font-medium text-sm transition-colors hover:bg-accent md:hidden",
+                "pressable flex min-h-12 items-center gap-3 rounded-md border-t px-3 font-medium text-sm hover:bg-accent md:hidden",
                 location.pathname === "/settings" && "bg-accent",
               )}
               href="/settings"

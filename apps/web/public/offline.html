@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f6f4f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b1917" media="(prefers-color-scheme: dark)" />
+    <!-- Tries again on its own: the page comes back as soon as the connection does. -->
+    <meta http-equiv="refresh" content="15" />
+    <title>Sem conexão · OpenMonetis</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: #f6f4f1;
+        --foreground: #3a2a17;
+        --muted: #6f6355;
+        --primary: #fc941d;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #1b1917;
+          --foreground: #ece8e2;
+          --muted: #b3aca3;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.5rem, env(safe-area-inset-bottom));
+        background: var(--background);
+        color: var(--foreground);
+        font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      main {
+        display: grid;
+        justify-items: center;
+        gap: 1rem;
+        max-width: 22rem;
+        text-align: center;
+      }
+
+      img {
+        width: 4.5rem;
+        height: 4.5rem;
+      }
+
+      h1 {
+        margin: 0.5rem 0 0;
+        font-size: 1.375rem;
+        font-weight: 600;
+        letter-spacing: -0.018em;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        margin-top: 0.75rem;
+        padding: 0 1.5rem;
+        border-radius: 9999px;
+        background: var(--primary);
+        color: #3a2a17;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      a:active {
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img alt="" height="72" src="/images/openmonetis-mark.svg" width="72" />
+      <h1>Você está sem conexão</h1>
+      <p>
+        O OpenMonetis precisa de internet para mostrar seus dados com segurança. Assim que a conexão
+        voltar, a página abre sozinha.
+      </p>
+      <a href="/">Tentar novamente</a>
+    </main>
+  </body>
+</html>

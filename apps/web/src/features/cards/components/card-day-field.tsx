@@ -1,12 +1,9 @@
-import { Info } from "lucide-react";
-
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
+import { InfoTip } from "@/components/info-tip";
 
 import { Label } from "@/components/ui/label";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { daysOfMonth } from "../cards.presentation";
 
@@ -29,22 +26,7 @@ export function DayField({
         <Label className="font-mono" htmlFor={fieldId}>
           {label}
         </Label>
-        {help ? (
-          <Tooltip>
-            <TooltipTrigger
-              aria-label="Informações sobre o ajuste do vencimento"
-              render={
-                <button
-                  className="text-muted-foreground transition-colors hover:text-foreground"
-                  type="button"
-                />
-              }
-            >
-              <Info aria-hidden="true" className="size-3.5" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">{help}</TooltipContent>
-          </Tooltip>
-        ) : null}
+        {help ? <InfoTip label="Informações sobre o ajuste do vencimento">{help}</InfoTip> : null}
       </div>
       <Select
         onValueChange={(day) => {

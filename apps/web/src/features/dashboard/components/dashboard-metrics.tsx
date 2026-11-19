@@ -17,10 +17,10 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatMetricChangePercent, formatProjectedMetricHelp } from "../dashboard.presentation";
@@ -344,14 +344,13 @@ export function DashboardMetricsError({ onRetry }: { onRetry: () => void }) {
 
 function MetricHelp({ help, label }: { help: string; label: string }) {
   return (
-    <Popover>
-      <PopoverTrigger
-        aria-label={label}
-        className="relative grid size-4 shrink-0 place-items-center rounded-full text-muted-foreground outline-none after:absolute after:-inset-3.5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <CircleHelp aria-hidden="true" className="size-3.5" />
-      </PopoverTrigger>
-      <PopoverContent className="w-72 text-sm">{help}</PopoverContent>
-    </Popover>
+    <InfoTip
+      contentClassName="w-72"
+      label={label}
+      side="bottom"
+      trigger={<CircleHelp aria-hidden="true" className="size-3.5" />}
+    >
+      {help}
+    </InfoTip>
   );
 }

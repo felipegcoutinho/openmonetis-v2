@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -9,7 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { useTransactionImportReview } from "../useTransactionImportReview";
+import { TransactionImportReviewItem } from "./transaction-import-review-item";
 import { TransactionImportReviewRow } from "./transaction-import-review-row";
 
 import type { Props } from "./transaction-import-screen.types";
@@ -27,6 +30,12 @@ export function TransactionImportReviewTable({
   allAvailableSelected: ReturnType<typeof useTransactionImportReview>["allAvailableSelected"];
   people: Props["people"];
 }) {
+  const isMobile = useIsMobile();
+  const selectAllId = useId();
+  const selectAll = (checked: boolean) =>
+    setRows((current) =>
+      current.map((row) => (row.isDuplicate ? row : { ...row, selected: checked })),
+    );
   return (
     <Card className="gap-0 border py-0" size="sm">
       <CardHeader className="border-b py-4">
@@ -36,32 +45,19 @@ export function TransactionImportReviewTable({
           <Badge variant="outline">{rows.length} lançamentos</Badge>
         </CardAction>
       </CardHeader>
-      <CardContent className="max-h-128 overflow-auto px-0">
-        <Table className="min-w-230">
-          <TableHeader className="sticky top-0 z-10 bg-background">
-            <TableRow>
-              <TableHead className="font-mono w-10">
-                <Checkbox
-                  aria-label="Selecionar todos"
-                  checked={allAvailableSelected}
-                  onCheckedChange={(checked) =>
-                    setRows((current) =>
-                      current.map((row) => (row.isDuplicate ? row : { ...row, selected: checked })),
-                    )
-                  }
-                />
-              </TableHead>
-              <TableHead className="font-mono w-28">Data</TableHead>
-              <TableHead className="font-mono">Descrição</TableHead>
-              <TableHead className="font-mono w-56">Pessoa</TableHead>
-              <TableHead className="font-mono w-48">Categoria</TableHead>
-              <TableHead className="font-mono w-24">Tipo</TableHead>
-              <TableHead className="font-mono w-32 text-right">Valor</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      {isMobile ? (
+        // Phones: one card per row and the page scrolls, instead of a 920px table in a box.
+        <CardContent className="px-0">
+          <label
+            className="flex min-h-12 items-center gap-3 border-b px-4 font-medium text-sm"
+            htmlFor={selectAllId}
+          >
+            <Checkbox checked={allAvailableSelected} id={selectAllId} onCheckedChange={selectAll} />
+            Selecionar todos
+          </label>
+          <ul className="divide-y">
             {rows.map((row, index) => (
-              <TransactionImportReviewRow
+              <TransactionImportReviewItem
                 key={row.rowKey}
                 row={row}
                 index={index}
@@ -70,9 +66,43 @@ export function TransactionImportReviewTable({
                 people={people}
               />
             ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+          </ul>
+        </CardContent>
+      ) : (
+        <CardContent className="max-h-128 overflow-auto px-0">
+          <Table className="min-w-230">
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableRow>
+                <TableHead className="font-mono w-10">
+                  <Checkbox
+                    aria-label="Selecionar todos"
+                    checked={allAvailableSelected}
+                    onCheckedChange={selectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-mono w-28">Data</TableHead>
+                <TableHead className="font-mono">Descrição</TableHead>
+                <TableHead className="font-mono w-56">Pessoa</TableHead>
+                <TableHead className="font-mono w-48">Categoria</TableHead>
+                <TableHead className="font-mono w-24">Tipo</TableHead>
+                <TableHead className="font-mono w-32 text-right">Valor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row, index) => (
+                <TransactionImportReviewRow
+                  key={row.rowKey}
+                  row={row}
+                  index={index}
+                  setRows={setRows}
+                  selectableCategories={selectableCategories}
+                  people={people}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      )}
     </Card>
   );
 }

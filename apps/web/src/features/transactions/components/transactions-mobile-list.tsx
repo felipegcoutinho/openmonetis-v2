@@ -3,7 +3,11 @@ import {
   invoicePaymentCategoryName,
   yieldCategoryName,
 } from "@openmonetis/domain/categories";
-import { dateOnlyToSafeInstant, formatDateInBrazil } from "@openmonetis/shared/date-time";
+import {
+  dateOnlyToSafeInstant,
+  formatDateInBrazil,
+  getCurrentDateInBrazil,
+} from "@openmonetis/shared/date-time";
 import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
@@ -54,6 +58,8 @@ type TransactionsMobileListProps = {
 export function TransactionsMobileList(props: TransactionsMobileListProps) {
   const [selectionMode, setSelectionMode] = useState(false);
   const selection = useTransactionSelection(props.transactions);
+  const today = getCurrentDateInBrazil();
+  const yesterday = getCurrentDateInBrazil(new Date(Date.now() - 24 * 60 * 60 * 1000));
   const groups = new Map<string, TransactionOutput[]>();
   for (const transaction of props.transactions) {
     const date = props.accountStatement
@@ -121,41 +127,37 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
           </>
         )}
       </div>
-      {/* One continuous list; `overflow-clip` keeps the rounded corners without breaking sticky.
-          Date headers stick right below the sticky month navigation. */}
-      <Card className="min-w-0 gap-0 overflow-clip py-0">
+      {/* One inset card per day; the date label sits on the page background above it and
+          scrolls with it, so no header ever overlaps a card. */}
+      <div className="grid min-w-0 gap-4">
         {[...groups.entries()].map(([date, transactions]) => (
-          <section
-            aria-labelledby={`transactions-${date}`}
-            className="border-t first:border-t-0"
-            key={date}
-          >
+          <section aria-labelledby={`transactions-${date}`} className="min-w-0" key={date}>
             <h2
-              className="eyebrow sticky top-[calc(var(--page-sticky-top)+3.5rem)] z-10 flex items-center justify-between gap-2 border-b bg-card/95 px-3 py-2 text-muted-foreground backdrop-blur-sm"
+              className="px-1 pb-2 font-medium text-muted-foreground text-xs"
               id={`transactions-${date}`}
             >
-              {formatGroupDate(date)}
-              <span className="font-normal tabular-nums">
-                {transactions.length}
-                <span className="sr-only"> lançamentos</span>
-              </span>
+              {formatGroupDate(date, today, yesterday)}
             </h2>
-            <ul className="divide-y">
-              {transactions.map((transaction) => (
-                <MobileTransactionRow
-                  key={transaction.id}
-                  {...props}
-                  onSelectionChange={(selected) => selection.setSelected(transaction.id, selected)}
-                  selected={selection.isSelected(transaction.id)}
-                  selectable={selection.isSelectable(transaction)}
-                  selectionMode={selectionMode}
-                  transaction={transaction}
-                />
-              ))}
-            </ul>
+            <Card className="min-w-0 gap-0 overflow-clip py-0">
+              <ul>
+                {transactions.map((transaction) => (
+                  <MobileTransactionRow
+                    key={transaction.id}
+                    {...props}
+                    onSelectionChange={(selected) =>
+                      selection.setSelected(transaction.id, selected)
+                    }
+                    selected={selection.isSelected(transaction.id)}
+                    selectable={selection.isSelectable(transaction)}
+                    selectionMode={selectionMode}
+                    transaction={transaction}
+                  />
+                ))}
+              </ul>
+            </Card>
           </section>
         ))}
-      </Card>
+      </div>
       <TransactionBulkActionDock
         onClear={selection.clear}
         summary={selection.summary}
@@ -169,7 +171,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
             aria-label="Página anterior"
             disabled={props.currentPage === 1}
             onClick={() => props.onPageChange(props.currentPage - 1)}
-            size="icon-sm"
+            size="icon"
             variant="outline"
           >
             <ChevronLeft aria-hidden="true" />
@@ -181,7 +183,7 @@ export function TransactionsMobileList(props: TransactionsMobileListProps) {
             aria-label="Próxima página"
             disabled={props.currentPage === props.pageCount}
             onClick={() => props.onPageChange(props.currentPage + 1)}
-            size="icon-sm"
+            size="icon"
             variant="outline"
           >
             <ChevronRight aria-hidden="true" />
@@ -237,7 +239,7 @@ function MobileTransactionRow({
   return (
     <li
       className={cn(
-        "flex min-h-16 items-center gap-3 px-3 py-2.5",
+        "relative flex min-h-16 items-center gap-3 px-3 py-2.5 not-first:before:absolute not-first:before:top-0 not-first:before:right-3 not-first:before:left-16 not-first:before:h-px not-first:before:bg-border/70 transition-colors duration-(--duration-fast) has-[>div>button:active:not(:disabled)]:bg-(--pressed) has-[>div>button:active]:duration-0",
         isInvoicePayment && "bg-success/5",
         selected && "bg-brand/5",
       )}
@@ -264,7 +266,7 @@ function MobileTransactionRow({
                 : `${transaction.name} não participa da conferência`
               : `Ver detalhes de ${transaction.name}`
           }
-          className="flex w-full min-w-0 items-center gap-3 text-left disabled:cursor-default"
+          className="flex w-full min-w-0 items-center gap-3 text-left outline-none [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none] focus-visible:rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default"
           disabled={selectionMode && !selectable}
           onClick={() => {
             if (selectionMode) {
@@ -382,7 +384,7 @@ function MobileTransactionRow({
           </span>
         </button>
         {transaction.dueDate ? (
-          <div className="mt-1 ml-11 text-xs">
+          <div className="mt-1 ml-13 text-muted-foreground text-xs">
             <TransactionDueDate transaction={transaction} />
           </div>
         ) : null}
@@ -391,7 +393,9 @@ function MobileTransactionRow({
   );
 }
 
-function formatGroupDate(value: string) {
+function formatGroupDate(value: string, today: string, yesterday: string) {
+  if (value === today) return "Hoje";
+  if (value === yesterday) return "Ontem";
   const label = formatDateInBrazil(dateOnlyToSafeInstant(value), {
     day: "2-digit",
     month: "long",

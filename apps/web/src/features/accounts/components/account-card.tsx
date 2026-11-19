@@ -1,9 +1,10 @@
 import type { AccountOutput } from "@openmonetis/validators/accounts";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { Archive, FileText, Info, Pencil, Trash2 } from "lucide-react";
+import { Archive, FileText, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { accountTypeLabels } from "../accounts.presentation";
 
@@ -72,24 +72,11 @@ export function AccountCard({
                   </Link>
                 </CardTitle>
                 {hasAccountingNote ? (
-                  <Tooltip>
-                    <TooltipTrigger
-                      aria-label={`Informações de saldo de ${account.name}`}
-                      render={
-                        <button
-                          className="text-muted-foreground hover:text-foreground"
-                          type="button"
-                        />
-                      }
-                    >
-                      <Info aria-hidden="true" className="size-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      {account.excludeFromBalance ? (
-                        <p>Esta conta não participa do saldo consolidado.</p>
-                      ) : null}
-                    </TooltipContent>
-                  </Tooltip>
+                  <InfoTip label={`Informações de saldo de ${account.name}`}>
+                    {account.excludeFromBalance ? (
+                      <p>Esta conta não participa do saldo consolidado.</p>
+                    ) : null}
+                  </InfoTip>
                 ) : null}
               </div>
               <p className="mt-0.5 truncate text-muted-foreground text-xs">
