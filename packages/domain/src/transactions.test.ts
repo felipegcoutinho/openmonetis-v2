@@ -13,10 +13,12 @@ import {
   canAssignBulkCategory,
   deriveTransactionPostingDate,
   getPeriodEndDate,
+  getTransferLeg,
   InsufficientTransferBalanceError,
   isTransactionSelectionItemSelectable,
   listRecurrenceDatesInPeriod,
   maximumRecurrenceOccurrenceCount,
+  mergeTransferLegs,
   previewInstallmentOptions,
   rebalanceTwoAmountShares,
   rebalanceTwoPercentageShares,
@@ -598,5 +600,37 @@ test("bulk categorization requires a matching user category", () => {
       { type: "expense", isSystem: false },
     ),
     false,
+  );
+});
+
+test("identifies the transfer leg from the posting account", () => {
+  assert.equal(getTransferLeg({ accountId: "a", sourceAccountId: "a" }), "source");
+  assert.equal(getTransferLeg({ accountId: "b", sourceAccountId: "a" }), "destination");
+});
+
+test("merges both legs of a transfer into one unsigned entry", () => {
+  type Entry = {
+    id: string;
+    transferId: string | null;
+    amount: number;
+    displayAmount: number;
+    transferLeg: "source" | "destination" | "both" | null;
+  };
+  const entries: Entry[] = [
+    { id: "in", transferId: "t1", amount: 100, displayAmount: 100, transferLeg: "destination" },
+    { id: "expense", transferId: null, amount: -30, displayAmount: 30, transferLeg: null },
+    { id: "out", transferId: "t1", amount: -100, displayAmount: 100, transferLeg: "source" },
+    { id: "lonely", transferId: "t2", amount: 50, displayAmount: 50, transferLeg: "destination" },
+  ];
+
+  const merged = mergeTransferLegs(entries, (entry) => entry.transferId);
+
+  assert.deepEqual(
+    merged.map(({ id, amount, transferLeg }) => ({ id, amount, transferLeg })),
+    [
+      { id: "out", amount: 100, transferLeg: "both" },
+      { id: "expense", amount: -30, transferLeg: null },
+      { id: "lonely", amount: 50, transferLeg: "destination" },
+    ],
   );
 });

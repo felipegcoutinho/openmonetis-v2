@@ -441,6 +441,47 @@ export function buildTransferPostings(input: {
   ];
 }
 
+export const transferLegs = ["source", "destination", "both"] as const;
+export type TransferLeg = (typeof transferLegs)[number];
+
+export function getTransferLeg(input: {
+  accountId: string | null;
+  sourceAccountId: string | null;
+}): Exclude<TransferLeg, "both"> {
+  return input.accountId !== null && input.accountId === input.sourceAccountId
+    ? "source"
+    : "destination";
+}
+
+/**
+ * Collapses the two postings of the same transfer into a single entry, keeping the position of
+ * whichever leg came first. The merged entry uses the source leg and an unsigned amount because
+ * it moves money between the user's own accounts. Unpaired legs (e.g. filtered by one account)
+ * stay signed so that account views keep their direction.
+ */
+export function mergeTransferLegs<
+  T extends { amount: number; displayAmount: number; transferLeg: TransferLeg | null },
+>(items: T[], getTransferId: (item: T) => string | null | undefined): T[] {
+  const legsByTransfer = new Map<string, T[]>();
+  for (const item of items) {
+    const transferId = item.transferLeg ? getTransferId(item) : null;
+    if (!transferId) continue;
+    legsByTransfer.set(transferId, [...(legsByTransfer.get(transferId) ?? []), item]);
+  }
+
+  const emitted = new Set<string>();
+  return items.flatMap((item) => {
+    const transferId = item.transferLeg ? getTransferId(item) : null;
+    const legs = transferId ? legsByTransfer.get(transferId) : undefined;
+    if (!transferId || !legs || legs.length < 2) return [item];
+    if (emitted.has(transferId)) return [];
+    emitted.add(transferId);
+    const source = legs.find((leg) => leg.transferLeg === "source") ?? item;
+    const amount = Math.abs(source.amount);
+    return [{ ...source, amount, displayAmount: amount, transferLeg: "both" as const }];
+  });
+}
+
 export function assertTransferWithinAvailableBalance(input: {
   amount: number;
   availableBalance: number;

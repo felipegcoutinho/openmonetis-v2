@@ -292,6 +292,15 @@ export function formatCompactDate(value: string) {
     .toLocaleLowerCase("pt-BR");
 }
 
+// A merged transfer moves money between the user's own accounts, so it carries no direction sign.
+export function shouldShowPositiveSign(
+  transaction: Pick<TransactionOutput, "type" | "transferLeg">,
+  visibleAmount: number,
+) {
+  if (transaction.type === "transfer") return transaction.transferLeg === "destination";
+  return transaction.type === "income" || visibleAmount > 0;
+}
+
 function slugifyUrlValue(value: string) {
   return value
     .normalize("NFD")

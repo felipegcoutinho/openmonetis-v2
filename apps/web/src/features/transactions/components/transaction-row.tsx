@@ -18,6 +18,7 @@ import {
   getTransactionSettlementAction,
   getTransactionSettlementShortLabel,
   paymentMethodIcons,
+  shouldShowPositiveSign,
   transactionConditionIcons,
   transactionConditionLabels,
 } from "../transactions.presentation";
@@ -54,7 +55,6 @@ export function TransactionRow({
   const [installmentDeleteOpen, setInstallmentDeleteOpen] = useState(false);
   const [recurringAction, setRecurringAction] = useState<"pause" | "stop" | "skip" | null>(null);
   const visibleAmount = transaction.allocation?.amount ?? transaction.amount;
-  const isIncomingTransfer = transaction.type === "transfer" && visibleAmount > 0;
   const amountClassName =
     transaction.type === "income"
       ? "text-success"
@@ -188,7 +188,9 @@ export function TransactionRow({
           amount={visibleAmount}
           className={`font-medium ${amountClassName}`}
           showPositiveSign={
-            transaction.type === "income" || isIncomingTransfer || isInvoiceReduction
+            transaction.type === "transfer"
+              ? shouldShowPositiveSign(transaction, visibleAmount)
+              : transaction.type === "income" || isInvoiceReduction
           }
         />
         {transaction.settledAmount != null &&

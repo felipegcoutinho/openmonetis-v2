@@ -7,6 +7,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- Lançamentos: uma transferência entre contas aparece como um único lançamento, com os logos das
+  duas contas lado a lado e a indicação de origem → destino, em vez de duas linhas de saída e
+  entrada. Filtrando por uma das contas, ou no extrato da conta, continua aparecendo só o lado
+  daquela conta, com o sinal de saída ou entrada.
+
 ## [0.18.0] - 2026-11-17
 
 Novo calendário do mês com vencimentos, faturas e tarefas, busca global com Ctrl K, orçamentos que

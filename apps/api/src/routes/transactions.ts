@@ -114,7 +114,7 @@ export function createTransactionsRoute(service: TransactionsService) {
     getRecurringRuleOccurrence,
     importTransactions,
     listRecentEstablishments,
-    listTransactions,
+    listTransactionEntries,
     previewTransactionImport,
     renameTransactions,
     settleRecurringOccurrence,
@@ -1021,7 +1021,7 @@ export function createTransactionsRoute(service: TransactionsService) {
     }),
     async (c) => {
       const query = c.req.valid("query");
-      const transactions = await listTransactions(c.get("userId"), query);
+      const transactions = await listTransactionEntries(c.get("userId"), query);
 
       return c.json(ok(transactions), 200);
     },

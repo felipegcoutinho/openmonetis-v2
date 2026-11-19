@@ -10,6 +10,7 @@ import {
   transactionConditions,
   transactionOrigins,
   transactionTypes,
+  transferLegs,
   validateTransactionSplits,
 } from "@openmonetis/domain/transactions";
 import { DueDateAdjustmentDetailsSchema } from "./due-date-rules";
@@ -755,6 +756,11 @@ export const TransactionOutputSchema = z
     destinationAccountId: z.string().uuid().nullable(),
     destinationAccountName: z.string().nullable(),
     destinationAccountLogo: z.string().nullable(),
+    transferLeg: z.enum(transferLegs).nullable().openapi({
+      description:
+        "Which posting of a transfer the entry represents; both means the pair was merged into a single unsigned entry.",
+      example: null,
+    }),
     dueDate: dateSchema.nullable(),
     originalDueDate: z.iso.date().nullable().optional(),
 

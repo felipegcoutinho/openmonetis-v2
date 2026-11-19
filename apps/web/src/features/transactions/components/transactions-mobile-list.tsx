@@ -8,6 +8,7 @@ import type { TransactionOutput } from "@openmonetis/validators/transactions";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
+  ArrowRight,
   ChevronLeft,
   ChevronRight,
   Circle,
@@ -27,10 +28,12 @@ import { cn } from "@/lib/utils";
 import {
   formatCompactDate,
   getTransactionSettlementShortLabel,
+  shouldShowPositiveSign,
 } from "../transactions.presentation";
 import { useTransactionSelection } from "../useTransactionSelection";
 import { TransactionBulkActionDock } from "./transaction-bulk-action-dock";
 import { TransactionDueDate } from "./transaction-due-date";
+import { TransferAvatar } from "./transaction-relation";
 import {
   TransactionsMobileActionsMenu,
   type TransactionsMobileExport,
@@ -221,6 +224,9 @@ function MobileTransactionRow({
       : isBalanceAdjustment || isAccountYield
         ? (transaction.accountLogo ?? transaction.cardLogo)
         : null;
+  const isTransferPair =
+    transaction.type === "transfer" &&
+    Boolean(transaction.sourceAccountName && transaction.destinationAccountName);
   const relationLogo =
     transaction.invoicePaymentCardLogo ??
     transaction.cardLogo ??
@@ -270,7 +276,9 @@ function MobileTransactionRow({
           type="button"
         >
           <span className="shrink-0">
-            {featuredLogo ? (
+            {isTransferPair ? (
+              <TransferAvatar transaction={transaction} />
+            ) : featuredLogo ? (
               <Image
                 alt=""
                 className="size-10 rounded-full object-contain"
@@ -298,7 +306,18 @@ function MobileTransactionRow({
               ) : null}
             </span>
             <span className="mt-1 flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
-              {relationLogo ? (
+              {isTransferPair ? (
+                <span
+                  className="flex min-w-0 items-center gap-1"
+                  title={`De ${transaction.sourceAccountName} para ${transaction.destinationAccountName}`}
+                >
+                  <span className="sr-only">De </span>
+                  <span className="min-w-0 truncate">{transaction.sourceAccountName}</span>
+                  <ArrowRight aria-hidden="true" className="size-3 shrink-0" />
+                  <span className="sr-only"> para </span>
+                  <span className="min-w-0 truncate">{transaction.destinationAccountName}</span>
+                </span>
+              ) : relationLogo ? (
                 <Image
                   alt=""
                   className="size-4 shrink-0 rounded-full object-contain"
@@ -312,7 +331,9 @@ function MobileTransactionRow({
               ) : transaction.accountId || transaction.type === "transfer" ? (
                 <Landmark aria-hidden="true" className="size-4 shrink-0" />
               ) : null}
-              <span className="truncate">{transaction.categoryName ?? "Sem categoria"}</span>
+              {isTransferPair ? null : (
+                <span className="truncate">{transaction.categoryName ?? "Sem categoria"}</span>
+              )}
             </span>
             {transaction.paymentMethod === "boleto" && transaction.boletoPaymentDate ? (
               <span className="mt-1 block text-muted-foreground text-xs">
@@ -331,7 +352,7 @@ function MobileTransactionRow({
                 transaction.type === "income" && "text-success",
                 transaction.type === "transfer" && "text-info",
               )}
-              showPositiveSign={transaction.type === "income" || visibleAmount > 0}
+              showPositiveSign={shouldShowPositiveSign(transaction, visibleAmount)}
             />
             {transaction.paymentMethod !== "credit_card" && transaction.isSettled !== null ? (
               <span

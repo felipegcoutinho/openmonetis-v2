@@ -6,7 +6,10 @@ import { MoneyValue } from "@/components/money-value";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
-import { formatCompactDate } from "@/features/transactions/transactions.presentation";
+import {
+  formatCompactDate,
+  shouldShowPositiveSign,
+} from "@/features/transactions/transactions.presentation";
 import { transactionsQueryOptions } from "@/features/transactions/transactions.queries";
 import { cn } from "@/lib/utils";
 import { DashboardWidget } from "./dashboard-widget";
@@ -82,7 +85,7 @@ export function DashboardRecentTransactionsWidget({ period }: { period: string }
 
 function RecentTransactionRow({ transaction }: { transaction: TransactionOutput }) {
   const visibleAmount = transaction.allocation?.amount ?? transaction.amount;
-  const showPositiveSign = transaction.type === "income" || visibleAmount > 0;
+  const showPositiveSign = shouldShowPositiveSign(transaction, visibleAmount);
 
   return (
     <DashboardWidgetRow>

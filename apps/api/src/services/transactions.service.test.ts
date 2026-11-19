@@ -3190,3 +3190,72 @@ test("bulk HTTP contract validates operation-specific payloads", async () => {
     400,
   );
 });
+
+test("transaction entries merge both transfer legs while internal listings keep them signed", async () => {
+  const sourceAccountId = "50000000-0000-4000-8000-000000000005";
+  const destinationAccountId = "90000000-0000-4000-8000-000000000009";
+  const incomingId = "a0000000-0000-4000-8000-00000000000a";
+  const transferLeg = (id: string, accountId: string, amount: string) =>
+    transactionFixture({
+      id,
+      type: "transfer",
+      paymentMethod: "bank_transfer",
+      name: "Transferência",
+      amount,
+      accountId,
+      sourceAccountId,
+      sourceAccountName: "Nubank",
+      destinationAccountId,
+      destinationAccountName: "Itaú",
+      transferId: "b0000000-0000-4000-8000-00000000000b",
+      dueDate: null,
+    });
+  let listed = [
+    transferLeg(incomingId, destinationAccountId, "100.00"),
+    transferLeg(transactionId, sourceAccountId, "-100.00"),
+  ];
+  const dependencies = new Proxy(
+    {
+      listTransactionsByPeriod: async () => listed,
+      listRecurringRulesForPeriod: async () => [],
+      listTransactionSplitsForUser: async () => [],
+      listRecurringSplitsForUser: async () => [],
+      listRecurringOccurrencesForUser: async () => [],
+      listTransactionIdsWithAttachmentsForUser: async () => [],
+    },
+    {
+      get(target, property) {
+        if (property in target) return target[property as keyof typeof target];
+        return async () => {
+          throw new Error(`Unexpected dependency call: ${String(property)}`);
+        };
+      },
+    },
+  ) as unknown as TransactionsServiceDependencies;
+  const service = createTransactionsService(dependencies, {
+    async cleanupOrphans() {
+      return { deletedCount: 0 };
+    },
+  });
+  const query = ListTransactionsQuerySchema.parse({ period: "2026-09" });
+
+  const entries = await service.listTransactionEntries(userId, query);
+  assert.equal(entries.total, 1);
+  assert.deepEqual(
+    entries.items.map((item) => [item.recordId, item.amount, item.transferLeg]),
+    [[transactionId, 100, "both"]],
+  );
+
+  const postings = await service.listTransactions(userId, query);
+  assert.deepEqual(postings.items.map((item) => [item.amount, item.transferLeg]).sort(), [
+    [-100, "source"],
+    [100, "destination"],
+  ]);
+
+  listed = [transferLeg(incomingId, destinationAccountId, "100.00")];
+  const destinationOnly = await service.listTransactionEntries(userId, query);
+  assert.deepEqual(
+    destinationOnly.items.map((item) => [item.amount, item.transferLeg]),
+    [[100, "destination"]],
+  );
+});
