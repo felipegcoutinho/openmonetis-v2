@@ -1,0 +1,55 @@
+/* Posterpole. */
+[data-palette="posterpole-dark"] {
+  --background: #25222a;
+  --foreground: #c6c0b9;
+  --card: #2c2c30;
+  --popover: #2c2c30;
+  --popover-field: #1f1c23;
+  --primary: #cc9166;
+  --primary-foreground: #25222a;
+  --secondary: #3d3a42;
+  --muted: #322f37;
+  --muted-foreground: #a5a59c;
+  --destructive: #bc8f8f;
+  --info: #8a99a8;
+  --success: #92a38f;
+  --teal: #aabbba;
+  --warning: #d9ac8c;
+  --brand: #cc9166;
+  --brand-strong: #cc9166;
+  --brand-foreground: #25222a;
+  --border: color-mix(in oklch, #c6c0b9 13%, transparent);
+  --chart-1: #cc9166;
+  --chart-2: #8a99a8;
+  --chart-3: #b894af;
+  --chart-4: #aabbba;
+  --chart-5: #afa79d;
+}
+
+/* Posterpole Gray. */
+[data-palette="posterpoleGray-dark"] {
+  --background: #1f1f1f;
+  --foreground: #c6c0b9;
+  --card: #2a2a2a;
+  --popover: #2a2a2a;
+  --popover-field: #181818;
+  --primary: #cc9166;
+  --primary-foreground: #1f1f1f;
+  --secondary: #3a3a3a;
+  --muted: #2f2f2f;
+  --muted-foreground: #a5a59c;
+  --destructive: #bc8f8f;
+  --info: #8a99a8;
+  --success: #92a38f;
+  --teal: #aabbba;
+  --warning: #d9ac8c;
+  --brand: #cc9166;
+  --brand-strong: #cc9166;
+  --brand-foreground: #1f1f1f;
+  --border: color-mix(in oklch, #c6c0b9 13%, transparent);
+  --chart-1: #cc9166;
+  --chart-2: #8a99a8;
+  --chart-3: #b894af;
+  --chart-4: #aabbba;
+  --chart-5: #afa79d;
+}

@@ -1,0 +1,62 @@
+/*
+ * Flexoki by Steph Ango, an inky scheme for reading on screens: https://stephango.com/flexoki
+ * (MIT). Light uses the 600 accents on paper, dark the 400 accents on black.
+ */
+
+/* Flexoki Light. */
+[data-palette="flexoki-light"] {
+  --background: #fffcf0;
+  --foreground: #100f0f;
+  --card: #fffcf0;
+  --popover: #fffcf0;
+  --primary: #205ea6;
+  --primary-foreground: #fffcf0;
+  --secondary: #e6e4d9;
+  --muted: #f2f0e5;
+  --muted-foreground: color-mix(in oklch, #6f6e69 88%, #100f0f);
+  --destructive: #af3029;
+  --info: #205ea6;
+  --success: color-mix(in oklch, #66800b 80%, #100f0f);
+  --teal: color-mix(in oklch, #24837b 85%, #100f0f);
+  --warning: color-mix(in oklch, #ad8301 65%, #100f0f);
+  --brand: #205ea6;
+  --brand-strong: #205ea6;
+  --brand-foreground: #fffcf0;
+  --border: #dad8ce;
+  --chart-1: #205ea6;
+  --chart-2: #5e409d;
+  --chart-3: #24837b;
+  --chart-4: #bc5215;
+  --chart-5: #a02f6f;
+  --financial-summary-neutral: #100f0f;
+  --financial-summary-neutral-foreground: #fffcf0;
+}
+
+/* Flexoki Dark. */
+[data-palette="flexoki-dark"],
+[data-palette="flexoki-light"] .dark {
+  --background: #100f0f;
+  --foreground: #cecdc3;
+  --card: #1c1b1a;
+  --popover: #282726;
+  --popover-field: color-mix(in oklch, #100f0f 60%, black);
+  --primary: #4385be;
+  --primary-foreground: #100f0f;
+  --secondary: #343331;
+  --muted: #282726;
+  --muted-foreground: color-mix(in oklch, #878580 60%, #cecdc3);
+  --destructive: color-mix(in oklch, #d14d41 78%, #cecdc3);
+  --info: color-mix(in oklch, #4385be 85%, #cecdc3);
+  --success: #879a39;
+  --teal: #3aa99f;
+  --warning: #d0a215;
+  --brand: #4385be;
+  --brand-strong: color-mix(in oklch, #4385be 85%, #cecdc3);
+  --brand-foreground: #100f0f;
+  --border: #343331;
+  --chart-1: #4385be;
+  --chart-2: #8b7ec8;
+  --chart-3: #3aa99f;
+  --chart-4: #da702c;
+  --chart-5: #ce5d97;
+}

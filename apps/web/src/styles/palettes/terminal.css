@@ -1,0 +1,29 @@
+/* Terminal: warm black, amber prompt, cyan and phosphor green, with square corners. */
+[data-palette="terminal-dark"] {
+  --background: oklch(20.5% 0.004 60);
+  --foreground: oklch(93% 0.006 75);
+  --card: oklch(22.8% 0.005 60);
+  --popover: oklch(26.5% 0.006 60);
+  --popover-field: oklch(18% 0.003 60);
+  --primary: #f8b048;
+  --primary-foreground: oklch(20.5% 0.004 60);
+  --secondary: oklch(31% 0.006 60);
+  --muted: oklch(25.5% 0.005 60);
+  --muted-foreground: oklch(72% 0.012 70);
+  --destructive: #ff6b5e;
+  --info: #30d0d8;
+  --success: #48f0a0;
+  --teal: color-mix(in oklch, #30d0d8 60%, #48f0a0);
+  --warning: #f5d76e;
+  --brand: #f8b048;
+  --brand-strong: #f8b048;
+  --brand-foreground: oklch(20.5% 0.004 60);
+  --border: color-mix(in oklch, oklch(93% 0.006 75) 14%, transparent);
+  --chart-1: #f8b048;
+  --chart-2: #30d0d8;
+  --chart-3: color-mix(in oklch, #a058f0 70%, #ece6e0);
+  --chart-4: #f0b098;
+  --chart-5: oklch(62% 0.012 70);
+  --radius: 0.125rem;
+  --radius-cards: 0.125rem;
+}

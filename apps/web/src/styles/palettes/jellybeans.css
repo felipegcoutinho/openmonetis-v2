@@ -1,0 +1,27 @@
+/* Jellybeans. */
+[data-palette="jellybeans-dark"] {
+  --background: #121212;
+  --foreground: #dedede;
+  --card: #1c1c1c;
+  --popover: #1c1c1c;
+  --popover-field: #0c0c0c;
+  --primary: #ffa560;
+  --primary-foreground: #121212;
+  --secondary: #333333;
+  --muted: #262626;
+  --muted-foreground: #a8a8a8;
+  --destructive: #e27373;
+  --info: #97bedc;
+  --success: #94b979;
+  --teal: #1ab2a8;
+  --warning: #ffdca0;
+  --brand: #ffa560;
+  --brand-strong: #ffa560;
+  --brand-foreground: #121212;
+  --border: color-mix(in oklch, #dedede 13%, transparent);
+  --chart-1: #ffa560;
+  --chart-2: #97bedc;
+  --chart-3: #e1c0fa;
+  --chart-4: #1ab2a8;
+  --chart-5: #ffdca0;
+}

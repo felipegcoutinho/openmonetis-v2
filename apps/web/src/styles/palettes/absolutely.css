@@ -1,0 +1,60 @@
+/* Absolutely, after the Claude Light and Claude Dark terminal schemes. */
+[data-palette="absolutely-light"] {
+  --background: #faf9f5;
+  --foreground: #141413;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #d97757;
+  --primary-foreground: #141413;
+  --secondary: #f0eee6;
+  --muted: color-mix(in oklch, #faf9f5 50%, #f0eee6);
+  --muted-foreground: #51504d;
+  --destructive: #a84b3a;
+  --info: #184e95;
+  --success: #2e7c4c;
+  --teal: #066049;
+  --warning: #8a6220;
+  --brand: #d97757;
+  --brand-strong: color-mix(in oklch, #d97757 62%, #141413);
+  --brand-foreground: #141413;
+  --border: color-mix(in oklch, #141413 15%, transparent);
+  --chart-1: #d97757;
+  --chart-2: #3886e5;
+  --chart-3: #d55382;
+  --chart-4: #b87700;
+  --chart-5: #51504d;
+  --financial-summary-neutral: #141413;
+  --financial-summary-neutral-foreground: #faf9f5;
+}
+
+/*
+ * Absolutely dark, after Claude Dark; it also paints the menus over Absolutely light. Menus sit a
+ * step lighter than cards, so a menu opened over a card stays apart from it.
+ */
+[data-palette="absolutely-dark"],
+[data-palette="absolutely-light"] .dark {
+  --background: #262624;
+  --foreground: #e5e4e1;
+  --card: #30302e;
+  --popover: #393937;
+  --popover-field: #1f1e1d;
+  --primary: #d97757;
+  --primary-foreground: #141413;
+  --secondary: #363634;
+  --muted: #2c2c2a;
+  --muted-foreground: #a6a59b;
+  --destructive: color-mix(in oklch, #d47563 80%, #f4a9a9);
+  --info: #9fc5f4;
+  --success: #9aca86;
+  --teal: #79d7b3;
+  --warning: #e8c96b;
+  --brand: #d97757;
+  --brand-strong: color-mix(in oklch, #d97757 85%, #e5e4e1);
+  --brand-foreground: #141413;
+  --border: color-mix(in oklch, #e5e4e1 13%, transparent);
+  --chart-1: #d97757;
+  --chart-2: #9fc5f4;
+  --chart-3: #9b87f5;
+  --chart-4: #e8c96b;
+  --chart-5: #a6a59b;
+}

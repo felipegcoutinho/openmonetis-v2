@@ -1,0 +1,168 @@
+[data-slot="button"] {
+  letter-spacing: -0.006em;
+}
+
+/*
+ * Primary action: coral fill with a soft light falling from the top edge. The light is the only
+ * effect — it brightens on hover and goes out on press, while the fill itself settles darker.
+ */
+@property --primary-action-light {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.primary-action {
+  --primary-action-light: 16%;
+  border-color: transparent;
+  background-color: var(--primary);
+  background-image: radial-gradient(
+    120% 150% at 50% -20%,
+    color-mix(in srgb, white var(--primary-action-light), transparent),
+    transparent 70%
+  );
+  background-clip: border-box;
+  box-shadow: none;
+  transition-property: color, background-color, scale, --primary-action-light;
+  transition-duration: var(--duration-base);
+}
+
+@media (hover: hover) {
+  .primary-action:hover:not(:disabled) {
+    --primary-action-light: 34%;
+  }
+}
+
+.primary-action:active:not(:disabled),
+.primary-action[data-popup-open] {
+  --primary-action-light: 0%;
+  background-color: color-mix(in oklch, var(--primary) 90%, var(--foreground));
+  transition-duration: var(--duration-press);
+}
+
+.primary-action:disabled {
+  --primary-action-light: 0%;
+}
+
+/*
+ * Cards draw their hairline as a real border: browsers snap border widths to whole device pixels,
+ * while a box-shadow spread is antialiased and looks 2px thick at fractional scales (125%, zoom).
+ * Highlight, error and dashed variants only change the border color/style through utilities.
+ */
+[data-slot="card"] {
+  border-width: 1px;
+  border-radius: var(--radius-cards);
+  box-shadow: none;
+}
+
+[data-slot="card-title"],
+[data-slot="dialog-title"],
+[data-slot="sheet-title"] {
+  font-family: var(--font-app-heading);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+[data-slot="badge"] {
+  border-radius: 9999px;
+  letter-spacing: normal;
+}
+
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+[data-slot="date-picker-trigger"],
+[data-slot="attachment"] {
+  background-color: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.dark
+  :where(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"],
+    [data-slot="date-picker-trigger"],
+    [data-slot="period-picker-trigger"],
+    [data-slot="attachment"],
+    [data-slot="checkbox"]:not([data-checked])
+  ) {
+  background-color: transparent;
+}
+
+.atmospheric-wash {
+  background:
+    radial-gradient(
+      ellipse 48% 58% at 28% 42%,
+      color-mix(in srgb, var(--brand) 78%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 42% 62% at 70% 38%,
+      color-mix(in srgb, var(--foreground) 34%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 40% 54% at 58% 72%,
+      color-mix(in srgb, var(--brand) 46%, transparent),
+      transparent 72%
+    );
+  filter: blur(64px) saturate(108%);
+}
+
+.dashboard-atmosphere {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: min(46rem, 70svh);
+  background: radial-gradient(
+    ellipse 52% 60% at 50% 20%,
+    color-mix(in srgb, var(--primary) 4%, transparent),
+    transparent 72%
+  );
+  mask-image: linear-gradient(to bottom, black 0%, black 44%, transparent 100%);
+  pointer-events: none;
+}
+
+.dark .dashboard-atmosphere {
+  background: radial-gradient(
+    ellipse 52% 60% at 50% 20%,
+    color-mix(in srgb, var(--primary) 5%, transparent),
+    transparent 72%
+  );
+}
+
+@media (max-width: 47.999rem) {
+  main:has(> .app-navbar) {
+    padding-bottom: calc(4rem + var(--safe-bottom));
+  }
+}
+
+[data-slot="table-row"] > [data-slot="table-cell"]:first-child {
+  border-left: 3px solid transparent;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+@media (hover: hover) {
+  [data-slot="table-row"]:hover {
+    background-color: color-mix(in srgb, var(--primary) 6%, transparent);
+  }
+
+  [data-slot="table-row"]:hover > [data-slot="table-cell"]:first-child {
+    border-left-color: var(--primary);
+  }
+}
+
+[data-slot="table-row"][data-state="selected"] > [data-slot="table-cell"]:first-child,
+[data-slot="table-row"]:has([aria-expanded="true"]) > [data-slot="table-cell"]:first-child {
+  border-left-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="table-row"] > [data-slot="table-cell"]:first-child {
+    transition: none;
+  }
+}

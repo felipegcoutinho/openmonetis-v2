@@ -178,6 +178,11 @@ rateios, valores efetivos e contas excluídas, incluindo a conta de baixa das re
 Os seletores responsivos também são verificados ao alternar entre desktop e celular com a lista
 aberta, sem perder o estado nem emitir avisos de controle do componente.
 
+A aparência verifica o salvamento do modo e do tema na conta, o tema aplicado desde a primeira
+pintura ao recarregar, a volta ao tema salvo quando a gravação falha e a troca de modo ao escolher
+um tema pela busca. O contraste de todos os temas é medido com as cores resolvidas pelo navegador;
+as regras estão em [`themes.md`](themes.md).
+
 O seletor de período de Evolução por categoria e Compromissos futuros verifica a escolha dos meses
 em qualquer ordem, o descarte ao fechar, o limite de 24 meses, a persistência na URL e o popup no
 celular sem rolagem horizontal.

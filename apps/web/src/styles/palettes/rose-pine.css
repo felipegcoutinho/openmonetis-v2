@@ -1,0 +1,60 @@
+/*
+ * Rosé Pine Dawn. The palette has no green; income takes a pine-tinted green made in its key
+ * so it still reads as income.
+ */
+[data-palette="rosePine-light"] {
+  --background: #faf4ed;
+  --foreground: #575279;
+  --card: #fffaf3;
+  --popover: #fffaf3;
+  --primary: #d7827e;
+  --primary-foreground: #26233a;
+  --secondary: #f2e9e1;
+  --muted: #f4ede8;
+  --muted-foreground: color-mix(in oklch, #797593 55%, #575279);
+  --destructive: color-mix(in oklch, #b4637a 62%, #575279);
+  --info: #286983;
+  --success: oklch(50% 0.09 160);
+  --teal: color-mix(in oklch, #56949f 50%, #575279);
+  --warning: color-mix(in oklch, #ea9d34 28%, #575279);
+  --brand: #d7827e;
+  --brand-strong: color-mix(in oklch, #d7827e 40%, #575279);
+  --brand-foreground: #26233a;
+  --border: color-mix(in oklch, #575279 20%, transparent);
+  --chart-1: color-mix(in oklch, #d7827e 78%, #575279);
+  --chart-2: #286983;
+  --chart-3: #907aa9;
+  --chart-4: color-mix(in oklch, #ea9d34 68%, #575279);
+  --chart-5: #56949f;
+  --financial-summary-neutral: #575279;
+  --financial-summary-neutral-foreground: #faf4ed;
+}
+
+/* Rosé Pine Moon. */
+[data-palette="rosePine-dark"],
+[data-palette="rosePine-light"] .dark {
+  --background: #232136;
+  --foreground: #e0def4;
+  --card: #2a273f;
+  --popover: #2a273f;
+  --popover-field: #1c1a2c;
+  --primary: #ea9a97;
+  --primary-foreground: #232136;
+  --secondary: #44415a;
+  --muted: #393552;
+  --muted-foreground: color-mix(in oklch, #908caa 72%, #e0def4);
+  --destructive: #eb6f92;
+  --info: color-mix(in oklch, #3e8fb0 60%, #9ccfd8);
+  --success: oklch(80% 0.09 160);
+  --teal: #9ccfd8;
+  --warning: #f6c177;
+  --brand: #ea9a97;
+  --brand-strong: #ea9a97;
+  --brand-foreground: #232136;
+  --border: color-mix(in oklch, #e0def4 12%, transparent);
+  --chart-1: #ea9a97;
+  --chart-2: #3e8fb0;
+  --chart-3: #c4a7e7;
+  --chart-4: #f6c177;
+  --chart-5: #9ccfd8;
+}

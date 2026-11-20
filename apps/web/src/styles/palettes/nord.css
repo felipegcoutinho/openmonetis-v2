@@ -1,0 +1,27 @@
+/* Nord (Polar Night, Snow Storm, Frost and Aurora). There is no light Nord. */
+[data-palette="nord-dark"] {
+  --background: #2e3440;
+  --foreground: #e5e9f0;
+  --card: #3b4252;
+  --popover: #3b4252;
+  --popover-field: #272c36;
+  --primary: #88c0d0;
+  --primary-foreground: #2e3440;
+  --secondary: #4c566a;
+  --muted: #434c5e;
+  --muted-foreground: color-mix(in oklch, #d8dee9 86%, #2e3440);
+  --destructive: color-mix(in oklch, #bf616a 50%, #eceff4);
+  --info: color-mix(in oklch, #81a1c1 72%, #d8dee9);
+  --success: #a3be8c;
+  --teal: #8fbcbb;
+  --warning: #ebcb8b;
+  --brand: #88c0d0;
+  --brand-strong: #88c0d0;
+  --brand-foreground: #2e3440;
+  --border: color-mix(in oklch, #eceff4 13%, transparent);
+  --chart-1: #88c0d0;
+  --chart-2: #b48ead;
+  --chart-3: #d08770;
+  --chart-4: #ebcb8b;
+  --chart-5: #81a1c1;
+}

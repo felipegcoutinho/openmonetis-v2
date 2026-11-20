@@ -1,0 +1,62 @@
+/*
+ * Everforest (medium contrast) by sainnhe, MIT: https://github.com/sainnhe/everforest. The forest
+ * green is the accent; charts lead with blue so they never read as income.
+ */
+
+/* Everforest Light. */
+[data-palette="everforest-light"] {
+  --background: #fdf6e3;
+  --foreground: color-mix(in oklch, #5c6a72 70%, #2d353b);
+  --card: #fffbef;
+  --popover: #fffbef;
+  --primary: #8da101;
+  --primary-foreground: #1e2326;
+  --secondary: #e6e2cc;
+  --muted: #f4f0d9;
+  --muted-foreground: color-mix(in oklch, #5c6a72 90%, #2d353b);
+  --destructive: color-mix(in oklch, #f85552 70%, #2d353b);
+  --info: color-mix(in oklch, #3a94c5 70%, #2d353b);
+  --success: color-mix(in oklch, #8da101 60%, #2d353b);
+  --teal: color-mix(in oklch, #35a77c 65%, #2d353b);
+  --warning: color-mix(in oklch, #dfa000 50%, #2d353b);
+  --brand: #8da101;
+  --brand-strong: color-mix(in oklch, #8da101 55%, #2d353b);
+  --brand-foreground: #1e2326;
+  --border: color-mix(in oklch, #5c6a72 22%, transparent);
+  --chart-1: color-mix(in oklch, #3a94c5 85%, #2d353b);
+  --chart-2: color-mix(in oklch, #df69ba 85%, #2d353b);
+  --chart-3: color-mix(in oklch, #35a77c 85%, #2d353b);
+  --chart-4: color-mix(in oklch, #f57d26 85%, #2d353b);
+  --chart-5: color-mix(in oklch, #dfa000 75%, #2d353b);
+  --financial-summary-neutral: #5c6a72;
+  --financial-summary-neutral-foreground: #fdf6e3;
+}
+
+/* Everforest Dark. */
+[data-palette="everforest-dark"],
+[data-palette="everforest-light"] .dark {
+  --background: #2d353b;
+  --foreground: #d3c6aa;
+  --card: #343f44;
+  --popover: #3d484d;
+  --popover-field: #232a2e;
+  --primary: #a7c080;
+  --primary-foreground: #2d353b;
+  --secondary: #475258;
+  --muted: #343f44;
+  --muted-foreground: color-mix(in oklch, #9da9a0 50%, #d3c6aa);
+  --destructive: color-mix(in oklch, #e67e80 70%, #d3c6aa);
+  --info: #7fbbb3;
+  --success: #a7c080;
+  --teal: #83c092;
+  --warning: #dbbc7f;
+  --brand: #a7c080;
+  --brand-strong: #a7c080;
+  --brand-foreground: #2d353b;
+  --border: color-mix(in oklch, #d3c6aa 14%, transparent);
+  --chart-1: #7fbbb3;
+  --chart-2: #d699b6;
+  --chart-3: #83c092;
+  --chart-4: #e69875;
+  --chart-5: #dbbc7f;
+}

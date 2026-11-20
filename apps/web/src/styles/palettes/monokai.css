@@ -1,0 +1,27 @@
+/* Monokai Classic. Its pink is close to red, so it marks expenses; the yellow leads. */
+[data-palette="monokai-dark"] {
+  --background: #272822;
+  --foreground: #f8f8f2;
+  --card: #2e2f28;
+  --popover: #3e3d32;
+  --popover-field: #1e1f1c;
+  --primary: #e6db74;
+  --primary-foreground: #272822;
+  --secondary: #49483e;
+  --muted: #3e3d32;
+  --muted-foreground: color-mix(in oklch, #75715e 40%, #f8f8f2);
+  --destructive: color-mix(in oklch, #f92672 75%, #f8f8f2);
+  --info: #66d9ef;
+  --success: #a6e22e;
+  --teal: color-mix(in oklch, #66d9ef 60%, #a6e22e);
+  --warning: #fd971f;
+  --brand: #e6db74;
+  --brand-strong: #e6db74;
+  --brand-foreground: #272822;
+  --border: color-mix(in oklch, #f8f8f2 13%, transparent);
+  --chart-1: #e6db74;
+  --chart-2: #66d9ef;
+  --chart-3: #ae81ff;
+  --chart-4: #fd971f;
+  --chart-5: color-mix(in oklch, #75715e 60%, #f8f8f2);
+}

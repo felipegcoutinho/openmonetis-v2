@@ -1,3 +1,11 @@
+import {
+  type ApplicationTheme,
+  applicationThemes,
+  type DarkPalette,
+  darkPalettes,
+  type LightPalette,
+  lightPalettes,
+} from "@openmonetis/domain/preferences";
 import type { CreateNoteInput } from "@openmonetis/validators/notes";
 import type { TransactionInput, TransactionOutput } from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
@@ -7,18 +15,23 @@ import {
   ArrowDownLeft,
   ArrowLeftRight,
   ArrowUpRight,
+  Check,
   CreditCard,
   Gauge,
   Landmark,
   LoaderCircle,
   type LucideIcon,
+  Monitor,
+  Moon,
   NotebookPen,
   Search,
   Settings,
+  Sun,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { MoneyValue } from "@/components/money-value";
 import { dashboardNavItem, navSections } from "@/components/navigation/nav-items";
+import { type Appearance, useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Command,
@@ -33,6 +46,12 @@ import { CategoryIcon } from "@/features/categories/category-icons";
 import { EstablishmentLogo } from "@/features/establishments/components/establishment-logo";
 import { NoteDialog } from "@/features/notes/components/note-dialog";
 import { useCreateNoteMutation } from "@/features/notes/notes.mutations";
+import { PaletteSwatch } from "@/features/preferences/components/palette-swatch";
+import {
+  applicationThemeLabels,
+  getPaletteName,
+} from "@/features/preferences/preferences.presentation";
+import { useSaveAppearance } from "@/features/preferences/useSaveAppearance";
 import { TransactionDialog } from "@/features/transactions/components/transaction-dialog";
 import {
   formatCompactDate,
@@ -165,6 +184,63 @@ const transactionActions: Array<{
 
 const shortcutKey = "k";
 
+type AppearanceCommand = {
+  id: string;
+  label: string;
+  description: string;
+  icon: ReactNode;
+  /** What choosing it changes. A palette also brings its mode on screen, so the change shows. */
+  change: (current: { mode: "light" | "dark" }) => Partial<Appearance>;
+  isCurrent: (appearance: Appearance) => boolean;
+};
+
+const modeIcons = {
+  system: Monitor,
+  light: Sun,
+  dark: Moon,
+} satisfies Record<ApplicationTheme, LucideIcon>;
+
+const appearanceKeywords = "tema aparencia cor cores paleta visual";
+
+const appearanceCommands: AppearanceCommand[] = [
+  ...applicationThemes.map((theme): AppearanceCommand => {
+    const Icon = modeIcons[theme];
+    return {
+      id: `mode:${theme}`,
+      label: `Modo ${applicationThemeLabels[theme].toLocaleLowerCase("pt-BR")}`,
+      description: "Modo",
+      icon: <Icon aria-hidden="true" className="size-4" />,
+      change: () => ({ theme }),
+      isCurrent: (appearance) => appearance.theme === theme,
+    };
+  }),
+  ...lightPalettes.map(
+    (palette: LightPalette): AppearanceCommand => ({
+      id: `light:${palette}`,
+      label: getPaletteName({ mode: "light", palette }),
+      description: "Tema claro",
+      icon: <PaletteSwatch palette={`${palette}-light`} />,
+      change: ({ mode }) =>
+        mode === "light" ? { lightPalette: palette } : { lightPalette: palette, theme: "light" },
+      isCurrent: (appearance) => appearance.lightPalette === palette,
+    }),
+  ),
+  ...darkPalettes.map(
+    (palette: DarkPalette): AppearanceCommand => ({
+      id: `dark:${palette}`,
+      label: getPaletteName({ mode: "dark", palette }),
+      description: "Tema escuro",
+      icon: <PaletteSwatch palette={`${palette}-dark`} />,
+      change: ({ mode }) =>
+        mode === "dark" ? { darkPalette: palette } : { darkPalette: palette, theme: "dark" },
+      isCurrent: (appearance) => appearance.darkPalette === palette,
+    }),
+  ),
+];
+
+/** Enough to scan; typing more narrows the list down. */
+const appearanceResultLimit = 8;
+
 export function CommandMenu({
   enabled,
   open,
@@ -181,6 +257,8 @@ export function CommandMenu({
   const [noteOpen, setNoteOpen] = useState(false);
   const formOptions = useTransactionFormOptions({ enabled: enabled && open });
   const createNote = useCreateNoteMutation();
+  const { appearance, mode } = useTheme();
+  const { saveAppearance } = useSaveAppearance();
   const debouncedQuery = useDebouncedValue(query.trim(), commandMenuRemoteSearchDelayMs);
   const remoteSearchEnabled =
     enabled && open && debouncedQuery.length >= commandMenuMinimumRemoteSearchLength;
@@ -289,6 +367,19 @@ export function CommandMenu({
         .filter((link) => matchesCommandMenuQuery(trimmedQuery, link.label, link.description))
         .slice(0, commandMenuEntityResultLimit * 4)
     : [];
+  // Only on a search: listing every theme would bury the pages and actions.
+  const visibleAppearanceCommands = trimmedQuery
+    ? appearanceCommands
+        .filter((command) =>
+          matchesCommandMenuQuery(
+            trimmedQuery,
+            command.label,
+            command.description,
+            appearanceKeywords,
+          ),
+        )
+        .slice(0, appearanceResultLimit)
+    : [];
   const transactions = remoteSearchEnabled ? (transactionsQuery.data?.items ?? []) : [];
   const searchingTransactions =
     trimmedQuery.length >= commandMenuMinimumRemoteSearchLength &&
@@ -372,6 +463,33 @@ export function CommandMenu({
                   ))}
                 </CommandGroup>
               ) : null}
+              {visibleAppearanceCommands.length ? (
+                <CommandGroup heading="Aparência">
+                  {visibleAppearanceCommands.map((command) => (
+                    <CommandItem
+                      key={command.id}
+                      onSelect={() => {
+                        handleOpenChange(false);
+                        saveAppearance(command.change({ mode }));
+                      }}
+                      value={`appearance:${command.id}`}
+                    >
+                      {command.icon}
+                      <span className="min-w-0 flex-1 truncate font-medium">{command.label}</span>
+                      {command.isCurrent(appearance) ? (
+                        <Check
+                          aria-label="Em uso"
+                          className="size-4 shrink-0 text-muted-foreground"
+                        />
+                      ) : null}
+                      <span className="shrink-0 text-muted-foreground text-xs">
+                        {command.description}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : null}
+
               {transactions.length ? (
                 <CommandGroup heading="Lançamentos">
                   {groupTransactionRows(transactions).map(({ transaction, splitConnector }) => (

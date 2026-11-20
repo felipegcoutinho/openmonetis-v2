@@ -1,0 +1,105 @@
+/* OpenMonetis light: warm sand canvas, charcoal ink and the coral brand. */
+:where(:root),
+[data-palette="openmonetis-light"] {
+  --palette-coral: oklch(76.042% 0.16904 61.306);
+  --palette-charcoal: oklch(29.182% 0.05685 64.634);
+  --palette-blue: oklch(59.101% 0.16978 254.626);
+  --palette-green: oklch(51.858% 0.10354 157.143);
+  --palette-red: oklch(59.505% 0.2301 31.027);
+  --palette-teal: oklch(57% 0.105 188);
+  --background: oklch(96.785% 0.00443 77.988);
+  --foreground: var(--palette-charcoal);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --primary: var(--palette-coral);
+  --primary-foreground: var(--palette-charcoal);
+  --secondary: oklch(93.597% 0.01475 80.639);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: color-mix(in srgb, var(--foreground) 72%, var(--background));
+  --accent: color-mix(in srgb, var(--primary) 16%, var(--background));
+  --accent-foreground: var(--foreground);
+  --destructive: color-mix(in srgb, var(--palette-red) 90%, var(--palette-charcoal));
+  --info: color-mix(in srgb, var(--palette-blue) 70%, var(--palette-charcoal));
+  --success: var(--palette-green);
+  /* Payoff simulations, kept apart from the blue of purchase simulations. */
+  --teal: color-mix(in srgb, var(--palette-teal) 85%, var(--palette-charcoal));
+  --warning: color-mix(in srgb, var(--palette-coral) 42%, var(--palette-charcoal));
+  --brand: var(--palette-coral);
+  --brand-strong: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-charcoal));
+  --brand-foreground: var(--palette-charcoal);
+  --border: oklch(26.033% 0.00003 271.152 / 0.2);
+  --input: color-mix(in srgb, var(--foreground) 30%, var(--background));
+  --ring: var(--info);
+  --overlay: color-mix(in srgb, var(--foreground) 18%, transparent);
+  --chart-1: var(--palette-coral);
+  --chart-2: var(--palette-blue);
+  --chart-3: var(--palette-green);
+  --chart-4: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-blue));
+  --chart-5: color-mix(in srgb, var(--palette-blue) 55%, var(--palette-charcoal));
+  /* Semantic series: every chart paints income, expense and balance the same way. */
+  --chart-income: var(--success);
+  --chart-expense: var(--destructive);
+  --chart-balance: var(--chart-2);
+  --financial-summary-neutral: oklch(32.504% 0.00004 271.152);
+  --financial-summary-neutral-foreground: oklch(100% 0.00011 271.152);
+
+  /* Translucent chrome takes the canvas colour, so blur reads as the same canvas. */
+  --material: color-mix(in srgb, var(--background) 78%, transparent);
+  --elevation-2:
+    0 2px 4px color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 8px 24px -6px color-mix(in srgb, var(--foreground) 14%, transparent);
+  --elevation-3:
+    0 4px 8px color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 24px 48px -12px color-mix(in srgb, var(--foreground) 24%, transparent);
+  /* Fallback press feedback for tappable elements without their own pressed state. */
+  --tap-highlight: color-mix(in srgb, var(--primary) 14%, transparent);
+  --pressed: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+
+/* OpenMonetis dark. Surfaces climb in lightness with elevation; low chroma keeps the warmth. */
+:where(:root.dark, :root:not(.dark) .dark),
+[data-palette="openmonetis-dark"],
+[data-palette="openmonetis-light"] .dark {
+  --background: oklch(21.5% 0.005 65);
+  --foreground: oklch(93% 0.008 75);
+  --card: oklch(25.5% 0.006 65);
+  --card-foreground: var(--foreground);
+  --popover: oklch(23.5% 0.006 65);
+  --popover-foreground: var(--foreground);
+  --popover-field: oklch(18% 0.005 65);
+  --primary: var(--brand-strong);
+  --primary-foreground: var(--palette-charcoal);
+  --secondary: oklch(32% 0.007 65);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(29.5% 0.006 65);
+  --muted-foreground: oklch(75% 0.008 65);
+  --accent: color-mix(in srgb, var(--brand) 14%, var(--popover));
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(69% 0.14 28);
+  --info: oklch(76% 0.11 270);
+  --success: oklch(71% 0.11 150);
+  --teal: oklch(76% 0.095 188);
+  --warning: oklch(81% 0.105 72);
+  --brand-strong: oklch(74.5% 0.135 58);
+  --brand: var(--brand-strong);
+  --brand-foreground: var(--palette-charcoal);
+  --border: oklch(93% 0.008 75 / 0.12);
+  --input: color-mix(in oklch, var(--foreground) 22%, transparent);
+  --ring: var(--info);
+  --overlay: color-mix(in srgb, black 62%, transparent);
+  --chart-1: var(--brand-strong);
+  --chart-2: oklch(74% 0.115 270);
+  --chart-3: var(--success);
+  --chart-4: oklch(74.5% 0.1 315);
+  --chart-5: oklch(82% 0.095 85);
+  --financial-summary-neutral: var(--secondary);
+  --financial-summary-neutral-foreground: var(--foreground);
+
+  --material: color-mix(in srgb, var(--background) 80%, transparent);
+  --elevation-1: 0 0 transparent;
+  --elevation-2: 0 8px 24px -6px oklch(0% 0 0 / 0.45);
+  --elevation-3: 0 24px 56px -12px oklch(0% 0 0 / 0.6);
+}

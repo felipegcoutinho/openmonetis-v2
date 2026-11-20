@@ -1,0 +1,27 @@
+/* Gotham. */
+[data-palette="gotham-dark"] {
+  --background: #0c1014;
+  --foreground: #99d1ce;
+  --card: #11151c;
+  --popover: #11151c;
+  --popover-field: #080b0e;
+  --primary: color-mix(in oklch, #33859e 70%, #99d1ce);
+  --primary-foreground: #0c1014;
+  --secondary: #0a3749;
+  --muted: #091f2e;
+  --muted-foreground: color-mix(in oklch, #99d1ce 72%, #0c1014);
+  --destructive: color-mix(in oklch, #c23127 65%, white);
+  --info: color-mix(in oklch, #33859e 55%, #99d1ce);
+  --success: #2aa889;
+  --teal: color-mix(in oklch, #2aa889 50%, #99d1ce);
+  --warning: #edb443;
+  --brand: color-mix(in oklch, #33859e 70%, #99d1ce);
+  --brand-strong: color-mix(in oklch, #33859e 70%, #99d1ce);
+  --brand-foreground: #0c1014;
+  --border: color-mix(in oklch, #99d1ce 13%, transparent);
+  --chart-1: color-mix(in oklch, #33859e 70%, #99d1ce);
+  --chart-2: #edb443;
+  --chart-3: color-mix(in oklch, #4e5166 50%, #99d1ce);
+  --chart-4: color-mix(in oklch, #195466 50%, #99d1ce);
+  --chart-5: #99d1ce;
+}

@@ -40,9 +40,6 @@ export function Navbar() {
   const compactTitle = useCompactPageTitle();
   const showCompactTitle = Boolean(isMobile && compactTitle?.visible);
   const [openNavigationSection, setOpenNavigationSection] = useState<string | null>(null);
-  const [navigationPopupVariant, setNavigationPopupVariant] = useState<"default" | "preview">(
-    "default",
-  );
 
   async function handleSignOut() {
     try {
@@ -112,9 +109,7 @@ export function Navbar() {
           <DesktopNavigation
             location={location}
             openNavigationSection={openNavigationSection}
-            navigationPopupVariant={navigationPopupVariant}
             setOpenNavigationSection={setOpenNavigationSection}
-            setNavigationPopupVariant={setNavigationPopupVariant}
           />
 
           <div className="flex justify-self-end items-center gap-0 md:gap-1">

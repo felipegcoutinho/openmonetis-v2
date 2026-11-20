@@ -246,6 +246,13 @@
       "when": 1795104849019,
       "tag": "0034_note_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795108844392,
+      "tag": "0035_user_palettes",
+      "breakpoints": true
     }
   ]
 }

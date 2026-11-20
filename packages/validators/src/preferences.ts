@@ -1,6 +1,8 @@
 import { z } from "@hono/zod-openapi";
 import {
   applicationThemes,
+  darkPalettes,
+  lightPalettes,
   mobileShortcutDestinations,
   notificationDueSoonDayOptions,
   startPageDestinations,
@@ -28,6 +30,8 @@ const TransactionsPageSizeSchema = z.union(
 export const UserPreferencesOutputSchema = z
   .object({
     theme: z.enum(applicationThemes),
+    lightPalette: z.enum(lightPalettes),
+    darkPalette: z.enum(darkPalettes),
     hideValuesOnStart: z.boolean(),
     defaultPaymentMethod: z.enum(paymentMethods),
     defaultAccountId: z.uuid().nullable(),

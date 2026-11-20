@@ -1,0 +1,120 @@
+@utility project-container {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+}
+
+@utility app-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: clamp(1.5rem, 2.5vw, var(--section-gap));
+  padding-block: clamp(1.75rem, 3vw, 3rem) clamp(3rem, 5vw, 5rem);
+  padding-left: max(clamp(1rem, 3.5vw, 3rem), var(--safe-left));
+  padding-right: max(clamp(1rem, 3.5vw, 3rem), var(--safe-right));
+  animation: page-in var(--duration-base) ease-out;
+}
+
+@utility page-title {
+  font-family: var(--font-app-heading);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.028em;
+
+  @media (width >= 40rem) {
+    font-size: 2.25rem;
+  }
+}
+
+@utility section-title {
+  font-family: var(--font-app-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.014em;
+}
+
+/* Figures lead: tabular and tight. */
+@utility kpi-value {
+  font-weight: 350;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+/* Person summary tinted by the avatar's dominant color (`--person-accent`), brand as fallback. */
+@utility person-accent-wash {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--person-accent, var(--brand)) 12%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+/* Section label: small sans caps with open tracking. */
+@utility eyebrow {
+  font-family: var(--font-app-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  /* 11px caps stay legible on a desktop monitor; phones get the 12px floor. */
+  @media (width < 48rem) {
+    font-size: 0.75rem;
+  }
+}
+
+/*
+ * Pressed state for anything tappable that is not a Button (rows, cards, navigation items):
+ * touch devices have no hover, so the press is the only feedback. Instant on press, eased on
+ * release.
+ */
+@utility pressable {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  transition-property: background-color, color, scale;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-out-strong);
+
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--pressed);
+    transition-duration: 0ms;
+  }
+}
+
+/*
+ * Drag handle on top of a bottom sheet. Decorative: the whole surface accepts the swipe, and the
+ * close button stays for screen readers and keyboards. Absolute, so it never shifts the layout.
+ */
+@utility sheet-grabber {
+  position: absolute;
+  top: 0.4375rem;
+  left: 50%;
+  z-index: 2;
+  width: 2.25rem;
+  height: 0.3125rem;
+  translate: -50% 0;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  pointer-events: none;
+}
+
+/*
+ * Translucent material for floating and fixed chrome only. Keep the -webkit- declaration first:
+ * the production CSS optimizer drops the standard one when it comes before the prefixed one, and
+ * browsers other than Safari ignore the prefix.
+ */
+@utility material {
+  background-color: var(--material);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--popover);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

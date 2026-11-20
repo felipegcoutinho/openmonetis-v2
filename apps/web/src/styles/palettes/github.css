@@ -1,0 +1,260 @@
+/* GitHub Light. */
+[data-palette="github-light"] {
+  --background: #f6f8fa;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #0969da;
+  --primary-foreground: #ffffff;
+  --secondary: #eaeef2;
+  --muted: #eff2f5;
+  --muted-foreground: #57606a;
+  --destructive: #cf222e;
+  --info: #0969da;
+  --success: #1a7f37;
+  --teal: #1b7c83;
+  --warning: color-mix(in oklch, #e3b341 40%, #633c01);
+  --brand: #0969da;
+  --brand-strong: #0969da;
+  --brand-foreground: #ffffff;
+  --border: color-mix(in oklch, #1f2328 18%, transparent);
+  --chart-1: #0969da;
+  --chart-2: #8250df;
+  --chart-3: #1b7c83;
+  --chart-4: color-mix(in oklch, #e3b341 40%, #633c01);
+  --chart-5: #6e7781;
+  --financial-summary-neutral: #1f2328;
+  --financial-summary-neutral-foreground: #ffffff;
+}
+
+/* GitHub Light High Contrast. */
+[data-palette="githubHighContrast-light"] {
+  --background: #ffffff;
+  --foreground: #0e1116;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #0349b4;
+  --primary-foreground: #ffffff;
+  --secondary: #e7ecf0;
+  --muted: #f0f3f6;
+  --muted-foreground: #4b535d;
+  --destructive: #a0111f;
+  --info: #0349b4;
+  --success: #055d20;
+  --teal: #1b7c83;
+  --warning: color-mix(in oklch, #f0b72f 30%, #3f2200);
+  --brand: #0349b4;
+  --brand-strong: #0349b4;
+  --brand-foreground: #ffffff;
+  --border: color-mix(in oklch, #0e1116 40%, transparent);
+  --chart-1: #0349b4;
+  --chart-2: #622cbc;
+  --chart-3: #1b7c83;
+  --chart-4: color-mix(in oklch, #f0b72f 30%, #3f2200);
+  --chart-5: #66707b;
+  --financial-summary-neutral: #0e1116;
+  --financial-summary-neutral-foreground: #ffffff;
+}
+
+/* GitHub Light Colorblind: orange for expenses and blue for income, as GitHub draws them for
+ * protanopia and deuteranopia. */
+[data-palette="githubColorblind-light"] {
+  --background: #f6f8fa;
+  --foreground: #24292f;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #0969da;
+  --primary-foreground: #ffffff;
+  --secondary: #eaeef2;
+  --muted: #eff2f5;
+  --muted-foreground: #57606a;
+  --destructive: #b35900;
+  --info: #0969da;
+  --success: #0550ae;
+  --teal: #1b7c83;
+  --warning: color-mix(in oklch, #e3b341 40%, #633c01);
+  --brand: #0969da;
+  --brand-strong: #0969da;
+  --brand-foreground: #ffffff;
+  --border: color-mix(in oklch, #24292f 18%, transparent);
+  --chart-1: #0969da;
+  --chart-2: #8250df;
+  --chart-3: #1b7c83;
+  --chart-4: color-mix(in oklch, #e3b341 40%, #633c01);
+  --chart-5: #6e7781;
+  --financial-summary-neutral: #24292f;
+  --financial-summary-neutral-foreground: #ffffff;
+}
+
+/* GitHub Light (Legacy). */
+[data-palette="githubLegacy-light"] {
+  --background: #f6f8fa;
+  --foreground: #24292e;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #0366d6;
+  --primary-foreground: #ffffff;
+  --secondary: #e8ebee;
+  --muted: #f1f3f5;
+  --muted-foreground: #586069;
+  --destructive: #cb2431;
+  --info: #0366d6;
+  --success: color-mix(in oklch, #22863a 85%, #24292e);
+  --teal: #1b7c83;
+  --warning: color-mix(in oklch, #b08800 70%, #24292e);
+  --brand: #0366d6;
+  --brand-strong: #0366d6;
+  --brand-foreground: #ffffff;
+  --border: color-mix(in oklch, #24292e 18%, transparent);
+  --chart-1: #0366d6;
+  --chart-2: #5a32a3;
+  --chart-3: #1b7c83;
+  --chart-4: color-mix(in oklch, #b08800 70%, #24292e);
+  --chart-5: #6a737d;
+  --financial-summary-neutral: #24292e;
+  --financial-summary-neutral-foreground: #ffffff;
+}
+
+/* GitHub Dark. */
+[data-palette="github-dark"],
+[data-palette="github-light"] .dark {
+  --background: #010409;
+  --foreground: #e6edf3;
+  --card: #0d1117;
+  --popover: #161b22;
+  --popover-field: #010409;
+  --primary: #58a6ff;
+  --primary-foreground: #010409;
+  --secondary: #21262d;
+  --muted: #161b22;
+  --muted-foreground: color-mix(in oklch, #b1bac4 80%, #6e7681);
+  --destructive: #ff7b72;
+  --info: #79c0ff;
+  --success: #3fb950;
+  --teal: #39c5cf;
+  --warning: #d29922;
+  --brand: #58a6ff;
+  --brand-strong: #58a6ff;
+  --brand-foreground: #010409;
+  --border: color-mix(in oklch, #e6edf3 13%, transparent);
+  --chart-1: #58a6ff;
+  --chart-2: #bc8cff;
+  --chart-3: #39c5cf;
+  --chart-4: #d29922;
+  --chart-5: #b1bac4;
+}
+
+/* GitHub Dark Dimmed. */
+[data-palette="githubDimmed-dark"] {
+  --background: #1c2128;
+  --foreground: #adbac7;
+  --card: #22272e;
+  --popover: #2d333b;
+  --popover-field: color-mix(in oklch, #1c2128 80%, black);
+  --primary: #539bf5;
+  --primary-foreground: #1c2128;
+  --secondary: #373e47;
+  --muted: #2d333b;
+  --muted-foreground: color-mix(in oklch, #909dab 80%, #adbac7);
+  --destructive: #f47067;
+  --info: #6cb6ff;
+  --success: #57ab5a;
+  --teal: #39c5cf;
+  --warning: #c69026;
+  --brand: #539bf5;
+  --brand-strong: #539bf5;
+  --brand-foreground: #1c2128;
+  --border: color-mix(in oklch, #adbac7 13%, transparent);
+  --chart-1: #539bf5;
+  --chart-2: #b083f0;
+  --chart-3: #39c5cf;
+  --chart-4: #c69026;
+  --chart-5: #909dab;
+}
+
+/* GitHub Dark High Contrast. */
+[data-palette="githubHighContrast-dark"],
+[data-palette="githubHighContrast-light"] .dark {
+  --background: #010409;
+  --foreground: #f0f3f6;
+  --card: #0a0c10;
+  --popover: #0a0c10;
+  --popover-field: #010409;
+  --primary: #71b7ff;
+  --primary-foreground: #010409;
+  --secondary: #272b33;
+  --muted: #161a21;
+  --muted-foreground: #d9dee3;
+  --destructive: #ff9492;
+  --info: #91cbff;
+  --success: #26cd4d;
+  --teal: #39c5cf;
+  --warning: #f0b72f;
+  --brand: #71b7ff;
+  --brand-strong: #71b7ff;
+  --brand-foreground: #010409;
+  --border: color-mix(in oklch, #f0f3f6 35%, transparent);
+  --chart-1: #71b7ff;
+  --chart-2: #cb9eff;
+  --chart-3: #39c5cf;
+  --chart-4: #f0b72f;
+  --chart-5: #d9dee3;
+}
+
+/* GitHub Dark Colorblind: orange for expenses and blue for income. */
+[data-palette="githubColorblind-dark"],
+[data-palette="githubColorblind-light"] .dark {
+  --background: #010409;
+  --foreground: #c9d1d9;
+  --card: #0d1117;
+  --popover: #161b22;
+  --popover-field: #010409;
+  --primary: #58a6ff;
+  --primary-foreground: #010409;
+  --secondary: #21262d;
+  --muted: #161b22;
+  --muted-foreground: color-mix(in oklch, #b1bac4 80%, #6e7681);
+  --destructive: #ec8e2c;
+  --info: #39c5cf;
+  --success: #58a6ff;
+  --teal: #56d4dd;
+  --warning: #d29922;
+  --brand: #58a6ff;
+  --brand-strong: #58a6ff;
+  --brand-foreground: #010409;
+  --border: color-mix(in oklch, #c9d1d9 13%, transparent);
+  --chart-1: #58a6ff;
+  --chart-2: #bc8cff;
+  --chart-3: #39c5cf;
+  --chart-4: #d29922;
+  --chart-5: #b1bac4;
+}
+
+/* GitHub Dark (Legacy). */
+[data-palette="githubLegacy-dark"],
+[data-palette="githubLegacy-light"] .dark {
+  --background: #1f2428;
+  --foreground: #d1d5da;
+  --card: #24292e;
+  --popover: #2f363d;
+  --popover-field: #1b1f23;
+  --primary: #79b8ff;
+  --primary-foreground: #1f2428;
+  --secondary: #444d56;
+  --muted: #2f363d;
+  --muted-foreground: color-mix(in oklch, #959da5 85%, #d1d5da);
+  --destructive: #f97583;
+  --info: #79b8ff;
+  --success: #34d058;
+  --teal: #39c5cf;
+  --warning: #ffea7f;
+  --brand: #79b8ff;
+  --brand-strong: #79b8ff;
+  --brand-foreground: #1f2428;
+  --border: color-mix(in oklch, #d1d5da 13%, transparent);
+  --chart-1: #79b8ff;
+  --chart-2: #b392f0;
+  --chart-3: #39c5cf;
+  --chart-4: #ffea7f;
+  --chart-5: #959da5;
+}

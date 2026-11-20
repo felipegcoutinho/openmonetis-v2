@@ -1,0 +1,27 @@
+/* Moonfly. */
+[data-palette="moonfly-dark"] {
+  --background: #080808;
+  --foreground: #bdbdbd;
+  --card: #121212;
+  --popover: #1c1c1c;
+  --popover-field: #050505;
+  --primary: #80a0ff;
+  --primary-foreground: #080808;
+  --secondary: #303030;
+  --muted: #1c1c1c;
+  --muted-foreground: #949494;
+  --destructive: #ff5454;
+  --info: #74b2ff;
+  --success: #8cc85f;
+  --teal: #79dac8;
+  --warning: #e3c78a;
+  --brand: #80a0ff;
+  --brand-strong: #80a0ff;
+  --brand-foreground: #080808;
+  --border: color-mix(in oklch, #bdbdbd 13%, transparent);
+  --chart-1: #80a0ff;
+  --chart-2: #cf87e8;
+  --chart-3: #79dac8;
+  --chart-4: #e3c78a;
+  --chart-5: #949494;
+}

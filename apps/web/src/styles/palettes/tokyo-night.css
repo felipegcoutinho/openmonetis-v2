@@ -1,0 +1,113 @@
+/* Tokyo Night Day. */
+[data-palette="tokyoNight-light"] {
+  --background: #e1e2e7;
+  --foreground: #3760bf;
+  --card: color-mix(in oklch, #e1e2e7 50%, white);
+  --popover: color-mix(in oklch, #e1e2e7 50%, white);
+  --primary: color-mix(in oklch, #2e7de9 72%, #1a1b26);
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in oklch, #e1e2e7 65%, #b7c1e3);
+  --muted: color-mix(in oklch, #e1e2e7 80%, #b7c1e3);
+  --muted-foreground: color-mix(in oklch, #6172b0 70%, #1a1b26);
+  --destructive: color-mix(in oklch, #f52a65 62%, #1a1b26);
+  --info: color-mix(in oklch, #2e7de9 72%, #1a1b26);
+  --success: color-mix(in oklch, #587539 82%, #1a1b26);
+  --teal: color-mix(in oklch, #007197 82%, #1a1b26);
+  --warning: color-mix(in oklch, #8c6c3e 72%, #1a1b26);
+  --brand: color-mix(in oklch, #2e7de9 72%, #1a1b26);
+  --brand-strong: color-mix(in oklch, #2e7de9 72%, #1a1b26);
+  --brand-foreground: #ffffff;
+  --border: color-mix(in oklch, #3760bf 20%, transparent);
+  --chart-1: #2e7de9;
+  --chart-2: #9854f1;
+  --chart-3: #007197;
+  --chart-4: #8c6c3e;
+  --chart-5: #6172b0;
+  --financial-summary-neutral: #3760bf;
+  --financial-summary-neutral-foreground: #ffffff;
+}
+
+/* Tokyo Night. */
+[data-palette="tokyoNight-dark"],
+[data-palette="tokyoNight-light"] .dark {
+  --background: #1a1b26;
+  --foreground: #c0caf5;
+  --card: color-mix(in oklch, #1a1b26 70%, #292e42);
+  --popover: color-mix(in oklch, #1a1b26 70%, #292e42);
+  --popover-field: #16161e;
+  --primary: #7aa2f7;
+  --primary-foreground: #15161e;
+  --secondary: #292e42;
+  --muted: color-mix(in oklch, #1a1b26 60%, #292e42);
+  --muted-foreground: color-mix(in oklch, #a9b1d6 85%, #414868);
+  --destructive: #f7768e;
+  --info: #7dcfff;
+  --success: #9ece6a;
+  --teal: color-mix(in oklch, #7dcfff 60%, #9ece6a);
+  --warning: #e0af68;
+  --brand: #7aa2f7;
+  --brand-strong: #7aa2f7;
+  --brand-foreground: #15161e;
+  --border: color-mix(in oklch, #c0caf5 13%, transparent);
+  --chart-1: #7aa2f7;
+  --chart-2: #bb9af7;
+  --chart-3: #7dcfff;
+  --chart-4: #e0af68;
+  --chart-5: #a9b1d6;
+}
+
+/* Tokyo Night Storm. */
+[data-palette="tokyoNightStorm-dark"] {
+  --background: #24283b;
+  --foreground: #c0caf5;
+  --card: #292e42;
+  --popover: #292e42;
+  --popover-field: #1f2335;
+  --primary: #7aa2f7;
+  --primary-foreground: #1d202f;
+  --secondary: #3b4261;
+  --muted: color-mix(in oklch, #24283b 50%, #3b4261);
+  --muted-foreground: color-mix(in oklch, #a9b1d6 85%, #414868);
+  --destructive: #f7768e;
+  --info: #7dcfff;
+  --success: #9ece6a;
+  --teal: color-mix(in oklch, #7dcfff 60%, #9ece6a);
+  --warning: #e0af68;
+  --brand: #7aa2f7;
+  --brand-strong: #7aa2f7;
+  --brand-foreground: #1d202f;
+  --border: color-mix(in oklch, #c0caf5 13%, transparent);
+  --chart-1: #7aa2f7;
+  --chart-2: #bb9af7;
+  --chart-3: #7dcfff;
+  --chart-4: #e0af68;
+  --chart-5: #a9b1d6;
+}
+
+/* Tokyo Night Moon. */
+[data-palette="tokyoNightMoon-dark"] {
+  --background: #222436;
+  --foreground: #c8d3f5;
+  --card: color-mix(in oklch, #222436 60%, #2f334d);
+  --popover: color-mix(in oklch, #222436 60%, #2f334d);
+  --popover-field: #1e2030;
+  --primary: #82aaff;
+  --primary-foreground: #1b1d2b;
+  --secondary: color-mix(in oklch, #2f334d 60%, #444a73);
+  --muted: #2f334d;
+  --muted-foreground: color-mix(in oklch, #828bb8 60%, #c8d3f5);
+  --destructive: #ff757f;
+  --info: #86e1fc;
+  --success: #c3e88d;
+  --teal: color-mix(in oklch, #86e1fc 60%, #c3e88d);
+  --warning: #ffc777;
+  --brand: #82aaff;
+  --brand-strong: #82aaff;
+  --brand-foreground: #1b1d2b;
+  --border: color-mix(in oklch, #c8d3f5 13%, transparent);
+  --chart-1: #82aaff;
+  --chart-2: #c099ff;
+  --chart-3: #86e1fc;
+  --chart-4: #ffc777;
+  --chart-5: #828bb8;
+}

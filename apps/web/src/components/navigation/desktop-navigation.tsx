@@ -12,7 +12,7 @@ import { NavLink } from "./nav-link";
 import {
   desktopNavigationActiveClassName,
   desktopNavigationItemClassName,
-  desktopNavigationPopupClassName,
+  desktopNavigationPanelClassName,
   previewNavigationSections,
 } from "./navbar-options";
 import { NavigationSectionItems } from "./navigation-section-items";
@@ -21,15 +21,11 @@ import { PreviewNavigationMenu } from "./preview-navigation-menu";
 export function DesktopNavigation({
   location,
   openNavigationSection,
-  navigationPopupVariant,
   setOpenNavigationSection,
-  setNavigationPopupVariant,
 }: {
   location: { pathname: string };
   openNavigationSection: string | null;
-  navigationPopupVariant: "default" | "preview";
   setOpenNavigationSection: Dispatch<SetStateAction<string | null>>;
-  setNavigationPopupVariant: Dispatch<SetStateAction<"default" | "preview">>;
 }) {
   return (
     <nav aria-label="Navegação principal" className="hidden min-w-0 justify-self-center xl:flex">
@@ -37,20 +33,9 @@ export function DesktopNavigation({
         className="justify-start"
         closeDelay={50}
         delay={30}
-        onValueChange={(value) => {
-          const nextSection = String(value ?? "") || null;
-          setOpenNavigationSection(nextSection);
-          if (nextSection) {
-            setNavigationPopupVariant(
-              previewNavigationSections.has(nextSection) ? "preview" : "default",
-            );
-          }
-        }}
-        popupClassName={
-          navigationPopupVariant === "preview"
-            ? "border-0 bg-transparent shadow-none"
-            : desktopNavigationPopupClassName
-        }
+        onValueChange={(value) => setOpenNavigationSection(String(value ?? "") || null)}
+        // Every section draws its own panel, so all four menus share the same surface.
+        popupClassName="border-0 bg-transparent shadow-none"
       >
         <NavigationMenuList className="gap-1">
           <NavigationMenuItem>
@@ -78,15 +63,13 @@ export function DesktopNavigation({
                 <NavigationMenuTrigger
                   className={cn(
                     desktopNavigationItemClassName,
-                    "focus:bg-muted/70 data-open:bg-muted/70 data-popup-open:bg-muted/70 [&>svg]:size-3 [&>svg]:text-current",
+                    "[&>svg]:size-3 [&>svg]:text-current",
                     sectionActive && desktopNavigationActiveClassName,
                   )}
                 >
                   {section.label}
                 </NavigationMenuTrigger>
-                <NavigationMenuContent
-                  className={previewNavigationSections.has(section.label) ? "p-0" : "p-2"}
-                >
+                <NavigationMenuContent className="p-0">
                   {previewNavigationSections.has(section.label) ? (
                     <PreviewNavigationMenu
                       isOpen={openNavigationSection === section.label}
@@ -94,11 +77,13 @@ export function DesktopNavigation({
                       pathname={location.pathname}
                     />
                   ) : (
-                    <NavigationSectionItems
-                      className="w-92 max-w-[calc(100vw-2rem)]"
-                      items={section.items}
-                      pathname={location.pathname}
-                    />
+                    <div className="w-92 max-w-[calc(100vw-2rem)] p-1">
+                      <NavigationSectionItems
+                        className={desktopNavigationPanelClassName}
+                        items={section.items}
+                        pathname={location.pathname}
+                      />
+                    </div>
                   )}
                 </NavigationMenuContent>
               </NavigationMenuItem>

@@ -18,6 +18,7 @@ import { getInitials } from "@/lib/name-presentation";
 import { cn } from "@/lib/utils";
 import { isPathActive, type NavLinkItem } from "./nav-items";
 import { NavLink } from "./nav-link";
+import { desktopNavigationPanelClassName } from "./navbar-options";
 
 type NavigationPreview = "cards" | "accounts" | "people";
 
@@ -51,7 +52,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       }}
       onPointerLeave={() => setPreview(null)}
     >
-      <div className="grid content-start gap-1 material rounded-lg border shadow-menu p-1.5">
+      <div className={cn("grid content-start gap-1", desktopNavigationPanelClassName)}>
         {items.map((item) => {
           const itemPreview = previewByHref[item.href];
           const active = !item.isShortcut && isPathActive(pathname, item.href);
@@ -89,7 +90,7 @@ export function PreviewNavigationMenu({ isOpen, items, pathname }: PreviewNaviga
       </div>
 
       {preview ? (
-        <div className="material rounded-lg border shadow-menu p-1.5">
+        <div className={desktopNavigationPanelClassName}>
           {preview === "cards" ? <CardsPreview enabled={isOpen} /> : null}
           {preview === "accounts" ? <AccountsPreview enabled={isOpen} /> : null}
           {preview === "people" ? <PeoplePreview enabled={isOpen} /> : null}

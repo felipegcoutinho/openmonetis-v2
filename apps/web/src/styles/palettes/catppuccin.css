@@ -1,0 +1,57 @@
+/* Catppuccin Latte. */
+[data-palette="catppuccin-light"] {
+  --background: #eff1f5;
+  --foreground: #4c4f69;
+  --card: color-mix(in oklch, #eff1f5 45%, white);
+  --popover: #eff1f5;
+  --primary: #8839ef;
+  --primary-foreground: #eff1f5;
+  --secondary: #e6e9ef;
+  --muted: #e6e9ef;
+  --muted-foreground: #5c5f77;
+  --destructive: #d20f39;
+  --info: color-mix(in oklch, #1e66f5 85%, #4c4f69);
+  --success: color-mix(in oklch, #40a02b 45%, #4c4f69);
+  --teal: color-mix(in oklch, #179299 55%, #4c4f69);
+  --warning: color-mix(in oklch, #df8e1d 36%, #4c4f69);
+  --brand: #8839ef;
+  --brand-strong: #8839ef;
+  --brand-foreground: #eff1f5;
+  --border: color-mix(in oklch, #4c4f69 20%, transparent);
+  --chart-1: #8839ef;
+  --chart-2: #1e66f5;
+  --chart-3: #179299;
+  --chart-4: color-mix(in oklch, #fe640b 80%, #4c4f69);
+  --chart-5: color-mix(in oklch, #ea76cb 70%, #4c4f69);
+  --financial-summary-neutral: #4c4f69;
+  --financial-summary-neutral-foreground: #eff1f5;
+}
+
+/* Catppuccin Mocha. */
+[data-palette="catppuccin-dark"],
+[data-palette="catppuccin-light"] .dark {
+  --background: #1e1e2e;
+  --foreground: #cdd6f4;
+  --card: color-mix(in oklch, #1e1e2e 55%, #313244);
+  --popover: color-mix(in oklch, #1e1e2e 70%, #313244);
+  --popover-field: #181825;
+  --primary: #cba6f7;
+  --primary-foreground: #11111b;
+  --secondary: #45475a;
+  --muted: #313244;
+  --muted-foreground: #a6adc8;
+  --destructive: #f38ba8;
+  --info: #89b4fa;
+  --success: #a6e3a1;
+  --teal: #94e2d5;
+  --warning: #f9e2af;
+  --brand: #cba6f7;
+  --brand-strong: #cba6f7;
+  --brand-foreground: #11111b;
+  --border: color-mix(in oklch, #cdd6f4 12%, transparent);
+  --chart-1: #cba6f7;
+  --chart-2: #89b4fa;
+  --chart-3: #94e2d5;
+  --chart-4: #fab387;
+  --chart-5: #f5c2e7;
+}

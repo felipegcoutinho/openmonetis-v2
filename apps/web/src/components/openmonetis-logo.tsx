@@ -20,6 +20,7 @@ export function OpenMonetisLogo({
     >
       <Image
         alt=""
+        data-brand-mark=""
         className={cn(
           "h-9 w-auto shrink-0 object-contain",
           onPrimary && "brightness-0 saturate-0 dark:brightness-100 dark:saturate-100",

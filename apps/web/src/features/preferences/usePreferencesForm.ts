@@ -6,18 +6,22 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useTheme } from "@/components/theme-provider";
 import { useUpdateUserPreferencesMutation } from "./preferences.mutations";
-import { preferencesMutationErrorMessage } from "./preferences.presentation";
+import {
+  getAppearance,
+  getFormPreferences,
+  preferencesMutationErrorMessage,
+} from "./preferences.presentation";
 import { defaultUserPreferencesQueryOptions } from "./preferences.queries";
+import { useSaveAppearance } from "./useSaveAppearance";
 
 export function usePreferencesForm(preferences: UserPreferencesOutput) {
   const queryClient = useQueryClient();
   const updatePreferences = useUpdateUserPreferencesMutation();
-  const { setTheme } = useTheme();
+  const { saveAppearance } = useSaveAppearance();
   const [isRestoring, setIsRestoring] = useState(false);
   const form = useForm({
-    defaultValues: preferences,
+    defaultValues: getFormPreferences(preferences),
     validators: {
       onSubmit: ({ value }) =>
         UpdateUserPreferencesInputSchema.safeParse(value).success
@@ -29,16 +33,14 @@ export function usePreferencesForm(preferences: UserPreferencesOutput) {
       try {
         const changes = Object.fromEntries(
           Object.entries(value).filter(
-            ([key, entry]) =>
-              entry !== form.options.defaultValues?.[key as keyof UserPreferencesOutput],
+            ([key, entry]) => entry !== form.options.defaultValues?.[key as keyof typeof value],
           ),
         );
         if (Object.keys(changes).length === 0) return;
         const saved = await updatePreferences.mutateAsync(
           UpdateUserPreferencesInputSchema.parse(changes),
         );
-        form.reset(saved);
-        setTheme(saved.theme);
+        form.reset(getFormPreferences(saved));
         toast.success("Preferências salvas");
       } catch (error) {
         toast.error(preferencesMutationErrorMessage(error));
@@ -50,10 +52,10 @@ export function usePreferencesForm(preferences: UserPreferencesOutput) {
     setIsRestoring(true);
     try {
       const defaults = await queryClient.fetchQuery(defaultUserPreferencesQueryOptions());
-      form.reset(defaults, { keepDefaultValues: true });
-      setTheme(defaults.theme);
+      form.reset(getFormPreferences(defaults), { keepDefaultValues: true });
+      saveAppearance(getAppearance(defaults));
       toast.info("Padrões carregados", {
-        description: "Salve para aplicar ou descarte as alterações.",
+        description: "O tema padrão já foi aplicado. Salve para aplicar o restante.",
       });
     } catch {
       toast.error("Não foi possível carregar os padrões. Tente novamente.");
@@ -62,10 +64,9 @@ export function usePreferencesForm(preferences: UserPreferencesOutput) {
     }
   }
 
-  /** Returns the form to the saved values, including the theme shown as a preview. */
+  /** Returns the form to the saved values. The appearance is already saved, so it stays. */
   function discardChanges() {
     form.reset();
-    setTheme(form.options.defaultValues?.theme ?? preferences.theme);
   }
 
   return { form, isRestoring, restoreDefaults, discardChanges };

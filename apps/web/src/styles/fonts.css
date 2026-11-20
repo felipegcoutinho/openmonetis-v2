@@ -33,8 +33,18 @@
   --font-aeonik: "Aeonik Fono", ui-monospace, monospace;
   --font-geist: "Geist Variable", system-ui, sans-serif;
   --font-code: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
 
+/* Every palette scope starts from these, so a theme swatch never inherits the page's faces. */
+:root,
+[data-palette] {
   --font-app-sans: var(--font-geist);
   --font-app-mono: var(--font-aeonik);
   --font-app-heading: var(--font-geist);
+}
+
+/* The Terminal palette sets every text in the monospace face. */
+[data-palette="terminal-dark"] {
+  --font-app-sans: var(--font-app-mono);
+  --font-app-heading: var(--font-app-mono);
 }

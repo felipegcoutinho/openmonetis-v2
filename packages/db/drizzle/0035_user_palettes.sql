@@ -1,0 +1,2 @@
+ALTER TABLE "user_preferences" ADD COLUMN "light_palette" text DEFAULT 'openmonetis' NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "dark_palette" text DEFAULT 'openmonetis' NOT NULL;

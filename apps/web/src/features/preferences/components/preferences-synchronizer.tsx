@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { usePrivacyMode } from "@/components/privacy-provider";
 import { useTheme } from "@/components/theme-provider";
 import { authClient } from "@/lib/auth-client";
+import { appearanceMutationKey } from "../preferences.mutations";
+import { getAppearance } from "../preferences.presentation";
 import { userPreferencesQueryOptions } from "../preferences.queries";
 
 export function PreferencesSynchronizer() {
@@ -10,12 +12,18 @@ export function PreferencesSynchronizer() {
   const userId = session.data?.user.id;
   const preferencesQuery = useQuery(userPreferencesQueryOptions(Boolean(userId)));
   const { setPrivacyModeEnabled } = usePrivacyMode();
-  const { setTheme } = useTheme();
+  const { setAppearance } = useTheme();
   const privacyInitializedForUser = useRef<string | null>(null);
+  // While appearance saves are queued, the answer to an earlier one must not repaint the app over
+  // the newer choice already on screen. Once the queue empties, the saved appearance applies, which
+  // also restores it after a failed save.
+  const savingAppearance = useIsMutating({ mutationKey: appearanceMutationKey }) > 0;
 
   useEffect(() => {
-    if (preferencesQuery.data) setTheme(preferencesQuery.data.theme);
-  }, [preferencesQuery.data, setTheme]);
+    if (preferencesQuery.data && !savingAppearance) {
+      setAppearance(getAppearance(preferencesQuery.data));
+    }
+  }, [preferencesQuery.data, savingAppearance, setAppearance]);
 
   useEffect(() => {
     if (!userId) {

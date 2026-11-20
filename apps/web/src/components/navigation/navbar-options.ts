@@ -1,15 +1,22 @@
 import { cn } from "@/lib/utils";
 
 export const headerIconButtonClassName =
-  "max-md:size-11 md:size-10 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground";
+  "max-md:size-11 md:size-10 rounded-md text-muted-foreground hover:bg-foreground/6 hover:text-foreground aria-expanded:bg-foreground/8 aria-expanded:text-foreground";
 
+/*
+ * Header item backgrounds are a tint of the foreground, never `--muted` or `--brand`: those vary
+ * from near-invisible to saturated between palettes, while a foreground tint keeps the same
+ * contrast against the navbar in every one. The active section is marked by its text colour.
+ * A trigger keeps focus after its menu closes, so focus alone paints nothing (only keyboard focus).
+ */
 export const desktopNavigationItemClassName =
-  "inline-flex h-8 items-center justify-center rounded-md border-0 bg-transparent px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring motion-reduce:transition-none";
+  "inline-flex h-8 items-center justify-center rounded-md border-0 bg-transparent px-3 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-foreground/6 focus:bg-transparent hover:focus:bg-foreground/6 focus-visible:bg-foreground/6 data-open:bg-foreground/8 data-popup-open:bg-foreground/8 data-open:hover:bg-foreground/8 data-popup-open:hover:bg-foreground/8 data-open:focus:bg-foreground/8 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring motion-reduce:transition-none";
 
 export const desktopNavigationActiveClassName =
-  "bg-brand/10 text-brand-strong hover:bg-brand/15 focus:bg-brand/10 data-open:bg-brand/15 data-popup-open:bg-brand/15 data-open:hover:bg-brand/15 data-popup-open:hover:bg-brand/15 data-open:focus:bg-brand/15";
+  "bg-foreground/8 text-brand-strong hover:bg-foreground/8 focus:bg-foreground/8 hover:focus:bg-foreground/8";
 
-export const desktopNavigationPopupClassName = "material rounded-lg shadow-menu";
+/** Surface of every desktop navigation menu; the preview menus use it for each of their panels. */
+export const desktopNavigationPanelClassName = "material rounded-lg border shadow-menu p-1.5";
 
 export const previewNavigationSections = new Set(["Finanças", "Organização"]);
 

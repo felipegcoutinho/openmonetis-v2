@@ -24,3 +24,20 @@ export function useUpdateUserPreferencesMutation() {
     onSuccess: updateCache,
   });
 }
+
+/**
+ * Saves appearance changes one after another, so a slow earlier answer never lands after a newer
+ * choice and paints the app with a theme the person already left.
+ */
+export const appearanceMutationKey = ["preferences", "appearance"] as const;
+
+export function useUpdateAppearanceMutation() {
+  const updateCache = usePreferenceMutationCache();
+
+  return useMutation({
+    mutationFn: (input: UpdateUserPreferencesInput) => updateUserPreferences(input),
+    mutationKey: appearanceMutationKey,
+    onSuccess: updateCache,
+    scope: { id: "appearance" },
+  });
+}

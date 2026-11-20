@@ -1,0 +1,27 @@
+/* Vesper: peppermint and orange on near-black. */
+[data-palette="vesper-dark"] {
+  --background: #101010;
+  --foreground: #ffffff;
+  --card: #161616;
+  --popover: #1c1c1c;
+  --popover-field: #0b0b0b;
+  --primary: #ffc799;
+  --primary-foreground: #101010;
+  --secondary: #282828;
+  --muted: #1c1c1c;
+  --muted-foreground: #a0a0a0;
+  --destructive: #ff8080;
+  --info: #b9aeda;
+  --success: #99ffe4;
+  --teal: #90b99f;
+  --warning: #e6b99d;
+  --brand: #ffc799;
+  --brand-strong: #ffc799;
+  --brand-foreground: #101010;
+  --border: color-mix(in oklch, #ffffff 12%, transparent);
+  --chart-1: #ffc799;
+  --chart-2: #b9aeda;
+  --chart-3: #ecaad6;
+  --chart-4: #90b99f;
+  --chart-5: #a0a0a0;
+}

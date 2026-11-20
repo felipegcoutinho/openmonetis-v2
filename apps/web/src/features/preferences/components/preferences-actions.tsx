@@ -23,7 +23,7 @@ export function PreferencesActions({
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-sm">
-          O tema aparece como prévia. As demais preferências valem ao salvar.
+          O tema é salvo assim que você escolhe. As demais preferências valem ao salvar.
         </p>
         <Button
           disabled={isBusy}

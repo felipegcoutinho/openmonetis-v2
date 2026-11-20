@@ -1,0 +1,83 @@
+/*
+ * Palettes, one family per file in `palettes/`. The root carries `data-palette="<palette>-<mode>"`
+ * for the active one, and the same attribute on any element paints it with that palette (the
+ * swatches in Preferences). Popups are always dark (`.dark`), so a light palette also paints them
+ * with the dark version of its own family.
+ *
+ * The OpenMonetis palette is the fallback: its root selectors sit inside `:where()`, so any other
+ * palette overrides it without fighting specificity. A palette only declares its own colours; the
+ * tokens built from them (material, accent, ring, chart series, press feedback) are declared once
+ * in `palettes/openmonetis.css` and resolve against whichever palette is active.
+ *
+ * Third-party palettes follow their authors' published terminal colours. Income stays green and
+ * expenses red in every one of them (except where a palette is monochrome or made for colour
+ * blindness): only the tone follows the palette. Colours the original reserves for terminal
+ * glyphs are deepened where they sit on the canvas. A palette that changes the typeface does it in
+ * `fonts.css`; one that changes the corners sets `--radius` in its own file.
+ *
+ * The rules after the imports apply to every palette, so they stay last.
+ */
+
+@import "./palettes/openmonetis.css";
+@import "./palettes/absolutely.css";
+@import "./palettes/catppuccin.css";
+@import "./palettes/everforest.css";
+@import "./palettes/flexoki.css";
+@import "./palettes/github.css";
+@import "./palettes/gotham.css";
+@import "./palettes/gruvbox.css";
+@import "./palettes/jellybeans.css";
+@import "./palettes/monokai.css";
+@import "./palettes/moonfly.css";
+@import "./palettes/nord.css";
+@import "./palettes/posterpole.css";
+@import "./palettes/rose-pine.css";
+@import "./palettes/terminal.css";
+@import "./palettes/tokyo-night.css";
+@import "./palettes/vesper.css";
+
+/*
+ * Popups always render with `.dark` tokens, so the menu shadow follows the app theme on the root
+ * element instead: the darker canvas needs a denser shadow to keep the same lift.
+ */
+:root.dark {
+  --menu-shadow: 0 2px 6px oklch(0% 0 0 / 0.2), 0 16px 40px -6px oklch(0% 0 0 / 0.5);
+}
+
+/* Field popups sit darker than dialogs so an open list stands out inside a form. */
+.dark
+:is(
+  [data-slot="select-content"],
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="hover-card-content"]
+) {
+  --popover: var(--popover-field);
+  --material: color-mix(in srgb, var(--popover-field) 86%, transparent);
+}
+
+/* Stronger hairlines for every palette. Declared last, so it wins over each palette's own. */
+@media (prefers-contrast: more) {
+  :where(:root),
+  [data-palette$="-light"] {
+    --border: color-mix(in oklch, var(--foreground) 45%, transparent);
+  }
+
+  :where(:root.dark, :root:not(.dark) .dark),
+  [data-palette$="-dark"],
+  [data-palette$="-light"] .dark {
+    --border: color-mix(in oklch, var(--foreground) 30%, transparent);
+  }
+}
+
+/*
+ * The coral symbol belongs to the OpenMonetis palette. Elsewhere it turns monochrome, like the
+ * wordmark, so it never clashes with another palette's accent.
+ */
+:root[data-palette]:not([data-palette^="openmonetis-"]) [data-brand-mark] {
+  filter: brightness(0);
+}
+
+:root.dark[data-palette]:not([data-palette^="openmonetis-"]) [data-brand-mark] {
+  filter: brightness(0) invert(1);
+}

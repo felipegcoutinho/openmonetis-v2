@@ -1,6 +1,49 @@
 import { type PaymentMethod, paymentMethods } from "./transactions";
 
 export const applicationThemes = ["system", "light", "dark"] as const;
+/**
+ * Colour palettes, chosen separately for each mode: the light one applies while the app is light
+ * and the dark one while it is dark. Some palettes only exist in one mode.
+ */
+export const lightPalettes = [
+  "openmonetis",
+  "absolutely",
+  "catppuccin",
+  "everforest",
+  "flexoki",
+  "github",
+  "githubHighContrast",
+  "githubColorblind",
+  "githubLegacy",
+  "rosePine",
+  "tokyoNight",
+] as const;
+export const darkPalettes = [
+  "openmonetis",
+  "absolutely",
+  "catppuccin",
+  "everforest",
+  "flexoki",
+  "github",
+  "githubDimmed",
+  "githubHighContrast",
+  "githubColorblind",
+  "githubLegacy",
+  "gotham",
+  "gruvbox",
+  "jellybeans",
+  "monokai",
+  "moonfly",
+  "nord",
+  "posterpole",
+  "posterpoleGray",
+  "rosePine",
+  "terminal",
+  "tokyoNight",
+  "tokyoNightStorm",
+  "tokyoNightMoon",
+  "vesper",
+] as const;
 export const notificationDueSoonDayOptions = [1, 3, 5, 7] as const;
 export const transactionPageSizeOptions = [20, 30, 50] as const;
 export const mobileShortcutDestinations = [
@@ -24,6 +67,8 @@ export const startPageDestinations = [
 ] as const;
 
 export type ApplicationTheme = (typeof applicationThemes)[number];
+export type LightPalette = (typeof lightPalettes)[number];
+export type DarkPalette = (typeof darkPalettes)[number];
 export type NotificationDueSoonDays = (typeof notificationDueSoonDayOptions)[number];
 export type TransactionPageSize = (typeof transactionPageSizeOptions)[number];
 export type MobileShortcutDestination = (typeof mobileShortcutDestinations)[number];
@@ -31,6 +76,8 @@ export type StartPageDestination = (typeof startPageDestinations)[number];
 
 export type UserPreferences = {
   theme: ApplicationTheme;
+  lightPalette: LightPalette;
+  darkPalette: DarkPalette;
   hideValuesOnStart: boolean;
   defaultPaymentMethod: PaymentMethod;
   defaultAccountId: string | null;
@@ -43,6 +90,8 @@ export type UserPreferences = {
 
 export type UserPreferencesRecord = {
   theme: string;
+  lightPalette: string;
+  darkPalette: string;
   hideValuesOnStart: boolean;
   defaultPaymentMethod: string;
   defaultAccountId: string | null;
@@ -54,6 +103,8 @@ export type UserPreferencesRecord = {
 };
 
 const applicationThemeSet = new Set<string>(applicationThemes);
+const lightPaletteSet = new Set<string>(lightPalettes);
+const darkPaletteSet = new Set<string>(darkPalettes);
 const notificationDueSoonDaySet = new Set<number>(notificationDueSoonDayOptions);
 const paymentMethodSet = new Set<string>(paymentMethods);
 const transactionPageSizeSet = new Set<number>(transactionPageSizeOptions);
@@ -63,6 +114,8 @@ const startPageDestinationSet = new Set<string>(startPageDestinations);
 export function createDefaultUserPreferences(): UserPreferences {
   return {
     theme: "system",
+    lightPalette: "openmonetis",
+    darkPalette: "openmonetis",
     hideValuesOnStart: false,
     defaultPaymentMethod: "credit_card",
     defaultAccountId: null,
@@ -84,6 +137,12 @@ export function normalizeUserPreferences(
     theme: applicationThemeSet.has(preferences.theme ?? "")
       ? (preferences.theme as ApplicationTheme)
       : defaults.theme,
+    lightPalette: lightPaletteSet.has(preferences.lightPalette ?? "")
+      ? (preferences.lightPalette as LightPalette)
+      : defaults.lightPalette,
+    darkPalette: darkPaletteSet.has(preferences.darkPalette ?? "")
+      ? (preferences.darkPalette as DarkPalette)
+      : defaults.darkPalette,
     hideValuesOnStart:
       typeof preferences.hideValuesOnStart === "boolean"
         ? preferences.hideValuesOnStart

@@ -1,0 +1,27 @@
+/* Gruvbox dark. */
+[data-palette="gruvbox-dark"] {
+  --background: #282828;
+  --foreground: #ebdbb2;
+  --card: #32302f;
+  --popover: #32302f;
+  --popover-field: #1d2021;
+  --primary: #fe8019;
+  --primary-foreground: #282828;
+  --secondary: #504945;
+  --muted: #3c3836;
+  --muted-foreground: #bdae93;
+  --destructive: color-mix(in oklch, #fb4934 72%, #ebdbb2);
+  --info: #83a598;
+  --success: #b8bb26;
+  --teal: #8ec07c;
+  --warning: #fabd2f;
+  --brand: #fe8019;
+  --brand-strong: #fe8019;
+  --brand-foreground: #282828;
+  --border: color-mix(in oklch, #ebdbb2 12%, transparent);
+  --chart-1: #fe8019;
+  --chart-2: #83a598;
+  --chart-3: #8ec07c;
+  --chart-4: #d3869b;
+  --chart-5: #fabd2f;
+}

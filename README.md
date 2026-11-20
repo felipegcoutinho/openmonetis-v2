@@ -151,6 +151,7 @@ detalhes e as convenções no [`guia de arquitetura`](docs/architecture.md).
 - [`docs/budgets.md`](docs/budgets.md): limites do mês, orçamentos recorrentes e ajustes mensais;
 - [`docs/person-reports.md`](docs/person-reports.md): extrato mensal de cada pessoa externa;
 - [`docs/due-date-rules.md`](docs/due-date-rules.md): calendário compartilhado, ajustes e exceções de vencimento;
+- [`docs/themes.md`](docs/themes.md): modo, temas de cada modo, como adicionar um tema e regras de contraste;
 - [`docs/ai-diagnoses.md`](docs/ai-diagnoses.md): assistente de IA, permissões de dados, serviço
   `openmonetis-ai` e atualização das CLIs;
 - [`docs/companion-api.md`](docs/companion-api.md): contrato do Companion;

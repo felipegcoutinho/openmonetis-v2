@@ -1,0 +1,148 @@
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(175%);
+  }
+}
+
+@keyframes progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Opacity only: a transform here would re-anchor fixed and sticky descendants while it runs. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.375rem);
+  }
+}
+
+@keyframes status-confirm {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@keyframes gauge-marker-in {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+}
+
+/*
+ * Lists enter one item after another; the delay stops growing after the eighth item. The fill is
+ * backwards only, so a finished item keeps no transform and stays out of the stacking order.
+ */
+@utility animate-list-item {
+  animation: list-item-in var(--duration-base) var(--ease-out-strong)
+    calc(var(--list-item-index, 0) * 30ms) backwards;
+
+  &:nth-child(2) {
+    --list-item-index: 1;
+  }
+  &:nth-child(3) {
+    --list-item-index: 2;
+  }
+  &:nth-child(4) {
+    --list-item-index: 3;
+  }
+  &:nth-child(5) {
+    --list-item-index: 4;
+  }
+  &:nth-child(6) {
+    --list-item-index: 5;
+  }
+  &:nth-child(7) {
+    --list-item-index: 6;
+  }
+  &:nth-child(n + 8) {
+    --list-item-index: 7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* Same cascade as animate-list-item, declared once on the container of a grid or list. */
+@utility stagger-children {
+  & > * {
+    animation: list-item-in var(--duration-base) var(--ease-out-strong)
+      calc(var(--list-item-index, 0) * 30ms) backwards;
+  }
+  & > :nth-child(2) {
+    --list-item-index: 1;
+  }
+  & > :nth-child(3) {
+    --list-item-index: 2;
+  }
+  & > :nth-child(4) {
+    --list-item-index: 3;
+  }
+  & > :nth-child(5) {
+    --list-item-index: 4;
+  }
+  & > :nth-child(6) {
+    --list-item-index: 5;
+  }
+  & > :nth-child(7) {
+    --list-item-index: 6;
+  }
+  & > :nth-child(n + 8) {
+    --list-item-index: 7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & > * {
+      animation: none;
+    }
+  }
+}
+
+@utility animate-status-confirm {
+  display: inline-flex;
+  animation: status-confirm var(--duration-base) var(--ease-out-strong) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/*
+ * Reduced motion keeps comprehension cues (opacity, colour) and drops travel and scale from
+ * every enter/exit utility, so popovers, dialogs and toasts cross-fade instead of moving.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /* Unlayered, so it outranks the layered animation utilities without !important. */
+  *,
+  ::before,
+  ::after {
+    --tw-enter-scale: 1;
+    --tw-exit-scale: 1;
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 0;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 0;
+    --tw-enter-rotate: 0;
+    --tw-exit-rotate: 0;
+  }
+}
+
+/*
+ * Theme changes cross-fade the page (`theme-provider.tsx`). Short and eased out, so the new
+ * colours settle quickly; the provider skips it when the person asks for less motion.
+ */
+html:active-view-transition-type(theme)::view-transition-old(root),
+html:active-view-transition-type(theme)::view-transition-new(root) {
+  animation-duration: var(--duration-fast);
+  animation-timing-function: var(--ease-out-strong);
+}

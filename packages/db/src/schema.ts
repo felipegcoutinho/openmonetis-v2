@@ -567,6 +567,10 @@ export const userPreferences = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     theme: applicationTheme("theme").notNull().default("system"),
+    // Palettes are plain text, not enums: the domain owns the list, so adding or retiring a palette
+    // needs no migration, and a retired palette reads back as the default.
+    lightPalette: text("light_palette").notNull().default("openmonetis"),
+    darkPalette: text("dark_palette").notNull().default("openmonetis"),
     hideValuesOnStart: boolean("hide_values_on_start").notNull().default(false),
     defaultPaymentMethod: paymentMethod("default_payment_method").notNull().default("credit_card"),
     defaultAccountId: uuid("default_account_id").references(() => financialAccounts.id, {

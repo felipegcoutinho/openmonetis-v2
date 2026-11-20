@@ -49,6 +49,34 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Lançamentos: no formulário de nova receita, despesa ou edição, uma imagem copiada (como um print)
   pode ser colada com Ctrl+V em qualquer campo para virar anexo. A seção "Etiquetas, anotações e
   anexos" abre sozinha para mostrar o arquivo adicionado.
+- Ajustes > Preferências: temas inspirados em temas de terminal, escolhidos à parte para o modo
+  claro e para o escuro. No claro: OpenMonetis, Absolutely (fundo creme e laranja no estilo do
+  Claude), Catppuccin Latte, Everforest Light, Flexoki Light, GitHub (Light, Light High Contrast,
+  Light Colorblind e Light Legacy), Rosé Pine Dawn e Tokyo Night Day; no escuro: OpenMonetis,
+  Absolutely (grafite quente e laranja no estilo do Claude), Catppuccin Mocha, Everforest Dark,
+  Flexoki Dark, GitHub (Dark, Dark Dimmed, Dark High Contrast, Dark Colorblind e Dark Legacy),
+  Gotham, Gruvbox Dark, Jellybeans, Monokai Classic, Moonfly, Nord, Posterpole (padrão e Gray),
+  Rosé Pine Moon, Terminal (preto, âmbar e verde-fósforo, com cantos retos e todo o texto em fonte
+  monoespaçada), Tokyo Night (Night, Storm e Moon) e Vesper.
+  Claro e escuro aparecem lado a lado, cada um num card com uma miniatura do tema nas cores, fonte
+  e cantos reais e o seletor logo abaixo, e um selo indica o modo em uso; clicar na miniatura
+  também abre a lista, cada opção mostra uma amostra do tema e, ao navegar pela lista com o mouse
+  ou as setas, a miniatura mostra o tema destacado antes da escolha; famílias com várias
+  variantes, como GitHub e Tokyo Night, aparecem agrupadas sob o próprio nome. Receitas continuam
+  verdes e despesas vermelhas, exceto nos temas GitHub Colorblind, que usam azul e laranja como o
+  próprio GitHub faz para daltonismo; os textos mantêm contraste mínimo de 4,5:1 e as séries dos
+  gráficos 3:1, verificados em todos os temas a cada execução dos testes, e fora do tema
+  OpenMonetis o símbolo do logo fica monocromático. O guia `docs/themes.md` descreve como adicionar
+  um tema e as regras de contraste.
+- Aparência ao alcance: o botão de tema do cabeçalho virou um menu com Sistema, Claro e Escuro,
+  mostra o tema em uso e leva a Preferências para trocá-lo; a busca (Ctrl K ou ⌘K) encontra modos
+  e temas pelo nome, e escolher um tema do outro modo já muda para ele. Em Preferências, o modo
+  virou um seletor compacto de uma linha e modo e temas passam a ser salvos na hora, como no
+  cabeçalho e na busca, enquanto as demais preferências continuam valendo ao salvar; ao escolher
+  um tema, a página sugere usar o par dele no outro modo (Catppuccin Latte com Mocha, por
+  exemplo). Trocar de modo ou tema faz uma transição curta, desligada para quem pede menos
+  movimento no sistema. Quando o dispositivo pede mais contraste, Preferências sugere o GitHub
+  High Contrast nos dois modos, com opção de dispensar a sugestão.
 
 ### Alterado
 
@@ -86,9 +114,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   aparelhos com entalhe, também com o celular deitado.
 - Em Ajustes, um e-mail longo não empurra mais o conteúdo para fora da tela no celular.
 - Celular: o formulário de anotação não espalha mais os campos pela altura da tela.
+- Cabeçalho: os quatro menus de navegação abrem com o mesmo fundo translúcido; Lançamentos e
+  Relatórios apareciam opacos, diferentes de Finanças e Organização. O fundo dos itens e botões ao
+  passar o mouse, com o menu aberto ou na seção atual também é igual em todas as paletas, e um
+  menu fechado não deixa mais o item marcado.
 
 ### Notas de atualização
 
+- Banco: a migration `0035_user_palettes.sql` adiciona as colunas de texto `light_palette` e
+  `dark_palette` a `user_preferences`, com padrão `openmonetis`; preferências existentes continuam
+  com a aparência atual. A lista de temas válidos fica no domínio, então novos temas não exigem
+  migration, e um tema retirado que ainda esteja salvo volta ao padrão na leitura.
+- API: `UserPreferencesOutput` e `UpdateUserPreferencesInput` ganham `lightPalette` (11 valores,
+  de `openmonetis` a `tokyoNight`) e `darkPalette` (24 valores, incluindo `absolutely`,
+  `monokai`, `nord`, `terminal`, `vesper`, `tokyoNightStorm` e as variantes `github*`); a lista
+  completa está no contrato OpenAPI. Clientes com validação estrita da resposta devem aceitar os dois campos.
 - Banco: a migration `0034_note_attachments.sql` cria a tabela `note_attachments`, que liga cada
   anotação a anexos do mesmo usuário; nenhum dado existente é alterado. Faça backup antes de
   atualizar e acompanhe `docker compose logs migrator`.
