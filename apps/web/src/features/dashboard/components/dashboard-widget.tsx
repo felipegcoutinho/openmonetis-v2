@@ -29,13 +29,15 @@ export function DashboardWidget({
       <div className="mx-5 border-b border-dotted border-muted-foreground/40">
         <CardHeader className="flex flex-row items-start justify-between gap-3 px-0 pt-5 pb-3">
           <div className="min-w-0">
-            <CardTitle className="flex min-w-0 items-center gap-2 text-[0.9375rem]">
-              {icon ? (
-                <span className="grid size-4 shrink-0 place-items-center text-muted-foreground [&>svg]:size-4">
-                  {icon}
-                </span>
-              ) : null}
-              <span className="truncate">{title}</span>
+            <CardTitle asChild className="flex min-w-0 items-center gap-2 text-[0.9375rem]">
+              <h3>
+                {icon ? (
+                  <span className="grid size-4 shrink-0 place-items-center text-muted-foreground [&>svg]:size-4">
+                    {icon}
+                  </span>
+                ) : null}
+                <span className="truncate">{title}</span>
+              </h3>
             </CardTitle>
             {description ? (
               <CardDescription className="mt-1 text-xs leading-tight">

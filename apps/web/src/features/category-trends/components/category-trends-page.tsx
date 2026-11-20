@@ -2,7 +2,7 @@ import type { ListCategoryTrendsQuery } from "@openmonetis/validators/category-t
 import { useQuery } from "@tanstack/react-query";
 import { Download, FileChartColumn, LineChart, RefreshCw, Table2, Tags } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,8 +30,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container min-w-0">
           <PageHeader
             breadcrumbs={[
@@ -153,7 +152,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
             )
           ) : null}
         </section>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

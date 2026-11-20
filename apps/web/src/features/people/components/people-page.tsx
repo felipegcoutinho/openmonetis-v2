@@ -9,7 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
@@ -65,8 +65,7 @@ export function PeoplePage() {
   const inactivePeople = people.filter((person) => person.status === "inactive");
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             mobileFloatingAction
@@ -121,7 +120,7 @@ export function PeoplePage() {
             </Tabs>
           ) : null}
         </section>
-      </main>
+      </AppShell>
       <PersonDialog person={editing} onOpenChange={changeOpen} onSubmit={save} open={open} />
       <AlertDialog
         onOpenChange={(next) => {

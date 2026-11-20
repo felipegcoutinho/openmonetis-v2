@@ -2,7 +2,7 @@ import type { InboxItemStatus } from "@openmonetis/domain/inbox";
 import { inboxSourceAppNameMaximumLength } from "@openmonetis/domain/inbox";
 import { createFileRoute } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { InboxPage } from "@/features/inbox/components/inbox-page";
 
 export const Route = createFileRoute("/inbox")({
@@ -37,8 +37,7 @@ function InboxRoute() {
   const navigate = Route.useNavigate();
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <InboxPage
           onSearchChange={(next) =>
             navigate({
@@ -53,7 +52,7 @@ function InboxRoute() {
           sourceAppName={search.app}
           status={search.status ?? "pending"}
         />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

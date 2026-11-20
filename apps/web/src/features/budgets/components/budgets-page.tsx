@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -169,8 +169,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             mobileFloatingAction
@@ -274,7 +273,7 @@ export function BudgetsPage({ onPeriodChange, period }: BudgetsPageProps) {
             </>
           ) : null}
         </section>
-      </main>
+      </AppShell>
 
       <BudgetDialog
         budget={editingBudget}

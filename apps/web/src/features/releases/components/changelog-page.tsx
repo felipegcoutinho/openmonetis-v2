@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, History, RefreshCw } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { GithubIcon } from "@/components/github-icon";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,7 @@ export function ChangelogPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container text-left">
           <PageHeader
             breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Novidades" }]}
@@ -160,7 +159,7 @@ export function ChangelogPage() {
             </div>
           ) : null}
         </section>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

@@ -10,7 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -73,8 +73,7 @@ export function CategoriesPage() {
   }
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container min-w-0">
           <PageHeader
             mobileFloatingAction
@@ -158,7 +157,7 @@ export function CategoriesPage() {
             </Tabs>
           ) : null}
         </section>
-      </main>
+      </AppShell>
       <CategoryDialog category={editing} onOpenChange={changeOpen} onSubmit={save} open={open} />
     </ProtectedRoute>
   );

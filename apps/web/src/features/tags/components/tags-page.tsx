@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { SearchInput } from "@/components/search-input";
 import {
@@ -89,8 +89,7 @@ export function TagsPage({
   }
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container min-w-0">
           <PageHeader
             mobileFloatingAction
@@ -232,7 +231,7 @@ export function TagsPage({
             )
           ) : null}
         </section>
-      </main>
+      </AppShell>
       <TagDialog open={open} onOpenChange={setOpen} tag={editing} onSubmit={save} />
       <AlertDialog
         open={Boolean(removing)}

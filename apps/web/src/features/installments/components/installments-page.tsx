@@ -6,7 +6,7 @@ import { useDeferredValue, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -136,8 +136,7 @@ export function InstallmentsPage({ search, onSearchChange }: InstallmentsPagePro
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             breadcrumbs={[
@@ -343,7 +342,7 @@ export function InstallmentsPage({ search, onSearchChange }: InstallmentsPagePro
             </>
           ) : null}
         </section>
-      </main>
+      </AppShell>
       {simulationDialogOpen ? (
         <InstallmentPurchaseSimulationDialog
           onOpenChange={setSimulationDialogOpen}

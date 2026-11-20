@@ -1,3 +1,4 @@
+import { Slot } from "@radix-ui/react-slot";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -33,9 +34,15 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({
+  asChild = false,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & { asChild?: boolean }) {
+  // asChild lets a card title render as a real heading (h2/h3) where it names a page section.
+  const Comp = asChild ? Slot : "div";
   return (
-    <div
+    <Comp
       data-slot="card-title"
       className={cn(
         "font-heading text-base leading-normal font-medium group-data-[size=sm]/card:text-sm",

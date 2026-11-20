@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { TransactionDeepLinkDialog } from "@/features/transactions/components/transaction-deep-link-dialog";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import { validateTransactionsSearch } from "@/features/transactions/transactions.presentation";
@@ -17,8 +17,7 @@ function TransactionsRoute() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <TransactionsContainer
           onSearchChange={(nextSearch) =>
             navigate({
@@ -39,7 +38,7 @@ function TransactionsRoute() {
           }}
           transactionId={search.edit}
         />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

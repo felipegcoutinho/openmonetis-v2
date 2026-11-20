@@ -4,7 +4,7 @@ import { Eye, EyeOff, FileSearch, ListChecks, NotebookPen, Plus, RefreshCw } fro
 import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { SearchInput } from "@/components/search-input";
 import {
@@ -165,8 +165,7 @@ export function NotesPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             mobileFloatingAction
@@ -398,7 +397,7 @@ export function NotesPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

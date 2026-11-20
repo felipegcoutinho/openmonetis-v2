@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,9 +41,8 @@ export function DashboardPage({
 
   return (
     <ProtectedRoute>
-      <main className="relative isolate min-h-svh bg-background">
+      <AppShell className="relative isolate">
         <div aria-hidden="true" className="dashboard-atmosphere hidden md:block" />
-        <Navbar />
         <div className="app-page project-container relative z-10">
           <div className="flex items-center justify-between gap-3 md:hidden">
             <div className="min-w-0 flex-1">
@@ -85,7 +84,7 @@ export function DashboardPage({
           ) : null}
           {isMobile === null ? <DashboardLayoutPlaceholder /> : null}
         </div>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

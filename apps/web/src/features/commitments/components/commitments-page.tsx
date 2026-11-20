@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Gauge } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { EntityLoadError } from "@/components/entity-load-error";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { PeriodRangePicker } from "@/components/period-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,8 +26,7 @@ export function CommitmentsPage({ filters, onChange }: Props) {
   const report = reportQuery.data;
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container min-w-0">
           <PageHeader
             title="Compromissos futuros"
@@ -75,7 +74,7 @@ export function CommitmentsPage({ filters, onChange }: Props) {
             </div>
           )}
         </section>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

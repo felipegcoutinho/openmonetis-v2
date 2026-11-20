@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MoneyValue } from "@/components/money-value";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
@@ -38,8 +38,7 @@ export function CalendarPage({
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             breadcrumbs={[
@@ -102,7 +101,7 @@ export function CalendarPage({
           }}
           open={Boolean(payingBill)}
         />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

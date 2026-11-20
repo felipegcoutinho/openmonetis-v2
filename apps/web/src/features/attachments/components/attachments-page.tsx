@@ -9,7 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
@@ -79,8 +79,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             breadcrumbs={[
@@ -218,7 +217,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
             </section>
           ) : null}
         </section>
-      </main>
+      </AppShell>
 
       {data && previewIndex >= 0 ? (
         <AttachmentPreviewDialog

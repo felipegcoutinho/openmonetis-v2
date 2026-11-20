@@ -9,7 +9,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DueDateRulesPage } from "@/features/due-date-rules/components/due-date-rules-page";
@@ -57,8 +57,7 @@ export function SettingsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             breadcrumbs={[{ label: "Visão geral", href: "/dashboard" }, { label: "Ajustes" }]}
@@ -114,7 +113,7 @@ export function SettingsPage() {
             </TabsContent>
           </Tabs>
         </section>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

@@ -16,7 +16,7 @@ import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { MonthNavigation } from "@/components/month-navigation";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -70,8 +70,7 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
   const incomes = report?.categories.filter((category) => category.type === "income") ?? [];
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container min-w-0">
           <PageHeader
             title="Distribuição financeira"
@@ -322,7 +321,7 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
             </div>
           ) : null}
         </section>
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

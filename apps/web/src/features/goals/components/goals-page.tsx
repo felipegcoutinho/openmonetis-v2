@@ -5,7 +5,7 @@ import { CircleCheck, Flag, Goal, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
@@ -83,8 +83,7 @@ export function GoalsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             mobileFloatingAction
@@ -257,7 +256,7 @@ export function GoalsPage() {
             open
           />
         ) : null}
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

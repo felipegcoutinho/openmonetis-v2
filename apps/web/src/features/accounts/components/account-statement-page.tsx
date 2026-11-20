@@ -20,7 +20,7 @@ import {
   FinancialSummaryTitleAction,
 } from "@/components/financial-summary-header";
 import { MoneyValue } from "@/components/money-value";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { TransactionsContainer } from "@/features/transactions/components/transactions-container";
 import type { TransactionsSearch } from "@/features/transactions/transactions.presentation";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -96,8 +96,7 @@ export function AccountStatementPage({
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         {accountQuery.isLoading ? <FinancialDetailLoading message="Carregando extrato" /> : null}
         {accountQuery.isError && !accountQuery.data ? (
           <EntityLoadError
@@ -175,7 +174,7 @@ export function AccountStatementPage({
             />
           </>
         ) : null}
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

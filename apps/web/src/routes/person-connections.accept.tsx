@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PersonConnectionAcceptPage } from "@/features/person-connections/components/person-connection-accept-page";
 
 export const Route = createFileRoute("/person-connections/accept")({
@@ -11,10 +11,9 @@ export const Route = createFileRoute("/person-connections/accept")({
 function PersonConnectionAcceptRoute() {
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <PersonConnectionAcceptPage />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

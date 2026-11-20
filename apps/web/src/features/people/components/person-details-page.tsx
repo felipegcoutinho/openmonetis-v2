@@ -7,7 +7,7 @@ import { type CSSProperties, type ReactNode, useState } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { EntityLoadError } from "@/components/entity-load-error";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,8 +69,7 @@ export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDe
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         {personQuery.isLoading ? <PersonDetailsLoading /> : null}
         {personQuery.isError ? (
           <EntityLoadError
@@ -108,7 +107,7 @@ export function PersonDetailsPage({ personId, search, onSearchChange }: PersonDe
             />
           </>
         ) : null}
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

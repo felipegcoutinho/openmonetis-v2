@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MobileCollectionLoading } from "@/components/mobile-collection-loading";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -75,8 +75,7 @@ export function CardsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <section className="app-page project-container">
           <PageHeader
             mobileFloatingAction
@@ -141,7 +140,7 @@ export function CardsPage() {
             </Tabs>
           ) : null}
         </section>
-      </main>
+      </AppShell>
       <CardDialog
         accounts={activeAccounts}
         card={editingCard}

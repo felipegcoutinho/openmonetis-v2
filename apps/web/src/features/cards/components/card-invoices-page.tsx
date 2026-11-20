@@ -31,7 +31,7 @@ import {
 import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,8 +133,7 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
 
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         {cardQuery.isLoading ? <FinancialDetailLoading message="Carregando fatura" /> : null}
         {cardQuery.isError && !cardQuery.data ? (
           <EntityLoadError
@@ -210,7 +209,7 @@ export function CardInvoicesPage({ cardId, search, onSearchChange }: CardInvoice
           open={paymentOpen && Boolean(invoice)}
           onOpenChange={setPaymentOpen}
         />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }

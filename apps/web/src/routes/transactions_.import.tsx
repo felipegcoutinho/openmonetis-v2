@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { Navbar } from "@/components/navigation/navbar";
+import { AppShell } from "@/components/navigation/app-shell";
 import { TransactionImportContainer } from "@/features/transactions/components/transaction-import-container";
 
 export const Route = createFileRoute("/transactions_/import")({
@@ -11,10 +11,9 @@ export const Route = createFileRoute("/transactions_/import")({
 function TransactionImportRoute() {
   return (
     <ProtectedRoute>
-      <main className="min-h-svh bg-background">
-        <Navbar />
+      <AppShell>
         <TransactionImportContainer />
-      </main>
+      </AppShell>
     </ProtectedRoute>
   );
 }
