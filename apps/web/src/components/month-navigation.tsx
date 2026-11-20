@@ -96,7 +96,7 @@ export function MonthNavigation({
       data-mobile-month-navigation
       aria-label="Navegação por mês"
       className={cn(
-        "material sticky top-(--page-sticky-top) z-20 flex w-full items-center justify-center rounded-lg border px-1 py-1 md:w-fit md:justify-start md:gap-1",
+        "material sticky top-(--page-sticky-top) z-20 flex w-full items-center justify-center rounded-lg border px-1 py-1 md:justify-start md:gap-1",
         className,
       )}
     >

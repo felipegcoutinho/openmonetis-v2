@@ -80,6 +80,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Telas com seletor de mês: a barra de mês fixa ocupa toda a largura, com fundo translúcido, em vez
+  de uma pílula que deixava os cards aparecerem pelas laterais ao rolar. Navegando pelo teclado, o
+  campo em foco não fica mais escondido atrás do topo e da barra de mês.
 - Lançamentos: uma transferência entre contas aparece como um único lançamento, com os logos das
   duas contas lado a lado e a indicação de origem → destino, em vez de duas linhas de saída e
   entrada. Filtrando por uma das contas, ou no extrato da conta, continua aparecendo só o lado
