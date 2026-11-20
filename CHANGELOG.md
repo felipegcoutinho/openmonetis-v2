@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-20
+
+Experiência de aplicativo no celular com PWA instalável, temas próprios para o modo claro e para o
+escuro, anexos em anotações e imagens coladas direto nos formulários. Transferências entre contas
+aparecem como um único lançamento, e a interface ganha uma rodada de acessibilidade: campos com
+nome para leitores de tela, região principal e títulos corretos, contraste nos controles marcados e
+cards de indicadores com o mesmo visual em todo o app.
+
 ### Adicionado
 
 - Celular: bottom sheets (novo lançamento, filtros, listas de opções, seletores de data e de
@@ -1600,7 +1608,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.16.0...v0.17.0
