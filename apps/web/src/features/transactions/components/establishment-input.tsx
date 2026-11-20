@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { FieldShellControl } from "./transaction-field-shell";
 
 type EstablishmentInputProps = {
   value: string;
@@ -78,26 +79,28 @@ export function EstablishmentInput({
       open={open}
     >
       <div className="relative" ref={containerRef}>
-        <Input
-          aria-autocomplete={mobile ? undefined : "list"}
-          aria-expanded={mobile ? undefined : open}
-          aria-invalid={invalid}
-          autoComplete="off"
-          className={establishments.length || loading ? "pr-9 text-left" : "text-left"}
-          disabled={disabled}
-          maxLength={maxLength}
-          onBlur={onBlur}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            onChange(nextValue);
-            setQuery(nextValue);
-          }}
-          onClick={mobile ? undefined : openEstablishments}
-          placeholder={placeholder}
-          required
-          role={mobile ? undefined : "combobox"}
-          value={value}
-        />
+        <FieldShellControl>
+          <Input
+            aria-autocomplete={mobile ? undefined : "list"}
+            aria-expanded={mobile ? undefined : open}
+            aria-invalid={invalid}
+            autoComplete="off"
+            className={establishments.length || loading ? "pr-9 text-left" : "text-left"}
+            disabled={disabled}
+            maxLength={maxLength}
+            onBlur={onBlur}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              onChange(nextValue);
+              setQuery(nextValue);
+            }}
+            onClick={mobile ? undefined : openEstablishments}
+            placeholder={placeholder}
+            required
+            role={mobile ? undefined : "combobox"}
+            value={value}
+          />
+        </FieldShellControl>
         {loading ? (
           <LoaderCircle
             aria-label="Carregando estabelecimentos recentes"

@@ -30,7 +30,9 @@ function formatDate(value: string) {
 }
 
 export function DatePicker({
+  "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  "aria-labelledby": ariaLabelledBy,
   className,
   disabled,
   id,
@@ -40,7 +42,9 @@ export function DatePicker({
   placeholder = "Selecione uma data",
   value,
 }: {
+  "aria-describedby"?: string;
   "aria-invalid"?: boolean;
+  "aria-labelledby"?: string;
   className?: string;
   disabled?: boolean;
   id?: string;
@@ -67,7 +71,9 @@ export function DatePicker({
       <PopoverTrigger
         render={
           <Button
+            aria-describedby={ariaDescribedBy}
             aria-invalid={ariaInvalid}
+            aria-labelledby={ariaLabelledBy}
             className={cn(
               "w-full justify-between border-input bg-popover px-2.5 font-normal focus-visible:ring-ring/50",
               !value && "text-muted-foreground",

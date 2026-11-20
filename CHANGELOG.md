@@ -109,6 +109,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- Leitores de tela anunciam o nome de cada campo do formulário de lançamento (data, forma de
+  pagamento, cartão, conta, pessoa, repetição) e leem a mensagem de erro junto do campo.
 - No widget de anotações da visão geral, uma falha ao salvar não mostra mais "Anotação criada".
 - O zoom com dois dedos voltou a funcionar no celular.
 - Os links de voltar e as trilhas de navegação no topo das páginas não recarregam mais o

@@ -6,6 +6,7 @@ import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-
 
 import { SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EntityOption } from "./transaction-entity-option";
+import { FieldShellControl } from "./transaction-field-shell";
 import type { AccountSelectProps } from "./transaction-form.types";
 import { createValue, noneValue } from "./transaction-form-options";
 
@@ -40,11 +41,13 @@ export function AccountSelect({
       }}
       value={value || noneValue}
     >
-      <SelectTrigger className="w-full" aria-invalid={error}>
-        <SelectValue placeholder="Selecione">
-          <EntityOption entity={accounts.find((account) => account.id === value)} />
-        </SelectValue>
-      </SelectTrigger>
+      <FieldShellControl>
+        <SelectTrigger className="w-full" aria-invalid={error}>
+          <SelectValue placeholder="Selecione">
+            <EntityOption entity={accounts.find((account) => account.id === value)} />
+          </SelectValue>
+        </SelectTrigger>
+      </FieldShellControl>
       <SelectContent>
         <SelectItem value={noneValue}>Selecione</SelectItem>
         {accounts.map((account) => (

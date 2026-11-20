@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { getTransactionDateLabel, transactionTypeLabels } from "../transactions.presentation";
 import type { useTransactionForm } from "../useTransactionForm";
 import { EstablishmentInput } from "./establishment-input";
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import {
   getTransactionFormErrorMessage,
   type TransactionFormValues,
@@ -81,12 +81,14 @@ export function TransactionBasicFields({
               error={getTransactionFormErrorMessage("purchaseDate", field.state.meta.errors)}
               label={getTransactionDateLabel(values.type, values.condition)}
             >
-              <DatePicker
-                aria-invalid={field.state.meta.errors.length > 0}
-                disabled={isSubmitting}
-                onChange={field.handleChange}
-                value={field.state.value}
-              />
+              <FieldShellControl withOwnText>
+                <DatePicker
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  disabled={isSubmitting}
+                  onChange={field.handleChange}
+                  value={field.state.value}
+                />
+              </FieldShellControl>
             </FieldShell>
           )}
         </form.Field>
@@ -115,14 +117,16 @@ export function TransactionBasicFields({
                     }
                     value={field.state.value}
                   >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-invalid={field.state.meta.errors.length > 0}
-                    >
-                      <SelectValue placeholder="Selecione">
-                        <TransactionTypeOption type={field.state.value} />
-                      </SelectValue>
-                    </SelectTrigger>
+                    <FieldShellControl>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={field.state.meta.errors.length > 0}
+                      >
+                        <SelectValue placeholder="Selecione">
+                          <TransactionTypeOption type={field.state.value} />
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FieldShellControl>
                     <SelectContent>
                       {Object.keys(transactionTypeLabels).map((value) => (
                         <SelectItem key={value} value={value}>

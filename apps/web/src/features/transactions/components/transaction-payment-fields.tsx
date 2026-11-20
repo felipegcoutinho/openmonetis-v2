@@ -10,7 +10,7 @@ import type { useTransactionForm } from "../useTransactionForm";
 import { InvoicePeriodPicker } from "./invoice-period-picker";
 import { AccountSelect } from "./transaction-account-select";
 import { EntityOption } from "./transaction-entity-option";
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import {
   getTransactionFormErrorMessage,
   type TransactionFormValues,
@@ -65,14 +65,16 @@ export function TransactionPaymentFields({
                     }
                     value={field.state.value}
                   >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-invalid={field.state.meta.errors.length > 0}
-                    >
-                      <SelectValue placeholder="Selecione">
-                        <PaymentMethodOption method={field.state.value} />
-                      </SelectValue>
-                    </SelectTrigger>
+                    <FieldShellControl>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={field.state.meta.errors.length > 0}
+                      >
+                        <SelectValue placeholder="Selecione">
+                          <PaymentMethodOption method={field.state.value} />
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FieldShellControl>
                     <SelectContent>
                       {Object.entries(paymentMethodLabels).map(([value]) => (
                         <SelectItem key={value} value={value}>
@@ -118,16 +120,18 @@ export function TransactionPaymentFields({
                       }}
                       value={field.state.value || noneValue}
                     >
-                      <SelectTrigger
-                        className="w-full"
-                        aria-invalid={field.state.meta.errors.length > 0}
-                      >
-                        <SelectValue placeholder="Selecione">
-                          <EntityOption
-                            entity={activeCards.find((card) => card.id === field.state.value)}
-                          />
-                        </SelectValue>
-                      </SelectTrigger>
+                      <FieldShellControl>
+                        <SelectTrigger
+                          className="w-full"
+                          aria-invalid={field.state.meta.errors.length > 0}
+                        >
+                          <SelectValue placeholder="Selecione">
+                            <EntityOption
+                              entity={activeCards.find((card) => card.id === field.state.value)}
+                            />
+                          </SelectValue>
+                        </SelectTrigger>
+                      </FieldShellControl>
                       <SelectContent>
                         <SelectItem value={noneValue}>Selecione</SelectItem>
                         {activeCards.map((card) => (

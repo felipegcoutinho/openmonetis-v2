@@ -4,7 +4,7 @@ import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-
 import { SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PersonOption } from "@/features/people/components/person-option";
 import type { useTransactionForm } from "../useTransactionForm";
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import {
   getTransactionFormErrorMessage,
   type TransactionFormValues,
@@ -67,16 +67,18 @@ export function TransactionPeopleFields({
                     }}
                     value={field.state.value || noneValue}
                   >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-invalid={field.state.meta.errors.length > 0}
-                    >
-                      <SelectValue placeholder="Selecione">
-                        <PersonOption
-                          person={activePeople.find((person) => person.id === field.state.value)}
-                        />
-                      </SelectValue>
-                    </SelectTrigger>
+                    <FieldShellControl>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={field.state.meta.errors.length > 0}
+                      >
+                        <SelectValue placeholder="Selecione">
+                          <PersonOption
+                            person={activePeople.find((person) => person.id === field.state.value)}
+                          />
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FieldShellControl>
                     <SelectContent>
                       <SelectItem value={noneValue}>Selecione</SelectItem>
                       {activePeople.map((person) => (

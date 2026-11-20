@@ -59,7 +59,9 @@ export function MobileDatePicker(props: ComponentProps<typeof DatePicker>) {
             variant="outline"
             id={props.id}
             disabled={props.disabled}
+            aria-describedby={props["aria-describedby"]}
             aria-invalid={props["aria-invalid"]}
+            aria-labelledby={props["aria-labelledby"]}
             data-slot="date-picker-trigger"
             className={cn(
               "w-full min-h-12 justify-between font-normal text-base",

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { useTransactionForm } from "../useTransactionForm";
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import { getTransactionFormErrorMessage } from "./transaction-form.validation";
 
 export function TransactionDueDateField({
@@ -29,15 +29,17 @@ export function TransactionDueDateField({
                 label="Vencimento (opcional)"
               >
                 <div className="flex items-center gap-1">
-                  <DatePicker
-                    id={id}
-                    className="w-auto min-w-0 flex-1 shrink"
-                    aria-invalid={field.state.meta.errors.length > 0}
-                    disabled={isSubmitting}
-                    onChange={field.handleChange}
-                    value={field.state.value}
-                    placeholder="Sem vencimento"
-                  />
+                  <FieldShellControl withOwnText>
+                    <DatePicker
+                      id={id}
+                      className="w-auto min-w-0 flex-1 shrink"
+                      aria-invalid={field.state.meta.errors.length > 0}
+                      disabled={isSubmitting}
+                      onChange={field.handleChange}
+                      value={field.state.value}
+                      placeholder="Sem vencimento"
+                    />
+                  </FieldShellControl>
                   {field.state.value ? (
                     <Button
                       type="button"

@@ -2,7 +2,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 
 import type { useTransactionForm } from "../useTransactionForm";
 
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import type { TransactionFormValues } from "./transaction-form.validation";
 import {
   getTransactionFormErrorMessage,
@@ -27,16 +27,18 @@ export function TransactionAmountField({
           error={getTransactionFormErrorMessage("amount", field.state.meta.errors)}
           label={values.condition === "installment" ? "Valor total da compra" : "Valor"}
         >
-          <CurrencyInput
-            data-mobile-amount
-            aria-invalid={field.state.meta.errors.length > 0}
-            disabled={isSubmitting}
-            onBlur={field.handleBlur}
-            onValueChange={field.handleChange}
-            placeholder="R$ 0,00"
-            required
-            value={field.state.value}
-          />
+          <FieldShellControl>
+            <CurrencyInput
+              data-mobile-amount
+              aria-invalid={field.state.meta.errors.length > 0}
+              disabled={isSubmitting}
+              onBlur={field.handleBlur}
+              onValueChange={field.handleChange}
+              placeholder="R$ 0,00"
+              required
+              value={field.state.value}
+            />
+          </FieldShellControl>
         </FieldShell>
       )}
     </form.Field>

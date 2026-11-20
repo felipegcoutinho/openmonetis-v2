@@ -2,7 +2,7 @@ import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { useTransactionForm } from "../useTransactionForm";
-import { FieldShell } from "./transaction-field-shell";
+import { FieldShell, FieldShellControl } from "./transaction-field-shell";
 import {
   getTrackedInstallmentHelper,
   getTransactionFormErrorMessage,
@@ -39,16 +39,18 @@ export function TransactionStartInstallmentField({
                     onValueChange={(value) => value && field.handleChange(value)}
                     value={field.state.value}
                   >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-invalid={field.state.meta.errors.length > 0}
-                    >
-                      <SelectValue placeholder="Selecione">
-                        {Number.isInteger(startInstallment)
-                          ? `${startInstallment}ª parcela`
-                          : "Selecione"}
-                      </SelectValue>
-                    </SelectTrigger>
+                    <FieldShellControl>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={field.state.meta.errors.length > 0}
+                      >
+                        <SelectValue placeholder="Selecione">
+                          {Number.isInteger(startInstallment)
+                            ? `${startInstallment}ª parcela`
+                            : "Selecione"}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FieldShellControl>
                     <SelectContent>
                       {Array.from(
                         {
