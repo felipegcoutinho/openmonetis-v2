@@ -83,6 +83,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Telas com seletor de mês: a barra de mês fixa ocupa toda a largura, com fundo translúcido, em vez
   de uma pílula que deixava os cards aparecerem pelas laterais ao rolar. Navegando pelo teclado, o
   campo em foco não fica mais escondido atrás do topo e da barra de mês.
+- Interruptores e opções marcadas ganham um contorno mais escuro, que se destaca também nos temas
+  claros.
+- Celular: no menu, o botão de privacidade diz **Ocultar valores** ou **Mostrar valores**.
+- Visão geral: **Restaurar organização padrão** usa o mesmo nome no botão, na dica e na
+  confirmação.
 - Lançamentos: uma transferência entre contas aparece como um único lançamento, com os logos das
   duas contas lado a lado e a indicação de origem → destino, em vez de duas linhas de saída e
   entrada. Filtrando por uma das contas, ou no extrato da conta, continua aparecendo só o lado
@@ -111,6 +116,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Leitores de tela anunciam o nome de cada campo do formulário de lançamento (data, forma de
   pagamento, cartão, conta, pessoa, repetição) e leem a mensagem de erro junto do campo.
+- Visão geral: os logos das contas a pagar e das faturas deixam de ser links sem nome para teclado
+  e leitores de tela; o nome ao lado continua levando ao mesmo lugar.
+- A área de avisos é anunciada como "Notificações", em português.
 - No widget de anotações da visão geral, uma falha ao salvar não mostra mais "Anotação criada".
 - O zoom com dois dedos voltou a funcionar no celular.
 - Os links de voltar e as trilhas de navegação no topo das páginas não recarregam mais o

@@ -119,11 +119,14 @@ function InvoiceRow({ invoice, onPay }: { invoice: DashboardInvoice; onPay: () =
   const isPaid = invoice.status === "paid";
   return (
     <DashboardWidgetRow>
+      {/* Same destination as the card name link beside it, so it stays out of the tab order. */}
       <Link
+        aria-hidden="true"
         to="/cards/$cardId"
         params={{ cardId: invoice.cardId }}
         search={{ period: invoice.period }}
         className="shrink-0"
+        tabIndex={-1}
       >
         {invoice.logo ? (
           <Image

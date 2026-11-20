@@ -25,14 +25,14 @@ export function DashboardRestoreDefaultButton({ labeled = false }: { labeled?: b
   function restore() {
     update(() => createDefaultDashboardWidgetPreferences());
     setOpen(false);
-    toast.success("Dashboard restaurado ao padrão");
+    toast.success("Visão geral restaurada ao padrão");
   }
 
   return (
     <>
       <Tooltip>
         <TooltipTrigger
-          aria-label="Restaurar dashboard padrão"
+          aria-label={labeled ? undefined : "Restaurar organização padrão"}
           disabled={!canEdit || isDefault}
           onClick={() => setOpen(true)}
           render={
@@ -51,12 +51,12 @@ export function DashboardRestoreDefaultButton({ labeled = false }: { labeled?: b
           <RotateCcw aria-hidden="true" />
           {labeled ? <span>Restaurar organização padrão</span> : null}
         </TooltipTrigger>
-        <TooltipContent>Restaurar dashboard padrão</TooltipContent>
+        <TooltipContent>Restaurar organização padrão</TooltipContent>
       </Tooltip>
       <AlertDialog onOpenChange={setOpen} open={open}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Restaurar o dashboard padrão?</AlertDialogTitle>
+            <AlertDialogTitle>Restaurar a organização padrão?</AlertDialogTitle>
             <AlertDialogDescription>
               Todos os widgets voltam a aparecer, na ordem original de cada grupo.
             </AlertDialogDescription>

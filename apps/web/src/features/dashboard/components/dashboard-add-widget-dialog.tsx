@@ -44,7 +44,7 @@ export function DashboardAddWidgetDialog({
             <DialogDescription>
               {availableWidgets.length > 0
                 ? "Escolha o que você quer acompanhar neste grupo."
-                : "Todos os widgets deste grupo já estão no dashboard."}
+                : "Todos os widgets deste grupo já estão na visão geral."}
             </DialogDescription>
           </DialogHeader>
           {availableWidgets.length > 0 ? (

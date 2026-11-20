@@ -15,6 +15,7 @@ function Toaster({ ...props }: ToasterProps) {
     <Sonner
       theme={appearance.theme}
       className="toaster group"
+      containerAriaLabel="Notificações"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,

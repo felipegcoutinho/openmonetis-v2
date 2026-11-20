@@ -72,8 +72,6 @@ export function MobileNavigationMenu({
                   <span className="text-xs">Calculadora</span>
                 </Button>
                 <Button
-                  aria-label={isPrivacyModeEnabled ? "Mostrar valores" : "Ocultar valores"}
-                  aria-pressed={isPrivacyModeEnabled}
                   className="h-20! w-full! flex-col gap-2 rounded-lg p-2 hover:bg-accent"
                   onClick={togglePrivacyMode}
                   type="button"
@@ -84,7 +82,9 @@ export function MobileNavigationMenu({
                   ) : (
                     <Eye aria-hidden="true" className="size-5 text-brand-strong" />
                   )}
-                  <span className="text-xs">Valores</span>
+                  <span className="whitespace-normal text-center text-xs leading-tight">
+                    {isPrivacyModeEnabled ? "Mostrar valores" : "Ocultar valores"}
+                  </span>
                 </Button>
                 <ThemeToggle card />
               </div>
