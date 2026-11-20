@@ -121,6 +121,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 - Leitores de tela encontram o conteúdo de cada página na região principal, separado do topo e da
   navegação, e navegam pela visão geral pelos títulos de cada widget.
+- O gráfico de receitas, despesas e resultado da visão geral ganha uma tabela com os valores dos
+  seis meses para leitores de tela; no modo privacidade os valores continuam ocultos.
 - Leitores de tela anunciam o nome de cada campo do formulário de lançamento (data, forma de
   pagamento, cartão, conta, pessoa, repetição) e leem a mensagem de erro junto do campo.
 - Visão geral: os logos das contas a pagar e das faturas deixam de ser links sem nome para teclado
