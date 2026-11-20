@@ -80,6 +80,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Os cards de indicadores dos relatórios (Calendário, Distribuição financeira, Parcelamentos,
+  Metas, Tendências e outros) seguem o mesmo visual dos indicadores da visão geral: rótulo discreto
+  com ícone, valor em destaque e contexto logo abaixo.
 - Telas com seletor de mês: a barra de mês fixa ocupa toda a largura, com fundo translúcido, em vez
   de uma pílula que deixava os cards aparecerem pelas laterais ao rolar. Navegando pelo teclado, o
   campo em foco não fica mais escondido atrás do topo e da barra de mês.

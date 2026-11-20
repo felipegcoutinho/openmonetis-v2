@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
+import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,52 +151,47 @@ export function DashboardMetrics({ metrics }: { metrics: DashboardMetricsOutput 
             card.key === "projected" ? formatProjectedMetricHelp(metrics.period) : card.help;
 
           return (
-            <Card className="gap-5 py-5" key={card.key}>
-              <CardHeader className="gap-1 px-5">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="flex min-w-0 items-center gap-2 font-medium text-muted-foreground text-sm">
-                    <card.icon
+            <StatCard
+              action={
+                card.transactionType && primarySlug ? (
+                  <Link
+                    aria-label={`Ver lançamentos de ${card.label.toLocaleLowerCase("pt-BR")}`}
+                    className="group/metric-link -my-1 -mr-1.5 grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    search={{
+                      period: metrics.period,
+                      type: card.transactionType,
+                      people: primarySlug,
+                    }}
+                    to="/transactions"
+                  >
+                    <ArrowRight
                       aria-hidden="true"
-                      className={cn("size-4 shrink-0", card.iconClassName)}
+                      className="size-4 transition-transform duration-200 ease-out group-hover/metric-link:translate-x-0.5 group-focus-visible/metric-link:translate-x-0.5 motion-reduce:transition-none"
                     />
-                    <span className="truncate">{card.label}</span>
-                    <MetricHelp
-                      help={help}
-                      label={`Como calculamos ${card.label.toLocaleLowerCase("pt-BR")}`}
-                    />
-                  </CardTitle>
-                  {card.transactionType && primarySlug ? (
-                    <Link
-                      aria-label={`Ver lançamentos de ${card.label.toLocaleLowerCase("pt-BR")}`}
-                      className="group/metric-link -my-1 -mr-1.5 grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                      search={{
-                        period: metrics.period,
-                        type: card.transactionType,
-                        people: primarySlug,
-                      }}
-                      to="/transactions"
-                    >
-                      <ArrowRight
-                        aria-hidden="true"
-                        className="size-4 transition-transform duration-200 ease-out group-hover/metric-link:translate-x-0.5 group-focus-visible/metric-link:translate-x-0.5 motion-reduce:transition-none"
-                      />
-                    </Link>
-                  ) : null}
-                </div>
-                <CardDescription className="truncate text-xs" title={card.description}>
-                  {card.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto grid gap-3 px-5">
-                <MoneyValue amount={metric.current} className="kpi-value text-[1.875rem]" />
-                <MetricComparison
-                  hasPreviousData={metric.hasPreviousData}
-                  invertTrend={card.invertTrend}
-                  previous={metric.previous}
-                  comparison={comparison}
-                />
-              </CardContent>
-            </Card>
+                  </Link>
+                ) : null
+              }
+              caption={card.description}
+              icon={<card.icon className={card.iconClassName} />}
+              key={card.key}
+              label={
+                <>
+                  <span className="truncate">{card.label}</span>
+                  <MetricHelp
+                    help={help}
+                    label={`Como calculamos ${card.label.toLocaleLowerCase("pt-BR")}`}
+                  />
+                </>
+              }
+              value={<MoneyValue amount={metric.current} />}
+            >
+              <MetricComparison
+                hasPreviousData={metric.hasPreviousData}
+                invertTrend={card.invertTrend}
+                previous={metric.previous}
+                comparison={comparison}
+              />
+            </StatCard>
           );
         })}
       </div>

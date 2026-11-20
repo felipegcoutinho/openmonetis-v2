@@ -268,7 +268,7 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
                   value={
                     <FinancialDistributionPercentage
                       value={report.savingsRatePercentage}
-                      className="text-foreground text-xl"
+                      className="text-foreground"
                     />
                   }
                 />
