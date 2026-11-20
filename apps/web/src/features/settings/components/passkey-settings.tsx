@@ -187,7 +187,7 @@ export function PasskeySettings() {
                 type="button"
                 variant="destructive"
               >
-                {removeMutation.isPending ? "Removendo..." : "Remover"}
+                {removeMutation.isPending ? "Removendo…" : "Remover"}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

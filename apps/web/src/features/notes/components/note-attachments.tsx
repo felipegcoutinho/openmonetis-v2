@@ -134,7 +134,7 @@ export function NoteAttachments({
         >
           <Skeleton className="aspect-square rounded-lg" />
           <Skeleton className="aspect-square rounded-lg" />
-          <span className="sr-only">Carregando...</span>
+          <span className="sr-only">Carregando…</span>
         </div>
       ) : null}
 
@@ -187,7 +187,7 @@ export function NoteAttachments({
                     className="size-5 animate-spin text-muted-foreground"
                   />
                   <span className="w-full truncate text-[11px] text-muted-foreground leading-tight">
-                    Enviando...
+                    Enviando…
                   </span>
                 </span>
               </div>
@@ -299,7 +299,7 @@ export function NoteAttachments({
               onClick={() => void remove()}
               variant="destructive"
             >
-              {detach.isPending ? "Removendo..." : "Remover anexo"}
+              {detach.isPending ? "Removendo…" : "Remover anexo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

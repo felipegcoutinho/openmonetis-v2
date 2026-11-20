@@ -158,7 +158,7 @@ export function FinancialDistributionChart({ report, personScope }: Props) {
             }}
           >
             <Download aria-hidden="true" />
-            {exportImage.isPending ? "Gerando..." : "Baixar imagem"}
+            {exportImage.isPending ? "Gerando…" : "Baixar imagem"}
           </Button>
         </div>
         <section

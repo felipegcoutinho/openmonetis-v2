@@ -250,7 +250,7 @@ function InvitationReview({
         ) : (
           <Link2 aria-hidden="true" />
         )}
-        {isPending ? "Aceitando convite..." : "Aceitar e gerar código"}
+        {isPending ? "Aceitando convite…" : "Aceitar e gerar código"}
       </Button>
       <p className="text-center text-muted-foreground text-xs">
         Continue apenas se você reconhece quem enviou este convite.

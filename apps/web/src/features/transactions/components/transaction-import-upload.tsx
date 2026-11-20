@@ -74,7 +74,7 @@ export function TransactionImportUpload({
             <span className="grid gap-1.5">
               <span className="font-medium text-base">
                 {isPreviewing
-                  ? "Lendo extrato..."
+                  ? "Lendo extrato…"
                   : "Arraste o arquivo aqui ou clique para selecionar"}
               </span>
               <span className="font-normal text-muted-foreground text-sm">
@@ -107,7 +107,7 @@ export function TransactionImportUpload({
           variant="ghost"
         >
           <Download />
-          {isDownloadingTemplate ? "Preparando modelo..." : "Baixar modelo XLSX"}
+          {isDownloadingTemplate ? "Preparando modelo…" : "Baixar modelo XLSX"}
         </Button>
       </CardFooter>
     </Card>

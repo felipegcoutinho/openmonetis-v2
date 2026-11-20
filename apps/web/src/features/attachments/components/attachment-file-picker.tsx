@@ -158,7 +158,7 @@ export function AttachmentFilePicker({
             <Paperclip />
           </AttachmentMedia>
           <AttachmentContent>
-            <AttachmentTitle>{disabled ? "Enviando anexo..." : "Adicionar anexo"}</AttachmentTitle>
+            <AttachmentTitle>{disabled ? "Enviando anexo…" : "Adicionar anexo"}</AttachmentTitle>
             <AttachmentDescription className="whitespace-normal" id={descriptionId}>
               Solte, cole ou escolha PDF, JPEG, PNG ou WebP · máx. {maximumAttachmentSizeMb} MB
             </AttachmentDescription>

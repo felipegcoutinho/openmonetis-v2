@@ -115,7 +115,7 @@ export function TagsList({
   }
   function transactionCountLabel(tagId: string) {
     const totals = totalsByTag.get(tagId);
-    if (!totals) return loading ? "Carregando..." : "";
+    if (!totals) return loading ? "Carregando…" : "";
     return totals.transactionCount
       ? `${formatDashboardTransactionCount(totals.transactionCount)} no mês`
       : "Sem lançamentos no mês";

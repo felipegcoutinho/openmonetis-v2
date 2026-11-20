@@ -134,7 +134,7 @@ export function AccountsPage() {
             </Card>
           ) : null}
           {accountsQuery.isLoading ? (
-            <MobileCollectionLoading message="Carregando contas..." />
+            <MobileCollectionLoading message="Carregando contas…" />
           ) : null}
           {accountsQuery.isError ? (
             <p className="text-destructive text-sm" role="alert">

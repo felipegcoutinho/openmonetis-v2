@@ -238,8 +238,8 @@ export function BudgetCard({
             >
               {pending
                 ? recurring
-                  ? "Encerrando..."
-                  : "Removendo..."
+                  ? "Encerrando…"
+                  : "Removendo…"
                 : recurring
                   ? "Encerrar"
                   : "Remover"}

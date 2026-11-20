@@ -214,7 +214,7 @@ export function LoginForm() {
               variant="outline"
             >
               <Fingerprint aria-hidden="true" className="size-4" />
-              {isPasskeySubmitting ? "Confirmando..." : "Entrar com chave de acesso"}
+              {isPasskeySubmitting ? "Confirmando…" : "Entrar com chave de acesso"}
             </Button>
           )}
         </form.Subscribe>

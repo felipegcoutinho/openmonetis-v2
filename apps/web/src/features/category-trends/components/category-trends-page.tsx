@@ -54,7 +54,7 @@ export function CategoryTrendsPage({ filters, onFiltersChange }: CategoryTrendsP
                   variant="outline"
                 >
                   <Download aria-hidden="true" />
-                  {exportMutation.isPending ? "Exportando..." : "Exportar CSV"}
+                  {exportMutation.isPending ? "Exportando…" : "Exportar CSV"}
                 </Button>
               }
               categories={report.availableCategories}

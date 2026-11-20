@@ -157,7 +157,7 @@ function AdjustAccountBalanceForm({
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">
-              {isSubmitting ? "Ajustando..." : "Ajustar saldo"}
+              {isSubmitting ? "Ajustando…" : "Ajustar saldo"}
             </Button>
           </DialogFooter>
         )}

@@ -281,7 +281,7 @@ function CopyBudgetSelection({
           type="button"
         >
           {pending
-            ? "Salvando..."
+            ? "Salvando…"
             : `${repeatMonthly ? "Repetir" : "Copiar"} ${
                 selectedIds.length === 1 ? "1 limite" : `${selectedIds.length} limites`
               }`}
@@ -297,7 +297,7 @@ function CopyBudgetsLoading() {
       <Skeleton className="h-16" />
       <Skeleton className="h-16" />
       <Skeleton className="h-16" />
-      <span className="sr-only">Carregando...</span>
+      <span className="sr-only">Carregando…</span>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export function InboxClearDialog({
             onClick={() => void clearAll()}
             variant="destructive"
           >
-            {clearMutation.isPending ? "Excluindo..." : "Excluir tudo"}
+            {clearMutation.isPending ? "Excluindo…" : "Excluir tudo"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

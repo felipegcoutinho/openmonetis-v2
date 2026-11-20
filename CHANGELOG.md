@@ -85,6 +85,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   campo em foco não fica mais escondido atrás do topo e da barra de mês.
 - Interruptores e opções marcadas ganham um contorno mais escuro, que se destaca também nos temas
   claros.
+- Textos de carregamento e de busca usam reticências (…), e o tamanho dos anexos aparece no
+  formato brasileiro (1,5 MB).
 - Celular: no menu, o botão de privacidade diz **Ocultar valores** ou **Mostrar valores**.
 - Visão geral: **Restaurar organização padrão** usa o mesmo nome no botão, na dica e na
   confirmação.

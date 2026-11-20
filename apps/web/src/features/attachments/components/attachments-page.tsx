@@ -262,7 +262,7 @@ export function AttachmentsPage({ search, onSearchChange }: AttachmentsPageProps
               onClick={() => void removeAttachment()}
               variant="destructive"
             >
-              {remove.isPending ? "Excluindo..." : "Excluir anexo"}
+              {remove.isPending ? "Excluindo…" : "Excluir anexo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -320,7 +320,7 @@ function AttachmentsSkeleton() {
           <Skeleton className="aspect-4/3 rounded-xl" key={key} />
         ))}
       </div>
-      <span className="sr-only">Carregando...</span>
+      <span className="sr-only">Carregando…</span>
     </div>
   );
 }

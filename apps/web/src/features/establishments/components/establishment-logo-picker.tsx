@@ -82,7 +82,7 @@ export function EstablishmentLogoPicker({
         <Input
           aria-label="Buscar marca"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar marca..."
+          placeholder="Buscar marca…"
           ref={searchInputRef}
           value={query}
         />

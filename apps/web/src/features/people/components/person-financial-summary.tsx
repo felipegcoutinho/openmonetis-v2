@@ -49,7 +49,7 @@ export function PersonFinancialSummary({ data, isError, isLoading }: PersonFinan
     return (
       <Card>
         <CardContent className="py-8 text-muted-foreground text-sm">
-          Carregando resumo financeiro...
+          Carregando resumo financeiro…
         </CardContent>
       </Card>
     );

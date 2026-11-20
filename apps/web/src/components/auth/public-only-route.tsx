@@ -12,7 +12,7 @@ export function PublicOnlyRoute({ children }: { children: ReactNode }) {
   if (session.isPending || (session.data && preferences.isPending)) {
     return (
       <main className="grid min-h-svh place-items-center bg-background px-4 py-12">
-        <p className="text-muted-foreground text-sm">Carregando...</p>
+        <p className="text-muted-foreground text-sm">Carregando…</p>
       </main>
     );
   }

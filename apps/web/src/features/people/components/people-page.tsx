@@ -86,7 +86,7 @@ export function PeoplePage() {
             icon={<Users aria-hidden="true" className="size-5" />}
             title="Pessoas"
           />
-          {query.isLoading ? <MobileCollectionLoading message="Carregando pessoas..." /> : null}
+          {query.isLoading ? <MobileCollectionLoading message="Carregando pessoas…" /> : null}
           {query.isError ? (
             <p className="text-destructive text-sm">Não foi possível carregar.</p>
           ) : null}

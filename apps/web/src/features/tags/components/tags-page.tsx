@@ -265,7 +265,7 @@ export function TagsPage({
                 }
               }}
             >
-              {remove.isPending ? "Excluindo..." : "Excluir etiqueta"}
+              {remove.isPending ? "Excluindo…" : "Excluir etiqueta"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

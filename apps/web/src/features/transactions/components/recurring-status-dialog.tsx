@@ -90,7 +90,7 @@ export function RecurringStatusDialog({
             }}
             variant={action === "stop" ? "destructive" : "default"}
           >
-            {isPending ? "Salvando..." : content?.actionLabel}
+            {isPending ? "Salvando…" : content?.actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

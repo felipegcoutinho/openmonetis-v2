@@ -101,7 +101,7 @@ export function CategoriesPage() {
             value={search}
             onValueChange={setSearch}
           />
-          {query.isLoading ? <MobileCollectionLoading message="Carregando categorias..." /> : null}
+          {query.isLoading ? <MobileCollectionLoading message="Carregando categorias…" /> : null}
           {query.isError ? (
             <p className="text-destructive text-sm">Não foi possível carregar.</p>
           ) : null}

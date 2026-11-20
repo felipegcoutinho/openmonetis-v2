@@ -236,7 +236,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
               }}
               variant="destructive"
             >
-              {pending ? "Inativando..." : "Inativar"}
+              {pending ? "Inativando…" : "Inativar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -261,7 +261,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
               }}
               variant="destructive"
             >
-              {pending ? "Excluindo..." : "Excluir permanentemente"}
+              {pending ? "Excluindo…" : "Excluir permanentemente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

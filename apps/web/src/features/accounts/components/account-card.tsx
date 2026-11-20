@@ -157,7 +157,7 @@ export function AccountCard({
               }}
               variant="destructive"
             >
-              {pending ? "Inativando..." : "Inativar"}
+              {pending ? "Inativando…" : "Inativar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -185,7 +185,7 @@ export function AccountCard({
               }}
               variant="destructive"
             >
-              {pending ? "Excluindo..." : "Excluir permanentemente"}
+              {pending ? "Excluindo…" : "Excluir permanentemente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

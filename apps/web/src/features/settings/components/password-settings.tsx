@@ -237,7 +237,7 @@ function ChangePasswordForm({
               ) : (
                 <KeyRound aria-hidden="true" className="size-4" />
               )}
-              {isSubmitting ? "Alterando..." : "Alterar senha"}
+              {isSubmitting ? "Alterando…" : "Alterar senha"}
             </Button>
           </DialogFooter>
         )}

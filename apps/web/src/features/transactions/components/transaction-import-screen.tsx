@@ -159,7 +159,7 @@ export function TransactionImportScreen({
                   type="submit"
                 >
                   {isImporting
-                    ? "Importando..."
+                    ? "Importando…"
                     : `Importar ${selectedRows.length} lançamentos para ${[...accounts, ...cards].find((entity) => destination.endsWith(`:${entity.id}`))?.name ?? "o destino escolhido"}`}
                 </Button>
               )}

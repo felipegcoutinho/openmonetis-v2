@@ -98,7 +98,7 @@ export function TransactionAttachments({
       {query.isLoading ? (
         <div aria-label="Carregando anexos" className="grid gap-2" role="status">
           <Skeleton className="h-11 w-full" />
-          <span className="sr-only">Carregando...</span>
+          <span className="sr-only">Carregando…</span>
         </div>
       ) : null}
 
@@ -210,7 +210,7 @@ export function TransactionAttachments({
               onClick={() => void remove()}
               variant="destructive"
             >
-              {detach.isPending ? "Removendo..." : "Remover anexo"}
+              {detach.isPending ? "Removendo…" : "Remover anexo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

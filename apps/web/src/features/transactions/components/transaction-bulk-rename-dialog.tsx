@@ -204,7 +204,7 @@ function TransactionBulkRenameForm({
               Cancelar
             </Button>
             <Button disabled={pending} type="submit">
-              {pending ? "Aplicando..." : `Aplicar a ${count} lançamento${count === 1 ? "" : "s"}`}
+              {pending ? "Aplicando…" : `Aplicar a ${count} lançamento${count === 1 ? "" : "s"}`}
             </Button>
           </div>
         )}

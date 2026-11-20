@@ -162,7 +162,7 @@ export function AttachmentPreviewDialog({
             <div className="grid h-full place-items-center" role="status">
               <div className="text-center text-muted-foreground text-sm">
                 <Loader2 aria-hidden="true" className="mx-auto mb-2 size-5 animate-spin" />
-                Carregando anexo...
+                Carregando anexo…
               </div>
             </div>
           ) : null}

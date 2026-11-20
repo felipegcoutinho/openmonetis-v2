@@ -95,7 +95,7 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
                 onClick={() => report && exportMutation.mutate(report)}
               >
                 <Download aria-hidden="true" />
-                {exportMutation.isPending ? "Exportando..." : "Exportar CSV"}
+                {exportMutation.isPending ? "Exportando…" : "Exportar CSV"}
               </Button>
             }
           />

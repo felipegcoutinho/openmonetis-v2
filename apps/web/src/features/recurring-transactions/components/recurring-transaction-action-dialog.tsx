@@ -60,7 +60,7 @@ export function RecurringTransactionActionDialog({ action, recurrence, onOpenCha
             }}
             variant={action === "stop" ? "destructive" : "default"}
           >
-            {mutation.isPending ? "Salvando..." : content?.actionLabel}
+            {mutation.isPending ? "Salvando…" : content?.actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

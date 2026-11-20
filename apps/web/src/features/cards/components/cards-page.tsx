@@ -102,7 +102,7 @@ export function CardsPage() {
             icon={<CreditCard aria-hidden="true" className="size-5" />}
             title="Cartões"
           />
-          {loading ? <MobileCollectionLoading message="Carregando cartões..." /> : null}
+          {loading ? <MobileCollectionLoading message="Carregando cartões…" /> : null}
           {failed ? (
             <p className="text-destructive text-sm" role="alert">
               Não foi possível carregar.

@@ -297,7 +297,7 @@ function PersonAvatar({ person }: { person: PersonOutput }) {
 function PersonDetailsLoading() {
   return (
     <section className="app-page project-container">
-      <p className="text-muted-foreground text-sm">Carregando pessoa...</p>
+      <p className="text-muted-foreground text-sm">Carregando pessoa…</p>
     </section>
   );
 }

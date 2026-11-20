@@ -335,7 +335,7 @@ export function NotesPage() {
                         type="button"
                         variant="outline"
                       >
-                        {query.isFetchingNextPage ? "Carregando..." : "Carregar mais"}
+                        {query.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
                       </Button>
                     </div>
                   ) : null}
@@ -393,7 +393,7 @@ export function NotesPage() {
                 onClick={() => void removeNote()}
                 variant="destructive"
               >
-                {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+                {deleteMutation.isPending ? "Excluindo…" : "Excluir"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -472,7 +472,7 @@ function NotesSkeleton() {
           <Skeleton className="h-32" />
         </Card>
       ))}
-      <span className="sr-only">Carregando...</span>
+      <span className="sr-only">Carregando…</span>
     </div>
   );
 }

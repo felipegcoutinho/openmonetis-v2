@@ -124,8 +124,8 @@ export function PasskeyNameDialog({
                 <Button disabled={isSubmitting} type="submit">
                   {isSubmitting
                     ? isAdding
-                      ? "Confirmando..."
-                      : "Salvando..."
+                      ? "Confirmando…"
+                      : "Salvando…"
                     : isAdding
                       ? "Continuar"
                       : "Salvar"}

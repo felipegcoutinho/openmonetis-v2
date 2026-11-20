@@ -303,7 +303,7 @@ function RemoveCategoryDialog({
             }}
             variant="destructive"
           >
-            {pending ? "Removendo..." : "Remover"}
+            {pending ? "Removendo…" : "Remover"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -249,7 +249,7 @@ export function GoalContributionDialog({
                   Cancelar
                 </Button>
                 <Button disabled={submitting} type="submit">
-                  {submitting ? "Salvando..." : "Registrar"}
+                  {submitting ? "Salvando…" : "Registrar"}
                 </Button>
               </div>
             )}

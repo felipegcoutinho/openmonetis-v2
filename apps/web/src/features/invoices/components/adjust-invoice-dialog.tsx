@@ -199,7 +199,7 @@ function AdjustInvoiceForm({
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">
-              {isSubmitting ? "Ajustando..." : "Ajustar fatura"}
+              {isSubmitting ? "Ajustando…" : "Ajustar fatura"}
             </Button>
           </DialogFooter>
         )}

@@ -191,7 +191,7 @@ function AddAccountYieldForm({
               Cancelar
             </Button>
             <Button disabled={!canSubmit || isSubmitting} type="submit">
-              {isSubmitting ? "Adicionando..." : "Adicionar rendimento"}
+              {isSubmitting ? "Adicionando…" : "Adicionar rendimento"}
             </Button>
           </DialogFooter>
         )}

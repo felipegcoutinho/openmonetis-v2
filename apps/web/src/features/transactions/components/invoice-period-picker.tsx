@@ -42,7 +42,7 @@ export function InvoicePeriodPicker({
           {effectivePeriod
             ? `${displayPeriod(effectivePeriod)} · alterar`
             : quote.isLoading
-              ? "Calculando fatura..."
+              ? "Calculando fatura…"
               : "Selecione a data para calcular a fatura"}
         </PopoverTrigger>
         <PopoverContent

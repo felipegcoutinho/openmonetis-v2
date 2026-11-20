@@ -325,7 +325,7 @@ export function GoalDialog({
                         <SelectTrigger className="h-11 w-full" id={`${id}-account`}>
                           <SelectValue
                             placeholder={
-                              accountsLoading ? "Carregando contas..." : "Selecione uma conta"
+                              accountsLoading ? "Carregando contas…" : "Selecione uma conta"
                             }
                           >
                             {(value: string) => {
@@ -354,7 +354,7 @@ export function GoalDialog({
                         O saldo inteiro da conta define o progresso. Esta meta não reserva dinheiro.
                       </p>
                       {accountsLoading ? (
-                        <p className="text-muted-foreground text-xs">Carregando contas...</p>
+                        <p className="text-muted-foreground text-xs">Carregando contas…</p>
                       ) : null}
                       {accountsError ? (
                         <p className="text-destructive text-xs">

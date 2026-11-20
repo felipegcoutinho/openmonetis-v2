@@ -210,7 +210,7 @@ function CategoryTransactionsSummary({
           icon: <ChartNoAxesCombined aria-hidden="true" />,
           label: "Comparado ao mês anterior",
           value: trendsQuery.isLoading
-            ? "Carregando..."
+            ? "Carregando…"
             : trendsQuery.isError || !periodTrend
               ? "Indisponível"
               : formatTrendPercentage(periodTrend.changePercentage, periodTrend.changeKind),
@@ -243,7 +243,7 @@ function CategoryTransactionsSummary({
 function CategoryTransactionsLoading() {
   return (
     <section className="app-page project-container">
-      <p className="text-muted-foreground text-sm">Carregando histórico da categoria...</p>
+      <p className="text-muted-foreground text-sm">Carregando histórico da categoria…</p>
     </section>
   );
 }

@@ -351,7 +351,7 @@ function BudgetsSkeleton() {
           <Skeleton className="h-64" key={key} />
         ))}
       </div>
-      <span className="sr-only">Carregando...</span>
+      <span className="sr-only">Carregando…</span>
     </div>
   );
 }

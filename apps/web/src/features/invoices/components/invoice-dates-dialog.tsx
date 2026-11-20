@@ -118,7 +118,7 @@ export function InvoiceDatesDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Salvando..." : "Salvar datas"}
+              {mutation.isPending ? "Salvando…" : "Salvar datas"}
             </Button>
           </DialogFooter>
         </form>
