@@ -4,6 +4,7 @@ import { Calculator, Eye, EyeOff, Search, Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CalculatorDialog } from "@/components/calculator/calculator-dialog";
+import { clearCalculatorHistory } from "@/components/calculator/calculator-history";
 import { CommandMenu } from "@/components/command-menu/command-menu";
 import { OpenMonetisLogo } from "@/components/openmonetis-logo";
 import { usePrivacyMode } from "@/components/privacy-provider";
@@ -50,6 +51,7 @@ export function Navbar() {
       }
 
       queryClient.clear();
+      clearCalculatorHistory();
       toast.success("Sessão encerrada");
       await navigate({ to: "/" });
     } catch (error) {

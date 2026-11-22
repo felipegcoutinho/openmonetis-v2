@@ -3,9 +3,14 @@ export type CalculatorOperator = "add" | "subtract" | "multiply" | "divide";
 type CalculatorState = {
   accumulator: number | null;
   display: string;
-  history: string | null;
+  lastExpression: string | null;
   operator: CalculatorOperator | null;
   overwrite: boolean;
+};
+
+export type CalculatorHistoryResult = {
+  expression: string;
+  result: string;
 };
 
 type CalculatorAction =
@@ -17,6 +22,7 @@ type CalculatorAction =
   | { type: "operator"; operator: CalculatorOperator }
   | { type: "paste"; value: string | null }
   | { type: "percent" }
+  | { type: "recall"; entry: CalculatorHistoryResult }
   | { type: "toggleSign" };
 
 const maximumDigits = 10;
@@ -31,7 +37,7 @@ const calculatorOperatorSymbols: Record<CalculatorOperator, string> = {
 const initialCalculatorState: CalculatorState = {
   accumulator: null,
   display: "0",
-  history: null,
+  lastExpression: null,
   operator: null,
   overwrite: false,
 };
@@ -64,6 +70,8 @@ export function calculatorReducer(
       return applyPercent(state);
     case "paste":
       return pasteValue(action.value);
+    case "recall":
+      return recallEntry(action.entry);
   }
 }
 
@@ -71,20 +79,35 @@ export function getCalculatorExpression(state: CalculatorState) {
   if (state.display === "Erro") return state.display;
 
   if (state.operator && state.accumulator !== null) {
-    const left = formatLocaleValue(formatCalculatorNumber(state.accumulator));
+    const left = formatCalculatorValue(formatCalculatorNumber(state.accumulator));
     const symbol = calculatorOperatorSymbols[state.operator];
     return state.overwrite
       ? `${left} ${symbol}`
-      : `${left} ${symbol} ${formatLocaleValue(state.display)}`;
+      : `${left} ${symbol} ${formatCalculatorValue(state.display)}`;
   }
 
-  return formatLocaleValue(state.display);
+  return formatCalculatorValue(state.display);
+}
+
+/** The finished calculation that pressing equals would produce, or null when there is none. */
+export function getCalculatorPendingResult(state: CalculatorState): CalculatorHistoryResult | null {
+  if (state.operator === null || state.accumulator === null || state.display === "Erro") {
+    return null;
+  }
+
+  const currentValue = Number(state.display);
+  const result = performOperation(state.accumulator, currentValue, state.operator);
+  if (!Number.isFinite(result)) return null;
+  return {
+    expression: `${formatCalculatorValue(formatCalculatorNumber(state.accumulator))} ${calculatorOperatorSymbols[state.operator]} ${formatCalculatorValue(formatCalculatorNumber(currentValue))}`,
+    result: formatCalculatorNumber(result),
+  };
 }
 
 export function getCalculatorResultText(state: CalculatorState) {
   if (state.display === "Erro") return null;
   const formatted = formatCalculatorNumber(Number(state.display));
-  return formatted === "Erro" ? null : formatLocaleValue(formatted);
+  return formatted === "Erro" ? null : formatCalculatorValue(formatted);
 }
 
 export function getCalculatorFieldValue(state: CalculatorState) {
@@ -137,7 +160,7 @@ export function normalizeCalculatorClipboardValue(rawValue: string): string | nu
 
 function inputDigit(state: CalculatorState, digit: string): CalculatorState {
   if (state.overwrite || state.display === "Erro") {
-    return { ...state, display: digit, history: null, overwrite: false };
+    return { ...state, display: digit, lastExpression: null, overwrite: false };
   }
   if (countDigits(state.display) >= maximumDigits) return state;
   return { ...state, display: state.display === "0" ? digit : `${state.display}${digit}` };
@@ -145,7 +168,7 @@ function inputDigit(state: CalculatorState, digit: string): CalculatorState {
 
 function inputDecimal(state: CalculatorState): CalculatorState {
   if (state.overwrite || state.display === "Erro") {
-    return { ...state, display: "0.", history: null, overwrite: false };
+    return { ...state, display: "0.", lastExpression: null, overwrite: false };
   }
   if (state.display.includes(".") || countDigits(state.display) >= maximumDigits) return state;
   return { ...state, display: `${state.display}.` };
@@ -159,7 +182,7 @@ function setOperator(state: CalculatorState, operator: CalculatorOperator): Calc
     return {
       ...state,
       accumulator: currentValue,
-      history: null,
+      lastExpression: null,
       operator,
       overwrite: true,
     };
@@ -170,7 +193,7 @@ function setOperator(state: CalculatorState, operator: CalculatorOperator): Calc
   return {
     accumulator: result,
     display: formatCalculatorNumber(result),
-    history: null,
+    lastExpression: null,
     operator,
     overwrite: true,
   };
@@ -181,14 +204,12 @@ function evaluate(state: CalculatorState): CalculatorState {
     return state;
   }
 
-  const currentValue = Number(state.display);
-  const history = `${formatLocaleValue(formatCalculatorNumber(state.accumulator))} ${calculatorOperatorSymbols[state.operator]} ${formatLocaleValue(formatCalculatorNumber(currentValue))}`;
-  const result = performOperation(state.accumulator, currentValue, state.operator);
-  if (!Number.isFinite(result)) return errorState();
+  const pending = getCalculatorPendingResult(state);
+  if (!pending) return errorState();
   return {
-    accumulator: result,
-    display: formatCalculatorNumber(result),
-    history,
+    accumulator: Number(pending.result),
+    display: pending.result,
+    lastExpression: pending.expression,
     operator: null,
     overwrite: true,
   };
@@ -199,18 +220,18 @@ function toggleSign(state: CalculatorState): CalculatorState {
   return {
     ...state,
     display: state.display.startsWith("-") ? state.display.slice(1) : `-${state.display}`,
-    history: state.overwrite ? null : state.history,
+    lastExpression: state.overwrite ? null : state.lastExpression,
     overwrite: false,
   };
 }
 
 function deleteLastDigit(state: CalculatorState): CalculatorState {
   if (state.display === "Erro") return initialCalculatorState;
-  if (state.overwrite) return { ...state, display: "0", history: null, overwrite: false };
+  if (state.overwrite) return { ...state, display: "0", lastExpression: null, overwrite: false };
   if (state.display.length <= 1 || (state.display.length === 2 && state.display.startsWith("-"))) {
-    return { ...state, display: "0", history: null };
+    return { ...state, display: "0", lastExpression: null };
   }
-  return { ...state, display: state.display.slice(0, -1), history: null };
+  return { ...state, display: state.display.slice(0, -1), lastExpression: null };
 }
 
 function applyPercent(state: CalculatorState): CalculatorState {
@@ -218,7 +239,7 @@ function applyPercent(state: CalculatorState): CalculatorState {
   return {
     ...state,
     display: formatCalculatorNumber(Number(state.display) / 100),
-    history: null,
+    lastExpression: null,
     overwrite: true,
   };
 }
@@ -226,6 +247,16 @@ function applyPercent(state: CalculatorState): CalculatorState {
 function pasteValue(value: string | null): CalculatorState {
   if (!value || countDigits(value) > maximumDigits) return errorState();
   return { ...initialCalculatorState, display: value };
+}
+
+function recallEntry(entry: CalculatorHistoryResult): CalculatorState {
+  if (!Number.isFinite(Number(entry.result))) return errorState();
+  return {
+    ...initialCalculatorState,
+    display: entry.result,
+    lastExpression: entry.expression,
+    overwrite: true,
+  };
 }
 
 function errorState(): CalculatorState {
@@ -250,7 +281,7 @@ function formatCalculatorNumber(value: number) {
   return Number(Math.round(value * 1e10) / 1e10).toString();
 }
 
-function formatLocaleValue(rawValue: string) {
+export function formatCalculatorValue(rawValue: string) {
   if (rawValue === "Erro") return rawValue;
   const isNegative = rawValue.startsWith("-");
   const unsignedValue = isNegative ? rawValue.slice(1) : rawValue;

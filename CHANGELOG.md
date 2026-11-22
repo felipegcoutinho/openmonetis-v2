@@ -15,6 +15,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   `.local/test-user-avatar.png` (ou `.jpg`/`.webp`), quando existir; ver `docs/testing.md`.
   Nos dados demonstrativos (`pnpm db:seed`), Marina Oliveira e Eduardo Lima deixam de aparecer com
   o avatar um do outro.
+- Calculadora: o botão **Histórico** no visor mostra as 20 últimas contas, da mais recente para a
+  mais antiga. Tocar em uma conta traz o resultado de volta ao visor, de onde é possível continuar
+  calculando ou usar o valor no formulário. O histórico fica salvo só neste navegador, aparece
+  desfocado no modo de privacidade e é apagado em **Limpar histórico** ou ao sair da conta.
 
 ## [0.19.0] - 2026-11-20
 

@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CalculatorDisplay } from "./calculator-display";
+import { CalculatorHistoryPanel } from "./calculator-history-panel";
 import { CalculatorKeypad } from "./calculator-keypad";
 import {
   type CalculatorOperator,
@@ -8,9 +9,11 @@ import {
   createCalculatorState,
   getCalculatorExpression,
   getCalculatorFieldValue,
+  getCalculatorPendingResult,
   getCalculatorResultText,
   normalizeCalculatorClipboardValue,
 } from "./calculator-state";
+import { useCalculatorHistory } from "./useCalculatorHistory";
 
 type CalculatorProps = {
   active?: boolean;
@@ -28,10 +31,18 @@ const keyOperators: Record<string, CalculatorOperator> = {
 export function Calculator({ active = true, initialValue, onSelectValue }: CalculatorProps) {
   const [state, dispatch] = useReducer(calculatorReducer, initialValue, createCalculatorState);
   const [copied, setCopied] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const history = useCalculatorHistory();
   const copiedTimeout = useRef<number | null>(null);
   const expression = getCalculatorExpression(state);
   const resultText = getCalculatorResultText(state);
   const fieldValue = getCalculatorFieldValue(state);
+
+  function calculate() {
+    const pending = getCalculatorPendingResult(state);
+    dispatch({ type: "equals" });
+    if (pending) history.addEntry(pending);
+  }
 
   async function copyResult() {
     if (!navigator.clipboard?.writeText || !resultText) return;
@@ -81,13 +92,14 @@ export function Calculator({ active = true, initialValue, onSelectValue }: Calcu
       dispatch({ type: "operator", operator });
     } else if (event.key === "Enter" || event.key === "=") {
       event.preventDefault();
-      dispatch({ type: "equals" });
+      calculate();
     } else if (event.key === "Backspace") {
       event.preventDefault();
       dispatch({ type: "delete" });
     } else if (event.key === "Escape") {
       event.preventDefault();
-      dispatch({ type: "clear" });
+      if (historyOpen) setHistoryOpen(false);
+      else dispatch({ type: "clear" });
     } else if (event.key === "%") {
       event.preventDefault();
       dispatch({ type: "percent" });
@@ -108,21 +120,34 @@ export function Calculator({ active = true, initialValue, onSelectValue }: Calcu
       <CalculatorDisplay
         copied={copied}
         expression={expression}
-        history={state.history}
+        historyOpen={historyOpen}
+        lastExpression={state.lastExpression}
         onCopy={() => void copyResult()}
+        onToggleHistory={() => setHistoryOpen((open) => !open)}
         resultText={resultText}
       />
-      <CalculatorKeypad
-        activeOperator={state.operator}
-        onClear={() => dispatch({ type: "clear" })}
-        onDecimal={() => dispatch({ type: "decimal" })}
-        onDelete={() => dispatch({ type: "delete" })}
-        onDigit={(digit) => dispatch({ type: "digit", digit })}
-        onEquals={() => dispatch({ type: "equals" })}
-        onOperator={(operator) => dispatch({ type: "operator", operator })}
-        onPercent={() => dispatch({ type: "percent" })}
-        onToggleSign={() => dispatch({ type: "toggleSign" })}
-      />
+      {historyOpen ? (
+        <CalculatorHistoryPanel
+          entries={history.entries}
+          onClear={history.clear}
+          onSelect={(entry) => {
+            dispatch({ type: "recall", entry });
+            setHistoryOpen(false);
+          }}
+        />
+      ) : (
+        <CalculatorKeypad
+          activeOperator={state.operator}
+          onClear={() => dispatch({ type: "clear" })}
+          onDecimal={() => dispatch({ type: "decimal" })}
+          onDelete={() => dispatch({ type: "delete" })}
+          onDigit={(digit) => dispatch({ type: "digit", digit })}
+          onEquals={calculate}
+          onOperator={(operator) => dispatch({ type: "operator", operator })}
+          onPercent={() => dispatch({ type: "percent" })}
+          onToggleSign={() => dispatch({ type: "toggleSign" })}
+        />
+      )}
       {onSelectValue ? (
         <Button
           className="h-11 rounded-lg"
