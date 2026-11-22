@@ -7,6 +7,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-22
+
+O tema claro padrão fica branco sobre o fundo areia e todos os campos de formulário passam a ter o
+mesmo visual. No celular, a barra inferior vira só ícones com o botão **Novo** no centro, que
+também cria anotações, e as barras do sistema acompanham o tema do aplicativo. A calculadora ganha
+histórico, **Precisa de atenção** passa a mostrar tarefas com prazo e a comparação de faturas por
+pessoa conta a parte de cada um nas compras divididas.
+
 ### Adicionado
 
 - Desenvolvimento: `pnpm db:test-user` cria ou recria o usuário de teste local, Pumita Rodriguez
@@ -1697,7 +1705,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.0...v0.17.1
