@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { budgetRuleEditScopes, budgetStatuses } from "@openmonetis/domain/budgets";
 
-export { budgetRuleEditScopes, budgetStatuses } from "@openmonetis/domain/budgets";
-
 const periodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
 const amountSchema = z.number().finite().multipleOf(0.01).positive().max(9_999_999_999.99);
 

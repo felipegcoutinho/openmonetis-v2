@@ -162,7 +162,6 @@ export const PersonReportScheduleStateOutputSchema = z
   })
   .openapi("PersonReportScheduleStateOutput");
 
-export type PersonReportQuery = z.infer<typeof PersonReportQuerySchema>;
 export type PersonReportOutput = z.infer<typeof PersonReportOutputSchema>;
 export type PersonReportGroupOutput = PersonReportOutput["groups"][number];
 export type PersonReportLineOutput = PersonReportGroupOutput["lines"][number];

@@ -9,14 +9,6 @@ import {
 } from "@openmonetis/domain/cards";
 import { DueDateAdjustmentDetailsSchema } from "./due-date-rules";
 
-export {
-  cardBrands,
-  cardClosingOffsetModes,
-  cardClosingRuleTypes,
-  cardInvoiceStatuses,
-  cardStatuses,
-} from "@openmonetis/domain/cards";
-
 const AmountSchema = z.number().finite().multipleOf(0.01).positive().max(9999999999.99);
 const DayOfMonthSchema = z.number().int().min(1).max(31);
 const LogoSchema = z

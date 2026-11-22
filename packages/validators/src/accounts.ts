@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { accountTypes } from "@openmonetis/domain/accounts";
 
-export { accountTypes } from "@openmonetis/domain/accounts";
-
 const AmountSchema = z.number().finite().multipleOf(0.01).min(-9999999999.99).max(9999999999.99);
 
 const LogoSchema = z

@@ -11,7 +11,6 @@ export {
   noteContentMaximumLength,
   noteItemsMaximumCount,
   noteItemTextMaximumLength,
-  noteKinds,
   noteTitleMaximumLength,
 } from "@openmonetis/domain/notes";
 

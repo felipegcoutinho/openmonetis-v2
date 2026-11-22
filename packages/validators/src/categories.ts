@@ -1,8 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { categoryTypes } from "@openmonetis/domain/categories";
 
-export { categoryTypes } from "@openmonetis/domain/categories";
-
 export const CreateCategoryInputSchema = z
   .object({
     name: z.string().trim().min(1).max(120),

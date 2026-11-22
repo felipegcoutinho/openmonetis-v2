@@ -10,7 +10,7 @@ import {
   paymentMethods,
 } from "@openmonetis/domain/transactions";
 
-export { installmentDiscountTypes, installmentPaymentStatuses, installmentSeriesStatuses };
+export { installmentDiscountTypes };
 
 const periodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
 const moneySchema = z.number().finite().nonnegative();

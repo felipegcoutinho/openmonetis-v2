@@ -74,7 +74,6 @@ export const CalendarOutputSchema = z
   })
   .openapi("Calendar");
 
-export type CalendarQuery = z.infer<typeof CalendarQuerySchema>;
 export type CalendarEntryOutput = z.infer<typeof CalendarEntrySchema>;
 export type CalendarDayOutput = z.infer<typeof CalendarDaySchema>;
 export type CalendarOutput = z.infer<typeof CalendarOutputSchema>;

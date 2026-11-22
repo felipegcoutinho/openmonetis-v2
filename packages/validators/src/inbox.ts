@@ -202,5 +202,4 @@ export type InboxItemOutput = z.infer<typeof InboxItemOutputSchema>;
 export type InboxItemSummaryOutput = z.infer<typeof InboxItemSummaryOutputSchema>;
 export type InboxPageOutput = z.infer<typeof InboxPageOutputSchema>;
 export type InboxSnapshotOutput = z.infer<typeof InboxSnapshotOutputSchema>;
-export type DiscardInboxItemsInput = z.infer<typeof DiscardInboxItemsInputSchema>;
 export type DiscardInboxItemsOutput = z.infer<typeof DiscardInboxItemsOutputSchema>;

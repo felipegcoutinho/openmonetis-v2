@@ -51,5 +51,4 @@ export const AiDataPreviewOutputSchema = z
 
 export type UpdateAiDataRetentionInput = z.infer<typeof UpdateAiDataRetentionInputSchema>;
 export type AiDataHistoryDeletedOutput = z.infer<typeof AiDataHistoryDeletedOutputSchema>;
-export type AiDataPreviewQuery = z.infer<typeof AiDataPreviewQuerySchema>;
 export type AiDataPreviewOutput = z.infer<typeof AiDataPreviewOutputSchema>;

@@ -7,7 +7,6 @@ import {
 import { transactionTypes } from "@openmonetis/domain/transactions";
 
 export {
-  attachmentKinds,
   attachmentMimeTypes,
   maximumAttachmentSize,
 } from "@openmonetis/domain/attachments";

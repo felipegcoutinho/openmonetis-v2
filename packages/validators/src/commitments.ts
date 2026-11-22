@@ -6,7 +6,7 @@ import {
   maxCommitmentMonths,
 } from "@openmonetis/domain/commitments";
 
-export { commitmentStatuses, defaultCommitmentMonths, maxCommitmentMonths };
+export { defaultCommitmentMonths, maxCommitmentMonths };
 
 export const commitmentPeriodSchema = z.string().regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
 const periodSchema = commitmentPeriodSchema;

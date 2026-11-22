@@ -9,8 +9,6 @@ import {
   aiProviders,
 } from "@openmonetis/domain/ai-providers";
 
-export { aiProviders } from "@openmonetis/domain/ai-providers";
-
 export const AiProviderSchema = z.enum(aiProviders);
 
 /** A model id from the provider catalog; `null` means the default of the person's plan. */
@@ -85,8 +83,6 @@ export const AiProviderLoginOutputSchema = z
   })
   .openapi("AiProviderLogin");
 
-export type AiProviderParams = z.infer<typeof AiProviderParamsSchema>;
-export type AiProviderLoginParams = z.infer<typeof AiProviderLoginParamsSchema>;
 export type StartAiProviderLoginInput = z.infer<typeof StartAiProviderLoginInputSchema>;
 export type AiProviderModel = z.infer<typeof AiProviderModelSchema>;
 export type UpdateAiProviderInput = z.infer<typeof UpdateAiProviderInputSchema>;
