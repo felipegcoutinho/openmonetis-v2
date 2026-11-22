@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildDashboardAttentionItems, compareDashboardMetric } from "./dashboard";
+import {
+  buildDashboardAttentionItems,
+  compareDashboardMetric,
+  getDashboardAttentionDueThroughDate,
+} from "./dashboard";
 
 const today = "2026-10-29";
 
@@ -51,6 +55,7 @@ test("attention lists overdue and soon-due items first and skips settled or dist
         status: "paid",
       },
     ],
+    tasks: [],
     budgets: [
       {
         id: "transport",
@@ -103,6 +108,7 @@ test("an open bill past its due date is critical even before its status is updat
         status: "due",
       },
     ],
+    tasks: [],
     budgets: [],
     pendingInboxCount: 0,
   });
@@ -134,6 +140,7 @@ test("attention carries the card logo and the category icon of each item", () =>
         status: "due",
       },
     ],
+    tasks: [],
     budgets: [
       {
         id: "bars",
@@ -157,12 +164,39 @@ test("attention carries the card logo and the category icon of each item", () =>
   );
 });
 
+test("tasks follow the bill due rule: overdue is critical, within a week is a warning", () => {
+  const items = buildDashboardAttentionItems({
+    today,
+    invoices: [],
+    bills: [],
+    tasks: [
+      { id: "later", title: "Revisar contrato", dueDate: "2026-11-30" },
+      { id: "tomorrow", title: "Pagar escola", dueDate: "2026-10-30" },
+      { id: "late", title: "Renovar seguro", dueDate: "2026-10-27" },
+    ],
+    budgets: [],
+    pendingInboxCount: 0,
+  });
+  assert.deepEqual(
+    items.map((item) => [item.id, item.kind, item.severity, item.daysUntilDue, item.title]),
+    [
+      ["task:late", "task", "critical", -2, "Renovar seguro"],
+      ["task:tomorrow", "task", "warning", 1, "Pagar escola"],
+    ],
+  );
+});
+
+test("the due-soon window ends seven days after today, across month ends", () => {
+  assert.equal(getDashboardAttentionDueThroughDate("2026-10-29"), "2026-11-05");
+});
+
 test("nothing needs attention when everything is settled and within budget", () => {
   assert.deepEqual(
     buildDashboardAttentionItems({
       today,
       invoices: [],
       bills: [],
+      tasks: [],
       budgets: [],
       pendingInboxCount: 0,
     }),

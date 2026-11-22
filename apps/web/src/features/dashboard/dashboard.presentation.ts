@@ -155,6 +155,7 @@ export function areDashboardWidgetPreferencesEqual(
 const attentionKindLabels: Record<DashboardAttentionKind, string> = {
   invoice: "Fatura",
   bill: "Conta a pagar",
+  task: "Tarefa",
   budget: "Orçamento",
   inbox: "Caixa de entrada",
 };
@@ -171,6 +172,9 @@ export function getAttentionKindLabel(item: DashboardAttentionItemOutput) {
   }
   if (item.kind === "bill" && item.daysUntilDue !== null && item.daysUntilDue < 0) {
     return "Conta vencida";
+  }
+  if (item.kind === "task" && item.daysUntilDue !== null && item.daysUntilDue < 0) {
+    return "Tarefa atrasada";
   }
   if (item.kind === "budget" && item.budgetStatus) return budgetStatusLabels[item.budgetStatus];
   return attentionKindLabels[item.kind];
@@ -202,6 +206,7 @@ export function formatAttentionDetail(item: DashboardAttentionItemOutput) {
 export const attentionActionLabels: Record<DashboardAttentionKind, string> = {
   invoice: "Abrir fatura",
   bill: "Ver contas",
+  task: "Ver anotações",
   budget: "Ver orçamento",
   inbox: "Revisar",
 };

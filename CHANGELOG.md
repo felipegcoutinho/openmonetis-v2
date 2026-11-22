@@ -19,6 +19,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   mais antiga. Tocar em uma conta traz o resultado de volta ao visor, de onde é possível continuar
   calculando ou usar o valor no formulário. O histórico fica salvo só neste navegador, aparece
   desfocado no modo de privacidade e é apagado em **Limpar histórico** ou ao sair da conta.
+- Visão geral: **Precisa de atenção** passa a listar as tarefas pendentes das Anotações com prazo
+  vencido (urgente, como **Tarefa atrasada**) ou nos próximos sete dias, com atalho para as
+  anotações. O cartão ganha um selo com a contagem e um brilho discreto na cor do item mais
+  urgente, e o vermelho fica reservado ao que já venceu.
 
 ### Corrigido
 

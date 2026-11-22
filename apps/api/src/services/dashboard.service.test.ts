@@ -4,8 +4,10 @@ import { calculateBudgetOverview, calculateBudgetSpending } from "@openmonetis/d
 import {
   createDefaultDashboardWidgetPreferences,
   dashboardWidgetIds,
+  getDashboardAttentionDueThroughDate,
   normalizeDashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
+import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
 import {
   createDashboardService,
   type DashboardRecurringRuleRecord,
@@ -574,6 +576,7 @@ test("dashboard places the new goals widget after budgets in existing custom lay
 });
 
 test("dashboard attention combines sources and reports the ones that failed", async () => {
+  let taskDueBy: string | null = null;
   const service = createDashboardService(
     scenarioRepository(),
     { list: async () => [] },
@@ -599,6 +602,12 @@ test("dashboard attention combines sources and reports the ones that failed", as
       },
       budgets: { list: async () => ({ items: [] }) },
       inbox: { snapshot: async () => ({ pendingCount: 2 }) },
+      notes: {
+        listTaskReminders: async (_userId, dueBy) => {
+          taskDueBy = dueBy;
+          return [{ id: "task-1", title: "Renovar seguro", dueDate: "2000-01-10" }];
+        },
+      },
     },
   );
 
@@ -608,9 +617,11 @@ test("dashboard attention combines sources and reports the ones that failed", as
     attention.items.map((item) => [item.kind, item.severity]),
     [
       ["invoice", "critical"],
+      ["task", "critical"],
       ["inbox", "info"],
     ],
   );
+  assert.equal(taskDueBy, getDashboardAttentionDueThroughDate(getCurrentDateInBrazil()));
   assert.deepEqual(attention.unavailableSources, ["bill"]);
 });
 
@@ -626,6 +637,7 @@ test("dashboard attention fails when no source can be read", async () => {
       bills: { get: unavailable },
       budgets: { list: unavailable },
       inbox: { snapshot: unavailable },
+      notes: { listTaskReminders: unavailable },
     },
   );
 

@@ -823,14 +823,21 @@ function groupExpenseDistribution<
     );
 }
 
-export const dashboardAttentionKinds = ["invoice", "bill", "budget", "inbox"] as const;
+export const dashboardAttentionKinds = ["invoice", "bill", "task", "budget", "inbox"] as const;
 export type DashboardAttentionKind = (typeof dashboardAttentionKinds)[number];
 
 export const dashboardAttentionSeverities = ["critical", "warning", "info"] as const;
 export type DashboardAttentionSeverity = (typeof dashboardAttentionSeverities)[number];
 
-/** Number of days ahead in which an open bill or invoice is considered due soon. */
+/** Number of days ahead in which an open bill, invoice or task is considered due soon. */
 export const dashboardAttentionDueSoonDays = 7;
+
+/** Last due date, inclusive, that still counts as due soon on `today`. */
+export function getDashboardAttentionDueThroughDate(today: string) {
+  const date = new Date(`${today}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + dashboardAttentionDueSoonDays);
+  return date.toISOString().slice(0, 10);
+}
 
 export type DashboardAttentionInvoiceCandidate = {
   cardId: string;
@@ -850,6 +857,13 @@ export type DashboardAttentionBillCandidate = {
   amount: number;
   isSettled: boolean;
   status: "paid" | "due" | "overdue";
+};
+
+/** A pending task note with a due date; completed tasks never reach the dashboard. */
+export type DashboardAttentionTaskCandidate = {
+  id: string;
+  title: string;
+  dueDate: string;
 };
 
 export type DashboardAttentionBudgetCandidate = {
@@ -909,13 +923,15 @@ function resolveDueSeverity(
 }
 
 /**
- * Collects what needs the user's action on the dashboard: overdue or soon-due invoices and bills,
- * budgets near, at or over their limit and pending inbox captures, ordered from the most to the least urgent.
+ * Collects what needs the user's action on the dashboard: overdue or soon-due invoices, bills and
+ * tasks, budgets near, at or over their limit and pending inbox captures, ordered from the most to
+ * the least urgent.
  */
 export function buildDashboardAttentionItems(input: {
   today: string;
   invoices: readonly DashboardAttentionInvoiceCandidate[];
   bills: readonly DashboardAttentionBillCandidate[];
+  tasks: readonly DashboardAttentionTaskCandidate[];
   budgets: readonly DashboardAttentionBudgetCandidate[];
   pendingInboxCount: number;
 }): DashboardAttentionItem[] {
@@ -963,6 +979,28 @@ export function buildDashboardAttentionItems(input: {
       usagePercentage: null,
       budgetStatus: null,
       referenceId: bill.id,
+      period: null,
+    });
+  }
+
+  for (const task of input.tasks) {
+    const daysUntilDue = daysBetween(input.today, task.dueDate);
+    const severity = resolveDueSeverity(daysUntilDue, false);
+    if (!severity) continue;
+    items.push({
+      id: `task:${task.id}`,
+      kind: "task",
+      severity,
+      title: task.title,
+      logo: null,
+      categoryIcon: null,
+      amount: null,
+      dueDate: task.dueDate,
+      daysUntilDue,
+      count: null,
+      usagePercentage: null,
+      budgetStatus: null,
+      referenceId: task.id,
       period: null,
     });
   }

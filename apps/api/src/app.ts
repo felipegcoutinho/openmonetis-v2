@@ -360,6 +360,7 @@ const dashboardService = createDashboardService(dashboardRepository, accountsSer
   budgets: budgetsService,
   inbox: inboxService,
   invoices: invoicesService,
+  notes: notesService,
 });
 const dashboardRoute = createDashboardRoute(dashboardService);
 const aiProvidersService = createAiProvidersService(aiProvidersRepository, aiServiceGateway);

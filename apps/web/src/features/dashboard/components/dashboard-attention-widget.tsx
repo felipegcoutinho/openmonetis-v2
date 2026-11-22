@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { MoneyValue } from "@/components/money-value";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryIcon } from "@/features/categories/category-icons";
+import { noteKindIcons } from "@/features/notes/notes.presentation";
 import { cn } from "@/lib/utils";
 import {
   attentionActionLabels,
@@ -31,12 +31,37 @@ import { useDashboardWidgetEditor } from "../useDashboardWidgetEditor";
 import { DashboardWidgetMenu } from "./dashboard-widget-menu";
 
 const collapsedItemCount = 4;
+const TaskIcon = noteKindIcons.task;
 
 const severityDotClassNames: Record<DashboardAttentionSeverity, string> = {
   critical: "bg-destructive",
   warning: "bg-warning",
   info: "bg-info",
 };
+
+/** Due date or status line: tinted when it asks for action, neutral when it only informs. */
+const severityDetailClassNames: Record<DashboardAttentionSeverity, string> = {
+  critical: "font-medium text-destructive",
+  warning: "text-warning",
+  info: "text-muted-foreground",
+};
+
+/** Header badge and corner glow follow the most severe item, so red only appears when it is due. */
+const severityToneClassNames: Record<DashboardAttentionSeverity, { badge: string; glow: string }> =
+  {
+    critical: {
+      badge: "bg-destructive/10 text-destructive",
+      glow: "bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklab,var(--destructive)_9%,transparent),transparent_60%)]",
+    },
+    warning: {
+      badge: "bg-warning/12 text-warning",
+      glow: "bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklab,var(--warning)_9%,transparent),transparent_60%)]",
+    },
+    info: {
+      badge: "bg-muted text-foreground",
+      glow: "",
+    },
+  };
 
 const severityLabels: Record<DashboardAttentionSeverity, string> = {
   critical: "Urgente",
@@ -62,6 +87,8 @@ export function DashboardAttentionWidget({
   const visibleItems = expanded ? items : items.slice(0, collapsedItemCount);
   const hiddenCount = items.length - visibleItems.length;
   const hasPartialError = Boolean(query.data?.unavailableSources.length);
+  // The API sorts items by urgency, so the first one carries the highest severity.
+  const tone = severityToneClassNames[items[0]?.severity ?? "info"];
 
   if (preferencesQuery.data?.hidden.includes("attention")) return null;
   const menu = editor.canEdit ? (
@@ -87,22 +114,35 @@ export function DashboardAttentionWidget({
   }
 
   return (
-    <Card aria-labelledby={`attention-${variant}-title`} className="gap-4 p-5" role="region">
+    <Card
+      aria-labelledby={`attention-${variant}-title`}
+      // A faint glow from the top-left corner signals urgency without a loud border. It starts at
+      // the border box and does not repeat, or a tiled copy shows as a seam under the translucent border.
+      className={cn("gap-4 bg-origin-border bg-no-repeat p-5", tone.glow)}
+      role="region"
+    >
       <div className="flex items-center gap-2">
         <h2
-          className="flex items-center gap-2 font-heading font-medium text-base leading-normal"
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-2.5 py-1 font-heading font-medium text-sm leading-normal",
+            tone.badge,
+          )}
           id={`attention-${variant}-title`}
         >
-          <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
+          {/* Filled circle: the "!" strokes take the background color to stay readable. */}
+          <CircleAlert
+            aria-hidden="true"
+            className="size-3.5 shrink-0 fill-current [&_line]:text-background"
+          />
           Precisa de atenção
-        </h2>
-        {items.length > 0 ? <Badge variant="secondary">{items.length}</Badge> : null}
-        <span className="ml-auto flex items-center gap-2">
-          {variant === "band" && items.length > 0 ? (
-            <span className="text-muted-foreground text-xs">Ordenado por urgência</span>
+          {items.length > 0 ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="tabular-nums">{items.length}</span>
+            </>
           ) : null}
-          {menu}
-        </span>
+        </h2>
+        <span className="ml-auto">{menu}</span>
       </div>
 
       {query.isPending ? (
@@ -140,7 +180,8 @@ export function DashboardAttentionWidget({
 
       {hiddenCount > 0 || expanded ? (
         <Button
-          className="w-fit"
+          // Offsets the button padding so the label lines up with the tiles' edge.
+          className="-ms-2.5 w-fit"
           onClick={() => setExpanded((value) => !value)}
           size="sm"
           type="button"
@@ -189,25 +230,21 @@ function AttentionItem({
         )}
         <span className="truncate">{getAttentionKindLabel(item)}</span>
       </span>
-      <span className="flex min-w-0 items-baseline justify-between gap-2">
+      {/* Centered, not baseline: the title group starts with a logo, which has no text baseline. */}
+      <span className="flex min-w-0 items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-1.5">
           <AttentionItemVisual item={item} />
           <span className="truncate font-medium text-sm">{getAttentionTitle(item)}</span>
         </span>
         {item.amount !== null ? (
-          <MoneyValue amount={item.amount} className="shrink-0 font-medium text-sm" />
+          <MoneyValue amount={item.amount} className="shrink-0 font-medium text-sm tabular-nums" />
         ) : null}
       </span>
       <span className="flex items-center justify-between gap-2 text-xs">
-        <span
-          className={cn(
-            "truncate",
-            item.severity === "critical" ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
+        <span className={cn("truncate", severityDetailClassNames[item.severity])}>
           {formatAttentionDetail(item)}
         </span>
-        <span className="inline-flex shrink-0 items-center gap-0.5 font-medium text-brand-strong">
+        <span className="inline-flex shrink-0 items-center gap-0.5 font-medium text-muted-foreground transition-colors group-hover:text-brand-strong group-focus-visible:text-brand-strong">
           {attentionActionLabels[item.kind]}
           <ChevronRight
             aria-hidden="true"
@@ -221,7 +258,7 @@ function AttentionItem({
   return (
     <AttentionLink
       className={cn(
-        "group grid min-h-11 gap-1 rounded-md bg-muted/70 p-3.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring",
+        "group grid min-h-11 gap-1 rounded-md bg-[color-mix(in_oklab,var(--muted)_70%,var(--card))] p-3.5 transition-[background-color,scale] duration-150 ease-out hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100",
         variant === "band" && "h-full",
       )}
       item={item}
@@ -237,7 +274,7 @@ function AttentionItemVisual({ item }: { item: DashboardAttentionItemOutput }) {
     return (
       <Image
         alt=""
-        className="size-5 shrink-0 rounded-full object-contain"
+        className="size-5 shrink-0 rounded-full object-contain outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
         height={20}
         layout="fixed"
         src={item.logo}
@@ -248,10 +285,12 @@ function AttentionItemVisual({ item }: { item: DashboardAttentionItemOutput }) {
   return (
     <span
       aria-hidden="true"
-      className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+      className="grid size-5 shrink-0 place-items-center rounded-full bg-background text-muted-foreground"
     >
       {item.kind === "invoice" ? (
         <CreditCard className="size-3" />
+      ) : item.kind === "task" ? (
+        <TaskIcon className="size-3" />
       ) : item.kind === "inbox" ? (
         <Inbox className="size-3" />
       ) : (
@@ -291,6 +330,13 @@ function AttentionLink({
         search={{ payables: true, period, settlement: "unpaid", sort: "dueDate" }}
         to="/transactions"
       >
+        {children}
+      </Link>
+    );
+  }
+  if (item.kind === "task") {
+    return (
+      <Link className={className} to="/notes">
         {children}
       </Link>
     );

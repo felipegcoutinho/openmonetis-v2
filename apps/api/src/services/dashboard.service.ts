@@ -12,6 +12,7 @@ import {
   type DashboardAttentionBillCandidate,
   type DashboardAttentionBudgetCandidate,
   type DashboardAttentionInvoiceCandidate,
+  type DashboardAttentionTaskCandidate,
   type DashboardCategoryBreakdownEntry,
   type DashboardExpenseDistributionEntry,
   type DashboardMetricEntry,
@@ -19,6 +20,7 @@ import {
   type DashboardPersonExpenseEntry,
   type DashboardTransactionOrigin,
   dashboardAttentionKinds,
+  getDashboardAttentionDueThroughDate,
   normalizeDashboardWidgetPreferences,
 } from "@openmonetis/domain/dashboard";
 import { getRecurringDueDate } from "@openmonetis/domain/recurring-expenses";
@@ -202,6 +204,13 @@ export type DashboardAttentionSources = {
   };
   inbox: {
     snapshot(userId: string, limit: number): Promise<{ pendingCount: number }>;
+  };
+  notes: {
+    /** Pending tasks due on or before `dueBy`, overdue ones included. */
+    listTaskReminders(
+      userId: string,
+      dueBy: string,
+    ): Promise<readonly DashboardAttentionTaskCandidate[]>;
   };
 };
 
@@ -535,22 +544,28 @@ export function createDashboardService(
   return {
     async getAttention(period: string, userId: string): Promise<DashboardAttentionOutput> {
       if (!attentionSources) throw new Error("Dashboard attention sources are not configured");
-      const [invoices, bills, budgets, inbox] = await Promise.allSettled([
+      const today = getCurrentDateInBrazil();
+      const [invoices, bills, tasks, budgets, inbox] = await Promise.allSettled([
         attentionSources.invoices.get(period, userId),
         attentionSources.bills.get(period, userId),
+        attentionSources.notes.listTaskReminders(
+          userId,
+          getDashboardAttentionDueThroughDate(today),
+        ),
         attentionSources.budgets.list(userId, { period }),
         attentionSources.inbox.snapshot(userId, 1),
       ]);
-      const results = { invoice: invoices, bill: bills, budget: budgets, inbox };
+      const results = { invoice: invoices, bill: bills, task: tasks, budget: budgets, inbox };
       const failures = Object.values(results).filter((result) => result.status === "rejected");
       if (failures.length === Object.keys(results).length) throw failures[0]?.reason;
 
       return {
         period,
         items: buildDashboardAttentionItems({
-          today: getCurrentDateInBrazil(),
+          today,
           invoices: invoices.status === "fulfilled" ? invoices.value.items : [],
           bills: bills.status === "fulfilled" ? bills.value.items : [],
+          tasks: tasks.status === "fulfilled" ? tasks.value : [],
           budgets: budgets.status === "fulfilled" ? budgets.value.items : [],
           pendingInboxCount: inbox.status === "fulfilled" ? inbox.value.pendingCount : 0,
         }),
