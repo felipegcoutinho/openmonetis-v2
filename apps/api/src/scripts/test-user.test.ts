@@ -1,11 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-  assertLocalDevelopment,
-  findLocalTestUserAvatar,
-  getTestUserStartPeriod,
-  isLocalDatabaseUrl,
-} from "./test-user";
+import { assertLocalDevelopment, getTestUserStartPeriod, isLocalDatabaseUrl } from "./test-user";
 
 test("the test user is only created against a database on this machine", () => {
   assert.equal(isLocalDatabaseUrl("postgres://user:pass@localhost:7000/openmonetis"), true);
@@ -35,14 +30,4 @@ test("the test user is never created in production or in an external database", 
 test("the test user's demo data ends in the current month", () => {
   assert.equal(getTestUserStartPeriod("2026-11"), "2026-06");
   assert.equal(getTestUserStartPeriod("2026-03"), "2025-10");
-});
-
-test("the test user's photo comes from the ignored .local folder at the repository root", () => {
-  assert.equal(
-    findLocalTestUserAvatar(() => false),
-    null,
-  );
-  const found = findLocalTestUserAvatar((path) => path.endsWith("test-user-avatar.jpg"));
-  assert.ok(found?.endsWith("/.local/test-user-avatar.jpg"));
-  assert.ok(!found?.includes("/apps/"));
 });

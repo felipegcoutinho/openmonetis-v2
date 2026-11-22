@@ -21,8 +21,7 @@ atual, com o seed de dados demonstrativos (`pnpm db:seed`): contas, cartões, fa
 recorrências, divisões entre pessoas, orçamentos, anotações e itens da Caixa de entrada. Rode-o
 sempre que os dados ficarem bagunçados por testes manuais. Ele só funciona fora de produção e com o
 banco local (`localhost`); com `EXTERNAL_DATABASE_URL` apontando para outro servidor, ele se recusa a
-rodar. Para dar uma foto ao usuário, coloque `.local/test-user-avatar.png` (ou `.jpg`/`.webp`, até
-256 KB) na raiz do repositório; a pasta `.local/` não é versionada. Os testes de navegador
+rodar. O usuário recebe o avatar `/avatars/4825015.png` do catálogo do app. Os testes de navegador
 (`pnpm test:e2e`) não usam esse usuário: sobem servidores próprios
 com um banco temporário.
 

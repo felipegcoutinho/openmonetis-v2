@@ -9,9 +9,8 @@
  * on this machine.
  */
 
-import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 import { resolveDatabaseUrl } from "@openmonetis/db/database-url";
 import { addMonthsToPeriod } from "@openmonetis/domain/transactions";
 import { getCurrentPeriodInBrazil } from "@openmonetis/shared/date-time";
@@ -25,17 +24,8 @@ export const testUser = {
 /** Months of demo data, ending in the current month. */
 export const testUserSeedMonths = 6;
 
-/**
- * An optional photo for the test user, kept in the repository's ignored `.local/` folder so a
- * personal picture never gets committed. Without it, the user keeps the default avatar.
- */
-const localAvatarCandidates = ["png", "jpg", "jpeg", "webp"].map((extension) =>
-  fileURLToPath(new URL(`../../../../.local/test-user-avatar.${extension}`, import.meta.url)),
-);
-
-export function findLocalTestUserAvatar(exists: (path: string) => boolean = existsSync) {
-  return localAvatarCandidates.find((path) => exists(path)) ?? null;
-}
+/** Avatar from the app catalog, so the test user never carries a personal photo. */
+export const testUserAvatar = "/avatars/4825015.png";
 
 const localDatabaseHosts = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
@@ -80,12 +70,11 @@ async function recreateTestUser() {
   await auth.api.signUpEmail({
     body: { name: testUser.name, email: testUser.email, password: testUser.password },
   });
-  const avatarPath = findLocalTestUserAvatar();
   await seedMockData([
     `--email=${testUser.email}`,
     `--startPeriod=${getTestUserStartPeriod(getCurrentPeriodInBrazil())}`,
     `--months=${testUserSeedMonths}`,
-    ...(avatarPath ? [`--avatar=${avatarPath}`] : []),
+    `--avatar=${testUserAvatar}`,
   ]);
 
   console.log(
@@ -93,7 +82,7 @@ async function recreateTestUser() {
       removed.length ? "Usuário de teste recriado." : "Usuário de teste criado.",
       `E-mail: ${testUser.email}`,
       `Senha: ${testUser.password}`,
-      avatarPath ? "Foto: .local/test-user-avatar" : "Foto: avatar padrão",
+      `Avatar: ${testUserAvatar}`,
     ].join("\n"),
   );
 }
