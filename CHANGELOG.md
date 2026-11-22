@@ -22,6 +22,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- Cartões: o card **Gastos do cartão** não passa mais da borda no celular. O gráfico, os valores e a
+  legenda ficavam mais largos que o card e eram cortados à direita. A comparação com a fatura
+  anterior vira uma frase só. O maior gasto e as parcelas de outras datas ficam em linhas de rótulo
+  e valor no celular e, em telas largas, em pares compactos ao lado do total, sem o espaço vazio que
+  separava rótulo e valor. A legenda fica centralizada, quebrando em duas linhas quando falta
+  espaço.
+  O marcador de **Fatura anterior** passa a ser tracejado como a linha que representa.
 - Cartões: a comparação com a fatura anterior por pessoa passa a contar compras e recorrências
   divididas pela parte de cada um. Antes, uma assinatura dividida, como uma Netflix repartida entre
   duas pessoas, contava inteira para quem a cadastrou, e o seletor de pessoa nem aparecia quando

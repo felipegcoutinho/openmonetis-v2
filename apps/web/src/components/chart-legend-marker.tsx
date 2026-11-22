@@ -18,7 +18,12 @@ export function ChartLegendMarker({ color, className, variant = "area" }: ChartL
     return (
       <span
         aria-hidden="true"
-        className={cn("h-0 w-3 shrink-0 border-current border-t-2 border-dashed", className)}
+        // Drawn as explicit dashes: a 12px dashed border rendered as one or two blurred dashes
+        // that read as a solid line, unlike the series it labels.
+        className={cn(
+          "h-0.5 w-4 shrink-0 bg-[repeating-linear-gradient(90deg,currentColor_0_4px,transparent_4px_6px)]",
+          className,
+        )}
         style={color ? { color } : undefined}
       />
     );

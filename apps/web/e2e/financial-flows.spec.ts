@@ -266,7 +266,7 @@ test("the card invoice comparison can be narrowed to each person's share", async
 
   await selector.click();
   await page.getByRole("option", { name: /Browser user/ }).click();
-  await expect(page.getByText("nesta:")).toBeVisible();
+  await expect(page.getByText(/nesta fatura, .*acima da fatura anterior/)).toBeVisible();
 });
 
 test("tag reports count transfers once on desktop and mobile without changing the result", async ({

@@ -8,7 +8,7 @@ import { MobileSelect as Select } from "@/components/forms/mobile-select";
 import { MobileSelectContent as SelectContent } from "@/components/forms/mobile-select-content";
 import { MoneyValue } from "@/components/money-value";
 import { usePrivacyMode } from "@/components/privacy-provider";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
@@ -68,17 +68,20 @@ export function CardSpendingFlow({
         onValueChange={(value) => setActiveView(value as SpendingView)}
         value={activeView}
       >
-        <CardHeader className="items-center border-b py-4">
+        <CardHeader className="gap-2 border-b pt-4 pb-0!">
           <CardTitle className="flex items-center gap-2 text-base">
             <ChartNoAxesCombined aria-hidden="true" className="size-4 text-muted-foreground" />
             Gastos do cartão
           </CardTitle>
-          <CardAction className="row-span-1 self-center">
-            <TabsList aria-label="Visualização dos gastos do cartão">
-              <TabsTrigger value="cycle">Por dia</TabsTrigger>
-              <TabsTrigger value="history">Por fatura</TabsTrigger>
-            </TabsList>
-          </CardAction>
+          {/* Line tabs rest on the header border, so the active underline replaces it. */}
+          <TabsList
+            aria-label="Visualização dos gastos do cartão"
+            className="-mb-px"
+            variant="line"
+          >
+            <TabsTrigger value="cycle">Por dia</TabsTrigger>
+            <TabsTrigger value="history">Por fatura</TabsTrigger>
+          </TabsList>
         </CardHeader>
         <TabsContent value="cycle">
           <CardCycleSpending cycle={cycle} />
@@ -108,9 +111,16 @@ function CardCycleSpending({ cycle }: { cycle: CardCycle }) {
   }));
 
   return (
-    <CardContent className="grid gap-5 py-5">
-      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-        <div className="grid gap-1">
+    // `grid-cols-1` holds the column to the card's width: an automatic track grew to the chart's
+    // first measured width and pushed the figures and the legend past the card's edge.
+    <CardContent className="grid grid-cols-1 gap-5 py-5">
+      {/*
+       * The headline and its comparison read as one block. The supporting figures follow as
+       * label-value rows on phones, and as compact label-over-value pairs on wider screens, where a
+       * row would stretch the label and value apart; only large screens fit them beside the headline.
+       */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-8">
+        <div className="grid min-w-0 gap-1">
           <p className="text-muted-foreground text-xs">
             {formatCardCycleRange(cycle.startDate, cycle.endDate)}
             <span aria-hidden="true"> · </span>
@@ -121,23 +131,38 @@ function CardCycleSpending({ cycle }: { cycle: CardCycle }) {
             <CardCycleComparisonSummary comparison={cycle.comparison} cycle={cycle} />
           ) : null}
         </div>
-        {cycle.peakDay ? (
-          <p className="text-muted-foreground text-xs">
-            Maior gasto: {formatInvoiceDate(cycle.peakDay.date)},{" "}
-            <MoneyValue amount={cycle.peakDay.amount} className="font-medium text-foreground" />
-          </p>
+        {cycle.peakDay || cycle.openingAmount !== 0 ? (
+          <dl className="grid gap-1.5 border-t pt-3 text-xs sm:flex sm:gap-8 lg:border-t-0 lg:pt-0">
+            {cycle.peakDay ? (
+              <div className="flex items-baseline justify-between gap-4 sm:grid sm:gap-0.5 lg:justify-items-end">
+                <dt className="text-muted-foreground">
+                  Maior gasto · {formatInvoiceDate(cycle.peakDay.date)}
+                </dt>
+                <dd>
+                  <MoneyValue
+                    amount={cycle.peakDay.amount}
+                    className="font-medium tabular-nums sm:text-sm"
+                  />
+                </dd>
+              </div>
+            ) : null}
+            {cycle.openingAmount !== 0 ? (
+              <div className="flex items-baseline justify-between gap-4 sm:grid sm:gap-0.5 lg:justify-items-end">
+                <dt className="text-muted-foreground">Parcelas e outras datas</dt>
+                <dd>
+                  <MoneyValue
+                    amount={cycle.openingAmount}
+                    className="font-medium tabular-nums sm:text-sm"
+                  />
+                </dd>
+              </div>
+            ) : null}
+          </dl>
         ) : null}
       </div>
 
-      {cycle.openingAmount !== 0 ? (
-        <p className="-mt-2 text-pretty text-muted-foreground text-xs">
-          Inclui <MoneyValue amount={cycle.openingAmount} className="font-medium text-foreground" />{" "}
-          de parcelas e lançamentos de outras datas.
-        </p>
-      ) : null}
-
       {hasSpending ? (
-        <div>
+        <div className="min-w-0">
           <ChartContainer
             aria-label={`Gastos diários do ciclo de ${formatCardCycleDate(cycle.startDate)} a ${formatCardCycleDate(cycle.endDate)}`}
             className={cn(
@@ -225,7 +250,7 @@ function CardCycleSpending({ cycle }: { cycle: CardCycle }) {
               />
             </ComposedChart>
           </ChartContainer>
-          <div className="mt-2 flex items-center justify-center gap-4 font-mono text-muted-foreground text-xs">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 font-mono text-muted-foreground text-xs">
             <span className="flex items-center gap-1.5">
               <ChartLegendMarker className="text-brand/70" />
               No dia
@@ -272,21 +297,16 @@ function CardCycleComparisonSummary({
   const selected = options.find((option) => option.person.id === selectedPersonId);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {!selected ? (
         <CardCycleComparisonLine comparison={comparison} />
       ) : selected.share.comparison ? (
         <CardCycleComparisonLine comparison={selected.share.comparison} showCurrentAmount />
       ) : (
-        <p className="flex flex-wrap items-center gap-x-1 text-muted-foreground text-xs">
-          <Minus aria-hidden="true" className="size-3.5 shrink-0" />
-          <span>
-            <MoneyValue amount={selected.share.totalAmount} className="font-medium" /> nesta fatura
-          </span>
-          <span>
-            <span aria-hidden="true">· </span>
-            sem gastos na anterior para comparar
-          </span>
+        <p className="text-pretty text-muted-foreground text-xs leading-relaxed">
+          <Minus aria-hidden="true" className="me-1 inline size-3.5 -translate-y-px align-middle" />
+          <MoneyValue amount={selected.share.totalAmount} className="font-medium text-foreground" />{" "}
+          nesta fatura, sem gastos na anterior para comparar
         </p>
       )}
       {options.length > 1 ? (
@@ -296,7 +316,7 @@ function CardCycleComparisonSummary({
         >
           <SelectTrigger
             aria-label="Pessoa da comparação"
-            className="-my-1.5 gap-1.5 border-transparent bg-transparent pr-1.5 pl-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-popup-open:bg-muted data-popup-open:text-foreground"
+            className="-my-1.5 -ms-2 gap-1.5 border-transparent bg-transparent pr-1.5 pl-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-popup-open:bg-muted data-popup-open:text-foreground"
             size="sm"
           >
             <SelectValue>
@@ -331,29 +351,30 @@ function CardCycleComparisonLine({
   const { icon: TrendIcon, className } = comparisonTrendStyles[comparison.trend];
   const label = formatCardCycleComparison(comparison);
 
+  // One sentence that wraps as text, so no line starts with a stray separator.
   return (
-    <p className="flex flex-wrap items-center gap-x-1 text-muted-foreground text-xs">
-      <TrendIcon aria-hidden="true" className={cn("size-3.5 shrink-0", className)} />
-      {comparison.trend === "equal" ? (
-        <span>{label}</span>
-      ) : (
-        <span>
+    <p className="text-pretty text-muted-foreground text-xs leading-relaxed">
+      <TrendIcon
+        aria-hidden="true"
+        className={cn("me-1 inline size-3.5 -translate-y-px align-middle", className)}
+      />
+      {showCurrentAmount ? (
+        <>
+          <MoneyValue amount={comparison.currentAmount} className="font-medium text-foreground" />{" "}
+          nesta fatura,{" "}
+        </>
+      ) : null}
+      {comparison.trend === "equal" ? null : (
+        <>
           <MoneyValue
             amount={comparison.differenceAmount}
             className={cn("font-medium", className)}
           />{" "}
-          {label}
-        </span>
+        </>
       )}
-      {showCurrentAmount ? (
-        <span>
-          <span aria-hidden="true">· </span>
-          nesta: <MoneyValue amount={comparison.currentAmount} />
-        </span>
-      ) : null}
-      <span>
-        <span aria-hidden="true">· </span>
-        na anterior: <MoneyValue amount={comparison.previousAmount} />
+      {label}{" "}
+      <span className="whitespace-nowrap">
+        (<MoneyValue amount={comparison.previousAmount} />)
       </span>
     </p>
   );
