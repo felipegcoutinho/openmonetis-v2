@@ -3,6 +3,29 @@
 Os testes usam `node:test`, `node:assert/strict` e `tsx`. A suíte web usa Chromium via Playwright; os testes sem banco não iniciam navegador. As suítes sem banco, PostgreSQL, S3Mock e Chromium são executadas pela CI. Os testes de provedores reais são optativos e separados. Lint, tipos e build são verificações
 complementares, sem substituir os testes de comportamento.
 
+## Usuário de teste local
+
+Para conferir telas no ambiente de desenvolvimento (`pnpm dev`), use sempre o mesmo usuário,
+Pumita Rodriguez:
+
+| E-mail                    | Senha               |
+| ------------------------- | ------------------- |
+| `teste@openmonetis.local` | `openmonetis-teste` |
+
+```bash
+pnpm db:test-user
+```
+
+O comando apaga o usuário e tudo o que é dele, cadastra-o de novo e preenche seis meses, até o mês
+atual, com o seed de dados demonstrativos (`pnpm db:seed`): contas, cartões, faturas, parcelas,
+recorrências, divisões entre pessoas, orçamentos, anotações e itens da Caixa de entrada. Rode-o
+sempre que os dados ficarem bagunçados por testes manuais. Ele só funciona fora de produção e com o
+banco local (`localhost`); com `EXTERNAL_DATABASE_URL` apontando para outro servidor, ele se recusa a
+rodar. Para dar uma foto ao usuário, coloque `.local/test-user-avatar.png` (ou `.jpg`/`.webp`, até
+256 KB) na raiz do repositório; a pasta `.local/` não é versionada. Os testes de navegador
+(`pnpm test:e2e`) não usam esse usuário: sobem servidores próprios
+com um banco temporário.
+
 ## Suíte sem banco
 
 ```bash

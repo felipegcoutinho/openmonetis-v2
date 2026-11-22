@@ -20,6 +20,7 @@
     "db:migrations:check": "node scripts/validate-migrations.mjs",
     "db:migrate": "pnpm --filter @openmonetis/db db:migrate",
     "db:seed": "pnpm --filter @openmonetis/api db:seed",
+    "db:test-user": "pnpm --filter @openmonetis/api db:test-user",
     "db:studio": "pnpm --filter @openmonetis/db db:studio",
     "dev": "pnpm --parallel --filter @openmonetis/api --filter @openmonetis/web --filter @openmonetis/ai dev",
     "dev:ai": "pnpm --filter @openmonetis/ai dev",

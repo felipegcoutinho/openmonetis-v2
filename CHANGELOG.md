@@ -7,6 +7,15 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Desenvolvimento: `pnpm db:test-user` cria ou recria o usuário de teste local, Pumita Rodriguez
+  (`teste@openmonetis.local`, senha `openmonetis-teste`) com seis meses de dados demonstrativos até o
+  mês atual. O comando só roda fora de produção e contra o banco local, e usa como foto o arquivo
+  `.local/test-user-avatar.png` (ou `.jpg`/`.webp`), quando existir; ver `docs/testing.md`.
+  Nos dados demonstrativos (`pnpm db:seed`), Marina Oliveira e Eduardo Lima deixam de aparecer com
+  o avatar um do outro.
+
 ## [0.19.0] - 2026-11-20
 
 Experiência de aplicativo no celular com PWA instalável, temas próprios para o modo claro e para o

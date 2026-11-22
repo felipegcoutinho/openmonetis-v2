@@ -10,6 +10,7 @@
     "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch --import dotenv/config src/index.ts",
     "build": "tsc --noEmit",
     "db:seed": "DOTENV_CONFIG_PATH=../../.env tsx --import dotenv/config src/scripts/mock-data.ts",
+    "db:test-user": "DOTENV_CONFIG_PATH=../../.env tsx --import dotenv/config src/scripts/test-user.ts",
     "worker:recurring-external-expenses": "DOTENV_CONFIG_PATH=../../.env tsx --import dotenv/config src/scripts/recurring-external-expenses.worker.ts",
     "typecheck": "tsc --noEmit"
   },

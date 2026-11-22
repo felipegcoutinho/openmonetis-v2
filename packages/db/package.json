@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
+    "./database-url": "./src/database-url.ts",
     "./schema": "./src/schema.ts"
   },
   "scripts": {
