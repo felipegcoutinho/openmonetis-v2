@@ -54,8 +54,8 @@ export function MonthNavigation({
       <PopoverTrigger
         aria-label={`Selecionar mês. Mês selecionado: ${periodLabel}`}
         className={cn(
-          "inline-flex min-w-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums outline-none transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring",
-          compact ? "h-9 border bg-card" : "h-8",
+          "inline-flex min-w-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums outline-none transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring",
+          compact ? "h-9 border bg-card" : "h-8 md:min-w-44",
         )}
       >
         <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
@@ -96,7 +96,7 @@ export function MonthNavigation({
       data-mobile-month-navigation
       aria-label="Navegação por mês"
       className={cn(
-        "material sticky top-(--page-sticky-top) z-20 flex w-full items-center justify-center rounded-lg border px-1 py-1 md:justify-start md:gap-1",
+        "material sticky top-(--page-sticky-top) z-20 flex w-full items-center justify-center rounded-lg border px-1 py-1 md:w-fit md:justify-start md:gap-1",
         className,
       )}
     >

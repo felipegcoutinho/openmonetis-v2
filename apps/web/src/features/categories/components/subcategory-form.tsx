@@ -65,7 +65,7 @@ export function SubcategoryForm({
       >
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={id}>
+            <Label htmlFor={id}>
               Nova subcategoria de <span className="font-sans">{parent.name}</span>
             </Label>
             <Input

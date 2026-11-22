@@ -83,7 +83,7 @@ export function AttachmentFilePicker({
   }
 
   return (
-    <div className="min-w-0 overflow-hidden rounded-md border border-input bg-muted/20">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-input bg-field">
       {files.length ? (
         <AttachmentGroup
           aria-label="Arquivos selecionados"

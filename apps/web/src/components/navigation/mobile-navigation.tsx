@@ -25,11 +25,13 @@ export function MobileNavigation({
   mobileNavigationOpen: boolean;
   setMobileNavigationOpen: Dispatch<SetStateAction<boolean>>;
 }) {
+  // Icons only, in five equal columns, so the new-transaction button sits on the centre line.
+  // Each destination keeps its name for assistive technology.
   return (
     <nav
       aria-label="Navegação principal mobile"
       className={cn(
-        "app-tabbar fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.25fr_0.75fr_1fr_1fr] material border-t pt-1 pr-[max(0.5rem,var(--safe-right))] pb-[max(0.3rem,var(--safe-bottom))] pl-[max(0.5rem,var(--safe-left))] transition-transform duration-300 ease-(--ease-drawer) motion-reduce:transition-none md:hidden",
+        "app-tabbar fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 material border-t pt-1 pr-[max(0.5rem,var(--safe-right))] pb-[max(0.3rem,var(--safe-bottom))] pl-[max(0.5rem,var(--safe-left))] transition-transform duration-300 ease-(--ease-drawer) motion-reduce:transition-none md:hidden",
         isMobile && mobileNavigationHidden && "pointer-events-none translate-y-full",
       )}
       inert={Boolean(isMobile && mobileNavigationHidden)}
@@ -42,9 +44,9 @@ export function MobileNavigation({
         preservePeriod
       >
         <MobileNavigationIcon active={location.pathname === "/dashboard"}>
-          <LayoutDashboard aria-hidden="true" className="size-5" />
+          <LayoutDashboard aria-hidden="true" className="size-6" />
         </MobileNavigationIcon>
-        <span className="max-w-full truncate">Visão geral</span>
+        <span className="sr-only">Visão geral</span>
       </NavLink>
       <NavLink
         aria-current={isPathActive(location.pathname, "/transactions") ? "page" : undefined}
@@ -54,9 +56,9 @@ export function MobileNavigation({
         preservePeriod
       >
         <MobileNavigationIcon active={isPathActive(location.pathname, "/transactions")}>
-          <ArrowLeftRight aria-hidden="true" className="size-5" />
+          <ArrowLeftRight aria-hidden="true" className="size-6" />
         </MobileNavigationIcon>
-        <span className="max-w-full truncate">Lançamentos</span>
+        <span className="sr-only">Lançamentos</span>
       </NavLink>
       <MobileTransactionButton />
       <MobileShortcut enabled={Boolean(user)} />
@@ -68,9 +70,9 @@ export function MobileNavigation({
         type="button"
       >
         <MobileNavigationIcon active={mobileNavigationOpen}>
-          <Menu aria-hidden="true" className="size-5" />
+          <Menu aria-hidden="true" className="size-6" />
         </MobileNavigationIcon>
-        Menu
+        <span className="sr-only">Menu</span>
       </button>
     </nav>
   );

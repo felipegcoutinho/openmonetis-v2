@@ -99,7 +99,7 @@ function AddAccountYieldForm({
       >
         {(state) => <MobileFormState {...state} />}
       </form.Subscribe>
-      <div className="rounded-md border bg-muted/40 px-3 py-2">
+      <div className="rounded-lg border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{account.name}</p>
         <p className="text-muted-foreground text-xs">
           Saldo atual: {formatCurrency(account.summary.balance)}
@@ -128,9 +128,7 @@ function AddAccountYieldForm({
             <form.Field name="amount">
               {(field) => (
                 <div className="grid gap-1.5">
-                  <Label className="font-mono" htmlFor={`${id}-amount`}>
-                    Valor do rendimento
-                  </Label>
+                  <Label htmlFor={`${id}-amount`}>Valor do rendimento</Label>
                   <CurrencyInput
                     id={`${id}-amount`}
                     onValueChange={field.handleChange}
@@ -144,9 +142,7 @@ function AddAccountYieldForm({
             <form.Field name="balance">
               {(field) => (
                 <div className="grid gap-1.5">
-                  <Label className="font-mono" htmlFor={`${id}-balance`}>
-                    Saldo atual na conta real
-                  </Label>
+                  <Label htmlFor={`${id}-balance`}>Saldo atual na conta real</Label>
                   <CurrencyInput
                     allowNegative
                     id={`${id}-balance`}
@@ -166,9 +162,7 @@ function AddAccountYieldForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-date`}>
-              Data do rendimento
-            </Label>
+            <Label htmlFor={`${id}-date`}>Data do rendimento</Label>
             <DatePicker
               id={`${id}-date`}
               max={getPeriodEndDateString(period)}

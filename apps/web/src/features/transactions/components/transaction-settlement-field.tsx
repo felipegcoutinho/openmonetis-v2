@@ -39,7 +39,7 @@ export function TransactionSettlementField({
             return (
               <section
                 className={cn(
-                  "flex items-center justify-between gap-4 rounded-lg border border-input bg-popover px-3 py-2.5 transition-colors",
+                  "flex items-center justify-between gap-4 rounded-lg border border-input bg-field px-3 py-2.5 transition-colors",
                   isSettled && "border-success/20 bg-success/5",
                 )}
               >
@@ -109,7 +109,7 @@ export function TransactionSettlementField({
         <form.Field name="boletoPaymentDate">
           {(field) => (
             <div className="grid gap-2">
-              <Label className="font-mono" htmlFor={dateId}>
+              <Label htmlFor={dateId}>
                 {values.type === "income" ? "Data do recebimento" : "Data do pagamento"}
               </Label>
               <MobileDatePicker

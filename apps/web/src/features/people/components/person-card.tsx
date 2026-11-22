@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { MessageSquare, Pencil, Trash2, UserRound } from "lucide-react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { CurrentUserBadge } from "@/components/current-user-badge";
 import { NotePopover } from "@/components/note-popover";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +21,7 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
   const isInactive = person.status === "inactive";
 
   return (
-    <Card className={cn("gap-5", isInactive && "opacity-70")}>
+    <Card className={cn("gap-5", isInactive && "opacity-70")} data-mobile-entity-card>
       <CardHeader className="gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -82,18 +83,14 @@ export function PersonCard({ person, onEdit, onRemove }: PersonCardProps) {
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring active:bg-(--pressed) pointer-coarse:h-11"
+          className={cardFooterActionClassName}
           params={{ personId: person.id }}
           to="/people/$personId"
         >
           <UserRound aria-hidden="true" className="size-3.5" />
           Ver painel
         </Link>
-        <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring active:bg-(--pressed) pointer-coarse:h-11"
-          onClick={() => onEdit(person)}
-          type="button"
-        >
+        <button className={cardFooterActionClassName} onClick={() => onEdit(person)} type="button">
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>

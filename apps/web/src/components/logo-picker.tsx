@@ -26,7 +26,7 @@ const OPTION_SELECTOR = "[data-logo-option]";
 const ARROW_KEYS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
 
 const tileClassName =
-  "relative flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-xs border border-input bg-popover shadow-xs outline-none transition-[color,background-color,border-color,box-shadow,scale] duration-150 hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] aria-pressed:border-brand aria-pressed:bg-accent aria-pressed:font-medium";
+  "relative flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-xs border border-input bg-field outline-none transition-[color,background-color,border-color,box-shadow,scale] duration-150 hover:border-input-hover focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] aria-pressed:border-brand-strong aria-pressed:bg-accent aria-pressed:font-medium";
 
 /** Accent- and case-insensitive, so "itau" finds "Itaú". */
 function normalizeSearch(text: string) {
@@ -135,11 +135,11 @@ export function LogoPicker({
     <>
       <Button
         aria-haspopup="dialog"
-        className="h-auto w-full justify-start gap-3 border-input bg-popover px-2.5 py-2 text-left shadow-xs"
+        className="h-auto w-full justify-start gap-3 px-2.5 py-2 text-left"
         disabled={disabled}
         onClick={() => setOpen(true)}
         type="button"
-        variant="outline"
+        variant="field"
       >
         {value ? (
           <Image

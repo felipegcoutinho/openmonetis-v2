@@ -122,7 +122,7 @@ function AdjustInvoiceForm({
       >
         {(state) => <MobileFormState {...state} />}
       </form.Subscribe>
-      <div className="rounded-md border bg-muted/40 px-3 py-2">
+      <div className="rounded-lg border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{cardName}</p>
         <p className="text-muted-foreground text-xs">
           Valor atual: {formatCurrency(currentAmount)}
@@ -131,9 +131,7 @@ function AdjustInvoiceForm({
       <form.Field name="amount">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-amount`}>
-              Novo valor da fatura
-            </Label>
+            <Label htmlFor={`${id}-amount`}>Novo valor da fatura</Label>
             <CurrencyInput
               id={`${id}-amount`}
               onValueChange={field.handleChange}
@@ -147,9 +145,7 @@ function AdjustInvoiceForm({
           const selectedPerson = people.find((person) => person.id === field.state.value);
           return (
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={`${id}-person`}>
-                Pessoa responsável
-              </Label>
+              <Label htmlFor={`${id}-person`}>Pessoa responsável</Label>
               <Select
                 onValueChange={(value) => value && field.handleChange(value)}
                 value={field.state.value}
@@ -174,9 +170,7 @@ function AdjustInvoiceForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-date`}>
-              Data do ajuste
-            </Label>
+            <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
             <DatePicker
               id={`${id}-date`}
               max={getMaximumEntryDate(period)}

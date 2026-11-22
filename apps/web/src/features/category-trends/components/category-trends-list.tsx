@@ -284,8 +284,9 @@ function CategorySection({
                     amount={category.averageAmount}
                     className={cn(
                       "font-normal",
-                      (category.isDetail || category.averageAmount === 0) &&
-                        "text-muted-foreground",
+                      category.isDetail || category.averageAmount === 0
+                        ? "text-muted-foreground"
+                        : "text-info",
                     )}
                   />
                 </TableCell>
@@ -328,7 +329,7 @@ function CategorySection({
                 </TableCell>
               ))}
               <TableCell className="sticky right-[128px] z-10 border-l bg-muted px-4 py-3 text-right">
-                <MoneyValue amount={averageAmount} className="font-normal" />
+                <MoneyValue amount={averageAmount} className="font-normal text-info" />
               </TableCell>
               <TableCell className="sticky right-0 z-10 bg-muted px-4 py-3 text-right">
                 <MoneyValue amount={totalAmount} className="font-normal" />
@@ -349,7 +350,7 @@ function CategorySection({
                 <div className="flex min-w-0 items-center gap-2">{identity(category)}</div>
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
                   <p className="text-muted-foreground">
-                    Média <MoneyValue amount={category.averageAmount} />
+                    Média <MoneyValue amount={category.averageAmount} className="text-info" />
                   </p>
                   <p className="text-muted-foreground">
                     Total{" "}

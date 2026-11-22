@@ -116,7 +116,7 @@ export function NoteAttachments({
   return (
     <section aria-labelledby={headingId} className="grid min-w-0 gap-2">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-medium font-mono text-sm" id={headingId}>
+        <h3 className="font-medium text-sm" id={headingId}>
           Anexos
         </h3>
         {attachments.length ? (

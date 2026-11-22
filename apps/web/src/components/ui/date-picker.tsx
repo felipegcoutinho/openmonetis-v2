@@ -75,7 +75,7 @@ export function DatePicker({
             aria-invalid={ariaInvalid}
             aria-labelledby={ariaLabelledBy}
             className={cn(
-              "w-full justify-between border-input bg-popover px-2.5 font-normal focus-visible:ring-ring/50",
+              "w-full justify-between px-2.5 focus-visible:ring-ring/50",
               !value && "text-muted-foreground",
               className,
             )}
@@ -83,7 +83,7 @@ export function DatePicker({
             disabled={disabled}
             id={id}
             type="button"
-            variant="outline"
+            variant="field"
           />
         }
       >

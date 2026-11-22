@@ -127,9 +127,7 @@ export function TransactionRefundDialog({
             {(field) => (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <Label className="font-mono" htmlFor={`${id}-amount`}>
-                    Valor recebido
-                  </Label>
+                  <Label htmlFor={`${id}-amount`}>Valor recebido</Label>
                   {transaction && field.state.value !== transaction.refundableAmount.toFixed(2) ? (
                     <Button
                       className="h-auto px-0 py-0 text-xs"
@@ -154,9 +152,7 @@ export function TransactionRefundDialog({
           <form.Field name="receivedAt">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-received-at`}>
-                  Data do reembolso
-                </Label>
+                <Label htmlFor={`${id}-received-at`}>Data do reembolso</Label>
                 <DatePicker
                   id={`${id}-received-at`}
                   onChange={field.handleChange}
@@ -193,9 +189,7 @@ export function TransactionRefundDialog({
           <form.Field name="note">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-note`}>
-                  Observação (opcional)
-                </Label>
+                <Label htmlFor={`${id}-note`}>Observação (opcional)</Label>
                 <Textarea
                   id={`${id}-note`}
                   maxLength={1000}

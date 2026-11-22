@@ -1,4 +1,7 @@
-/* OpenMonetis light: warm sand canvas, charcoal ink and the coral brand. */
+/*
+ * OpenMonetis light: warm sand canvas, charcoal ink and the coral brand. Cards, dialogs, sheets and
+ * the fields inside them are white sheets laid on the sand, edged by a soft hairline.
+ */
 :where(:root),
 [data-palette="openmonetis-light"] {
   --palette-coral: oklch(76.042% 0.16904 61.306);
@@ -9,17 +12,17 @@
   --palette-teal: oklch(57% 0.105 188);
   --background: oklch(96.785% 0.00443 77.988);
   --foreground: var(--palette-charcoal);
-  --card: var(--background);
+  --card: oklch(98.26% 0.0016 66.229);
   --card-foreground: var(--foreground);
-  --popover: var(--background);
+  --popover: var(--card);
   --popover-foreground: var(--foreground);
   --primary: var(--palette-coral);
   --primary-foreground: var(--palette-charcoal);
-  --secondary: oklch(93.597% 0.01475 80.639);
+  --secondary: oklch(94.6% 0.0075 78);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
-  --muted-foreground: color-mix(in srgb, var(--foreground) 72%, var(--background));
-  --accent: color-mix(in srgb, var(--primary) 16%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--foreground) 72%, var(--card));
+  --accent: color-mix(in srgb, var(--primary) 14%, var(--card));
   --accent-foreground: var(--foreground);
   --destructive: color-mix(in srgb, var(--palette-red) 90%, var(--palette-charcoal));
   --info: color-mix(in srgb, var(--palette-blue) 70%, var(--palette-charcoal));
@@ -30,8 +33,8 @@
   --brand: var(--palette-coral);
   --brand-strong: color-mix(in srgb, var(--palette-coral) 45%, var(--palette-charcoal));
   --brand-foreground: var(--palette-charcoal);
-  --border: oklch(26.033% 0.00003 271.152 / 0.2);
-  --input: color-mix(in srgb, var(--foreground) 30%, var(--background));
+  --border: oklch(26.033% 0.00003 271.152 / 0.1);
+  --input: color-mix(in srgb, var(--foreground) 22%, var(--card));
   --ring: var(--info);
   --overlay: color-mix(in srgb, var(--foreground) 18%, transparent);
   --chart-1: var(--palette-coral);

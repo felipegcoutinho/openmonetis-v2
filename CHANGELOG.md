@@ -24,13 +24,57 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   anotações. O cartão ganha um selo com a contagem e um brilho discreto na cor do item mais
   urgente, e o vermelho fica reservado ao que já venceu.
 
+### Alterado
+
+- Tema padrão (OpenMonetis claro): cards, janelas, painéis laterais e folhas passam a ser brancos
+  sobre o fundo areia, e os campos de formulário, seletores, botões de contorno, a aba ativa, o
+  botão dos interruptores, a barra de navegação por mês e os submenus do cabeçalho acompanham o
+  branco; a barra do cabeçalho continua translúcida sobre o fundo areia. As bordas de cards e
+  campos ficam mais suaves, as áreas secundárias passam de bege para um cinza quente discreto e os
+  destaques de seleção usam o coral sobre branco. Os demais temas não mudam.
+- Formulários: todos os campos (texto, valor, datas, listas, seletores de categoria, etiquetas,
+  ícone e logo, caixas de seleção, anexos) e as linhas com interruptor têm o mesmo fundo, a mesma
+  borda e os mesmos cantos, e escurecem a borda da mesma forma ao passar o ponteiro, sem cobrir o
+  vermelho de um campo com erro. As opções escolhidas em listas de cartões (escopo de edição,
+  parcelas, períodos, orçamentos a copiar) usam a borda coral sobre o mesmo destaque, e os quadros
+  informativos dentro dos formulários usam um único tom neutro.
+- Lançamentos: **Exportar** fica branco como os demais botões da barra de ações, e **Filtros**
+  ganha um leve tom coral para se destacar.
+- Cabeçalho: a sombra dos submenus deixa de ser cortada em um retângulo acinzentado ao redor do
+  painel.
+- Celular: a barra inferior mostra só os ícones, em cinco colunas iguais, e o botão **Novo** fica
+  exatamente no centro da tela; leitores de tela continuam anunciando o nome de cada destino. Os
+  ícones passam de 20 para 24 px, e o destaque da aba ativa e o botão **Novo**, de 48 × 28 para
+  60 × 36 px.
+- Celular: o zoom com dois dedos e com toque duplo fica desativado no aplicativo.
+- Celular: o botão **Novo** da barra inferior também cria anotações. **Nova anotação** aparece
+  abaixo de despesa, receita e transferência, separada por um divisor, e a folha passa a se chamar
+  **Novo**.
+- O atalho da barra inferior para a Caixa de entrada passa a se chamar **Caixa de entrada**, como
+  no menu e na página, em vez de **Capturas**.
+- Celular: na Caixa de entrada, **Descartar** e **Revisar** ficam lado a lado, com a mesma largura,
+  ocupando toda a largura do card e 44 px de altura (**Restaurar** e o ícone de excluir em
+  vermelho, nas descartadas; nas confirmadas, **Excluir** em vermelho na largura toda). Os
+  detalhes abrem com um toque na parte de cima do card (nome, hora e texto da notificação),
+  indicada por uma seta ao lado do nome; o ícone de olho, que se confundia com o de ocultar
+  valores, sai do celular.
+- Celular: os cards de Orçamentos seguem o padrão de Contas e Cartões, com **Editar**,
+  **Lançamentos** e o menu de mais ações na mesma linha, todos com 44 px de altura. O botão
+  **Detalhes**, que abre o lançado e o previsto, passa para a linha do saldo restante.
+- Celular: Metas, Anotações e Pessoas adotam o mesmo rodapé de ações dos demais cards, e as ações
+  do rodapé de todos os cards passam a usar um único estilo.
+
 ### Corrigido
 
+- Celular: trocar de página não pisca mais. A página nova aparecia, sumia e voltava a surgir logo
+  depois da transição, e na troca entre abas o fundo aparecia por um instante entre as duas telas.
 - Celular: as barras do sistema acompanham o modo e o tema do aplicativo, mesmo quando o navegador
   ou o celular estão em outro modo. A página guardava uma segunda cor, clara e fixa, que podia
   prevalecer na barra de status. O manifesto do aplicativo instalado, de onde o Firefox tira a cor
   das barras e o Chrome a da barra de navegação, passa a trazer a cor do tema em uso, em vez de um
   claro fixo; o navegador aplica a mudança ao reabrir o aplicativo.
+- Celular: no menu de navegação, **Ajustes** fica alinhado aos demais itens, com o divisor reto, e
+  a barra inferior se recolhe enquanto o menu está aberto, em vez de aparecer através dele.
 - Cartões: o card **Gastos do cartão** não passa mais da borda no celular. O gráfico, os valores e a
   legenda ficavam mais largos que o card e eram cortados à direita. A comparação com a fatura
   anterior vira uma frase só. O maior gasto e as parcelas de outras datas ficam em linhas de rótulo
@@ -42,6 +86,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   divididas pela parte de cada um. Antes, uma assinatura dividida, como uma Netflix repartida entre
   duas pessoas, contava inteira para quem a cadastrou, e o seletor de pessoa nem aparecia quando
   essa era a única forma de outra pessoa ter gastos no cartão. O total da fatura não muda.
+- Compromissos futuros: em **Parcelamentos que terminam**, cada compra ocupa duas linhas (nome e
+  valor; data de término), e o card não corta mais a data nem o valor em telas estreitas.
 
 ## [0.19.0] - 2026-11-20
 

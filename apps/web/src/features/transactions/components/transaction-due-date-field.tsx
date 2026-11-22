@@ -74,7 +74,7 @@ export function TransactionDueDateField({
               values.dueDate ? (
                 <form.Field name="dueDateRuleExcluded">
                   {(field) => (
-                    <Label htmlFor={`${id}-exclude`} className="font-mono text-sm">
+                    <Label htmlFor={`${id}-exclude`} className="text-sm">
                       <Checkbox
                         id={`${id}-exclude`}
                         checked={field.state.value}

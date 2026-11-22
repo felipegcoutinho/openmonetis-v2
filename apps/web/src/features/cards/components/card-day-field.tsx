@@ -23,9 +23,7 @@ export function DayField({
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center gap-1.5">
-        <Label className="font-mono" htmlFor={fieldId}>
-          {label}
-        </Label>
+        <Label htmlFor={fieldId}>{label}</Label>
         {help ? <InfoTip label="Informações sobre o ajuste do vencimento">{help}</InfoTip> : null}
       </div>
       <Select

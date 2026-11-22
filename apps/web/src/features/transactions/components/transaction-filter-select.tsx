@@ -26,7 +26,7 @@ export function FilterSelect({
 
   return (
     <div className="grid min-w-0 gap-2">
-      <span className="font-mono font-medium text-muted-foreground text-xs" id={`${id}-label`}>
+      <span className="font-medium text-muted-foreground text-xs" id={`${id}-label`}>
         {label}
       </span>
       <Select onValueChange={(next) => next && onChange(next)} value={value}>

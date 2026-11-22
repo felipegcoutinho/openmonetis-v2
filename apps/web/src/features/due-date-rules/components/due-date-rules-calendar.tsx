@@ -29,7 +29,7 @@ export function DueDateRulesCalendar({
         <form.Field name="calendar.includeNationalHolidays">
           {(field) => (
             <div className="grid min-w-0 gap-3">
-              <Label className="font-mono" htmlFor={`${id}-national`}>
+              <Label htmlFor={`${id}-national`}>
                 <Checkbox
                   id={`${id}-national`}
                   checked={field.state.value}
@@ -58,9 +58,7 @@ export function DueDateRulesCalendar({
               : holidays.length >= 366;
             return (
               <div className="grid gap-3">
-                <Label className="font-mono" htmlFor={`${id}-holiday`}>
-                  Feriados adicionais
-                </Label>
+                <Label htmlFor={`${id}-holiday`}>Feriados adicionais</Label>
                 <p className="-mt-1 text-muted-foreground text-xs">
                   Inclua feriados estaduais e municipais. Os que se repetem valem para todos os
                   anos.
@@ -90,7 +88,7 @@ export function DueDateRulesCalendar({
                     Adicionar
                   </Button>
                 </div>
-                <Label className="font-mono" htmlFor={`${id}-repeat`}>
+                <Label htmlFor={`${id}-repeat`}>
                   <Checkbox
                     id={`${id}-repeat`}
                     checked={repeatYearly}
@@ -150,7 +148,7 @@ function HolidayChips({
 }) {
   return (
     <div className="grid gap-2">
-      <p className="font-mono font-medium text-muted-foreground text-xs">{label}</p>
+      <p className="font-medium text-muted-foreground text-xs">{label}</p>
       <div className="flex min-w-0 flex-wrap gap-2">
         {items.map((item) => (
           <Button

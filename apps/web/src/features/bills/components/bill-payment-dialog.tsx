@@ -112,7 +112,7 @@ export function BillPaymentDialog({
             </DialogHeader>
 
             {bill ? (
-              <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/35 px-4 py-3">
+              <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/40 px-4 py-3">
                 <div>
                   <p className="text-muted-foreground text-xs">Valor previsto</p>
                   <p className="mt-0.5 font-semibold text-lg">{formatCurrency(bill.amount)}</p>
@@ -142,9 +142,7 @@ export function BillPaymentDialog({
               <form.Field name="accountId">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={`${id}-account`}>
-                      Conta de pagamento
-                    </Label>
+                    <Label htmlFor={`${id}-account`}>Conta de pagamento</Label>
                     <Select
                       disabled={payment.isPending}
                       items={accounts.map((account) => ({
@@ -181,9 +179,7 @@ export function BillPaymentDialog({
               <form.Field name="amount">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={`${id}-amount`}>
-                      Valor pago
-                    </Label>
+                    <Label htmlFor={`${id}-amount`}>Valor pago</Label>
                     <CurrencyInput
                       id={`${id}-amount`}
                       value={field.state.value}
@@ -200,9 +196,7 @@ export function BillPaymentDialog({
               <form.Field name="paidAt">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={`${id}-paid-at`}>
-                      Data do pagamento
-                    </Label>
+                    <Label htmlFor={`${id}-paid-at`}>Data do pagamento</Label>
                     <DatePicker
                       aria-invalid={field.state.value > currentLocalDate()}
                       disabled={payment.isPending}

@@ -131,9 +131,7 @@ export function GoalDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-name`}>
-                  Nome
-                </Label>
+                <Label htmlFor={`${id}-name`}>Nome</Label>
                 <Input
                   id={`${id}-name`}
                   maxLength={120}
@@ -162,9 +160,7 @@ export function GoalDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-target`}>
-                  Valor alvo
-                </Label>
+                <Label htmlFor={`${id}-target`}>Valor alvo</Label>
                 <CurrencyInput
                   id={`${id}-target`}
                   onBlur={field.handleBlur}
@@ -183,11 +179,9 @@ export function GoalDialog({
           </form.Field>
           {goal ? (
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={`${id}-tracking-output`}>
-                Tipo de acompanhamento
-              </Label>
+              <Label htmlFor={`${id}-tracking-output`}>Tipo de acompanhamento</Label>
               <p
-                className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm"
+                className="flex items-center gap-2 rounded-lg border border-input bg-muted/40 px-3 py-2 text-sm"
                 id={`${id}-tracking-output`}
               >
                 {goal.trackingType === "manual" ? (
@@ -207,9 +201,7 @@ export function GoalDialog({
             <form.Field name="trackingType">
               {(field) => (
                 <div className="grid gap-1.5">
-                  <Label className="font-mono" htmlFor={`${id}-tracking`}>
-                    Acompanhamento
-                  </Label>
+                  <Label htmlFor={`${id}-tracking`}>Acompanhamento</Label>
                   <Select
                     onValueChange={(value) => {
                       if (value) field.handleChange(value);
@@ -280,7 +272,7 @@ export function GoalDialog({
                 >
                   {(field) => (
                     <div className="grid gap-1.5">
-                      <Label className="font-mono" htmlFor={`${id}-current`}>
+                      <Label htmlFor={`${id}-current`}>
                         {goal ? "Saldo da meta" : "Valor já economizado"}
                       </Label>
                       <CurrencyInput
@@ -310,9 +302,7 @@ export function GoalDialog({
                 <form.Field name="accountId">
                   {(field) => (
                     <div className="grid gap-1.5">
-                      <Label className="font-mono" htmlFor={`${id}-account`}>
-                        Conta vinculada
-                      </Label>
+                      <Label htmlFor={`${id}-account`}>Conta vinculada</Label>
                       <Select
                         disabled={
                           accountsLoading ||
@@ -380,7 +370,7 @@ export function GoalDialog({
           <form.Field name="targetDate">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-date`}>
+                <Label htmlFor={`${id}-date`}>
                   Data alvo <span className="font-normal text-muted-foreground">(opcional)</span>
                 </Label>
                 <DatePicker

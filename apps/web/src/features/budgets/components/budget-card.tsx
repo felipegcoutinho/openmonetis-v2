@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -70,7 +71,7 @@ export function BudgetCard({
   const exceeded = budget.status === "exceeded";
 
   return (
-    <Card className="gap-4 border max-md:gap-3 max-md:py-4">
+    <Card className="gap-4 border max-md:gap-3 max-md:py-4" data-mobile-entity-card>
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -122,17 +123,39 @@ export function BudgetCard({
           indicatorClassName={budgetProgressStyles[budget.status]}
           value={Math.min(budget.usagePercentage, 100)}
         />
-        <p className={cn("font-medium text-sm", exceeded && "text-destructive")}>
-          {exceeded ? (
-            <>
-              <MoneyValue amount={budget.exceededAmount} /> acima do limite
-            </>
-          ) : (
-            <>
-              Restam <MoneyValue amount={budget.remainingAmount} />
-            </>
-          )}
-        </p>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <p className={cn("font-medium text-sm", exceeded && "text-destructive")}>
+            {exceeded ? (
+              <>
+                <MoneyValue amount={budget.exceededAmount} /> acima do limite
+              </>
+            ) : (
+              <>
+                Restam <MoneyValue amount={budget.remainingAmount} />
+              </>
+            )}
+          </p>
+          {/* The breakdown belongs to the figures, so its toggle sits beside them, not among the actions. */}
+          {isMobile === true ? (
+            <button
+              aria-controls={detailsOpen ? detailsId : undefined}
+              aria-expanded={detailsOpen}
+              className="-me-2 inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-muted-foreground text-xs transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring active:bg-(--pressed)"
+              data-hit-slop=""
+              onClick={() => setDetailsOpen((open) => !open)}
+              type="button"
+            >
+              Detalhes
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "size-3.5 transition-transform motion-reduce:transition-none",
+                  detailsOpen && "rotate-180",
+                )}
+              />
+            </button>
+          ) : null}
+        </div>
         {showDetails ? (
           <p className="text-muted-foreground text-xs" id={detailsId}>
             <MoneyValue amount={budget.actualSpentAmount} /> lançado
@@ -147,35 +170,13 @@ export function BudgetCard({
       </CardContent>
 
       <CardFooter className="flex flex-wrap items-center gap-3 border-t pt-3">
-        {isMobile === true ? (
-          <button
-            aria-controls={detailsOpen ? detailsId : undefined}
-            aria-expanded={detailsOpen}
-            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
-            onClick={() => setDetailsOpen((open) => !open)}
-            type="button"
-          >
-            Detalhes
-            <ChevronDown
-              aria-hidden="true"
-              className={cn(
-                "size-3.5 transition-transform motion-reduce:transition-none",
-                detailsOpen && "rotate-180",
-              )}
-            />
-          </button>
-        ) : null}
-        <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
-          onClick={() => onEdit(budget)}
-          type="button"
-        >
+        <button className={cardFooterActionClassName} onClick={() => onEdit(budget)} type="button">
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>
         {categorySlug ? (
           <Link
-            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            className={cardFooterActionClassName}
             search={{ categories: categorySlug, period: budget.period, type: "expense" }}
             to="/transactions"
           >

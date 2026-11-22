@@ -14,17 +14,16 @@ export function MobileTransactionButton() {
     <>
       {/* The tab bar's primary action: a filled pill sets it apart from the destinations. */}
       <button
-        aria-label="Novo lançamento"
+        aria-label="Novo lançamento ou anotação"
         aria-haspopup="dialog"
         aria-expanded={open}
         className={mobileNavigationItemClassName(false)}
         onClick={() => setOpen(true)}
         type="button"
       >
-        <span className="primary-action grid h-8 w-13 place-items-center rounded-full text-primary-foreground transition-[scale] duration-(--duration-press) group-active/nav-item:scale-90 motion-reduce:transition-none">
-          <Plus aria-hidden="true" className="size-5" strokeWidth={2.25} />
+        <span className="primary-action grid h-9 w-15 place-items-center rounded-full text-primary-foreground transition-[scale] duration-(--duration-press) group-active/nav-item:scale-90 motion-reduce:transition-none">
+          <Plus aria-hidden="true" className="size-6" strokeWidth={2.25} />
         </span>
-        <span className="font-medium text-foreground">Novo</span>
       </button>
       {open ? (
         <Suspense

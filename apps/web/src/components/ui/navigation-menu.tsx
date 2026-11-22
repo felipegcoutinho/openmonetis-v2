@@ -121,7 +121,12 @@ function NavigationMenuPositioner({
             popupClassName,
           )}
         >
-          <NavigationMenuPrimitive.Viewport className="relative size-full overflow-hidden" />
+          {/*
+           * Clips the sliding sections while leaving room for the panel's shadow, which a plain
+           * `overflow: hidden` cuts into a visible box. `clip-path` would do the same but stops the
+           * translucent panels from blurring the page behind them.
+           */}
+          <NavigationMenuPrimitive.Viewport className="relative size-full overflow-clip [overflow-clip-margin:3rem]" />
         </NavigationMenuPrimitive.Popup>
       </NavigationMenuPrimitive.Positioner>
     </NavigationMenuPrimitive.Portal>

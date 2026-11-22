@@ -41,9 +41,7 @@ export function NoteTaskFields({
       >
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={fieldId(field.name)}>
-              Data da tarefa
-            </Label>
+            <Label htmlFor={fieldId(field.name)}>Data da tarefa</Label>
             <DatePicker
               aria-invalid={!field.state.meta.isValid}
               id={fieldId(field.name)}
@@ -57,7 +55,7 @@ export function NoteTaskFields({
                 return (
                   <Button
                     aria-pressed={field.state.value === date}
-                    className="aria-pressed:border-brand-strong/50 aria-pressed:bg-brand/10"
+                    className="aria-pressed:border-brand-strong aria-pressed:bg-accent"
                     key={option.label}
                     onClick={() => field.handleChange(date)}
                     size="xs"
@@ -78,9 +76,7 @@ export function NoteTaskFields({
         {(field) => (
           <div className="grid gap-1.5">
             <div className="flex items-center justify-between gap-3">
-              <Label className="font-mono" htmlFor={fieldId("task-content")}>
-                Detalhes (opcional)
-              </Label>
+              <Label htmlFor={fieldId("task-content")}>Detalhes (opcional)</Label>
               <NoteCharacterCount
                 length={field.state.value.length}
                 maximum={noteContentMaximumLength}

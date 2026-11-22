@@ -56,13 +56,13 @@ export function CategoryPicker({
         render={
           <Button
             type="button"
-            variant="outline"
+            variant="field"
             role="combobox"
             aria-expanded={open}
             aria-label={`Categoria: ${selected ? getCategoryLabel(selected) : "Sem categoria"}`}
             aria-invalid={invalid}
             disabled={disabled}
-            className="w-full justify-start overflow-hidden font-normal"
+            className="w-full justify-start overflow-hidden"
           />
         }
       >

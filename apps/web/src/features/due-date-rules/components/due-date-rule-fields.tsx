@@ -32,9 +32,7 @@ export function DueDateRuleFields({
       <legend className="sr-only">{rule.name || "Nova regra"}</legend>
       <div className="grid min-w-0 gap-4 xl:grid-cols-2">
         <div className="grid gap-2">
-          <Label className="font-mono" htmlFor={`${id}-name`}>
-            Nome da regra
-          </Label>
+          <Label htmlFor={`${id}-name`}>Nome da regra</Label>
           <Input
             id={`${id}-name`}
             maxLength={100}
@@ -43,9 +41,7 @@ export function DueDateRuleFields({
           />
         </div>
         <div className="grid gap-2">
-          <Label className="font-mono" htmlFor={`${id}-target`}>
-            Aplicar a
-          </Label>
+          <Label htmlFor={`${id}-target`}>Aplicar a</Label>
           <Select
             value={rule.target}
             disabled={disabled}
@@ -72,9 +68,7 @@ export function DueDateRuleFields({
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label className="font-mono" htmlFor={`${id}-scope`}>
-            Abrangência
-          </Label>
+          <Label htmlFor={`${id}-scope`}>Abrangência</Label>
           <Select
             value={rule.scope}
             disabled={disabled}
@@ -105,9 +99,7 @@ export function DueDateRuleFields({
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label className="font-mono" htmlFor={`${id}-adjustment`}>
-            Ajustar para
-          </Label>
+          <Label htmlFor={`${id}-adjustment`}>Ajustar para</Label>
           <Select
             value={rule.adjustment}
             disabled={disabled}
@@ -131,7 +123,7 @@ export function DueDateRuleFields({
         <div className="grid gap-2">
           <p className="font-medium text-sm">Quando o vencimento cair em</p>
           <div className="flex flex-wrap gap-4">
-            <Label className="font-mono" htmlFor={`${id}-weekends`}>
+            <Label htmlFor={`${id}-weekends`}>
               <Checkbox
                 id={`${id}-weekends`}
                 checked={rule.weekends}
@@ -140,7 +132,7 @@ export function DueDateRuleFields({
               />
               Final de semana
             </Label>
-            <Label className="font-mono" htmlFor={`${id}-holidays`}>
+            <Label htmlFor={`${id}-holidays`}>
               <Checkbox
                 id={`${id}-holidays`}
                 checked={rule.holidays}
@@ -154,7 +146,7 @@ export function DueDateRuleFields({
       ) : null}
       {rule.scope === "selected" ? (
         <div className="grid min-w-0 gap-2">
-          <Label className="font-mono" htmlFor={`${id}-search`}>
+          <Label htmlFor={`${id}-search`}>
             Buscar {rule.target === "invoice" ? "cartões" : "contas a pagar"}
           </Label>
           <Input

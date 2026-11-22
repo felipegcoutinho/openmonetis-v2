@@ -12,7 +12,7 @@ export function MobileNavigationIcon({
   return (
     <span
       className={cn(
-        "grid h-7 w-12 place-items-center rounded-full transition-[background-color,scale] duration-(--duration-fast) ease-(--ease-out-strong) group-active/nav-item:scale-90 group-active/nav-item:bg-(--pressed) motion-reduce:transition-none",
+        "grid h-9 w-15 place-items-center rounded-full transition-[background-color,scale] duration-(--duration-fast) ease-(--ease-out-strong) group-active/nav-item:scale-90 group-active/nav-item:bg-(--pressed) motion-reduce:transition-none",
         active && "bg-brand/14",
       )}
     >

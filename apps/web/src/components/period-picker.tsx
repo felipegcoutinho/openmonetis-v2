@@ -34,14 +34,11 @@ export function PeriodPicker({
         render={
           <Button
             aria-invalid={ariaInvalid}
-            className={cn(
-              "w-full justify-between border-input bg-popover px-2.5 font-normal focus-visible:ring-ring/50",
-              className,
-            )}
+            className={cn("w-full justify-between px-2.5 focus-visible:ring-ring/50", className)}
             data-slot="period-picker-trigger"
             id={id}
             type="button"
-            variant="outline"
+            variant="field"
           />
         }
       >

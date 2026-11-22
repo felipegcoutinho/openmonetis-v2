@@ -45,10 +45,9 @@ export function TransactionSplitTrigger({
   return (
     <section
       className={cn(
-        "group rounded-lg border border-input bg-card transition-[color,background-color,border-color,box-shadow,opacity] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30",
-        !cardDisabled && "hover:border-brand-strong/40 hover:bg-accent/40",
+        "group rounded-lg border border-input bg-field transition-[color,background-color,border-color,box-shadow,opacity] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30",
+        !cardDisabled && "hover:border-input-hover",
         isDivided && "border-brand-strong/20 bg-brand/5",
-        cardDisabled && "bg-muted/30",
       )}
     >
       <div className="flex items-center">

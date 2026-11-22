@@ -201,6 +201,7 @@ rateios, valores efetivos e contas excluídas, incluindo a conta de baixa das re
 Os seletores responsivos também são verificados ao alternar entre desktop e celular com a lista
 aberta, sem perder o estado nem emitir avisos de controle do componente.
 
+A barra inferior do celular mantém o botão de novo lançamento no centro da tela de 320 a 430 px.
 A aparência verifica o salvamento do modo e do tema na conta, o tema aplicado desde a primeira
 pintura ao recarregar, a volta ao tema salvo quando a gravação falha e a troca de modo ao escolher
 um tema pela busca. O contraste de todos os temas é medido com as cores resolvidas pelo navegador;

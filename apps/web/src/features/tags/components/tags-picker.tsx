@@ -55,8 +55,8 @@ export function TagsPicker({
           render={
             <Button
               type="button"
-              variant="outline"
-              className="w-full justify-start gap-2 overflow-hidden border-input bg-card pr-2.5 pl-3 font-normal"
+              variant="field"
+              className="w-full justify-start gap-2 overflow-hidden pr-2.5 pl-3"
               disabled={disabled}
               aria-invalid={invalid}
               aria-label={

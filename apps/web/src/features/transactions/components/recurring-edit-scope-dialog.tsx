@@ -82,8 +82,8 @@ export function RecurringEditScopeDialog({
             return (
               <label
                 className={cn(
-                  "flex w-full cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:border-brand-strong/40 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  selected && "border-brand-strong bg-brand/5",
+                  "flex w-full cursor-pointer items-start gap-3 rounded-lg border border-input bg-field p-3 text-left transition-colors hover:border-input-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  selected && "border-brand-strong bg-accent hover:border-brand-strong",
                   disabled && "cursor-not-allowed opacity-50",
                 )}
                 key={option.scope}

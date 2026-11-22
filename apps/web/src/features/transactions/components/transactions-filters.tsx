@@ -104,7 +104,12 @@ export function TransactionsFilters({
               ? `Abrir filtros, ${activeFilterCount} ${activeFilterCount === 1 ? "ativo" : "ativos"}`
               : "Abrir filtros"
           }
-          render={<Button className="relative bg-transparent" variant="outline" />}
+          render={
+            <Button
+              className="relative border-primary/30 bg-primary/8 hover:bg-primary/14 aria-expanded:bg-primary/14 dark:border-primary/30 dark:bg-primary/10 dark:hover:bg-primary/16"
+              variant="outline"
+            />
+          }
         >
           <Filter aria-hidden="true" />
           <span className="hidden md:inline">Filtros</span>
@@ -300,7 +305,7 @@ export function TransactionsFilters({
               </FilterGroup>
               <FilterGroup title="Datas e valores">
                 <div className="grid gap-2 sm:col-span-2">
-                  <span className="font-mono font-medium text-muted-foreground text-xs">
+                  <span className="font-medium text-muted-foreground text-xs">
                     Intervalo de datas
                   </span>
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -331,9 +336,7 @@ export function TransactionsFilters({
                   </div>
                 </div>
                 <div className="grid gap-2 sm:col-span-2">
-                  <span className="font-mono font-medium text-muted-foreground text-xs">
-                    Faixa de valor
-                  </span>
+                  <span className="font-medium text-muted-foreground text-xs">Faixa de valor</span>
                   <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
                     <CurrencyInput
                       aria-label="Valor mínimo"

@@ -56,7 +56,7 @@ export function MobileDatePicker(props: ComponentProps<typeof DatePicker>) {
         render={
           <Button
             type="button"
-            variant="outline"
+            variant="field"
             id={props.id}
             disabled={props.disabled}
             aria-describedby={props["aria-describedby"]}

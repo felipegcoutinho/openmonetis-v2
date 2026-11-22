@@ -23,7 +23,7 @@ export const mobileShortcutLabels: Record<MobileShortcutDestination, string> = {
   categories: "Categorias",
   notes: "Anotações",
   attachments: "Anexos",
-  inbox: "Capturas",
+  inbox: "Caixa de entrada",
 };
 
 export const startPageLabels: Record<StartPageDestination, string> = {

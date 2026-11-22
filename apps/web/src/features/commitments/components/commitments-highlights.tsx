@@ -86,36 +86,39 @@ export function CommitmentsHighlights({ report }: { report: CommitmentsOutput })
             Parcelamentos que terminam
           </h2>
           {report.endingSeries.length ? (
-            <ul className="grid gap-2 text-sm">
-              {report.endingSeries.map((series) => (
-                <li className="flex items-center justify-between gap-3" key={series.seriesId}>
-                  <span className="flex min-w-0 items-center gap-2">
+            // Two lines per series: on one line the name, the end date and the amount competed for
+            // a narrow card, and the date and the amount were the parts that got cut. What the amount
+            // means is said once, under the title.
+            <>
+              <p className="text-muted-foreground text-xs">
+                Valor mensal que cada um libera ao chegar à última parcela.
+              </p>
+              <ul className="grid gap-3 text-sm">
+                {report.endingSeries.map((series) => (
+                  <li className="flex min-w-0 items-start gap-2.5" key={series.seriesId}>
                     <EstablishmentLogo
                       categoryIcon={null}
-                      className="opacity-90"
+                      className="mt-0.5 opacity-90"
                       editable={false}
                       name={series.name}
                       size={20}
                     />
-                    <span className="min-w-0 truncate">
-                      {series.name}
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · termina em {formatPeriod(series.endPeriod)}
+                    <div className="grid min-w-0 flex-1 gap-0.5">
+                      <div className="flex min-w-0 items-baseline justify-between gap-3">
+                        <span className="min-w-0 truncate font-medium">{series.name}</span>
+                        <MoneyValue
+                          amount={series.monthlyAmount}
+                          className="shrink-0 font-medium tabular-nums"
+                        />
+                      </div>
+                      <span className="truncate text-muted-foreground text-xs">
+                        Termina em {formatPeriod(series.endPeriod).toLocaleLowerCase("pt-BR")}
                       </span>
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-muted-foreground">
-                    libera{" "}
-                    <MoneyValue
-                      amount={series.monthlyAmount}
-                      className="font-medium text-foreground"
-                    />
-                    /mês
-                  </span>
-                </li>
-              ))}
-            </ul>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <p className="text-muted-foreground text-sm">
               Nenhum parcelamento termina no período analisado.

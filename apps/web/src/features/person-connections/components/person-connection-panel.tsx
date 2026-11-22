@@ -202,9 +202,7 @@ export function PersonConnectionPanel({ person }: { person: PersonOutput }) {
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  <Label className="font-mono" htmlFor={confirmationCodeId}>
-                    Código de confirmação
-                  </Label>
+                  <Label htmlFor={confirmationCodeId}>Código de confirmação</Label>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       aria-describedby={confirmationCodeHintId}

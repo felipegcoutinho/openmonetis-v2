@@ -130,27 +130,12 @@ function BillRow({ bill, onSettle }: { bill: DashboardBill; onSettle: () => void
   return (
     // Name, method and due date may wrap on narrow widgets, so the row grows instead of clipping.
     <DashboardWidgetRow className="h-auto min-h-16 py-2.5">
-      {/* Same destination as the name link beside it, so it stays out of the tab order. */}
-      <Link
-        aria-hidden="true"
-        className="shrink-0"
-        tabIndex={-1}
-        to="/transactions"
-        search={{
-          period: bill.period,
-          payables: true,
-          paymentMethod: bill.paymentMethod,
-          q: bill.name,
-        }}
-      >
-        <EstablishmentLogo
-          categoryIcon={bill.categoryIcon}
-          editable={false}
-          className="size-9"
-          name={bill.name}
-          size={36}
-        />
-      </Link>
+      <EstablishmentLogo
+        categoryIcon={bill.categoryIcon}
+        className="size-9"
+        name={bill.name}
+        size={36}
+      />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <BillName bill={bill} />

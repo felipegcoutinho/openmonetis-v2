@@ -12,6 +12,9 @@ const buttonVariants = cva(
         default: "primary-action bg-primary text-primary-foreground",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-transparent dark:hover:bg-muted/70",
+        /* Pickers that open a list or dialog look like the other form fields. */
+        field:
+          "border-input bg-field font-normal hover:not-aria-invalid:border-input-hover aria-expanded:not-aria-invalid:border-input-hover",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_6%)] aria-expanded:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_6%)]",
         ghost:
@@ -59,6 +62,7 @@ function Button({
     <Component
       data-slot="button"
       data-size={size}
+      data-variant={variant}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

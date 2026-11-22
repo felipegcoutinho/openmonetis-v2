@@ -101,7 +101,7 @@ export function GoalContributionDialog({
           <form.Field name="movement">
             {(field) => (
               <fieldset className="grid gap-2">
-                <legend className="mb-2 font-mono text-muted-foreground text-xs">Tipo</legend>
+                <legend className="mb-2 text-muted-foreground text-xs">Tipo</legend>
                 <ToggleGroup
                   className="grid w-full grid-cols-2"
                   onValueChange={(value) => {
@@ -143,9 +143,7 @@ export function GoalContributionDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-amount`}>
-                  Valor
-                </Label>
+                <Label htmlFor={`${id}-amount`}>Valor</Label>
                 <CurrencyInput
                   aria-invalid={field.state.meta.errors.length > 0}
                   autoFocus
@@ -197,9 +195,7 @@ export function GoalContributionDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-date`}>
-                  Data
-                </Label>
+                <Label htmlFor={`${id}-date`}>Data</Label>
                 <DatePicker
                   aria-invalid={field.state.meta.errors.length > 0}
                   id={`${id}-date`}
@@ -218,7 +214,7 @@ export function GoalContributionDialog({
           <form.Field name="note">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-note`}>
+                <Label htmlFor={`${id}-note`}>
                   Observação <span className="font-normal text-muted-foreground">(opcional)</span>
                 </Label>
                 <Input

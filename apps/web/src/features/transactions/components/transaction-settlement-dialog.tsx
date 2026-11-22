@@ -90,7 +90,7 @@ export function TransactionSettlementDialog({
             {target.name}. Informe os dados da baixa já realizada.
           </DialogDescription>
         </DialogHeader>
-        <p className="rounded-lg border bg-muted/30 p-3 text-sm">
+        <p className="rounded-lg border bg-muted/40 p-3 text-sm">
           {multiple
             ? `${target.ids?.length} lançamentos serão confirmados pelos respectivos valores previstos.`
             : `Valor previsto: ${target.plannedAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`}
@@ -115,9 +115,7 @@ export function TransactionSettlementDialog({
             <form.Field name="amount">
               {(field) => (
                 <div className="grid gap-2">
-                  <Label className="font-mono" htmlFor={`${id}-amount`}>
-                    {income ? "Valor recebido" : "Valor pago"}
-                  </Label>
+                  <Label htmlFor={`${id}-amount`}>{income ? "Valor recebido" : "Valor pago"}</Label>
                   <CurrencyInput
                     id={`${id}-amount`}
                     value={field.state.value}
@@ -130,7 +128,7 @@ export function TransactionSettlementDialog({
           <form.Field name="settledDate">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-date`}>
+                <Label htmlFor={`${id}-date`}>
                   {income ? "Data do recebimento" : "Data do pagamento"}
                 </Label>
                 <MobileDatePicker
@@ -145,7 +143,7 @@ export function TransactionSettlementDialog({
           <form.Field name="accountId">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-account`}>
+                <Label htmlFor={`${id}-account`}>
                   {multiple ? "Conta para todos os lançamentos" : "Conta da baixa"}
                 </Label>
                 <Select

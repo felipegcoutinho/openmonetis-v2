@@ -32,7 +32,7 @@ export function CategoryIconPicker({
   return (
     <>
       <button
-        className="flex min-h-9 w-full items-center gap-2 rounded-md border border-input bg-popover px-2.5 py-1.5 text-left shadow-xs transition-[color,box-shadow] hover:border-brand-strong focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-9 w-full items-center gap-2 rounded-lg border border-input bg-field px-2.5 py-1.5 text-left transition-[color,border-color,box-shadow] hover:border-input-hover focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         id={id}
         onClick={() => setOpen(true)}
         type="button"
@@ -75,8 +75,8 @@ export function CategoryIconPicker({
               <button
                 aria-label={option.label}
                 className={cn(
-                  "grid size-11 place-items-center rounded-md border border-input bg-popover text-muted-foreground shadow-xs transition-[color,box-shadow] hover:border-brand-strong hover:text-brand-strong focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                  option.value === value && "border-brand-strong bg-brand/10 text-brand-strong",
+                  "grid size-11 place-items-center rounded-md border border-input bg-field text-muted-foreground transition-[color,border-color,box-shadow] hover:border-input-hover hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  option.value === value && "border-brand-strong bg-accent text-brand-strong",
                 )}
                 key={option.value}
                 onClick={() => {

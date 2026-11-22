@@ -157,16 +157,14 @@ export function BudgetDialog({
           <form.Field name="categoryId">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-category`}>
-                  Categoria de despesa
-                </Label>
+                <Label htmlFor={`${id}-category`}>Categoria de despesa</Label>
                 {editing && budget ? (
                   <output
-                    className="flex h-9 items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm"
+                    className="flex items-center gap-2 text-foreground text-sm"
                     id={`${id}-category`}
                   >
                     <CategoryIcon
-                      className="size-4 text-muted-foreground"
+                      className="size-4 shrink-0 text-muted-foreground"
                       name={budget.categoryIcon}
                     />
                     <span>{budget.categoryName}</span>
@@ -210,7 +208,7 @@ export function BudgetDialog({
                   <form.Field name="period">
                     {(field) => (
                       <div className="grid gap-1.5">
-                        <Label className="font-mono" htmlFor={`${id}-period`}>
+                        <Label htmlFor={`${id}-period`}>
                           {repeats ? "A partir de" : "Mês do orçamento"}
                         </Label>
                         <PeriodPicker
@@ -242,7 +240,7 @@ export function BudgetDialog({
           >
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-amount`}>
+                <Label htmlFor={`${id}-amount`}>
                   {recurring
                     ? `Limite em ${formatBudgetPeriod(period).toLocaleLowerCase("pt-BR")}`
                     : "Limite mensal"}
@@ -267,7 +265,7 @@ export function BudgetDialog({
           {editing ? null : (
             <form.Field name="repeatMonthly">
               {(field) => (
-                <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-4 rounded-lg border border-input bg-field p-3">
                   <Label className="grid gap-0.5 font-normal" htmlFor={`${id}-repeat`}>
                     <span className="font-medium text-sm">Repetir todo mês</span>
                     <span className="text-muted-foreground text-xs">
@@ -291,7 +289,7 @@ export function BudgetDialog({
             <form.Field name="scope">
               {(field) => (
                 <fieldset className="grid gap-1.5">
-                  <legend className="mb-1.5 font-mono text-sm">Aplicar a mudança</legend>
+                  <legend className="mb-1.5 text-sm">Aplicar a mudança</legend>
                   <RadioGroup
                     className="grid gap-2"
                     onValueChange={(value) =>
@@ -301,7 +299,7 @@ export function BudgetDialog({
                   >
                     {getBudgetRuleScopeOptions(period).map((option) => (
                       <Label
-                        className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-data-checked:border-primary has-data-checked:bg-accent"
+                        className="flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-field p-3 transition-colors hover:border-input-hover has-data-checked:border-brand-strong has-data-checked:bg-accent"
                         htmlFor={`${id}-scope-${option.scope}`}
                         key={option.scope}
                       >

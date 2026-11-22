@@ -4,6 +4,7 @@ import { Image } from "@unpic/react";
 import { Archive, FileText, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import {
@@ -107,18 +108,14 @@ export function AccountCard({
 
       <CardFooter className="flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+          className={cardFooterActionClassName}
           params={{ accountId: account.id }}
           to="/accounts/$accountId"
         >
           <FileText aria-hidden="true" className="size-3.5" />
           Extrato
         </Link>
-        <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
-          onClick={() => onEdit(account)}
-          type="button"
-        >
+        <button className={cardFooterActionClassName} onClick={() => onEdit(account)} type="button">
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>

@@ -52,12 +52,17 @@ export function AccountCashFlow({
   return (
     <Card className="gap-0 border py-0 shadow-none">
       <Tabs className="gap-0" defaultValue="daily">
-        <CardHeader className="gap-3 border-b py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5">
+        <CardHeader className="gap-2 border-b pt-4 pb-0!">
           <CardTitle className="flex items-center gap-2 text-base">
             <ChartNoAxesCombined aria-hidden="true" className="size-4 text-muted-foreground" />
             Movimentação da conta
           </CardTitle>
-          <TabsList aria-label="Visualização da movimentação da conta">
+          {/* Line tabs rest on the header border, so the active underline replaces it. */}
+          <TabsList
+            aria-label="Visualização da movimentação da conta"
+            className="-mb-px"
+            variant="line"
+          >
             <TabsTrigger value="daily">No mês</TabsTrigger>
             <TabsTrigger value="history">Histórico de 12 meses</TabsTrigger>
           </TabsList>

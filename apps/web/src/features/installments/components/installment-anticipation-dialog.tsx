@@ -182,8 +182,8 @@ export function InstallmentAnticipationDialog({
                 return (
                   <div
                     className={cn(
-                      "flex items-center gap-3 rounded-lg border p-3 transition-colors",
-                      selected && "border-brand-strong/40 bg-brand/5",
+                      "flex items-center gap-3 rounded-lg border border-input bg-field p-3 transition-colors hover:border-input-hover",
+                      selected && "border-brand-strong bg-accent hover:border-brand-strong",
                     )}
                     key={installment.id}
                   >
@@ -254,9 +254,7 @@ export function InstallmentAnticipationDialog({
           <form.Field name="discount">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-discount`}>
-                  Desconto obtido (opcional)
-                </Label>
+                <Label htmlFor={`${id}-discount`}>Desconto obtido (opcional)</Label>
                 <CurrencyInput
                   id={`${id}-discount`}
                   onValueChange={field.handleChange}

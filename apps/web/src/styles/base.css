@@ -8,7 +8,7 @@
     color-scheme: light;
     /* Keeps focused and anchored content clear of the navbar and the sticky month bar (WCAG 2.4.11). */
     scroll-padding-top: calc(var(--page-sticky-top) + 3.5rem);
-    /* Drops the double-tap zoom delay while keeping pinch zoom (WCAG 1.4.4). */
+    /* No double-tap zoom: the app sets its own scale (`user-scalable=no` in the viewport tag). */
     touch-action: manipulation;
     -webkit-tap-highlight-color: var(--tap-highlight);
     -webkit-text-size-adjust: 100%;

@@ -26,10 +26,10 @@ export const mobileNavigationHideDistance = 20;
 
 export const mobileNavigationShowDistance = 12;
 
-/** Tab bar item: the label stays put; the active tab is marked by colour and an icon pill. */
+/** Tab bar item, icon only: the active tab is marked by colour and an icon pill. */
 export function mobileNavigationItemClassName(active: boolean) {
   return cn(
-    "group/nav-item flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-2xs text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-3 focus-visible:ring-ring/50",
-    active && "font-medium text-brand-strong",
+    "group/nav-item flex min-h-14 min-w-0 items-center justify-center rounded-lg text-muted-foreground outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-3 focus-visible:ring-ring/50",
+    active && "text-brand-strong",
   );
 }

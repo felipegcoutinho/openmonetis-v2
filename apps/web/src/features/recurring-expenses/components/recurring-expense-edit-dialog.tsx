@@ -133,9 +133,7 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
             <form.Field name="name">
               {(field) => (
                 <div className="grid gap-2">
-                  <Label className="font-mono" htmlFor={`${id}-name`}>
-                    Descrição
-                  </Label>
+                  <Label htmlFor={`${id}-name`}>Descrição</Label>
                   <Input
                     id={`${id}-name`}
                     maxLength={160}
@@ -159,7 +157,7 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
                     <div className="grid gap-2">
                       {field.state.value.map((share, index) => (
                         <div
-                          className="grid items-center gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[minmax(0,1fr)_9rem]"
+                          className="grid items-center gap-3 rounded-lg border bg-muted/40 p-3 sm:grid-cols-[minmax(0,1fr)_9rem]"
                           key={share.personId}
                         >
                           <div className="flex min-w-0 items-center gap-2.5">
@@ -212,9 +210,7 @@ export function RecurringExpenseEditDialog({ expense, onOpenChange, open }: Prop
               <form.Field name="amount">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={`${id}-amount`}>
-                      Valor
-                    </Label>
+                    <Label htmlFor={`${id}-amount`}>Valor</Label>
                     <CurrencyInput
                       id={`${id}-amount`}
                       onBlur={field.handleBlur}

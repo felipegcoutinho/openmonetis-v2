@@ -97,7 +97,7 @@ export function TransactionsActiveFilters({
       {activeFilterCount ? (
         <fieldset
           aria-label="Filtros ativos"
-          className="grid min-w-0 gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-3 py-2.5"
+          className="grid min-w-0 gap-2.5 rounded-xl border border-primary/30 bg-primary/8 px-3 py-2.5 dark:border-primary/30 dark:bg-primary/10"
         >
           <div className="flex min-w-0 items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">

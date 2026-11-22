@@ -216,9 +216,10 @@ export function Navbar() {
           </div>
         </div>
       </header>
+      {/* The translucent menu sheet would show the tab bar through its lower rows, so it steps aside. */}
       <MobileNavigation
         isMobile={isMobile}
-        mobileNavigationHidden={mobileNavigationHidden}
+        mobileNavigationHidden={mobileNavigationHidden || mobileNavigationOpen}
         location={location}
         user={user}
         mobileNavigationOpen={mobileNavigationOpen}

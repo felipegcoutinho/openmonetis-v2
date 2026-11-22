@@ -46,6 +46,8 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-hover: var(--input-hover);
+  --color-field: var(--field);
   --color-ring: var(--ring);
   --color-overlay: var(--overlay);
   --color-material: var(--material);

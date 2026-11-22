@@ -35,9 +35,7 @@ export function NoteChecklistEditor({
       {(itemsField) => (
         <div className="grid gap-3">
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={fieldId("new-item")}>
-              Novo item
-            </Label>
+            <Label htmlFor={fieldId("new-item")}>Novo item</Label>
             <div className="flex gap-2">
               <Input
                 id={fieldId("new-item")}

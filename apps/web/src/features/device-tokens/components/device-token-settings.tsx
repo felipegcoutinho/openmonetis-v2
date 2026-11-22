@@ -256,9 +256,7 @@ export function DeviceTokenSettings() {
               <form.Field name="name">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={nameId}>
-                      Nome do aparelho
-                    </Label>
+                    <Label htmlFor={nameId}>Nome do aparelho</Label>
                     <Input
                       aria-invalid={field.state.meta.errors.length > 0}
                       aria-describedby={

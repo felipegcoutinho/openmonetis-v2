@@ -182,7 +182,7 @@ function CopyBudgetSelection({
               return (
                 <div
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border p-3",
+                    "flex items-center gap-3 rounded-lg border border-input bg-field p-3 transition-colors has-data-checked:border-brand-strong has-data-checked:bg-accent",
                     unavailable && "bg-muted/30 opacity-70",
                   )}
                   key={budget.id}
@@ -234,7 +234,7 @@ function CopyBudgetSelection({
               Todos os limites do mês anterior já existem neste mês.
             </p>
           ) : (
-            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-input bg-field p-3">
               <Label className="grid gap-0.5 font-sans font-normal" htmlFor="copy-budgets-repeat">
                 <span className="font-medium text-sm">Repetir todo mês</span>
                 <span className="text-muted-foreground text-xs">

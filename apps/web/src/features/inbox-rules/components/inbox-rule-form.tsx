@@ -140,9 +140,7 @@ export function InboxRuleForm({
         <form.Field name="name">
           {(field) => (
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={`${id}-name`}>
-                Nome da regra
-              </Label>
+              <Label htmlFor={`${id}-name`}>Nome da regra</Label>
               <Input
                 id={`${id}-name`}
                 maxLength={120}
@@ -158,9 +156,7 @@ export function InboxRuleForm({
           {(field) => (
             <div className="grid gap-1.5">
               <div className="flex items-center gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-priority`}>
-                  Ordem de aplicação
-                </Label>
+                <Label htmlFor={`${id}-priority`}>Ordem de aplicação</Label>
                 <InfoTip label="Informações sobre a ordem de aplicação">
                   Números menores são aplicados primeiro. Se mais de uma regra coincidir, cada campo
                   fica com a sugestão da regra de menor número.
@@ -217,10 +213,10 @@ export function InboxRuleForm({
                 </form.Field>
               </div>
 
-              <div className="grid gap-2 rounded-lg border bg-muted/20 p-3">
+              <div className="grid gap-2 rounded-lg border bg-muted/40 p-3">
                 <div
                   aria-hidden="true"
-                  className="hidden gap-2 font-mono text-muted-foreground text-xs sm:grid sm:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)_minmax(0,1fr)_2.25rem]"
+                  className="hidden gap-2 text-muted-foreground text-xs sm:grid sm:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)_minmax(0,1fr)_2.25rem]"
                 >
                   <span>Campo</span>
                   <span>Operador</span>
@@ -391,9 +387,7 @@ export function InboxRuleForm({
           <form.Field name="categoryId">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-category`}>
-                  Categoria
-                </Label>
+                <Label htmlFor={`${id}-category`}>Categoria</Label>
                 <Select
                   onValueChange={(value) => value && field.handleChange(value)}
                   value={field.state.value}
@@ -424,9 +418,7 @@ export function InboxRuleForm({
           <form.Field name="personId">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-person`}>
-                  Pessoa
-                </Label>
+                <Label htmlFor={`${id}-person`}>Pessoa</Label>
                 <Select
                   onValueChange={(value) => value && field.handleChange(value)}
                   value={field.state.value}
@@ -460,11 +452,9 @@ export function InboxRuleForm({
 
       <form.Field name="isActive">
         {(field) => (
-          <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-input bg-field p-3">
             <div>
-              <Label className="font-mono" htmlFor={`${id}-active`}>
-                Regra ativa
-              </Label>
+              <Label htmlFor={`${id}-active`}>Regra ativa</Label>
               <p className="mt-1 text-muted-foreground text-xs">
                 Regras inativas ficam salvas, mas não sugerem valores.
               </p>

@@ -18,8 +18,6 @@ import { TransactionSplitRemoveDialog } from "./transaction-split-remove-dialog"
 import { TransactionSplitSummary } from "./transaction-split-summary";
 import { TransactionSplitTrigger } from "./transaction-split-trigger";
 
-export type { TransactionSplitDialogProps } from "./transaction-split-dialog.types";
-
 export function TransactionSplitDialog({
   amount,
   disabled,

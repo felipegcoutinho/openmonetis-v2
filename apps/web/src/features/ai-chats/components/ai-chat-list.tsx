@@ -212,9 +212,7 @@ function RenameChatDialog({ chat, onClose }: { chat: AiChatSummaryOutput; onClos
           <form.Field name="title">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={id}>
-                  Nome
-                </Label>
+                <Label htmlFor={id}>Nome</Label>
                 <Input
                   aria-invalid={field.state.meta.errors.length > 0}
                   autoFocus

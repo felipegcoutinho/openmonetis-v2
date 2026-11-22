@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -54,7 +55,7 @@ export function NoteCard({
   const hiddenItemCount = note.items.length - visibleItems.length;
 
   return (
-    <Card className={cn("gap-4", note.isArchived && "opacity-70")}>
+    <Card className={cn("gap-4", note.isArchived && "opacity-70")} data-mobile-entity-card>
       <CardHeader className="gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -221,7 +222,7 @@ export function NoteCard({
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
         {!note.isArchived ? (
           <button
-            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            className={cardFooterActionClassName}
             disabled={pendingAction}
             onClick={() => onEdit(note)}
             type="button"
@@ -231,7 +232,7 @@ export function NoteCard({
           </button>
         ) : null}
         <button
-          className="inline-flex items-center gap-1 rounded-sm px-1 py-0.5 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          className={cardFooterActionClassName}
           disabled={pendingAction}
           onClick={() => onArchive(note, !note.isArchived)}
           type="button"

@@ -219,9 +219,7 @@ export function InvoicePaymentDialog({
                     <form.Field name="personId">
                       {(field) => (
                         <div className="grid gap-2">
-                          <Label className="font-mono" htmlFor={`${id}-person`}>
-                            Pessoa
-                          </Label>
+                          <Label htmlFor={`${id}-person`}>Pessoa</Label>
                           <Select
                             items={
                               invoice?.people
@@ -259,9 +257,7 @@ export function InvoicePaymentDialog({
                     <form.Field name="amount">
                       {(field) => (
                         <div className="grid gap-2">
-                          <Label className="font-mono" htmlFor={`${id}-amount`}>
-                            Valor
-                          </Label>
+                          <Label htmlFor={`${id}-amount`}>Valor</Label>
                           <CurrencyInput
                             id={`${id}-amount`}
                             onValueChange={field.handleChange}
@@ -282,9 +278,7 @@ export function InvoicePaymentDialog({
                     <form.Field name="accountId">
                       {(field) => (
                         <div className="grid gap-2">
-                          <Label className="font-mono" htmlFor={`${id}-account`}>
-                            Conta de pagamento
-                          </Label>
+                          <Label htmlFor={`${id}-account`}>Conta de pagamento</Label>
                           <Select
                             items={accounts.map((account) => ({
                               value: account.id,
@@ -317,9 +311,7 @@ export function InvoicePaymentDialog({
               <form.Field name="paidAt">
                 {(field) => (
                   <div className="grid gap-2">
-                    <Label className="font-mono" htmlFor={`${id}-paid-at`}>
-                      Data do pagamento
-                    </Label>
+                    <Label htmlFor={`${id}-paid-at`}>Data do pagamento</Label>
                     <DatePicker
                       id={`${id}-paid-at`}
                       max={today}

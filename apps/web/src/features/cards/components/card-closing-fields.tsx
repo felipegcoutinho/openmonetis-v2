@@ -34,9 +34,7 @@ export function CardClosingFields({
       <form.Field name="closingRuleType">
         {(field) => (
           <div className="grid content-start gap-1.5 sm:col-span-2">
-            <Label className="font-mono" htmlFor={fieldId(field.name)}>
-              Regra de fechamento
-            </Label>
+            <Label htmlFor={fieldId(field.name)}>Regra de fechamento</Label>
             <Select
               onValueChange={(value) => value && field.handleChange(value)}
               value={field.state.value}
@@ -77,9 +75,7 @@ export function CardClosingFields({
               <form.Field name="closingOffsetDays">
                 {(field) => (
                   <div className="grid content-start gap-1.5">
-                    <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                      Quantidade de dias
-                    </Label>
+                    <Label htmlFor={fieldId(field.name)}>Quantidade de dias</Label>
                     <Input
                       id={fieldId(field.name)}
                       inputMode="numeric"
@@ -95,9 +91,7 @@ export function CardClosingFields({
               <form.Field name="closingOffsetMode">
                 {(field) => (
                   <div className="grid content-start gap-1.5">
-                    <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                      Contagem
-                    </Label>
+                    <Label htmlFor={fieldId(field.name)}>Contagem</Label>
                     <Select
                       onValueChange={(value) => value && field.handleChange(value)}
                       value={field.state.value}
@@ -124,9 +118,9 @@ export function CardClosingFields({
 
       <form.Field name="closingDayPurchasesNextInvoice">
         {(field) => (
-          <div className="flex items-center justify-between gap-4 rounded-lg border p-3 sm:col-span-2">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-input bg-field p-3 sm:col-span-2">
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={fieldId(field.name)}>
+              <Label htmlFor={fieldId(field.name)}>
                 Compra no dia do fechamento vai para a próxima fatura
               </Label>
               <p className="text-muted-foreground text-xs" id={`${fieldId(field.name)}-help`}>

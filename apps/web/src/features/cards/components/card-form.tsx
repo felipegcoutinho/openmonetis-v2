@@ -57,9 +57,7 @@ export function CardForm({ accounts, card, onCancel, onSubmit }: CardFormProps) 
         <form.Field name="note">
           {(field) => (
             <div className="grid gap-1.5 sm:col-span-2">
-              <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                Anotação
-              </Label>
+              <Label htmlFor={fieldId(field.name)}>Anotação</Label>
               <Textarea
                 id={fieldId(field.name)}
                 maxLength={1000}

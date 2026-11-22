@@ -57,7 +57,7 @@ export function PreferencesPalettePicker<Palette extends keyof typeof paletteLab
   return (
     <div className="grid min-w-0 gap-2.5">
       <div className="flex min-h-6 items-center justify-between gap-2">
-        <Label className="flex items-center gap-2 font-mono text-sm tracking-normal" htmlFor={id}>
+        <Label className="flex items-center gap-2 text-sm tracking-normal" htmlFor={id}>
           <ModeIcon aria-hidden="true" className="size-4 text-muted-foreground" />
           {label}
         </Label>

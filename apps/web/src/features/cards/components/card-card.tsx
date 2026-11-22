@@ -4,6 +4,7 @@ import { Image } from "@unpic/react";
 import { Archive, CalendarDays, FileText, Info, Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { InfoTip } from "@/components/info-tip";
 import { MoneyValue } from "@/components/money-value";
 import { NotePopover } from "@/components/note-popover";
@@ -139,7 +140,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
       <CardContent className="flex flex-1 flex-col gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <p className="font-mono text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs">
               Fatura de {formatPeriod(card.invoiceSummary.period)}
             </p>
             <span
@@ -168,8 +169,14 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             value={<MoneyValue amount={card.invoiceSummary.availableLimit} />}
           />
         </div>
-        <p className="text-muted-foreground text-xs">Parcelas futuras também ocupam o limite.</p>
+        {/* Usage reads as one block: the figure above the bar, the caveat that explains it below. */}
         <div className="flex flex-col gap-2">
+          <span className="text-muted-foreground text-xs">
+            <span className="font-medium text-foreground tabular-nums">
+              {card.invoiceSummary.usagePercentage.toLocaleString("pt-BR")}%
+            </span>{" "}
+            do limite utilizado
+          </span>
           <Progress
             aria-label={`${card.invoiceSummary.usagePercentage.toLocaleString("pt-BR")}% do limite utilizado`}
             indicatorClassName={cn(
@@ -178,26 +185,20 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
             )}
             value={Math.min(100, card.invoiceSummary.usagePercentage)}
           />
-          <span className="text-muted-foreground text-xs">
-            {card.invoiceSummary.usagePercentage.toLocaleString("pt-BR")} % do limite utilizado
-          </span>
+          <p className="text-muted-foreground text-xs">Parcelas futuras também ocupam o limite.</p>
         </div>
       </CardContent>
 
       <CardFooter className="mt-auto flex flex-wrap gap-3 border-t pt-3">
         <Link
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+          className={cardFooterActionClassName}
           params={{ cardId: card.id }}
           to="/cards/$cardId"
         >
           <FileText aria-hidden="true" className="size-3.5" />
           Fatura
         </Link>
-        <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
-          onClick={() => onEdit(card)}
-          type="button"
-        >
+        <button className={cardFooterActionClassName} onClick={() => onEdit(card)} type="button">
           <Pencil aria-hidden="true" className="size-3.5" />
           Editar
         </button>
@@ -273,7 +274,7 @@ export function CardCard({ card, onArchive, onDelete, onEdit, pending = false }:
 function CardMetric({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="truncate font-mono text-muted-foreground text-xs">{label}</p>
+      <p className="truncate text-muted-foreground text-xs">{label}</p>
       <p className="mt-0.5 truncate font-medium text-sm tabular-nums">{value}</p>
     </div>
   );

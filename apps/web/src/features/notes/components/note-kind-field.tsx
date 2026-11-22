@@ -43,7 +43,10 @@ export function NoteKindField({
                     <span
                       className={cn(
                         "flex h-9 items-center justify-center gap-1.5 rounded-md font-medium text-muted-foreground text-sm transition-[background-color,color,box-shadow] group-hover:text-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
-                        selected && "bg-background text-foreground shadow-sm",
+                        // The dialog surface, not the page background: in the light theme the page
+                        // beige is almost the track's color, so the selected option would vanish.
+                        selected &&
+                          "bg-popover text-foreground shadow-xs ring-1 ring-foreground/10 dark:bg-input/30",
                       )}
                     >
                       <Icon

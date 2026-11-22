@@ -18,7 +18,7 @@ export function FieldShell({ label, error, children }: FieldShellProps) {
   return (
     <FieldShellContext value={ids}>
       <fieldset className="flex min-w-0 flex-col gap-1.5" data-invalid={error ? "true" : undefined}>
-        <legend className="font-mono mb-1.5 text-sm font-medium" id={ids.legendId}>
+        <legend className="mb-1.5 text-sm font-medium" id={ids.legendId}>
           {label}
         </legend>
         {children}

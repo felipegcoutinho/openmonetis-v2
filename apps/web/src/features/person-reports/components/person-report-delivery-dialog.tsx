@@ -99,9 +99,7 @@ function PersonReportDeliveryForm({
       <form.Field name="message">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-message`}>
-              Mensagem (opcional)
-            </Label>
+            <Label htmlFor={`${id}-message`}>Mensagem (opcional)</Label>
             <Textarea
               aria-describedby={`${id}-message-count`}
               id={`${id}-message`}

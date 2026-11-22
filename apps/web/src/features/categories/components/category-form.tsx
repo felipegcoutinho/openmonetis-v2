@@ -97,9 +97,7 @@ export function CategoryForm({
       >
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-name`}>
-              Nome
-            </Label>
+            <Label htmlFor={`${id}-name`}>Nome</Label>
             <Input
               aria-invalid={field.state.meta.errors.length > 0}
               id={`${id}-name`}
@@ -119,9 +117,7 @@ export function CategoryForm({
       <form.Field name="type">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-type`}>
-              Tipo da categoria
-            </Label>
+            <Label htmlFor={`${id}-type`}>Tipo da categoria</Label>
             <Select
               disabled={hasChildren || lockType}
               onValueChange={(value) => {
@@ -157,9 +153,7 @@ export function CategoryForm({
           <form.Field name="parentId">
             {(field) => (
               <div className="grid gap-1.5">
-                <Label className="font-mono" htmlFor={`${id}-parent`}>
-                  Categoria principal
-                </Label>
+                <Label htmlFor={`${id}-parent`}>Categoria principal</Label>
                 <Select
                   disabled={hasChildren || categoriesQuery.isPending || categoriesQuery.isError}
                   value={field.state.value || "root"}
@@ -207,9 +201,7 @@ export function CategoryForm({
       <form.Field name="icon">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-icon`}>
-              Ícone
-            </Label>
+            <Label htmlFor={`${id}-icon`}>Ícone</Label>
             <CategoryIconPicker
               id={`${id}-icon`}
               onChange={field.handleChange}

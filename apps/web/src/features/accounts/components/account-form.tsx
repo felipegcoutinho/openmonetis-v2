@@ -144,9 +144,7 @@ export function AccountForm(props: AccountFormProps) {
         >
           {(field) => (
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                Nome
-              </Label>
+              <Label htmlFor={fieldId(field.name)}>Nome</Label>
               <Input
                 aria-invalid={!field.state.meta.isValid}
                 id={fieldId(field.name)}
@@ -165,9 +163,7 @@ export function AccountForm(props: AccountFormProps) {
         <form.Field name="type">
           {(field) => (
             <div className="grid gap-1.5">
-              <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                Tipo de conta
-              </Label>
+              <Label htmlFor={fieldId(field.name)}>Tipo de conta</Label>
               <Select
                 onValueChange={(type) => {
                   if (type) field.handleChange(type);
@@ -196,9 +192,7 @@ export function AccountForm(props: AccountFormProps) {
           <form.Field name="isArchived">
             {(field) => (
               <div className="grid gap-1.5 sm:col-span-2">
-                <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                  Status
-                </Label>
+                <Label htmlFor={fieldId(field.name)}>Status</Label>
                 <Select
                   onValueChange={(status) => field.handleChange(status === "inactive")}
                   value={field.state.value ? "inactive" : "active"}
@@ -234,9 +228,7 @@ export function AccountForm(props: AccountFormProps) {
         >
           {(field) => (
             <div className="grid gap-1.5 sm:col-span-2">
-              <Label className="font-mono" htmlFor={fieldId(field.name)}>
-                Anotação
-              </Label>
+              <Label htmlFor={fieldId(field.name)}>Anotação</Label>
               <Textarea
                 aria-invalid={!field.state.meta.isValid}
                 id={fieldId(field.name)}
@@ -265,7 +257,7 @@ export function AccountForm(props: AccountFormProps) {
                 onCheckedChange={(checked) => field.handleChange(checked === true)}
               />
               <Label
-                className="font-mono cursor-pointer font-normal leading-tight"
+                className="cursor-pointer font-normal leading-tight"
                 htmlFor={fieldId(field.name)}
               >
                 Desconsiderar do saldo total (útil para contas de investimento ou reserva)

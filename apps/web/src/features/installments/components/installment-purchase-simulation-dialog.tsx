@@ -133,9 +133,7 @@ export function InstallmentPurchaseSimulationDialog({
           <form.Field name="name">
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-name`}>
-                  Nome (opcional)
-                </Label>
+                <Label htmlFor={`${id}-name`}>Nome (opcional)</Label>
                 <Input
                   autoFocus
                   id={`${id}-name`}
@@ -160,9 +158,7 @@ export function InstallmentPurchaseSimulationDialog({
           >
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-amount`}>
-                  Valor total
-                </Label>
+                <Label htmlFor={`${id}-amount`}>Valor total</Label>
                 <CurrencyInput
                   aria-invalid={field.state.meta.errors.length > 0}
                   id={`${id}-amount`}
@@ -186,9 +182,7 @@ export function InstallmentPurchaseSimulationDialog({
           >
             {(field) => (
               <div className="grid gap-2">
-                <Label className="font-mono" htmlFor={`${id}-count`}>
-                  Parcelas
-                </Label>
+                <Label htmlFor={`${id}-count`}>Parcelas</Label>
                 <Select
                   onValueChange={(value) => {
                     if (value) field.handleChange(value);
@@ -222,9 +216,7 @@ export function InstallmentPurchaseSimulationDialog({
               const selected = activeCards.find((card) => card.id === field.state.value);
               return (
                 <div className="grid gap-2">
-                  <Label className="font-mono" htmlFor={`${id}-card`}>
-                    Cartão
-                  </Label>
+                  <Label htmlFor={`${id}-card`}>Cartão</Label>
                   {cardsQuery.isLoading ? (
                     <Skeleton className="h-9 w-full" />
                   ) : activeCards.length === 0 ? (

@@ -2,7 +2,6 @@ import type { GoalOutput, UpdateGoalInput } from "@openmonetis/validators/goals"
 import {
   Archive,
   Check,
-  Ellipsis,
   Goal,
   History,
   Pause,
@@ -13,6 +12,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { CardActionsMenu } from "@/components/card-actions-menu";
+import { cardFooterActionClassName } from "@/components/card-footer-action";
 import { MoneyValue } from "@/components/money-value";
 import {
   AlertDialog,
@@ -26,13 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
@@ -73,7 +68,7 @@ export function GoalCard({
           : null;
 
   return (
-    <Card className="h-full gap-5 border">
+    <Card className="h-full gap-5 border" data-mobile-entity-card>
       <CardHeader className="gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -163,7 +158,7 @@ export function GoalCard({
       <CardFooter className="mt-auto flex flex-wrap items-center gap-3 border-t pt-3">
         {acceptsGoalContributions(goal) ? (
           <button
-            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            className={cardFooterActionClassName}
             disabled={busy}
             onClick={() => onContribute(goal)}
             type="button"
@@ -172,7 +167,7 @@ export function GoalCard({
           </button>
         ) : null}
         <button
-          className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+          className={cardFooterActionClassName}
           disabled={busy}
           onClick={() => onEdit(goal)}
           type="button"
@@ -181,7 +176,7 @@ export function GoalCard({
         </button>
         {statusAction ? (
           <button
-            className="-mx-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2 font-medium text-brand-strong text-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring"
+            className={cardFooterActionClassName}
             disabled={busy}
             onClick={() => void onUpdate(goal.id, { status: statusAction.status })}
             type="button"
@@ -189,40 +184,26 @@ export function GoalCard({
             <statusAction.icon aria-hidden="true" className="size-3.5" /> {statusAction.label}
           </button>
         ) : null}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            disabled={busy}
-            render={
-              <button
-                aria-label={`Mais ações para ${goal.name}`}
-                className="ml-auto inline-flex items-center rounded-sm px-1 py-0.5 text-muted-foreground transition-opacity hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50"
-                type="button"
-              />
-            }
-          >
-            <Ellipsis aria-hidden="true" className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-44">
-            <DropdownMenuItem onClick={() => onOpenDetails(goal)}>
-              <History aria-hidden="true" /> Ver histórico
+        <CardActionsMenu disabled={busy} label={`Mais ações para ${goal.name}`}>
+          <DropdownMenuItem onClick={() => onOpenDetails(goal)}>
+            <History aria-hidden="true" /> Ver histórico
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {goal.status === "active" || goal.status === "paused" ? (
+            <DropdownMenuItem onClick={() => void onUpdate(goal.id, { status: "completed" })}>
+              <Check aria-hidden="true" /> Concluir
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {goal.status === "active" || goal.status === "paused" ? (
-              <DropdownMenuItem onClick={() => void onUpdate(goal.id, { status: "completed" })}>
-                <Check aria-hidden="true" /> Concluir
-              </DropdownMenuItem>
-            ) : null}
-            {goal.status !== "archived" ? (
-              <DropdownMenuItem onClick={() => void onUpdate(goal.id, { status: "archived" })}>
-                <Archive aria-hidden="true" /> Arquivar
-              </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setRemoveOpen(true)} variant="destructive">
-              <Trash2 aria-hidden="true" /> Excluir meta
+          ) : null}
+          {goal.status !== "archived" ? (
+            <DropdownMenuItem onClick={() => void onUpdate(goal.id, { status: "archived" })}>
+              <Archive aria-hidden="true" /> Arquivar
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          ) : null}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setRemoveOpen(true)} variant="destructive">
+            <Trash2 aria-hidden="true" /> Excluir meta
+          </DropdownMenuItem>
+        </CardActionsMenu>
       </CardFooter>
       <AlertDialog onOpenChange={setRemoveOpen} open={removeOpen}>
         <AlertDialogContent>

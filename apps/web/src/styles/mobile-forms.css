@@ -434,7 +434,7 @@
     min-width: 0;
     min-height: 2.75rem;
     justify-content: center;
-    margin-left: 0;
+    margin-inline: 0;
     border-radius: 0.5rem;
     background: var(--muted);
   }
@@ -497,8 +497,12 @@
     view-transition-name: mobile-fab;
   }
 
-  /* The entering screen is already moving; its own fade-in would only blur the gesture. */
-  html:active-view-transition .app-page {
+  /*
+   * Screens change through the view transition, or instantly where there is none. The page's own
+   * fade-in stays off for good: switched off only during the transition, it restarted from
+   * transparent the moment the transition ended, and the new screen blinked.
+   */
+  .app-page {
     animation: none;
   }
 }
@@ -520,12 +524,26 @@ html:active-view-transition-type(pop)::view-transition-new(root) {
   animation: screen-pop-in var(--duration-slow) var(--ease-drawer) both;
 }
 
+/*
+ * Tabs: the old screen stays opaque underneath while the new one fades in over it, so the canvas
+ * never shows through halfway and the screen does not dip.
+ */
 html:active-view-transition-type(tab)::view-transition-old(root) {
-  animation: screen-fade-out var(--duration-fast) var(--ease-out-strong) both;
+  animation: none;
 }
 
 html:active-view-transition-type(tab)::view-transition-new(root) {
   animation: screen-fade-in var(--duration-base) var(--ease-out-strong) both;
+}
+
+/*
+ * The screens are opaque sheets laid over one another. The browser's default `plus-lighter`
+ * blending is made for a symmetric cross-fade; with these timings it would add the two screens'
+ * light together where they overlap and flash.
+ */
+html:active-view-transition-type(push, pop, tab)::view-transition-old(root),
+html:active-view-transition-type(push, pop, tab)::view-transition-new(root) {
+  mix-blend-mode: normal;
 }
 
 @keyframes screen-push-out {
@@ -551,12 +569,6 @@ html:active-view-transition-type(tab)::view-transition-new(root) {
   from {
     opacity: 0.6;
     translate: -28% 0;
-  }
-}
-
-@keyframes screen-fade-out {
-  to {
-    opacity: 0;
   }
 }
 

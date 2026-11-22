@@ -111,17 +111,23 @@ export function MobileNavigationMenu({
                 />
               </section>
             ))}
-            <NavLink
-              className={cn(
-                "pressable flex min-h-12 items-center gap-3 rounded-md border-t px-3 font-medium text-sm hover:bg-accent md:hidden",
-                location.pathname === "/settings" && "bg-accent",
-              )}
-              href="/settings"
-              onClick={() => setMobileNavigationOpen(false)}
-            >
-              <Settings aria-hidden="true" className="size-5" />
-              Ajustes
-            </NavLink>
+            {/*
+             * The divider is its own straight line: drawn on the rounded row itself, its ends
+             * curved down with the corners.
+             */}
+            <div className="border-t pt-2 md:hidden">
+              <NavLink
+                className={cn(
+                  "pressable flex min-h-12 items-center gap-3 rounded-md px-3 font-medium text-sm hover:bg-accent",
+                  location.pathname === "/settings" && "bg-accent",
+                )}
+                href="/settings"
+                onClick={() => setMobileNavigationOpen(false)}
+              >
+                <Settings aria-hidden="true" className="size-4 shrink-0 text-brand-strong" />
+                Ajustes
+              </NavLink>
+            </div>
           </nav>
         </SheetBody>
       </SheetContent>

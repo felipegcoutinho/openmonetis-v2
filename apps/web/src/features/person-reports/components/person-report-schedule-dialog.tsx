@@ -215,7 +215,7 @@ function PersonReportScheduleForm({
       <fieldset className="grid gap-4 disabled:opacity-60" disabled={disabled}>
         <form.Field name="enabled">
           {(field) => (
-            <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-input bg-field p-3">
               <Label className="grid cursor-pointer gap-0.5" htmlFor={`${id}-enabled`}>
                 <span className="font-medium text-sm">Enviar automaticamente</span>
                 <span className="font-normal text-muted-foreground text-xs">
@@ -244,9 +244,7 @@ function PersonReportScheduleForm({
             >
               {(field) => (
                 <fieldset className="grid gap-2">
-                  <legend className="mb-2 font-mono text-muted-foreground text-xs">
-                    Frequência
-                  </legend>
+                  <legend className="mb-2 text-muted-foreground text-xs">Frequência</legend>
                   <ToggleGroup
                     className="grid w-full grid-cols-2 sm:grid-cols-4"
                     disabled={disabled}
@@ -280,7 +278,7 @@ function PersonReportScheduleForm({
                     <form.Field name="weekday">
                       {(field) => (
                         <fieldset className="grid gap-2">
-                          <legend className="mb-2 font-mono text-muted-foreground text-xs">
+                          <legend className="mb-2 text-muted-foreground text-xs">
                             Dia da semana
                           </legend>
                           <ToggleGroup
@@ -316,7 +314,7 @@ function PersonReportScheduleForm({
                       {(field) => (
                         <div className="grid gap-1.5">
                           <Label
-                            className="font-mono text-muted-foreground text-xs"
+                            className="text-muted-foreground text-xs"
                             htmlFor={`${id}-monthly-day`}
                           >
                             Dia do mês
@@ -339,7 +337,7 @@ function PersonReportScheduleForm({
                           {(["Primeiro envio", "Segundo envio"] as const).map((label, index) => (
                             <div className="grid gap-1.5" key={label}>
                               <Label
-                                className="font-mono text-muted-foreground text-xs"
+                                className="text-muted-foreground text-xs"
                                 htmlFor={`${id}-semimonthly-${index}`}
                               >
                                 {label}
@@ -365,7 +363,7 @@ function PersonReportScheduleForm({
                     <form.Field name="customDays">
                       {(field) => (
                         <fieldset className="grid gap-2">
-                          <legend className="mb-2 flex w-full items-center justify-between font-mono text-muted-foreground text-xs">
+                          <legend className="mb-2 flex w-full items-center justify-between text-muted-foreground text-xs">
                             Dias do mês
                             <span className="font-sans tabular-nums">
                               {field.state.value.length}/{maximumPersonReportScheduleMonthDays}
@@ -417,9 +415,7 @@ function PersonReportScheduleForm({
             <form.Field name="reportPeriod">
               {(field) => (
                 <fieldset className="grid gap-2">
-                  <legend className="mb-2 font-mono text-muted-foreground text-xs">
-                    Mês do extrato
-                  </legend>
+                  <legend className="mb-2 text-muted-foreground text-xs">Mês do extrato</legend>
                   <RadioGroup
                     className="grid gap-2 sm:grid-cols-2"
                     disabled={disabled}
@@ -430,7 +426,7 @@ function PersonReportScheduleForm({
                   >
                     {personReportSchedulePeriods.map((period) => (
                       <Label
-                        className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-data-checked:border-primary has-data-checked:bg-accent"
+                        className="flex cursor-pointer items-start gap-3 rounded-lg border border-input bg-field p-3 transition-colors hover:border-input-hover has-data-checked:border-brand-strong has-data-checked:bg-accent"
                         htmlFor={`${id}-period-${period}`}
                         key={period}
                       >

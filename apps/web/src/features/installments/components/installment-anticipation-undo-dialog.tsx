@@ -135,8 +135,8 @@ export function InstallmentAnticipationUndoDialog({
                   return (
                     <div
                       className={cn(
-                        "flex items-center gap-3 rounded-lg border p-3 transition-colors",
-                        selected && "border-brand-strong/40 bg-brand/5",
+                        "flex items-center gap-3 rounded-lg border border-input bg-field p-3 transition-colors hover:border-input-hover",
+                        selected && "border-brand-strong bg-accent hover:border-brand-strong",
                       )}
                       key={installment.id}
                     >

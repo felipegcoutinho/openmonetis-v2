@@ -126,7 +126,7 @@ export function TransactionImportDestination({
           <form.Field name="invoicePeriod">
             {(field) => (
               <Field label="Fatura">
-                <div className="flex min-h-14 items-center rounded-md border border-input bg-popover px-3 shadow-xs">
+                <div className="flex min-h-14 items-center rounded-lg border border-input bg-field px-3">
                   <InvoicePeriodPicker onChange={field.handleChange} value={field.state.value} />
                 </div>
               </Field>

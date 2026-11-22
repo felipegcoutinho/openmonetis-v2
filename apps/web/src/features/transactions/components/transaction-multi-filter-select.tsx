@@ -55,10 +55,7 @@ export function MultiFilterSelect({
   return (
     <div className={cn("grid min-w-0 gap-2", className)}>
       <span
-        className={cn(
-          "font-mono font-medium text-muted-foreground text-xs",
-          hideLabel && "sr-only",
-        )}
+        className={cn("font-medium text-muted-foreground text-xs", hideLabel && "sr-only")}
         id={`${id}-label`}
       >
         {label}
@@ -68,10 +65,10 @@ export function MultiFilterSelect({
           render={
             <Button
               aria-labelledby={`${id}-label ${id}-trigger`}
-              className="w-full min-w-0 justify-between overflow-hidden border-input bg-card pr-2.5 pl-3 font-normal"
+              className="w-full min-w-0 justify-between overflow-hidden pr-2.5 pl-3"
               id={`${id}-trigger`}
               type="button"
-              variant="outline"
+              variant="field"
             />
           }
         >

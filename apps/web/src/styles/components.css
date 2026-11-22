@@ -68,25 +68,67 @@
   letter-spacing: normal;
 }
 
-[data-slot="input"],
-[data-slot="textarea"],
-[data-slot="select-trigger"],
-[data-slot="date-picker-trigger"],
-[data-slot="attachment"] {
-  background-color: color-mix(in srgb, var(--background) 72%, transparent);
+/*
+ * Form fields share one surface in every palette: `--field` behind the value, `--input` as the
+ * hairline at rest and `--input-hover` under the pointer. Focus, error and open states keep their
+ * own colours on each control. Light palettes let a little canvas through the field; OpenMonetis
+ * light paints it the white of the card or dialog around it, and dark scopes (dark palettes and
+ * the popups over a light one) leave it clear.
+ */
+:root,
+[data-palette] {
+  --field: color-mix(in srgb, var(--background) 72%, transparent);
+  --input-hover: color-mix(in oklch, var(--input), var(--foreground) 28%);
 }
 
-.dark
-  :where(
-    [data-slot="input"],
-    [data-slot="textarea"],
-    [data-slot="select-trigger"],
-    [data-slot="date-picker-trigger"],
-    [data-slot="period-picker-trigger"],
-    [data-slot="attachment"],
-    [data-slot="checkbox"]:not([data-checked])
-  ) {
-  background-color: transparent;
+:root:not([data-palette]),
+[data-palette="openmonetis-light"] {
+  --field: var(--card);
+}
+
+.dark {
+  --field: transparent;
+  --input-hover: color-mix(in oklch, var(--input), var(--foreground) 28%);
+}
+
+/*
+ * Controls that paint themselves with the canvas (outline buttons, also when a menu or sheet
+ * trigger renders them, the active tab, the switch thumb) take the white of the surfaces instead,
+ * so they read as part of the same layer.
+ * Only the variable changes: hover, pressed and open states keep their own colours. Popups over
+ * the light palette are dark and keep theirs.
+ */
+:where(:root:not([data-palette]), [data-palette="openmonetis-light"])
+:where(
+  [data-slot="button"],
+  [data-variant="outline"],
+  [data-slot="tabs-indicator"],
+  [data-slot="tabs-trigger"],
+  [data-slot="switch-thumb"]
+):not(.dark, .dark *) {
+  --background: var(--card);
+}
+
+/*
+ * The navbar keeps the translucent canvas. Its menus and the sticky month bar float over the page
+ * like cards, so they take the white of the cards instead: opaque in the menus, so the page never
+ * shows through, and lightly translucent in the month bar.
+ */
+:where(:root:not([data-palette]), [data-palette="openmonetis-light"])
+[data-slot="navigation-menu-content"] {
+  --material: var(--card);
+}
+
+:where(:root:not([data-palette]), [data-palette="openmonetis-light"])
+  [data-mobile-month-navigation] {
+  --material: color-mix(in srgb, var(--card) 82%, transparent);
+}
+
+:where(:root:not([data-palette]), [data-palette="openmonetis-light"])
+  [data-slot="sheet-content"]:not(.dark) {
+  background-color: var(--popover);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .atmospheric-wash {

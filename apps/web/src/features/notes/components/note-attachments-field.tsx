@@ -21,7 +21,7 @@ export function NoteAttachmentsField({
   return (
     <section aria-label="Anexos" className="grid min-w-0 gap-2">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-medium font-mono text-sm">Anexos</h3>
+        <h3 className="font-medium text-sm">Anexos</h3>
         <span className="text-muted-foreground text-xs">Opcional</span>
       </div>
       <AttachmentFilePicker

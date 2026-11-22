@@ -96,7 +96,7 @@ function AdjustAccountBalanceForm({
       >
         {(state) => <MobileFormState {...state} />}
       </form.Subscribe>
-      <div className="rounded-md border bg-muted/40 px-3 py-2">
+      <div className="rounded-lg border bg-muted/40 px-3 py-2">
         <p className="font-medium text-sm">{account.name}</p>
         <p className="text-muted-foreground text-xs">
           Saldo acumulado até {formatAccountPeriod(period)}:{" "}
@@ -106,9 +106,7 @@ function AdjustAccountBalanceForm({
       <form.Field name="balance">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-balance`}>
-              Saldo correto
-            </Label>
+            <Label htmlFor={`${id}-balance`}>Saldo correto</Label>
             <CurrencyInput
               allowNegative
               id={`${id}-balance`}
@@ -124,9 +122,7 @@ function AdjustAccountBalanceForm({
       <form.Field name="date">
         {(field) => (
           <div className="grid gap-1.5">
-            <Label className="font-mono" htmlFor={`${id}-date`}>
-              Data do ajuste
-            </Label>
+            <Label htmlFor={`${id}-date`}>Data do ajuste</Label>
             <DatePicker
               id={`${id}-date`}
               max={getMaximumAdjustmentDate(period)}

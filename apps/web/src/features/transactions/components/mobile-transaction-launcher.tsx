@@ -1,6 +1,7 @@
+import type { CreateNoteInput } from "@openmonetis/validators/notes";
 import type { TransactionInput } from "@openmonetis/validators/transactions";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, NotebookPen } from "lucide-react";
 import { useState } from "react";
 import { MobileFormContent } from "@/components/forms/mobile-form-content";
 import { MobileFormDialog as Dialog } from "@/components/forms/mobile-form-dialog";
@@ -9,6 +10,8 @@ import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/di
 import { accountsQueryOptions } from "@/features/accounts/accounts.queries";
 import { cardsQueryOptions } from "@/features/cards/cards.queries";
 import { categoriesQueryOptions } from "@/features/categories/categories.queries";
+import { NoteDialog } from "@/features/notes/components/note-dialog";
+import { useCreateNoteMutation } from "@/features/notes/notes.mutations";
 import { peopleQueryOptions } from "@/features/people/people.queries";
 import { TransactionDialog } from "./transaction-dialog";
 
@@ -20,6 +23,8 @@ const choices = [
 
 export function MobileTransactionLauncher({ onClose }: { onClose: () => void }) {
   const [type, setType] = useState<TransactionInput["type"] | null>(null);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const createNote = useCreateNoteMutation();
   const accounts = useQuery({ ...accountsQueryOptions(), enabled: type !== null });
   const cards = useQuery({ ...cardsQueryOptions(), enabled: type !== null });
   const categories = useQuery({ ...categoriesQueryOptions(), enabled: type !== null });
@@ -27,6 +32,24 @@ export function MobileTransactionLauncher({ onClose }: { onClose: () => void }) 
   const queries = [accounts, cards, categories, people];
   const failed = queries.some((query) => query.isError);
   const ready = queries.every((query) => query.data !== undefined);
+
+  if (noteOpen) {
+    return (
+      <NoteDialog
+        note={null}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+        onSubmit={async (input, files) => {
+          const created = await createNote.mutateAsync({ input: input as CreateNoteInput, files });
+          onClose();
+          return created;
+        }}
+        open
+        pending={createNote.isPending}
+      />
+    );
+  }
 
   if (type && ready) {
     return (
@@ -54,7 +77,7 @@ export function MobileTransactionLauncher({ onClose }: { onClose: () => void }) 
     >
       <MobileFormContent mobileLayout="sheet">
         <DialogHeader>
-          <DialogTitle>Novo lançamento</DialogTitle>
+          <DialogTitle>Novo</DialogTitle>
           <DialogDescription>Escolha o que deseja registrar.</DialogDescription>
         </DialogHeader>
         {!type ? (
@@ -71,6 +94,18 @@ export function MobileTransactionLauncher({ onClose }: { onClose: () => void }) 
                 {choice.label}
               </Button>
             ))}
+            {/* A note is not a financial entry, so it sits apart from the three kinds of entry. */}
+            <div className="mt-1 border-t pt-3">
+              <Button
+                className="min-h-12 w-full justify-start gap-3"
+                onClick={() => setNoteOpen(true)}
+                type="button"
+                variant="outline"
+              >
+                <NotebookPen aria-hidden="true" className="size-5" />
+                Nova anotação
+              </Button>
+            </div>
           </div>
         ) : failed ? (
           <div className="grid gap-3">

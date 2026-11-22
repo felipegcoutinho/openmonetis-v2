@@ -159,9 +159,8 @@ export function MobileShortcut({ enabled }: { enabled: boolean }) {
           preservePeriod={option.preservePeriod}
         >
           <MobileNavigationIcon active={isPathActive(location.pathname, option.href)}>
-            <option.icon aria-hidden="true" className="size-5" />
+            <option.icon aria-hidden="true" className="size-6" />
           </MobileNavigationIcon>
-          <span className="max-w-full truncate">{label}</span>
           <span
             aria-hidden="true"
             className="absolute bottom-0 left-1/2 h-0.5 w-5 -translate-x-1/2 overflow-hidden rounded-full bg-muted-foreground/40"
