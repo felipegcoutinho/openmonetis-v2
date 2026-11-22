@@ -270,3 +270,95 @@ test("card cycle spending includes recurring purchases on their day in the selec
   assert.equal(may.cycleSpending.endDate, "2026-04-19");
   assert.equal(may.cycleSpending.daily[0]?.amount, 50);
 });
+
+test("card cycle comparison by person follows split shares without changing the invoice", async () => {
+  const cardId = "11111111-1111-4111-8111-111111111111";
+  const ownerId = "55555555-5555-4555-8555-555555555555";
+  const friendId = "66666666-6666-4666-8666-666666666666";
+  const card = {
+    id: cardId,
+    userId: "user-1",
+    accountId: "22222222-2222-4222-8222-222222222222",
+    name: "Principal",
+    brand: "visa" as const,
+    status: "active" as const,
+    closingDay: 20,
+    closingRuleType: "fixedDay" as const,
+    closingOffsetDays: null,
+    closingOffsetMode: null,
+    closingDayPurchasesNextInvoice: false,
+    dueDay: 10,
+    limit: "1000.00",
+    logo: null,
+    note: null,
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    updatedAt: new Date("2026-01-01T00:00:00Z"),
+  };
+  const repository: CardsRepository = {
+    accountExistsForUser: async () => true,
+    insert: async () => card,
+    deleteInactiveForUser: async () => ({ status: "not_found" }),
+    listByUser: async () => [card],
+    findByIdForUser: async () => card,
+    updateForUser: async () => card,
+    listMovementsByUser: async () => [
+      {
+        cardId,
+        personId: ownerId,
+        period: "2026-04",
+        amount: "-100.00",
+        purchaseDate: "2026-03-10",
+        shares: [
+          { personId: ownerId, amount: "-60.00" },
+          { personId: friendId, amount: "-40.00" },
+        ],
+      },
+    ],
+    listInvoiceStatesByUser: async () => [],
+    listInvoicePaymentsByUser: async () => [],
+    // A shared subscription: the owner holds the rule, the friend pays part of it every month.
+    listActiveRecurringRulesThroughPeriod: async () => [
+      {
+        id: "33333333-3333-4333-8333-333333333333",
+        cardId,
+        personId: ownerId,
+        amount: "-55.90",
+        anchorDate: "2026-01-05",
+        startDate: "2026-01-05",
+        endDate: null,
+        frequency: "monthly",
+        paymentMethod: "credit_card",
+        dueDate: null,
+        closingDay: 20,
+        closingRuleType: "fixedDay",
+        closingOffsetDays: null,
+        closingOffsetMode: null,
+        closingDayPurchasesNextInvoice: false,
+        dueDay: 10,
+        shares: [
+          { personId: ownerId, amount: "-35.90" },
+          { personId: friendId, amount: "-20.00" },
+        ],
+      },
+    ],
+  };
+
+  const result = await createCardsService(repository, () => "2026-04-15").get(
+    cardId,
+    "user-1",
+    "2026-04",
+  );
+
+  assert.equal(result.invoiceSummary.amount, 155.9);
+  assert.deepEqual(
+    result.cycleSpending.peopleComparisons.map(({ personId, totalAmount, comparison }) => ({
+      personId,
+      totalAmount,
+      previousAmount: comparison?.previousAmount ?? null,
+    })),
+    [
+      { personId: ownerId, totalAmount: 95.9, previousAmount: 35.9 },
+      { personId: friendId, totalAmount: 60, previousAmount: 20 },
+    ],
+  );
+});

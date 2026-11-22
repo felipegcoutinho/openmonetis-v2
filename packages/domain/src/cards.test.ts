@@ -281,6 +281,55 @@ test("closed cycles compare final totals and cycles without a reference are skip
   );
 });
 
+test("cycle comparison by person counts a split purchase for each person by their share", () => {
+  const people = compareCardCycleSpendingByPerson({
+    current: {
+      previousClosingDate: "2026-05-31",
+      closingDate: "2026-06-03",
+      movements: [
+        {
+          personId: "ana",
+          purchaseDate: "2026-06-01",
+          amount: -55.9,
+          shares: [
+            { personId: "ana", amount: -35.9 },
+            { personId: "bia", amount: -20 },
+          ],
+        },
+        { personId: "ana", purchaseDate: "2026-06-02", amount: -10, shares: null },
+      ],
+    },
+    previous: {
+      previousClosingDate: "2026-04-30",
+      closingDate: "2026-05-03",
+      movements: [
+        {
+          personId: "ana",
+          purchaseDate: "2026-05-01",
+          amount: -55.9,
+          shares: [
+            { personId: "ana", amount: -35.9 },
+            { personId: "bia", amount: -20 },
+          ],
+        },
+      ],
+    },
+    today: "2026-06-10",
+  });
+
+  assert.deepEqual(
+    people.map(({ personId, totalAmount, comparison }) => ({
+      personId,
+      totalAmount,
+      previousAmount: comparison?.previousAmount,
+    })),
+    [
+      { personId: "ana", totalAmount: 45.9, previousAmount: 35.9 },
+      { personId: "bia", totalAmount: 20, previousAmount: 20 },
+    ],
+  );
+});
+
 test("cycle comparison by person compares each share and adds up to the invoice", () => {
   const current = {
     previousClosingDate: "2026-05-31",

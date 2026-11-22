@@ -60,12 +60,17 @@ type DeleteCardResult =
   | { status: "deleted"; id: string }
   | { status: "not_found" };
 
+/** One person's part of a purchase split between people. */
+type CardMovementShareRecord = { personId: string; amount: string };
+
 type CardMovementRecord = {
   cardId: string | null;
   personId: string;
   period: string;
   amount: string;
   purchaseDate: string;
+  /** Present when the purchase is split between people; the totals still use `amount`. */
+  shares?: CardMovementShareRecord[] | null;
 };
 
 type CardInvoiceStateRecord = {
@@ -105,6 +110,7 @@ type CardRecurringRuleRecord = {
   closingOffsetMode: CardClosingOffsetMode | null;
   closingDayPurchasesNextInvoice: boolean;
   dueDay: number;
+  shares?: CardMovementShareRecord[] | null;
 };
 
 export type CardsRepository = {
@@ -247,6 +253,10 @@ export function createCardsService(
             personId: movement.personId,
             purchaseDate: movement.purchaseDate,
             amount: Number(movement.amount),
+            shares: movement.shares?.map((share) => ({
+              personId: share.personId,
+              amount: Number(share.amount),
+            })),
           }));
       const currentCycleInput = {
         previousClosingDate: previousInvoiceSummary.closingDate,
@@ -486,6 +496,7 @@ function expandRecurringInvoiceMovements(
                   period: invoicePeriod,
                   amount: rule.amount,
                   purchaseDate,
+                  shares: rule.shares,
                 },
               ]
             : [],

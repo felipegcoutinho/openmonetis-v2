@@ -10,6 +10,14 @@ import {
 } from "@openmonetis/db";
 import { and, asc, desc, eq, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import type { CardsRepository } from "../services/cards.service";
+
+/**
+ * One person's part of a purchase split between people, as each split row stores it. The share
+ * subqueries name the outer table in full: Drizzle leaves a single-table query's columns
+ * unqualified, and an unqualified `id` inside the subquery would match the split's own id.
+ */
+type MovementShare = { personId: string; amount: string };
+
 import { effectiveRecurringEndDateSql } from "./recurring-transactions.repository";
 import {
   effectiveTransactionAmountSql,
@@ -170,6 +178,11 @@ export const cardsRepository = {
         period: transactions.period,
         amount: effectiveTransactionAmountSql.as("amount"),
         purchaseDate: transactions.purchaseDate,
+        shares: sql<
+          MovementShare[] | null
+        >`(select json_agg(json_build_object('personId', s.person_id, 'amount', coalesce(s.settled_amount, s.amount)::text)) from transaction_splits s where s.transaction_id = transactions.id and s.user_id = transactions.user_id)`.as(
+          "shares",
+        ),
       })
       .from(transactions)
       .where(
@@ -258,6 +271,11 @@ export const cardsRepository = {
         closingOffsetMode: cards.closingOffsetMode,
         closingDayPurchasesNextInvoice: cards.closingDayPurchasesNextInvoice,
         dueDay: cards.dueDay,
+        shares: sql<
+          MovementShare[] | null
+        >`(select json_agg(json_build_object('personId', s.person_id, 'amount', s.amount::text)) from recurring_transaction_splits s where s.recurring_rule_id = recurring_transaction_rules.id and s.user_id = recurring_transaction_rules.user_id)`.as(
+          "shares",
+        ),
       })
       .from(recurringTransactionRules)
       .innerJoin(

@@ -20,6 +20,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   calculando ou usar o valor no formulário. O histórico fica salvo só neste navegador, aparece
   desfocado no modo de privacidade e é apagado em **Limpar histórico** ou ao sair da conta.
 
+### Corrigido
+
+- Cartões: a comparação com a fatura anterior por pessoa passa a contar compras e recorrências
+  divididas pela parte de cada um. Antes, uma assinatura dividida, como uma Netflix repartida entre
+  duas pessoas, contava inteira para quem a cadastrou, e o seletor de pessoa nem aparecia quando
+  essa era a única forma de outra pessoa ter gastos no cartão. O total da fatura não muda.
+
 ## [0.19.0] - 2026-11-20
 
 Experiência de aplicativo no celular com PWA instalável, temas próprios para o modo claro e para o
