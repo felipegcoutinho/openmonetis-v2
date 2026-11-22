@@ -14,7 +14,7 @@ import { EdgeSwipeBack } from "@/components/pwa/edge-swipe-back";
 import { OfflineNotice } from "@/components/pwa/offline-notice";
 import { PullToRefresh } from "@/components/pwa/pull-to-refresh";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
-import { ThemeProvider } from "@/components/theme-provider";
+import { AppearanceScript, ThemeProvider } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -173,6 +173,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <AppearanceScript />
       </head>
       <body>
         <ThemeProvider>

@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Corrigido
+
+- Aparência: ao abrir ou recarregar uma página, o tema salvo é aplicado antes de qualquer parte da
+  tela aparecer. Em conexões lentas, o primeiro quadro podia surgir sem o tema e piscar o padrão
+  antes de trocar.
+
 ## [0.20.0] - 2026-11-22
 
 O tema claro padrão fica branco sobre o fundo areia e todos os campos de formulário passam a ter o

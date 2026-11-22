@@ -73,6 +73,14 @@ test("the theme is saved to the account, applied before the first frame and rest
     await expect.poll(() => linkedManifestThemeColor(page)).toBe("#2e3440");
   });
 
+  await test.step("the appearance script runs in the head, before any of the body can paint", async () => {
+    // A script in the body leaves a window, on a slow stream, where the first frame shows no theme.
+    const document = await (await page.request.get("/settings")).text();
+    const script = document.indexOf('setAttribute("data-palette"');
+    expect(script).toBeGreaterThan(-1);
+    expect(script).toBeLessThan(document.indexOf("</head>"));
+  });
+
   await test.step("a reload paints the saved theme from the first frame", async () => {
     // Read before the first frame paints, so a flash of the default theme would be caught.
     await page.addInitScript(() => {

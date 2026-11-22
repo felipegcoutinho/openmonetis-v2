@@ -28,7 +28,7 @@ mesmo que o navegador ou o celular estejam em outro modo. O script de tema cria 
 o aplicativo instalado lê do manifesto a cor das barras: o Firefox, a da barra de status; o Chrome,
 a da barra de navegação. Nenhuma das duas tags fica no `head` da rota, que as duplicaria com a cor
 clara ao carregar. O navegador só relê o manifesto do aplicativo instalado em uma nova visita, então
-a cor das barras muda ao reabrir o aplicativo. Um script em linha aplica o último tema guardado no `localStorage` antes da primeira
+a cor das barras muda ao reabrir o aplicativo. Um script em linha no `head` (`AppearanceScript`) aplica o último tema guardado no `localStorage` antes da primeira
 pintura, sem piscar o tema padrão; em seguida, o tema salvo na conta prevalece. Se um salvamento
 falhar, a página volta ao tema salvo e mostra um aviso.
 

@@ -72,7 +72,14 @@ function readStoredAppearance(): Appearance {
   };
 }
 
-/** Runs before the first paint, so a reload never flashes another mode or palette. */
+/**
+ * Paints the stored appearance before the first frame, so a reload never flashes another mode or
+ * palette. It belongs in the document head: from the body, a slow stream can paint a frame first.
+ */
+export function AppearanceScript() {
+  return <ScriptOnce>{getAppearanceScript()}</ScriptOnce>;
+}
+
 function getAppearanceScript() {
   const config = JSON.stringify({
     keys: storageKeys,
@@ -201,7 +208,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <ThemeProviderContext value={{ appearance, mode, setAppearance }}>
-      <ScriptOnce>{getAppearanceScript()}</ScriptOnce>
       {children}
     </ThemeProviderContext>
   );
