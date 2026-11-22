@@ -22,6 +22,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- Celular: as barras do sistema acompanham o modo e o tema do aplicativo, mesmo quando o navegador
+  ou o celular estão em outro modo. A página guardava uma segunda cor, clara e fixa, que podia
+  prevalecer na barra de status. O manifesto do aplicativo instalado, de onde o Firefox tira a cor
+  das barras e o Chrome a da barra de navegação, passa a trazer a cor do tema em uso, em vez de um
+  claro fixo; o navegador aplica a mudança ao reabrir o aplicativo.
 - Cartões: o card **Gastos do cartão** não passa mais da borda no celular. O gráfico, os valores e a
   legenda ficavam mais largos que o card e eram cortados à direita. A comparação com a fatura
   anterior vira uma frase só. O maior gasto e as parcelas de outras datas ficam em linhas de rótulo

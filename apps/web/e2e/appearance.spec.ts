@@ -3,6 +3,28 @@ import { expect, type Page, test } from "@playwright/test";
 
 const html = (page: Page) => page.locator("html");
 
+/** Every `theme-color` tag on the page; there must be exactly one, painted with the theme. */
+function browserThemeColors(page: Page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')].map(
+      (meta) => meta.content,
+    ),
+  );
+}
+
+/** The installed app's bars come from the manifest the page links to. */
+async function linkedManifestThemeColor(page: Page) {
+  const links = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLLinkElement>('link[rel="manifest"]')].map(
+      (link) => link.href,
+    ),
+  );
+  expect(links).toHaveLength(1);
+  const response = await page.request.get(links[0] ?? "");
+  expect(response.ok()).toBeTruthy();
+  return (await response.json()).theme_color as string;
+}
+
 function isPreferencesSave(url: string, method: string) {
   return method === "PATCH" && new URL(url).pathname === "/api-proxy/preferences";
 }
@@ -46,6 +68,9 @@ test("the theme is saved to the account, applied before the first frame and rest
     await chooseDarkPalette(page, /Nord/);
     expect((await saved).ok()).toBeTruthy();
     await expect(html(page)).toHaveAttribute("data-palette", "nord-dark");
+    // The status bar follows the dark theme, with no stale light tag left behind.
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#2e3440"]);
+    await expect.poll(() => linkedManifestThemeColor(page)).toBe("#2e3440");
   });
 
   await test.step("a reload paints the saved theme from the first frame", async () => {
@@ -58,6 +83,7 @@ test("the theme is saved to the account, applied before the first frame and rest
     });
     await page.reload();
     await expect(html(page)).toHaveAttribute("data-first-frame-palette", "nord-dark");
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#2e3440"]);
   });
 
   await test.step("a browser without the local copy gets the theme from the account", async () => {
@@ -91,6 +117,8 @@ test("the theme is saved to the account, applied before the first frame and rest
     expect((await saved).ok()).toBeTruthy();
     await expect(html(page)).toHaveClass(/\blight\b/);
     await expect(html(page)).toHaveAttribute("data-palette", "rosePine-light");
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#faf4ed"]);
+    await expect.poll(() => linkedManifestThemeColor(page)).toBe("#faf4ed");
     await expect(modes.getByRole("button", { name: "Claro" })).toHaveAttribute(
       "aria-pressed",
       "true",

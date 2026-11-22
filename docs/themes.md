@@ -21,7 +21,14 @@ tema não exige migration, e um tema retirado que ainda esteja salvo volta ao pa
 na leitura (`normalizeUserPreferences`). A API recusa com 400 um tema fora da lista do seu modo.
 
 No navegador, a página raiz recebe a classe do modo e `data-palette="<tema>-<modo>"`, por exemplo
-`nord-dark`. Um script em linha aplica o último tema guardado no `localStorage` antes da primeira
+`nord-dark`. As barras do sistema usam o fundo do tema em uso (`apps/web/src/lib/browser-theme-colors.ts`),
+mesmo que o navegador ou o celular estejam em outro modo. O script de tema cria a única tag
+`theme-color` da página e o link do manifesto, `/manifest.json?theme=<tema>-<modo>`. A rota
+`manifest[.]json.ts` devolve o manifesto com essa cor em `theme_color` e `background_color`, porque
+o aplicativo instalado lê do manifesto a cor das barras: o Firefox, a da barra de status; o Chrome,
+a da barra de navegação. Nenhuma das duas tags fica no `head` da rota, que as duplicaria com a cor
+clara ao carregar. O navegador só relê o manifesto do aplicativo instalado em uma nova visita, então
+a cor das barras muda ao reabrir o aplicativo. Um script em linha aplica o último tema guardado no `localStorage` antes da primeira
 pintura, sem piscar o tema padrão; em seguida, o tema salvo na conta prevalece. Se um salvamento
 falhar, a página volta ao tema salvo e mostra um aviso.
 

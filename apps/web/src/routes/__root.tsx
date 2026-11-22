@@ -51,10 +51,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content: "noindex, nofollow, noarchive",
       },
       {
-        name: "theme-color",
-        content: "#f6f4f1",
-      },
-      {
         name: "apple-mobile-web-app-title",
         content: siteName,
       },
@@ -100,11 +96,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         rel: "apple-touch-icon",
         href: "/apple-touch-icon.png",
         sizes: "180x180",
-      },
-      {
-        rel: "manifest",
-        href: "/manifest.json",
-        crossOrigin: "use-credentials",
       },
       ...appleSplashScreenLinks,
     ],

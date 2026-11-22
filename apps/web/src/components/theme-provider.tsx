@@ -17,6 +17,7 @@ import {
   useState,
 } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { browserThemeColors, webAppManifestPath } from "@/lib/browser-theme-colors";
 import { prefersReducedMotion } from "@/lib/pwa";
 
 /** What the app looks like: the mode, and the palette used in each mode. */
@@ -53,49 +54,6 @@ const storageKeys = {
   darkPalette: "openmonetis-dark-palette",
 } as const satisfies Record<keyof Appearance, string>;
 
-/* The system bars take the canvas colour of each palette, so the app reads as one surface. */
-const browserThemeColors = {
-  light: {
-    openmonetis: "#f6f4f1",
-    absolutely: "#faf9f5",
-    catppuccin: "#eff1f5",
-    everforest: "#fdf6e3",
-    flexoki: "#fffcf0",
-    github: "#f6f8fa",
-    githubHighContrast: "#ffffff",
-    githubColorblind: "#f6f8fa",
-    githubLegacy: "#f6f8fa",
-    rosePine: "#faf4ed",
-    tokyoNight: "#e1e2e7",
-  },
-  dark: {
-    openmonetis: "#1b1917",
-    absolutely: "#262624",
-    catppuccin: "#1e1e2e",
-    everforest: "#2d353b",
-    flexoki: "#100f0f",
-    github: "#010409",
-    githubDimmed: "#1c2128",
-    githubHighContrast: "#010409",
-    githubColorblind: "#010409",
-    githubLegacy: "#1f2428",
-    gotham: "#0c1014",
-    gruvbox: "#282828",
-    jellybeans: "#121212",
-    monokai: "#272822",
-    moonfly: "#080808",
-    nord: "#2e3440",
-    posterpole: "#25222a",
-    posterpoleGray: "#1f1f1f",
-    rosePine: "#232136",
-    terminal: "#191715",
-    tokyoNight: "#1a1b26",
-    tokyoNightStorm: "#24283b",
-    tokyoNightMoon: "#222436",
-    vesper: "#101010",
-  },
-} as const satisfies { light: Record<LightPalette, string>; dark: Record<DarkPalette, string> };
-
 function readStoredAppearance(): Appearance {
   const theme = localStorage.getItem(storageKeys.theme);
   const lightPalette = localStorage.getItem(storageKeys.lightPalette);
@@ -123,9 +81,10 @@ function getAppearanceScript() {
     lightPalettes,
     darkPalettes,
     colors: browserThemeColors,
+    manifest: webAppManifestPath,
   });
 
-  return `(function(){try{var c=${config};function r(k,l){var v=localStorage.getItem(c.keys[k]);return l.indexOf(v)>=0?v:c.defaults[k]}var t=r("theme",c.themes);var m=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;var p=m==="dark"?r("darkPalette",c.darkPalettes):r("lightPalette",c.lightPalettes);var e=document.documentElement;e.classList.add(m);e.style.colorScheme=m;e.setAttribute("data-palette",p+"-"+m);var s=document.querySelector('meta[name="theme-color"]');if(s)s.setAttribute("content",c.colors[m][p])}catch(e){}})();`;
+  return `(function(){try{var c=${config};function r(k,l){var v=localStorage.getItem(c.keys[k]);return l.indexOf(v)>=0?v:c.defaults[k]}var t=r("theme",c.themes);var m=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;var p=m==="dark"?r("darkPalette",c.darkPalettes):r("lightPalette",c.lightPalettes);var e=document.documentElement;e.classList.add(m);e.style.colorScheme=m;e.setAttribute("data-palette",p+"-"+m);function h(q,t,k){var x=document.querySelector(t+"["+q+"]");if(!x){x=document.createElement(t);x.setAttribute(q.split("=")[0],k);document.head.appendChild(x)}return x}h('name="theme-color"',"meta","theme-color").content=c.colors[m][p];h('rel="manifest"',"link","manifest").href=c.manifest+"?theme="+p+"-"+m}catch(e){}})();`;
 }
 
 function resolveMode(theme: ApplicationTheme): ResolvedMode {
@@ -146,7 +105,34 @@ function applyAppearance(appearance: Appearance) {
   root.classList.add(mode);
   root.style.colorScheme = mode;
   root.dataset.palette = `${palette}-${mode}`;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+  paintSystemBars(`${palette}-${mode}`, themeColor);
+}
+
+/**
+ * The phone's system bars follow the appearance on screen. The page's single `theme-color` tag
+ * paints the status bar in the browser and in Chrome's installed app; the manifest link carries the
+ * same appearance for the installed app's other bars, which some browsers (Firefox) only take from
+ * the manifest. Both tags belong to the appearance script, not the route head: a head tag is
+ * rendered again on hydration, and the stale light copy kept the bar light in dark mode.
+ */
+function paintSystemBars(scope: string, color: string) {
+  const meta = findOrCreateHeadElement<HTMLMetaElement>("meta", "name", "theme-color");
+  meta.content = color;
+  const manifest = findOrCreateHeadElement<HTMLLinkElement>("link", "rel", "manifest");
+  manifest.href = `${webAppManifestPath}?theme=${scope}`;
+}
+
+function findOrCreateHeadElement<Element extends HTMLElement>(
+  tag: "meta" | "link",
+  attribute: "name" | "rel",
+  value: string,
+) {
+  const existing = document.head.querySelector<Element>(`${tag}[${attribute}="${value}"]`);
+  if (existing) return existing;
+  const element = document.createElement(tag) as unknown as Element;
+  element.setAttribute(attribute, value);
+  document.head.append(element);
+  return element;
 }
 
 /**
