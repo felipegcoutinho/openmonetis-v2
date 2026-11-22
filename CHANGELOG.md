@@ -89,6 +89,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Compromissos futuros: em **Parcelamentos que terminam**, cada compra ocupa duas linhas (nome e
   valor; data de término), e o card não corta mais a data nem o valor em telas estreitas.
 
+### Notas de atualização
+
+- API: em `GET /dashboard/attention` (`DashboardAttention`), `kind` de cada item e
+  `unavailableSources` aceitam o novo valor `task`, para tarefas pendentes das Anotações com prazo
+  vencido ou nos próximos sete dias. Clientes com validação estrita da resposta devem aceitar o
+  novo valor. Não há migrations nem mudanças de ambiente ou Compose.
+
 ## [0.19.0] - 2026-11-20
 
 Experiência de aplicativo no celular com PWA instalável, temas próprios para o modo claro e para o
