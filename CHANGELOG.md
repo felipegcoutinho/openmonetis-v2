@@ -7,6 +7,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-11-23
+
+O aplicativo instalado pelo Firefox para Android volta a abrir como aplicativo, com o manifesto
+estático e os atalhos no ícone, e a barra de status passa a usar a cor principal do tema. O tema
+salvo é aplicado antes da primeira pintura mesmo em conexões lentas, e a Caixa de entrada e a
+Distribuição financeira recebem ajustes visuais.
+
 ### Alterado
 
 - Caixa de entrada: em **Por origem**, cartões e contas ficam direto no card, alinhados ao
@@ -1727,7 +1734,8 @@ API-first, com cliente web em PT-BR, domínio financeiro isolado e implantação
 - Backup e restauração definidos como operações de infraestrutura, cobrindo PostgreSQL, objetos do
   storage e segredos da implantação.
 
-[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.20.1...HEAD
+[0.20.1]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/felipegcoutinho/openmonetis-v2/compare/v0.17.1...v0.18.0
