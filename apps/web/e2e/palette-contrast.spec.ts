@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { darkPalettes, lightPalettes } from "../../../packages/domain/src/preferences";
+import { browserThemeColors } from "../src/lib/browser-theme-colors";
 
 /**
  * Every palette keeps its text readable and its chart series distinguishable. The browser resolves
@@ -169,4 +170,47 @@ test("every palette keeps text and chart contrast", async ({ page }) => {
   );
 
   expect(failures, failures.join("\n")).toEqual([]);
+});
+
+test("the status bar colour of every palette is the primary the browser resolves", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const resolved = await page.evaluate((variants) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Canvas 2D is unavailable");
+    const probe = document.createElement("div");
+    probe.style.color = "var(--primary)";
+    document.body.append(probe);
+    const root = document.documentElement;
+    const original = { className: root.className, palette: root.dataset.palette };
+    const colours: Record<string, string> = {};
+
+    for (const variant of variants) {
+      root.classList.remove("light", "dark");
+      root.classList.add(variant.endsWith("-dark") ? "dark" : "light");
+      root.dataset.palette = variant;
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = getComputedStyle(probe).color;
+      context.fillRect(0, 0, 1, 1);
+      const [red = 0, green = 0, blue = 0] = context.getImageData(0, 0, 1, 1).data;
+      colours[variant] =
+        `#${[red, green, blue].map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    root.className = original.className;
+    if (original.palette) root.dataset.palette = original.palette;
+    probe.remove();
+    return colours;
+  }, variants);
+
+  const expected = Object.fromEntries([
+    ...lightPalettes.map((palette) => [`${palette}-light`, browserThemeColors.light[palette]]),
+    ...darkPalettes.map((palette) => [`${palette}-dark`, browserThemeColors.dark[palette]]),
+  ]);
+  expect(resolved).toEqual(expected);
 });

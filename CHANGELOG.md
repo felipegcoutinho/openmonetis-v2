@@ -12,6 +12,14 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Aparência: ao abrir ou recarregar uma página, o tema salvo é aplicado antes de qualquer parte da
   tela aparecer. Em conexões lentas, o primeiro quadro podia surgir sem o tema e piscar o padrão
   antes de trocar.
+- Celular: o aplicativo instalado volta a abrir sozinho, como um aplicativo, e não como atalho do
+  navegador. O manifesto voltou a ser o arquivo estático da 0.19.0, com os atalhos no ícone, agora
+  com a cor laranja do OpenMonetis, e o link é enviado com as credenciais de login. Quem instalou o
+  aplicativo pela 0.20.0 precisa remover o atalho e instalar de novo.
+- Celular: a barra de status passa a usar a cor principal do tema escolhido no Chrome, no
+  navegador e no aplicativo instalado. O Firefox para Android e o aplicativo instalado no iPhone
+  não seguem o tema: no aplicativo instalado pelo Firefox, a barra fica na cor laranja do
+  OpenMonetis.
 
 ## [0.20.0] - 2026-11-22
 

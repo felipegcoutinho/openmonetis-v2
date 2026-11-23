@@ -6,13 +6,18 @@
  * responses are never stored: they carry private financial data (`Cache-Control: private,
  * no-store`) and always go to the network.
  */
-// v2: the manifest follows the appearance and the worker no longer keeps it; new names drop old copies.
-const SHELL_CACHE = "openmonetis-shell-v2";
+const SHELL_CACHE = "openmonetis-shell-v1";
 const ASSET_CACHE = "openmonetis-assets-v1";
-const STATIC_CACHE = "openmonetis-static-v2";
+const STATIC_CACHE = "openmonetis-static-v1";
 const KNOWN_CACHES = [SHELL_CACHE, ASSET_CACHE, STATIC_CACHE];
 const OFFLINE_URL = "/offline.html";
-const SHELL_FILES = [OFFLINE_URL, "/favicon.svg", "/icon-192.png", "/images/openmonetis-mark.svg"];
+const SHELL_FILES = [
+  OFFLINE_URL,
+  "/manifest.json",
+  "/favicon.svg",
+  "/icon-192.png",
+  "/images/openmonetis-mark.svg",
+];
 /** Hashed files never change; older builds are trimmed past this many entries. */
 const MAX_ASSET_ENTRIES = 160;
 const STATIC_PREFIXES = ["/images/", "/logos/", "/flags/", "/avatars/"];
@@ -25,6 +30,7 @@ const STATIC_FILES = new Set([
   "/icon-512.png",
   "/icon-maskable-192.png",
   "/icon-maskable-512.png",
+  "/manifest.json",
 ]);
 
 self.addEventListener("install", (event) => {

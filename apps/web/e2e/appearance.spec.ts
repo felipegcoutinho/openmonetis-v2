@@ -3,7 +3,10 @@ import { expect, type Page, test } from "@playwright/test";
 
 const html = (page: Page) => page.locator("html");
 
-/** Every `theme-color` tag on the page; there must be exactly one, painted with the theme. */
+/** The installed app's manifest keeps the OpenMonetis primary, whatever the theme on screen. */
+const manifestThemeColor = "#fc941d";
+
+/** Every `theme-color` tag on the page; there must be exactly one, with the theme's primary. */
 function browserThemeColors(page: Page) {
   return page.evaluate(() =>
     [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')].map(
@@ -12,17 +15,28 @@ function browserThemeColors(page: Page) {
   );
 }
 
-/** The installed app's bars come from the manifest the page links to. */
-async function linkedManifestThemeColor(page: Page) {
+/**
+ * The installed app needs the manifest link in the server's HTML, sent with credentials so a
+ * deployment behind an authenticating proxy still serves it, or Firefox installs a shortcut that
+ * opens in the browser.
+ */
+async function expectInstallableManifest(page: Page) {
   const links = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLLinkElement>('link[rel="manifest"]')].map(
-      (link) => link.href,
-    ),
+    [...document.querySelectorAll<HTMLLinkElement>('link[rel="manifest"]')].map((link) => ({
+      href: new URL(link.href).pathname + new URL(link.href).search,
+      crossOrigin: link.crossOrigin,
+    })),
   );
-  expect(links).toHaveLength(1);
-  const response = await page.request.get(links[0] ?? "");
+  expect(links).toEqual([{ href: "/manifest.json", crossOrigin: "use-credentials" }]);
+  const html = await (await page.request.get("/settings")).text();
+  expect(html.slice(0, html.indexOf("</head>"))).toMatch(
+    /<link[^>]*rel="manifest"[^>]*crossorigin="use-credentials"|<link[^>]*crossorigin="use-credentials"[^>]*rel="manifest"/,
+  );
+  const response = await page.request.get("/manifest.json");
   expect(response.ok()).toBeTruthy();
-  return (await response.json()).theme_color as string;
+  const manifest = (await response.json()) as { display: string; theme_color?: string };
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.theme_color).toBe(manifestThemeColor);
 }
 
 function isPreferencesSave(url: string, method: string) {
@@ -68,9 +82,9 @@ test("the theme is saved to the account, applied before the first frame and rest
     await chooseDarkPalette(page, /Nord/);
     expect((await saved).ok()).toBeTruthy();
     await expect(html(page)).toHaveAttribute("data-palette", "nord-dark");
-    // The status bar follows the dark theme, with no stale light tag left behind.
-    await expect.poll(() => browserThemeColors(page)).toEqual(["#2e3440"]);
-    await expect.poll(() => linkedManifestThemeColor(page)).toBe("#2e3440");
+    // The status bar takes Nord's primary, with no stale tag left behind.
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#88c0d0"]);
+    await expectInstallableManifest(page);
   });
 
   await test.step("the appearance script runs in the head, before any of the body can paint", async () => {
@@ -87,11 +101,15 @@ test("the theme is saved to the account, applied before the first frame and rest
       requestAnimationFrame(() => {
         document.documentElement.dataset.firstFramePalette =
           document.documentElement.dataset.palette ?? "";
+        document.documentElement.dataset.firstFrameThemeColor =
+          document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content ?? "";
       });
     });
     await page.reload();
     await expect(html(page)).toHaveAttribute("data-first-frame-palette", "nord-dark");
-    await expect.poll(() => browserThemeColors(page)).toEqual(["#2e3440"]);
+    await expect(html(page)).toHaveAttribute("data-first-frame-theme-color", "#88c0d0");
+    // Hydration and the route head must not put the default colour back.
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#88c0d0"]);
   });
 
   await test.step("a browser without the local copy gets the theme from the account", async () => {
@@ -125,8 +143,8 @@ test("the theme is saved to the account, applied before the first frame and rest
     expect((await saved).ok()).toBeTruthy();
     await expect(html(page)).toHaveClass(/\blight\b/);
     await expect(html(page)).toHaveAttribute("data-palette", "rosePine-light");
-    await expect.poll(() => browserThemeColors(page)).toEqual(["#faf4ed"]);
-    await expect.poll(() => linkedManifestThemeColor(page)).toBe("#faf4ed");
+    await expect.poll(() => browserThemeColors(page)).toEqual(["#d7827e"]);
+    await expectInstallableManifest(page);
     await expect(modes.getByRole("button", { name: "Claro" })).toHaveAttribute(
       "aria-pressed",
       "true",

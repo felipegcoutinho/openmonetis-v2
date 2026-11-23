@@ -1,67 +1,52 @@
 import type { DarkPalette, LightPalette } from "@openmonetis/domain/preferences";
 
 /**
- * The colour of the phone's system bars for each palette: its canvas, so the app reads as one
- * surface. The page sends it in its `theme-color` tag, and the web app manifest (served by
- * `routes/manifest[.]json.ts`) carries it for the installed app, whose bars some browsers paint
- * only from the manifest.
+ * The colour of the phone's status bar for each palette: its primary (`--primary`), as hex,
+ * because browsers read `theme-color` unevenly when it is written as `oklch()` or `color-mix()`.
+ * The appearance script writes it into the page's `theme-color` tag; `palette-contrast.spec.ts`
+ * checks every entry against the colour the browser resolves from the palette stylesheets.
+ *
+ * The web app manifest stays static with the OpenMonetis primary: a manifest that changed with
+ * the theme made Firefox for Android install a browser shortcut.
  */
 export const browserThemeColors = {
   light: {
-    openmonetis: "#f6f4f1",
-    absolutely: "#faf9f5",
-    catppuccin: "#eff1f5",
-    everforest: "#fdf6e3",
-    flexoki: "#fffcf0",
-    github: "#f6f8fa",
-    githubHighContrast: "#ffffff",
-    githubColorblind: "#f6f8fa",
-    githubLegacy: "#f6f8fa",
-    rosePine: "#faf4ed",
-    tokyoNight: "#e1e2e7",
+    openmonetis: "#fc941d",
+    absolutely: "#d97757",
+    catppuccin: "#8839ef",
+    everforest: "#8da101",
+    flexoki: "#205ea6",
+    github: "#0969da",
+    githubHighContrast: "#0349b4",
+    githubColorblind: "#0969da",
+    githubLegacy: "#0366d6",
+    rosePine: "#d7827e",
+    tokyoNight: "#395dae",
   },
   dark: {
-    openmonetis: "#1b1917",
-    absolutely: "#262624",
-    catppuccin: "#1e1e2e",
-    everforest: "#2d353b",
-    flexoki: "#100f0f",
-    github: "#010409",
-    githubDimmed: "#1c2128",
-    githubHighContrast: "#010409",
-    githubColorblind: "#010409",
-    githubLegacy: "#1f2428",
-    gotham: "#0c1014",
-    gruvbox: "#282828",
-    jellybeans: "#121212",
-    monokai: "#272822",
-    moonfly: "#080808",
-    nord: "#2e3440",
-    posterpole: "#25222a",
-    posterpoleGray: "#1f1f1f",
-    rosePine: "#232136",
-    terminal: "#191715",
-    tokyoNight: "#1a1b26",
-    tokyoNightStorm: "#24283b",
-    tokyoNightMoon: "#222436",
-    vesper: "#101010",
+    openmonetis: "#eb954e",
+    absolutely: "#d97757",
+    catppuccin: "#cba6f7",
+    everforest: "#a7c080",
+    flexoki: "#4385be",
+    github: "#58a6ff",
+    githubDimmed: "#539bf5",
+    githubHighContrast: "#71b7ff",
+    githubColorblind: "#58a6ff",
+    githubLegacy: "#79b8ff",
+    gotham: "#519cac",
+    gruvbox: "#fe8019",
+    jellybeans: "#ffa560",
+    monokai: "#e6db74",
+    moonfly: "#80a0ff",
+    nord: "#88c0d0",
+    posterpole: "#cc9166",
+    posterpoleGray: "#cc9166",
+    rosePine: "#ea9a97",
+    terminal: "#f8b048",
+    tokyoNight: "#7aa2f7",
+    tokyoNightStorm: "#7aa2f7",
+    tokyoNightMoon: "#82aaff",
+    vesper: "#ffc799",
   },
 } as const satisfies { light: Record<LightPalette, string>; dark: Record<DarkPalette, string> };
-
-export const webAppManifestPath = "/manifest.json";
-
-const defaultScope = { mode: "light", palette: "openmonetis" } as const;
-
-/**
- * The bar colour of a palette scope, written as in `data-palette` (`nord-dark`). Anything else,
- * including a palette retired since the app was installed, gets the default light canvas.
- */
-export function getBrowserThemeColor(scope: string | null | undefined) {
-  const match = /^(\w+)-(light|dark)$/.exec(scope ?? "");
-  const mode = match?.[2] === "dark" ? "dark" : "light";
-  const colors: Record<string, string> = browserThemeColors[mode];
-  const palette = match?.[1] ?? "";
-  return Object.hasOwn(colors, palette)
-    ? colors[palette]
-    : browserThemeColors[defaultScope.mode][defaultScope.palette];
-}

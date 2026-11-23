@@ -21,14 +21,23 @@ tema não exige migration, e um tema retirado que ainda esteja salvo volta ao pa
 na leitura (`normalizeUserPreferences`). A API recusa com 400 um tema fora da lista do seu modo.
 
 No navegador, a página raiz recebe a classe do modo e `data-palette="<tema>-<modo>"`, por exemplo
-`nord-dark`. As barras do sistema usam o fundo do tema em uso (`apps/web/src/lib/browser-theme-colors.ts`),
-mesmo que o navegador ou o celular estejam em outro modo. O script de tema cria a única tag
-`theme-color` da página e o link do manifesto, `/manifest.json?theme=<tema>-<modo>`. A rota
-`manifest[.]json.ts` devolve o manifesto com essa cor em `theme_color` e `background_color`, porque
-o aplicativo instalado lê do manifesto a cor das barras: o Firefox, a da barra de status; o Chrome,
-a da barra de navegação. Nenhuma das duas tags fica no `head` da rota, que as duplicaria com a cor
-clara ao carregar. O navegador só relê o manifesto do aplicativo instalado em uma nova visita, então
-a cor das barras muda ao reabrir o aplicativo. Um script em linha no `head` (`AppearanceScript`) aplica o último tema guardado no `localStorage` antes da primeira
+`nord-dark`. A barra de status usa a cor primária do tema em uso, em hex
+(`apps/web/src/lib/browser-theme-colors.ts`). A única tag `theme-color` da página pertence ao
+script de tema, que a cria antes da primeira pintura e só troca o valor dela depois. A rota não
+renderiza essa tag: o roteador renderiza de novo as tags do `head` ao carregar, e a cópia extra
+deixava a barra presa na cor padrão. O teste `palette-contrast.spec.ts` compara a tabela com a
+primária que o navegador resolve de cada tema.
+
+O manifesto continua estático (`apps/web/public/manifest.json`), com `theme_color` fixo em
+`#fc941d`. Um manifesto que mudava com o tema quebrou a instalação no Firefox para Android, que
+passou a criar um atalho aberto no navegador. Por isso a cor da barra muda com o tema no Chrome, no
+navegador e no aplicativo instalado, que leem a tag. O Firefox para Android ignora a tag: no
+navegador a barra é a do próprio Firefox, e no aplicativo instalado fica laranja, a cor do
+manifesto. No iOS instalado, que também ignora `theme-color`, a barra não muda. O link do manifesto
+vem no HTML do servidor com `crossorigin="use-credentials"`: uma instalação atrás de um proxy que
+exige login recusa a busca do manifesto sem os cookies.
+
+Um script em linha no `head` (`AppearanceScript`) aplica o último tema guardado no `localStorage` antes da primeira
 pintura, sem piscar o tema padrão; em seguida, o tema salvo na conta prevalece. Se um salvamento
 falhar, a página volta ao tema salvo e mostra um aviso.
 
@@ -43,8 +52,9 @@ falhar, a página volta ao tema salvo e mostra um aviso.
 3. **Menus de um tema claro.** Menus e listas abertas usam sempre as cores escuras. Um tema claro
    também declara `[data-palette="<tema>-light"] .dark`, normalmente no mesmo bloco da versão
    escura da família.
-4. **Cor da barra do navegador.** Adicione o fundo do tema a `browserThemeColors` em
-   `theme-provider.tsx`; o TypeScript aponta a ausência.
+4. **Cor da barra de status.** Adicione a primária do tema, em hex, a `browserThemeColors` em
+   `apps/web/src/lib/browser-theme-colors.ts`; o TypeScript aponta a ausência e
+   `palette-contrast.spec.ts` confere o valor.
 5. **Nome.** Preencha `paletteLabels` com o nome da família e `lightPaletteVariantLabels` ou
    `darkPaletteVariantLabels` com a variante (`"Padrão"` quando a família tem uma só por modo). O
    seletor agrupa automaticamente famílias com mais de uma variante.

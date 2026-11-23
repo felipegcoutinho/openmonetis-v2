@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { browserThemeColors, webAppManifestPath } from "@/lib/browser-theme-colors";
+import { browserThemeColors } from "@/lib/browser-theme-colors";
 import { prefersReducedMotion } from "@/lib/pwa";
 
 /** What the app looks like: the mode, and the palette used in each mode. */
@@ -88,10 +88,9 @@ function getAppearanceScript() {
     lightPalettes,
     darkPalettes,
     colors: browserThemeColors,
-    manifest: webAppManifestPath,
   });
 
-  return `(function(){try{var c=${config};function r(k,l){var v=localStorage.getItem(c.keys[k]);return l.indexOf(v)>=0?v:c.defaults[k]}var t=r("theme",c.themes);var m=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;var p=m==="dark"?r("darkPalette",c.darkPalettes):r("lightPalette",c.lightPalettes);var e=document.documentElement;e.classList.add(m);e.style.colorScheme=m;e.setAttribute("data-palette",p+"-"+m);function h(q,t,k){var x=document.querySelector(t+"["+q+"]");if(!x){x=document.createElement(t);x.setAttribute(q.split("=")[0],k);document.head.appendChild(x)}return x}h('name="theme-color"',"meta","theme-color").content=c.colors[m][p];h('rel="manifest"',"link","manifest").href=c.manifest+"?theme="+p+"-"+m}catch(e){}})();`;
+  return `(function(){try{var c=${config};function r(k,l){var v=localStorage.getItem(c.keys[k]);return l.indexOf(v)>=0?v:c.defaults[k]}var t=r("theme",c.themes);var m=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;var p=m==="dark"?r("darkPalette",c.darkPalettes):r("lightPalette",c.lightPalettes);var e=document.documentElement;e.classList.add(m);e.style.colorScheme=m;e.setAttribute("data-palette",p+"-"+m);var b=document.head.querySelector('meta[name="theme-color"]');if(!b){b=document.createElement("meta");b.name="theme-color";document.head.appendChild(b)}b.content=c.colors[m][p]}catch(e){}})();`;
 }
 
 function resolveMode(theme: ApplicationTheme): ResolvedMode {
@@ -103,43 +102,33 @@ function applyAppearance(appearance: Appearance) {
   const root = document.documentElement;
   const mode = resolveMode(appearance.theme);
   const palette = mode === "dark" ? appearance.darkPalette : appearance.lightPalette;
-  const themeColor =
-    mode === "dark"
-      ? browserThemeColors.dark[appearance.darkPalette]
-      : browserThemeColors.light[appearance.lightPalette];
 
   root.classList.remove("light", "dark");
   root.classList.add(mode);
   root.style.colorScheme = mode;
   root.dataset.palette = `${palette}-${mode}`;
-  paintSystemBars(`${palette}-${mode}`, themeColor);
+  paintStatusBar(
+    mode === "dark"
+      ? browserThemeColors.dark[appearance.darkPalette]
+      : browserThemeColors.light[appearance.lightPalette],
+  );
 }
 
 /**
- * The phone's system bars follow the appearance on screen. The page's single `theme-color` tag
- * paints the status bar in the browser and in Chrome's installed app; the manifest link carries the
- * same appearance for the installed app's other bars, which some browsers (Firefox) only take from
- * the manifest. Both tags belong to the appearance script, not the route head: a head tag is
- * rendered again on hydration, and the stale light copy kept the bar light in dark mode.
+ * The status bar takes the primary of the theme on screen. The page's single `theme-color` tag
+ * belongs to the appearance script, which creates it before the first frame; the route head must
+ * not render one, because the router renders head tags again on hydration and the second copy
+ * kept the default colour. The manifest keeps its fixed colour: Firefox for Android ignores this
+ * tag and paints its installed app from the manifest only.
  */
-function paintSystemBars(scope: string, color: string) {
-  const meta = findOrCreateHeadElement<HTMLMetaElement>("meta", "name", "theme-color");
+function paintStatusBar(color: string) {
+  let meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "theme-color";
+    document.head.append(meta);
+  }
   meta.content = color;
-  const manifest = findOrCreateHeadElement<HTMLLinkElement>("link", "rel", "manifest");
-  manifest.href = `${webAppManifestPath}?theme=${scope}`;
-}
-
-function findOrCreateHeadElement<Element extends HTMLElement>(
-  tag: "meta" | "link",
-  attribute: "name" | "rel",
-  value: string,
-) {
-  const existing = document.head.querySelector<Element>(`${tag}[${attribute}="${value}"]`);
-  if (existing) return existing;
-  const element = document.createElement(tag) as unknown as Element;
-  element.setAttribute(attribute, value);
-  document.head.append(element);
-  return element;
 }
 
 /**
