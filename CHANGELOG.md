@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Alterado
+
+- Caixa de entrada: em **Por origem**, cartões e contas ficam direto no card, alinhados ao
+  cabeçalho, em vez de numa caixa interna, com o logo ou o ícone num círculo e textos em cinza
+  neutro.
+
 ### Corrigido
 
 - Aparência: ao abrir ou recarregar uma página, o tema salvo é aplicado antes de qualquer parte da
