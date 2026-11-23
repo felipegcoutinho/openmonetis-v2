@@ -15,6 +15,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 
+- Distribuição financeira: o valor de **Taxa de poupança** tem o mesmo tamanho dos demais
+  indicadores, em vez do tamanho de legenda.
 - Aparência: ao abrir ou recarregar uma página, o tema salvo é aplicado antes de qualquer parte da
   tela aparecer. Em conexões lentas, o primeiro quadro podia surgir sem o tema e piscar o padrão
   antes de trocar.

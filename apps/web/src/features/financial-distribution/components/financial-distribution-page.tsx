@@ -266,9 +266,10 @@ export function FinancialDistributionPage({ filters, onChange }: Props) {
                   icon={<PiggyBank />}
                   label="Taxa de poupança"
                   value={
+                    // Inherits the card's figure size instead of the percentage's caption size.
                     <FinancialDistributionPercentage
                       value={report.savingsRatePercentage}
-                      className="text-foreground"
+                      className="text-[length:inherit] text-foreground"
                     />
                   }
                 />
